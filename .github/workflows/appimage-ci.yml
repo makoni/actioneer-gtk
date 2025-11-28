@@ -22,9 +22,9 @@ jobs:
           - arch: x86_64
             runner: ubuntu-latest
             appimagetool_suffix: x86_64
-          #- arch: aarch64
-          #  runner: ubuntu-24.04-arm64
-          #  appimagetool_suffix: aarch64
+          - arch: aarch64
+           runner: ubuntu-24.04-arm64
+           appimagetool_suffix: aarch64
     outputs:
       run-id: ${{ steps.expose-run-id.outputs.run_id }}
     env:
