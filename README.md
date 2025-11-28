@@ -5,7 +5,7 @@ Actioneer is a native GNOME desktop client for GitHub Actions. It combines a GTK
 <a href="https://snapcraft.io/actioneer"><img alt="Get it from the Snap Store" src="https://snapcraft.io/en/dark/install.svg" /></a> <a href="https://flathub.org/en/apps/me.spaceinbox.actioneer"><img height="56" alt="Get it on Flathub" src="https://flathub.org/api/badge?locale=en"/></a>
 
 ## Feature Highlights
-- GitHub sign-in via OAuth device flow with tokens stored securely in the system keyring
+- GitHub sign-in via OAuth device flow with tokens stored securely (system keyring on classic installs, encrypted via the xdg-desktop-portal Secret interface inside sandboxes)
 - Repository browser with live search, favorites, caching, and adaptive layout
 - Detailed workflow, run, and job views with real-time log streaming and status indicators
 - Background refreshes with rate-limit awareness and optional notifications
@@ -118,7 +118,7 @@ See `docs/` for API, caching, and UI guidelines. The project enforces zero warni
 - `src/main.rs` – Application entry point and Tokio runtime bootstrap
 - `src/api/` – GitHub API client, HTTP helpers, and typed models
 - `src/auth/` – OAuth device flow implementation
-- `src/storage/` – Secure keyring-backed token storage
+- `src/storage/` – Secure token storage (keyring on classic installs, xdg-desktop-portal Secret inside sandboxes)
 - `src/cache.rs` – In-memory cache with ETag-aware helpers
 - `src/preferences.rs` / `src/favorites.rs` – Persistence for user state
 - `src/ui/` – GTK4/libadwaita UI components (main window, detail panes, dialogs)

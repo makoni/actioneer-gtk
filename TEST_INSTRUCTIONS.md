@@ -139,6 +139,13 @@ snapcraft --build-for=arm64
 3. **`SNAP_BUILD_FIX.md`** - Detailed documentation
 4. **`TEST_INSTRUCTIONS.md`** - This file
 
+## Secret Storage Regression Checks
+
+Run these quick manual checks whenever the snap's secret handling changes:
+1. **Classic session (outside the snap sandbox):** run `ACTIONEER_LOG=info cargo run` and make sure the log reports `TokenStorage initialized (keyring backend)`; sign in, restart, and confirm the token persists via the host keyring.
+2. **Confined snap:** install the snap (`snap install --dangerous actioneer_*.snap`), start it with `ACTIONEER_LOG=info actioneer`, and verify the log shows `Using secret portal storage`. Complete the OAuth flow once, restart the snap, and ensure you're still signed in (the encrypted portal file lives under `$SNAP_USER_COMMON/.config/actioneer/secret-portal`).
+3. **Fallback signal:** temporarily stop the portal service (`systemctl --user stop xdg-desktop-portal.service`) and confirm the snap now falls back to the keyring backend with a warning in the log—this is the scenario you must report in the Snap Store review request.
+
 ## Need Help?
 
 If the tests fail or you need assistance:

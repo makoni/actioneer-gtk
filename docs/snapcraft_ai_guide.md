@@ -19,7 +19,7 @@ This note distills the Snapcraft documentation fetched during the investigation 
 4. **Part configuration** — the `rust` plugin plus `source: .` assumes the workspace has `Cargo.toml` at the root. Do not move the manifest.
 5. **Override build hook** — `craftctl default` runs the stock Rust build (`cargo install ...`). Extra installs copy desktop and icon assets into `meta/gui`.
 6. **Stage packages** — libadwaita/libgtk/libssl ship runtime GTK stack. Use `stage-packages` for runtime libraries, `build-packages` for headers + pkgconfig.
-7. **Slots/plugs** — the snap no longer exposes a custom D-Bus name. Avoid re-adding one unless you also ship a matching service implementation.
+7. **Slots/plugs** — the snap no longer exposes a custom D-Bus name, and Actioneer now relies on `org.freedesktop.portal.Secret` for secret storage instead of the `password-manager-service` plug. Keep the plug list minimal and verify the portal is present on GNOME 46/base core24 images before publishing.
 
 ## Local build flow (native snapcraft)
 1. `snapcraft clean actioneer --destructive-mode` to wipe `parts/`, `prime/`, and related directories when dependencies or layout change.
@@ -34,6 +34,11 @@ This note distills the Snapcraft documentation fetched during the investigation 
 - Snapcraft is installed directly on the runner via `snapd`, allowing `snapcraft login`, `snapcraft whoami`, and `snapcraft upload` to execute without containers.
 - Ensure the Snapcraft store credentials are passed via `SNAPCRAFT_STORE_CREDENTIALS`; `snapcraft whoami` is the quick validation.
 - After `pack`, call `snapcraft upload` (alias `snapcraft push`) with `--release edge` as currently configured.
+
+## Secret portal verification
+- Launch the snap (`snap run actioneer`) on a confined session (core24 GNOME image). `ACTIONEER_LOG=info` will show whether the portal backend is selected (`Using secret portal storage...`).
+- If the log falls back to "system keyring storage", inspect the host (`busctl --user list | grep portal`, `gdbus introspect --session --dest org.freedesktop.portal.Desktop ...`) and ensure `xdg-desktop-portal` plus the GNOME backend are present.
+- The snap no longer declares `password-manager-service`, so portal failures will break token storage — run this check before requesting store review.
 
 ## Troubleshooting checklist
 - **Missing `prime/meta/snap.yaml`** — means the `pack` command did not consume the `prime` dir; verify `snapcraft pack` completed and inspect `prime/meta/` contents.

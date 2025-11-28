@@ -27,6 +27,16 @@ Optional / next steps (low priority)
 - Persist cache to disk (optional)
 - Small UI micro-optimizations or accessibility checks
 
+## Secret portal migration plan
+
+Context: Snap reviewers requested that we rely on `org.freedesktop.portal.Secret` (available since Ubuntu 20.04) instead of the `password-manager-service` plug. The secret portal’s `RetrieveSecret` contract is documented in the Flatpak portal reference and XML spec ([docs](https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.Secret.html), [schema](https://github.com/flatpak/xdg-desktop-portal/blob/master/data/org.freedesktop.portal.Secret.xml)). It returns a per-app secret via a pipe fd and emits the usual `org.freedesktop.portal.Request` response, so our GLib code must watch that handle.
+
+1. [✅] Default-enable portal detection and add sandbox heuristics in `src/storage/secret_portal.rs`/`TokenStorage::new` (env vars + sandbox env vars) so we automatically attempt the portal on confined builds, with opt-out logging for hosts without it.
+2. [✅] Implement a real `PortalTokenStore` that talks to `org.freedesktop.portal.Secret` via `gio` (fd passing + request handling) to derive the secret, encrypt tokens, and integrate it into `TokenStorage` so sandboxed builds prefer the portal while classic builds continue using `keyring`.
+3. [✅] Migrate existing credentials: when the portal becomes available inside a sandbox, read any existing host keyring token once, copy it into the portal collection, and clean up the legacy entry to avoid drift.
+4. [✅] Update packaging and docs (`snapcraft.yaml`, `docs/snapcraft_ai_guide.md`, `README.md`) to document the portal requirement, remove `password-manager-service`, and describe manual verification steps for Snap reviewers.
+5. [✅] Extend test coverage: add unit tests for the portal path, document a manual regression matrix in `TEST_INSTRUCTIONS.md`, and ensure portal failures surface in logs during CI/manual runs.
+
 Notes
 - Full history and detailed session notes are preserved in git commits.
 - For larger changes, run the quick validation steps above and ensure `cargo clippy -- -D warnings` passes.
@@ -34,6 +44,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2025-11-28 — Implemented portal-first token storage (secret_portal + PortalTokenStore), migrated existing keyring secrets automatically, and documented the new snap portal verification checklist.
 - [🔄] 2025-11-13 — Investigating Snap icon regression; pointing the desktop file icon to `/snap/actioneer/current/meta/gui/me.spaceinbox.actioneer.svg` to stop GNOME from ignoring the theme lookup.
 - [✅] 2025-11-13 — Added an env-gated secret portal detector so we can validate the GNOME 49 portal without shipping it yet; remains off until the snap plug is auto-connected.
 - [✅] 2025-11-13 — Confirmed `org.freedesktop.portal.Secret` is live on GNOME 49 by wiring a `secret-test` helper that pipes secrets back from the portal without additional deps.
