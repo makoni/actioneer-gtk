@@ -145,6 +145,7 @@ Run these quick manual checks whenever the snap's secret handling changes:
 1. **Classic session (outside the snap sandbox):** run `ACTIONEER_LOG=info cargo run` and make sure the log reports `TokenStorage initialized (keyring backend)`; sign in, restart, and confirm the token persists via the host keyring.
 2. **Confined snap:** install the snap (`snap install --dangerous actioneer_*.snap`), start it with `ACTIONEER_LOG=info actioneer`, and verify the log shows `Using secret portal storage`. Complete the OAuth flow once, restart the snap, and ensure you're still signed in (the encrypted portal file lives under `$SNAP_USER_COMMON/.config/actioneer/secret-portal`).
 3. **Fallback signal:** temporarily stop the portal service (`systemctl --user stop xdg-desktop-portal.service`) and confirm the snap now falls back to the keyring backend with a warning in the log—this is the scenario you must report in the Snap Store review request.
+4. **Welcome screen transition:** after finishing the OAuth device flow (classic or snap), the dialog should close and the main window must immediately switch from the welcome screen to the repository view without restarting the app. If it stays on the welcome view, collect logs (`ACTIONEER_LOG=debug`) and file a regression report.
 
 ## Need Help?
 

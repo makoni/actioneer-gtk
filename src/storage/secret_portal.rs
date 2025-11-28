@@ -110,7 +110,7 @@ pub fn secret_portal_available() -> Result<bool, PortalDetectionError> {
         None::<&gio::Cancellable>,
     )?;
 
-    let xml_variant = if xml_variant.is_type(&VariantTy::STRING) {
+    let xml_variant = if xml_variant.is_type(VariantTy::STRING) {
         xml_variant
     } else {
         xml_variant.child_value(0)
@@ -169,10 +169,10 @@ fn sandbox_reason() -> Option<&'static str> {
         }
     }
 
-    if let Ok(value) = env::var("CONTAINER") {
-        if value.eq_ignore_ascii_case("flatpak") || value.eq_ignore_ascii_case("snap") {
-            return Some("CONTAINER");
-        }
+    if let Ok(value) = env::var("CONTAINER")
+        && (value.eq_ignore_ascii_case("flatpak") || value.eq_ignore_ascii_case("snap"))
+    {
+        return Some("CONTAINER");
     }
 
     None
@@ -192,10 +192,10 @@ fn read_secret(mut reader: UnixStream) -> Result<Vec<u8>, PortalSecretError> {
 }
 
 fn parse_flag(value: &str) -> bool {
-    match value {
-        "1" | "true" | "TRUE" | "True" | "yes" | "YES" | "Yes" | "on" | "ON" | "On" => true,
-        _ => false,
-    }
+    matches!(
+        value,
+        "1" | "true" | "TRUE" | "True" | "yes" | "YES" | "Yes" | "on" | "ON" | "On"
+    )
 }
 
 #[cfg(test)]

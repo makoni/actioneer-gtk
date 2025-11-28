@@ -45,6 +45,7 @@ Notes
 
 -Recent Updates
 - [✅] 2025-11-28 — Implemented portal-first token storage (secret_portal + PortalTokenStore), migrated existing keyring secrets automatically, and documented the new snap portal verification checklist.
+- [✅] 2025-11-28 — Ensured the OAuth dialog completion automatically initializes the GitHub client so the welcome screen transitions to the main UI without restarting (auth_window.rs, main_window.rs).
 - [🔄] 2025-11-13 — Investigating Snap icon regression; pointing the desktop file icon to `/snap/actioneer/current/meta/gui/me.spaceinbox.actioneer.svg` to stop GNOME from ignoring the theme lookup.
 - [✅] 2025-11-13 — Added an env-gated secret portal detector so we can validate the GNOME 49 portal without shipping it yet; remains off until the snap plug is auto-connected.
 - [✅] 2025-11-13 — Confirmed `org.freedesktop.portal.Secret` is live on GNOME 49 by wiring a `secret-test` helper that pipes secrets back from the portal without additional deps.
