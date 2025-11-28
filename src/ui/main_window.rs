@@ -586,7 +586,30 @@ impl MainWindow {
 
     fn show_auth_window(&self) {
         let auth_window = AuthWindow::new();
-        auth_window.present(Some(&self.window));
+        let this = self.clone();
+        auth_window.present(Some(&self.window), move || {
+            this.handle_sign_in_success();
+        });
+    }
+
+    fn handle_sign_in_success(&self) {
+        match TokenStorage::new() {
+            Ok(storage) => match storage.get_token() {
+                Ok(token) => {
+                    if !self.initialize_client(token) {
+                        self.enter_signed_out_state();
+                    }
+                }
+                Err(err) => {
+                    error!("Token unavailable after sign-in: {}", err);
+                    self.enter_signed_out_state();
+                }
+            },
+            Err(err) => {
+                error!("Failed to reopen token storage after sign-in: {}", err);
+                self.enter_signed_out_state();
+            }
+        }
     }
 
     fn initialize_client(&self, token: String) -> bool {

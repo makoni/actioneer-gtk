@@ -161,26 +161,24 @@ fn try_portal_backend(entry: &Entry, preference: PortalPreference) -> Option<Bac
     }
 
     match secret_portal::secret_portal_available() {
-        Ok(true) => match PortalTokenStore::new() {
-            Ok(store) => {
-                info!(
-                    "Using secret portal storage (reason: {})",
-                    preference.describe()
-                );
-                migrate_keyring_token(entry, &store);
-                Some(Backend::Portal(store))
-            }
-            Err(err) => {
-                warn!("Secret portal initialization failed: {err}");
-                None
-            }
-        },
-        Ok(false) => {
-            warn!("Secret portal requested but interface not advertised by the session");
-            None
+        Ok(true) => debug!("Secret portal advertised by the session"),
+        Ok(false) => warn!(
+            "Secret portal requested but interface not advertised by the session (attempting anyway)"
+        ),
+        Err(err) => warn!("Secret portal detection failed (attempting anyway): {err}"),
+    }
+
+    match PortalTokenStore::new() {
+        Ok(store) => {
+            info!(
+                "Using secret portal storage (reason: {})",
+                preference.describe()
+            );
+            migrate_keyring_token(entry, &store);
+            Some(Backend::Portal(store))
         }
         Err(err) => {
-            warn!("Secret portal detection failed: {err}");
+            warn!("Secret portal initialization failed: {err}");
             None
         }
     }

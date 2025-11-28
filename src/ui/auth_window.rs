@@ -11,6 +11,7 @@ use gtk4::{self as gtk, glib};
 use libadwaita as adw;
 use libadwaita::prelude::*;
 use parking_lot::Mutex;
+use std::rc::Rc;
 use std::sync::Arc;
 use std::time::Duration;
 use tracing::{error, info};
@@ -184,9 +185,12 @@ impl AuthWindow {
         )
     }
 
-    pub fn present(&self, parent: Option<&impl gtk::prelude::IsA<gtk::Widget>>) {
+    pub fn present<F>(&self, parent: Option<&impl gtk::prelude::IsA<gtk::Widget>>, on_success: F)
+    where
+        F: Fn() + 'static,
+    {
         self.reset_ui();
-        self.start_device_flow();
+        self.start_device_flow(Rc::new(on_success));
         self.dialog.present(parent);
     }
 
@@ -201,7 +205,7 @@ impl AuthWindow {
         self.spinner.set_visible(false);
     }
 
-    fn start_device_flow(&self) {
+    fn start_device_flow(&self, on_success: Rc<dyn Fn()>) {
         let (sender, receiver) =
             glib::MainContext::default().channel::<AuthMessage>(glib::Priority::default());
 
@@ -228,6 +232,7 @@ impl AuthWindow {
         let copy_button_clone = self.copy_button.clone();
         let spinner_clone = self.spinner.clone();
         let dialog_clone = self.dialog.clone();
+        let completion = on_success.clone();
 
         receiver.attach(None, move |message| match message {
             AuthMessage::FlowReady(info) => {
@@ -316,7 +321,10 @@ impl AuthWindow {
                 spinner_clone.stop();
                 spinner_clone.set_visible(false);
                 match save_token_and_close(token, &dialog_clone) {
-                    Ok(()) => status_clone.set_text("Signed in successfully"),
+                    Ok(()) => {
+                        status_clone.set_text("Signed in successfully");
+                        completion();
+                    }
                     Err(err) => {
                         error!("Failed to save token: {}", err);
                         status_clone.set_text(&format!("Error saving token: {}", err));

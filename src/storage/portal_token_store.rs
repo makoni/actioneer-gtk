@@ -17,7 +17,6 @@ use super::secret_portal;
 const STORAGE_DIR: &str = "actioneer";
 const PORTAL_DIR: &str = "secret-portal";
 const TOKEN_FILENAME: &str = "github_token.portal";
-const PORTAL_TOKEN_ID_FILENAME: &str = "portal-token-id";
 const FILE_MAGIC: &[u8; 4] = b"ACTN";
 const FILE_VERSION: u8 = 1;
 const NONCE_LEN: usize = 12;
@@ -41,22 +40,13 @@ pub enum PortalStoreError {
     Decryption,
     #[error("stored token is missing")]
     TokenMissing,
-    #[error("invalid portal token metadata")]
-    InvalidPortalToken,
 }
 
 impl PortalTokenStore {
     pub fn new() -> Result<Self, PortalStoreError> {
         let storage_dir = portal_storage_dir()?;
         let cipher_path = storage_dir.join(TOKEN_FILENAME);
-        let portal_token_path = storage_dir.join(PORTAL_TOKEN_ID_FILENAME);
-        let cached_portal_token = read_portal_token(&portal_token_path)?;
-        let portal_secret = secret_portal::retrieve_secret(cached_portal_token.as_deref())?;
-
-        if portal_secret.token.as_ref() != cached_portal_token.as_ref() {
-            persist_portal_token(&portal_token_path, portal_secret.token.as_deref())?;
-        }
-
+        let portal_secret = secret_portal::retrieve_secret(None)?;
         let key = derive_key(&portal_secret.secret);
 
         Ok(Self { key, cipher_path })
@@ -176,44 +166,6 @@ fn ensure_parent(path: &Path) -> Result<(), PortalStoreError> {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)?;
     }
-    Ok(())
-}
-
-fn read_portal_token(path: &Path) -> Result<Option<String>, PortalStoreError> {
-    if !path.exists() {
-        return Ok(None);
-    }
-
-    let value = fs::read_to_string(path)?;
-    let trimmed = value.trim();
-    if trimmed.is_empty() {
-        return Err(PortalStoreError::InvalidPortalToken);
-    }
-
-    Ok(Some(trimmed.to_string()))
-}
-
-fn persist_portal_token(path: &Path, token: Option<&str>) -> Result<(), PortalStoreError> {
-    if let Some(token) = token {
-        ensure_parent(path)?;
-        let mut file = OpenOptions::new()
-            .create(true)
-            .truncate(true)
-            .write(true)
-            .open(path)?;
-        file.write_all(token.as_bytes())?;
-        file.write_all(b"\n")?;
-        file.sync_all()?;
-        drop(file);
-        #[cfg(unix)]
-        {
-            use std::os::unix::fs::PermissionsExt;
-            fs::set_permissions(path, fs::Permissions::from_mode(0o600))?;
-        }
-    } else if path.exists() {
-        fs::remove_file(path)?;
-    }
-
     Ok(())
 }
 
