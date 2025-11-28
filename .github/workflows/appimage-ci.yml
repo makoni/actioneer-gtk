@@ -20,15 +20,16 @@ jobs:
       matrix:
         include:
           - arch: x86_64
-            runner: ubuntu-latest
-            appimagetool_suffix: x86_64
+            runner: ubuntu-22.04
+            linuxdeploy_suffix: x86_64
           # - arch: aarch64
           #   runner: ubuntu-24.04-arm64
-          #   appimagetool_suffix: aarch64
+          #   linuxdeploy_suffix: aarch64
     outputs:
       run-id: ${{ steps.expose-run-id.outputs.run_id }}
     env:
       APPDIR: build/AppDir
+      LINUXDEPLOY_PLUGIN_GTK: ${{ github.workspace }}/linuxdeploy-plugin-gtk.sh
     steps:
       - uses: actions/checkout@v5.0.0
 
@@ -46,23 +47,6 @@ jobs:
         run: |
           cargo build --workspace --release --verbose
 
-      - name: Assemble AppDir
-        run: |
-          set -euo pipefail
-          rm -rf "$APPDIR"
-          mkdir -p "$APPDIR/usr/bin"
-          install -Dm755 target/release/actioneer "$APPDIR/usr/bin/actioneer"
-          install -Dm644 data/me.spaceinbox.actioneer.desktop "$APPDIR/usr/share/applications/me.spaceinbox.actioneer.desktop"
-          install -Dm644 data/metainfo.xml "$APPDIR/usr/share/metainfo/me.spaceinbox.actioneer.metainfo.xml"
-          install -Dm644 LICENSE "$APPDIR/usr/share/licenses/actioneer/LICENSE"
-          mkdir -p "$APPDIR/usr/share/icons"
-          cp -a icons/icons/hicolor "$APPDIR/usr/share/icons/hicolor"
-          install -Dm644 data/me.spaceinbox.actioneer.desktop "$APPDIR/me.spaceinbox.actioneer.desktop"
-          # Ensure icon referenced by desktop file exists in AppDir root (AppImage tooling expects it)
-          cp -a icons/icons/hicolor/512x512/apps/me.spaceinbox.actioneer.png "$APPDIR/me.spaceinbox.actioneer.png"
-          install -Dm644 icons/icons/hicolor/512x512/apps/me.spaceinbox.actioneer.png "$APPDIR/me.spaceinbox.actioneer.png"
-          printf '#!/bin/sh\nHERE="$(dirname "$0")"\nexec "$HERE/usr/bin/actioneer" "$@"\n' > "$APPDIR/AppRun"
-          chmod +x "$APPDIR/AppRun"
 
       - name: Get app version
         id: get_version
@@ -76,15 +60,35 @@ jobs:
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
-      - name: Build AppImage
+      - name: Download linuxdeploy and GTK plugin
         run: |
           set -euo pipefail
-          curl -L "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${{ matrix.appimagetool_suffix }}.AppImage" -o appimagetool.AppImage
-          chmod +x appimagetool.AppImage
+          curl -L "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${{ matrix.linuxdeploy_suffix }}.AppImage" -o linuxdeploy.AppImage
+          curl -L "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh" -o "$LINUXDEPLOY_PLUGIN_GTK"
+          chmod +x linuxdeploy.AppImage "$LINUXDEPLOY_PLUGIN_GTK"
+
+      - name: Build AppImage with linuxdeploy
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          rm -rf "$APPDIR"
+          mkdir -p dist "$APPDIR/usr/share/metainfo" "$APPDIR/usr/share/licenses/actioneer"
+          install -Dm644 data/metainfo.xml "$APPDIR/usr/share/metainfo/me.spaceinbox.actioneer.metainfo.xml"
+          install -Dm644 LICENSE "$APPDIR/usr/share/licenses/actioneer/LICENSE"
+          chmod +x packaging/AppRun.sh
           export APPIMAGE_EXTRACT_AND_RUN=1
-          export ARCH=${{ matrix.arch }}
-          mkdir -p dist
-          ./appimagetool.AppImage "$APPDIR" "dist/actioneer-${{ steps.get_version.outputs.version }}-${{ matrix.arch }}.AppImage"
+          ./linuxdeploy.AppImage \
+            --appdir "$APPDIR" \
+            --executable target/release/actioneer \
+            --desktop-file data/me.spaceinbox.actioneer.desktop \
+            --icon-file icons/icons/hicolor/scalable/apps/me.spaceinbox.actioneer.svg \
+            --custom-apprun packaging/AppRun.sh \
+            --plugin gtk \
+            --output appimage
+          OUTPUT_FILE=$(ls -1 Actioneer-*.AppImage | head -n 1)
+          DEST="dist/actioneer-${{ steps.get_version.outputs.version }}-${{ matrix.arch }}.AppImage"
+          mv "$OUTPUT_FILE" "$DEST"
 
       - name: Upload AppImage artifact
         uses: actions/upload-artifact@v5

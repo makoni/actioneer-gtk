@@ -40,8 +40,7 @@ modules:
       - cp -a icons/icons/hicolor/* /app/share/icons/hicolor/
       - find /app/share/icons/hicolor -type f -name 'actioneer.*' -delete
     sources:
-      - type: git
-        url: https://github.com/makoni/Actioneer-gtk.git
-        tag: 1.0.0
+      - type: dir
+        path: ..
       # flatpak-cargo-generator -d Cargo.lock -o flatpak/me.spaceinbox.actioneer.cargo-sources.json
       - me.spaceinbox.actioneer.cargo-sources.json
