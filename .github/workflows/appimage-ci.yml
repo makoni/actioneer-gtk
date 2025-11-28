@@ -45,7 +45,7 @@ jobs:
 
       - name: Build release binary
         run: |
-          cargo build --workspace --release --verbose
+          cargo build --release --locked --bin actioneer
 
 
       - name: Get app version
