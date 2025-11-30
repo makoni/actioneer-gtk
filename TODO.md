@@ -32,6 +32,9 @@ Optional / next steps (low priority)
 - Refactor `src/ui/detail_view/helpers/runs/load.rs::load_workflow_runs` (currently ~325 lines) into smaller helpers/structs so error handling, digest comparison, notification dispatch, and UI updates are testable in isolation; the monolithic function makes it hard to reason about background vs foreground refresh paths.
 - Replace the manual `gtk::Box` run list rebuild (clearing and re-adding rows on every refresh) with a `gio::ListStore` + `gtk::ListView` factory. That would eliminate repeated widget construction, cut down diff churn, and prevent scroll jumps when only a single run changes.
 - Drop the duplicate cache writes when runs are fetched. Today we call `store_runs_async` when digest changes and then call `cache.store_runs` again right after the HTTP fetch completes (same data). Consolidate into a single write so we avoid extra spawn + clone work per refresh.
+- Add lightweight run-status filter chips (Success/Failed/Running/Branch) above the detail pane so users can quickly scope the list without scrolling. Persist the selection in Preferences so the view restores across sessions.
+- Introduce an inline job-log drawer that can be expanded from each job row instead of opening a separate window; mirror the logs view styling with syntax-colored sections and search highlighting for faster triage.
+- Provide a compact “Overview” page that aggregates the last run status for pinned repositories (favorites) using multi-pane cards, giving users a bird’s-eye view before diving into a specific repo.
 
 ## Secret portal migration plan
 
