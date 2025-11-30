@@ -28,7 +28,7 @@ Optional / next steps (low priority)
 - Small UI micro-optimizations or accessibility checks
 - Add a CI/preflight check that ensures `Cargo.lock` and `flatpak/me.spaceinbox.actioneer.cargo-sources.json` stay in sync (fail fast when either changes without the other).
 - Factor shared `ClampScrollable`/layout helpers for detail panes so future list sections inherit the correct sizing behavior automatically.
-- Document sandbox keyring/portal expectations (Snap, Flatpak) directly in README + packaging guides so reviewers understand the default flow without digging through PR history.
+- [✅] Documented sandbox keyring/portal expectations (Snap + Flatpak) in the README and packaging guides so reviewers know how the secret portal is verified.
 - Refactor `src/ui/detail_view/helpers/runs/load.rs::load_workflow_runs` (currently ~325 lines) into smaller helpers/structs so error handling, digest comparison, notification dispatch, and UI updates are testable in isolation; the monolithic function makes it hard to reason about background vs foreground refresh paths.
 - Replace the manual `gtk::Box` run list rebuild (clearing and re-adding rows on every refresh) with a `gio::ListStore` + `gtk::ListView` factory. That would eliminate repeated widget construction, cut down diff churn, and prevent scroll jumps when only a single run changes.
 - Drop the duplicate cache writes when runs are fetched. Today we call `store_runs_async` when digest changes and then call `cache.store_runs` again right after the HTTP fetch completes (same data). Consolidate into a single write so we avoid extra spawn + clone work per refresh.
@@ -55,6 +55,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2025-11-30 — Added explicit sandbox secret-portal documentation to the README, Snapcraft, and Flatpak guides so reviewers know how to verify the encrypted token flow.
 - [✅] 2025-11-30 — Swapped run digests to a HashMap diff so workflow refreshes ignore row ordering and notifications only process truly changed runs (`src/ui/detail_view/helpers/runs/load.rs`).
 - [✅] 2025-11-28 — Implemented portal-first token storage (secret_portal + PortalTokenStore), migrated existing keyring secrets automatically, and documented the new snap portal verification checklist.
 - [✅] 2025-11-28 — Ensured the OAuth dialog completion automatically initializes the GitHub client so the welcome screen transitions to the main UI without restarting (auth_window.rs, main_window.rs).

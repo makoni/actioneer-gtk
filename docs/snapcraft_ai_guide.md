@@ -40,6 +40,8 @@ This note distills the Snapcraft documentation fetched during the investigation 
 - If the log falls back to "system keyring storage", inspect the host (`busctl --user list | grep portal`, `gdbus introspect --session --dest org.freedesktop.portal.Desktop ...`) and ensure `xdg-desktop-portal` plus the GNOME backend are present.
 - The snap no longer declares `password-manager-service`, so portal failures will break token storage — run this check before requesting store review.
 
+**Store review note:** include in the Snap Store request both (1) the log line showing `Using secret portal storage` and (2) the path of the encrypted token file (`$SNAP_USER_COMMON/.config/actioneer/secret-portal/github_token.portal`) after completing OAuth. Reviewers have explicitly asked for this confirmation since the portal is guaranteed in Ubuntu 20.04+.
+
 ## Troubleshooting checklist
 - **Missing `prime/meta/snap.yaml`** — means the `pack` command did not consume the `prime` dir; verify `snapcraft pack` completed and inspect `prime/meta/` contents.
 - **`Cargo.toml` not found** — happens when Snapcraft cannot see the repo root. Always invoke commands from the top-level directory so the root symlink remains in place.

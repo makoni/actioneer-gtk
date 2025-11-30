@@ -157,6 +157,7 @@ Steps for the agent (detailed)
    - Actioneer now ships with a `PortalTokenStore` that prefers `org.freedesktop.portal.Secret` inside sandboxes. When testing Flatpak builds, confirm the logs show `Using secret portal storage` and that sign-in tokens persist across relaunches.
    - Keep the legacy keyring path available for classic installs, but ensure unit tests that touch the system keyring are skipped or mocked when `IN_FLATPAK=1`/portal env vars are detected.
    - Review any direct file access and make sure portals or sandbox-friendly locations (XDG config/cache) are used.
+   - For Flathub submissions collect evidence similar to Snap builds: run `ACTIONEER_LOG=info flatpak run me.spaceinbox.actioneer`, capture the `Using secret portal storage` log line, and note the ciphertext location `~/.var/app/me.spaceinbox.actioneer/config/actioneer/secret-portal/github_token.portal` after completing OAuth.
 
 5. Add CI workflow (optional but recommended)
    - Add `.github/workflows/flatpak.yml` that installs flatpak and flatpak-builder on the runner and runs the build and metainfo checks.

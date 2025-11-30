@@ -84,6 +84,21 @@ Actioneer ships with default OAuth credentials for developer testing. To use you
 
 Additional configuration details live in `CONFIGURATION_GUIDE.md`.
 
+## Secret storage & sandbox expectations
+
+Actioneer picks a token backend automatically:
+
+- **Classic/cargo builds (non-sandboxed):** tokens live in the desktop keyring (`me.spaceinbox.actioneer` entry via libsecret/keyring). Nothing extra is required beyond an unlocked keyring.
+- **Snap (strict confinement):** the app always uses `org.freedesktop.portal.Secret` and stores the encrypted token at `$SNAP_USER_COMMON/.config/actioneer/secret-portal/github_token.portal`. This requires the GNOME portal stack that ships with Ubuntu 20.04+ (GNOME keyring ≥ 3.35.1).
+- **Flatpak:** the same portal backend is used, with the ciphertext stored under `~/.var/app/me.spaceinbox.actioneer/config/actioneer/secret-portal/github_token.portal`.
+
+Packaging/review checklist:
+
+1. Launch the sandboxed build with logging enabled (`ACTIONEER_LOG=info snap run actioneer` or `flatpak run me.spaceinbox.actioneer`). The log must contain `Using secret portal storage` before you start the OAuth device flow.
+2. Complete sign-in once, restart the app, and confirm the encrypted file mentioned above exists and the session stays authenticated. If the log falls back to `system keyring storage`, the host portal stack is missing or disabled—fix that before submitting to the Snap Store or Flathub.
+
+Set `ACTIONEER_ENABLE_SECRET_PORTAL=1` to force the portal on desktop builds for testing, or `ACTIONEER_DISABLE_SECRET_PORTAL=1` to compare behavior without the portal.
+
 ## Desktop Integration (from source builds)
 
 Install the desktop entry and icons so Actioneer shows up in GNOME Shell search:
@@ -110,8 +125,8 @@ See `docs/` for API, caching, and UI guidelines. The project enforces zero warni
 
 ## Packaging Notes
 
-- **Flatpak**: The manifest lives in `flatpak/me.spaceinbox.actioneer.yaml`. Local builds should vendor dependencies via `flatpak/vendor`, pass AppStream validation before submission, and can be run with `scripts/flathub-build.sh --install flatpak/me.spaceinbox.actioneer.yaml` when `rofiles-fuse` is unavailable (for example in virtualised hosts). Whenever `Cargo.lock` changes (including `cargo update`), regenerate `flatpak/me.spaceinbox.actioneer.cargo-sources.json` with `flatpak-cargo-generator -d Cargo.lock -o flatpak/me.spaceinbox.actioneer.cargo-sources.json` so the offline build has the updated crates.
-- **Snap**: `snap/snapcraft.yaml` builds a strictly confined snap using the GNOME extension. Test locally with `snapcraft pack` or push to the Snap Store once the snap is registered. Actioneer now relies on the xdg-desktop-portal Secret interface inside the snap, so verify the portal is working on your target GNOME session before requesting review.
+- **Flatpak**: The manifest lives in `flatpak/me.spaceinbox.actioneer.yaml`. Local builds should vendor dependencies via `flatpak/vendor`, pass AppStream validation before submission, and can be run with `scripts/flathub-build.sh --install flatpak/me.spaceinbox.actioneer.yaml` when `rofiles-fuse` is unavailable (for example in virtualised hosts). Whenever `Cargo.lock` changes (including `cargo update`), regenerate `flatpak/me.spaceinbox.actioneer.cargo-sources.json` with `flatpak-cargo-generator -d Cargo.lock -o flatpak/me.spaceinbox.actioneer.cargo-sources.json` so the offline build has the updated crates. See “Secret storage & sandbox expectations” for the required portal verification steps before shipping a Flatpak build.
+- **Snap**: `snap/snapcraft.yaml` builds a strictly confined snap using the GNOME extension. Test locally with `snapcraft pack` or push to the Snap Store once the snap is registered. The snap no longer plugs `password-manager-service`; instead it depends on the xdg-desktop-portal Secret interface documented above, so capture the portal log line and encrypted file path mentioned in “Secret storage & sandbox expectations” when requesting store review.
 
 ## Architecture Overview
 
