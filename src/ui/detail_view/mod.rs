@@ -100,11 +100,12 @@ impl RepoDetailPane {
         list_box.set_margin_bottom(12);
         list_box.set_margin_start(12);
         list_box.set_margin_end(12);
-        list_box.set_valign(gtk::Align::Start);
-        list_box.set_vexpand(false);
+        list_box.set_valign(gtk::Align::Fill);
+        list_box.set_vexpand(true);
         // Create ToastOverlay to wrap the content for showing feedback
         let toast_overlay = adw::ToastOverlay::new();
         let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        root.set_vexpand(true);
         let run_digests = Arc::new(Mutex::new(HashMap::new()));
         let notification_manager = deps
             .notification_manager
@@ -215,15 +216,15 @@ impl RepoDetailPane {
         let scrolled = gtk::ScrolledWindow::builder()
             .hscrollbar_policy(gtk::PolicyType::Never)
             .build();
-        scrolled.set_propagate_natural_height(true);
-        scrolled.set_min_content_height(0);
-        scrolled.set_max_content_height(700);
+        scrolled.set_hexpand(true);
+        scrolled.set_vexpand(true);
+        scrolled.set_propagate_natural_height(false);
         scrolled.set_child(Some(&self.list_box));
 
-        let clamp = adw::Clamp::new();
+        let clamp = adw::ClampScrollable::new();
         clamp.set_maximum_size(800);
         clamp.set_hexpand(true);
-        clamp.set_vexpand(false);
+        clamp.set_vexpand(true);
         clamp.set_child(Some(&scrolled));
 
         self.root.append(&clamp);
