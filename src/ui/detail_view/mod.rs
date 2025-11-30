@@ -17,7 +17,7 @@ use tracing::{error, info, warn};
 
 mod helpers;
 use helpers::{
-    JobContextMap, LoadRunsParams, RunDigest, WorkflowRowContext, WorkflowRowSettings,
+    JobContextMap, LoadRunsParams, RunDigestStore, WorkflowRowContext, WorkflowRowSettings,
     create_workflow_expander_row, current_job_context_run_ids, load_workflow_runs,
     refresh_jobs_for_workflows, take_job_context_run_ids,
 };
@@ -41,7 +41,7 @@ pub struct RepoDetailPane {
     auto_refresh_source: Arc<Mutex<Option<glib::SourceId>>>, // Auto-refresh timer
     workflows_with_active_runs: Arc<Mutex<HashSet<i64>>>, // Track workflows needing refresh
     job_contexts: JobContextMap,
-    run_digests: Arc<Mutex<HashMap<i64, Vec<RunDigest>>>>,
+    run_digests: Arc<Mutex<RunDigestStore>>,
     notification_manager: Option<NotificationManager>,
 }
 
@@ -66,7 +66,7 @@ struct WorkflowListContext {
     toast_overlay: adw::ToastOverlay,
     job_contexts: JobContextMap,
     workflows_with_active_runs: Arc<Mutex<HashSet<i64>>>,
-    run_digests: Arc<Mutex<HashMap<i64, Vec<RunDigest>>>>,
+    run_digests: Arc<Mutex<RunDigestStore>>,
     notification_manager: Option<NotificationManager>,
     preferences_manager: Option<Arc<PreferencesManager>>,
 }

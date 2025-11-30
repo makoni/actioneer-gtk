@@ -1,5 +1,5 @@
 use super::context::{JobContextMap, take_job_context_run_ids};
-use super::runs::{LoadRunsParams, RunDigest, load_workflow_runs};
+use super::runs::{LoadRunsParams, RunDigestStore, load_workflow_runs};
 use crate::api::GitHubClient;
 use crate::api::models::{Repo, Workflow};
 use crate::cache::DataCache;
@@ -11,7 +11,7 @@ use gtk4::{self as gtk, glib};
 use libadwaita as adw;
 use parking_lot::Mutex;
 use std::cell::{Cell, RefCell};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::rc::Rc;
 use std::sync::Arc;
 use tracing::{error, info};
@@ -27,7 +27,7 @@ pub(crate) struct WorkflowRowContext {
     pub toast_overlay: adw::ToastOverlay,
     pub job_contexts: JobContextMap,
     pub workflows_with_active_runs: Arc<Mutex<HashSet<i64>>>,
-    pub run_digests: Arc<Mutex<HashMap<i64, Vec<RunDigest>>>>,
+    pub run_digests: Arc<Mutex<RunDigestStore>>,
     pub notification_manager: Option<NotificationManager>,
     pub preferences_manager: Option<Arc<PreferencesManager>>,
 }

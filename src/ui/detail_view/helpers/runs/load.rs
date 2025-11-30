@@ -15,13 +15,16 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 use tracing::{debug, error, info, warn};
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub(crate) struct RunDigest {
     pub(crate) id: i64,
     pub(crate) status: Option<String>,
     pub(crate) conclusion: Option<String>,
     pub(crate) updated_at: Option<String>,
 }
+
+pub(crate) type RunDigestMap = HashMap<i64, RunDigest>;
+pub(crate) type RunDigestStore = HashMap<i64, RunDigestMap>;
 
 #[derive(Clone)]
 struct RunErrorContext {
@@ -35,7 +38,7 @@ struct RunErrorContext {
     toast_overlay: adw::ToastOverlay,
     job_contexts: JobContextMap,
     workflows_with_active: Arc<Mutex<HashSet<i64>>>,
-    run_digests: Arc<Mutex<HashMap<i64, Vec<RunDigest>>>>,
+    run_digests: Arc<Mutex<RunDigestStore>>,
     workflow_name: String,
     notification_manager: Option<NotificationManager>,
     preferences_manager: Option<Arc<PreferencesManager>>,
@@ -60,7 +63,7 @@ pub(crate) struct LoadRunsParams {
     pub expanded_run_ids: Vec<i64>,
     pub workflows_with_active: Arc<Mutex<HashSet<i64>>>,
     pub background: bool,
-    pub run_digests: Arc<Mutex<HashMap<i64, Vec<RunDigest>>>>,
+    pub run_digests: Arc<Mutex<RunDigestStore>>,
     pub notification_manager: Option<NotificationManager>,
     pub preferences_manager: Option<Arc<PreferencesManager>>,
 }
@@ -126,7 +129,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
             Ok(runs) if runs.is_empty() => {
                 {
                     let mut digests = run_digests_for_ui.lock();
-                    digests.insert(workflow_id, Vec::new());
+                    digests.insert(workflow_id, RunDigestMap::new());
                 }
 
                 if should_rebuild_ui {
@@ -138,14 +141,15 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
             }
             Ok(runs) => {
                 let digest = digest_runs(&runs);
-                let previous_digest = {
+                let (previous_digest, changed) = {
                     let mut digests = run_digests_for_ui.lock();
-                    let previous = digests.get(&workflow_id).cloned();
-                    digests.insert(workflow_id, digest.clone());
-                    previous
+                    let previous = digests.insert(workflow_id, digest.clone());
+                    let changed = match &previous {
+                        Some(prev) => prev != &digest,
+                        None => true,
+                    };
+                    (previous, changed)
                 };
-
-                let changed = previous_digest.as_ref() != Some(&digest);
 
                 if changed {
                     prune_stale_job_contexts(&job_contexts, workflow_id, &runs);
@@ -413,30 +417,30 @@ fn update_expander_activity(
     has_active_runs
 }
 
-fn digest_runs(runs: &[WorkflowRun]) -> Vec<RunDigest> {
+fn digest_runs(runs: &[WorkflowRun]) -> RunDigestMap {
     runs.iter()
-        .map(|run| RunDigest {
-            id: run.id,
-            status: run.status.clone(),
-            conclusion: run.conclusion.clone(),
-            updated_at: run.updated_at.clone(),
+        .map(|run| {
+            (
+                run.id,
+                RunDigest {
+                    id: run.id,
+                    status: run.status.clone(),
+                    conclusion: run.conclusion.clone(),
+                    updated_at: run.updated_at.clone(),
+                },
+            )
         })
         .collect()
 }
 
 fn collect_completed_notifications(
-    previous: &[RunDigest],
+    previous: &RunDigestMap,
     runs: &[WorkflowRun],
 ) -> Vec<(String, String, Option<String>)> {
-    let mut previous_by_id = HashMap::new();
-    for digest in previous {
-        previous_by_id.insert(digest.id, digest);
-    }
-
     runs.iter()
         .filter(|run| is_completed_status(run.status.as_ref()))
         .filter_map(|run| {
-            let prior = previous_by_id.get(&run.id)?;
+            let prior = previous.get(&run.id)?;
 
             let prev_completed = is_completed_status(prior.status.as_ref());
             let conclusion_changed = prior.conclusion != run.conclusion;
@@ -593,5 +597,33 @@ mod tests {
         append_empty_runs_state(&runs_box);
 
         assert!(runs_box.first_child().is_some());
+    }
+
+    fn build_run(id: i64, status: &str, conclusion: Option<&str>) -> WorkflowRun {
+        WorkflowRun {
+            id,
+            run_number: Some(id),
+            name: Some(format!("Run {}", id)),
+            display_title: Some(format!("Run {}", id)),
+            head_branch: Some("main".to_string()),
+            status: Some(status.to_string()),
+            conclusion: conclusion.map(|c| c.to_string()),
+            run_started_at: None,
+            event: None,
+            created_at: None,
+            updated_at: Some("2024-01-01T00:00:00Z".to_string()),
+            html_url: None,
+        }
+    }
+
+    #[test]
+    fn digest_runs_treats_reordering_as_unchanged() {
+        let run_a = build_run(1, "completed", Some("success"));
+        let run_b = build_run(2, "in_progress", None);
+
+        let digest_first = digest_runs(&[run_a.clone(), run_b.clone()]);
+        let digest_second = digest_runs(&[run_b, run_a]);
+
+        assert_eq!(digest_first, digest_second);
     }
 }
