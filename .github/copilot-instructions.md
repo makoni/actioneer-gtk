@@ -67,6 +67,7 @@ These specifics are drawn from Tokio and gtk-rs patterns — follow them when ad
 
 - Authentication & token handling
   - Token lifecycle lives in `TokenStorage`. `TokenStorage::new()` performs a keyring test and may return `KeyringUnavailable`. Handle that explicitly — the UI currently falls back to showing the auth window.
+  - Sandboxed builds (Flatpak, Snap) now default to `PortalTokenStore`, which talks to `org.freedesktop.portal.Secret`. Keep this path intact and avoid reintroducing the `password-manager-service` snap plug; fix portal detection if you see "Using system keyring storage" inside a sandbox.
   - The OAuth device flow UI is in `src/ui/auth_window.rs` and the flow implementation in `src/auth/device.rs`.
 
 - How to add API calls safely
@@ -107,6 +108,7 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
   - Token/keyring interactions are tested at runtime in `token_storage.rs` — avoid destructive cleanup in tests that run on developer machines.
   - New notes (2025-10): Recent changes added ETag caching for GET endpoints in `src/api/http.rs`. Agents should use the `ResponseHandler` for conditional requests by calling `apply_cache_headers` when building requests and passing the same cache key to `handle_response`. See `src/api/*` modules for examples.
   - The sidebar width issue was fixed by wrapping the sidebar in an `adw::ClampScrollable` in `src/ui/main_window.rs` and configuring the `gtk::Paned` to keep the start child at its natural size. If you change the sidebar layout, keep `ClampScrollable` constraints in mind.
+  - Workflow/run lists now also sit inside an `adw::ClampScrollable` + `gtk::ScrolledWindow` combo (`src/ui/detail_view/mod.rs`) so long job lists are visible at fullscreen sizes. Preserve that structure when touching detail panes to avoid clipped content or scroll jumping.
   - Background refreshes skip redundant non-ETag endpoints: `spawn_repo_status_tasks` now tracks last-checked timestamps and avoids querying the actions-permissions endpoint more often than a TTL. If you need to force-refresh, clear the timestamps in `actions_checked_at`.
   - Flatpak packaging pins Cargo dependencies via `flatpak/me.spaceinbox.actioneer.cargo-sources.json`, generated with `flatpak-cargo-generator`. When you change Rust dependencies (including `cargo update`), regenerate this file with `~/.local/bin/flatpak-cargo-generator -d Cargo.lock -o flatpak/me.spaceinbox.actioneer.cargo-sources.json` and commit the result. Verify the manifest by running `flatpak-builder --force-clean --ccache builddir flatpak/me.spaceinbox.actioneer.yaml` so Flathub keeps an offline-complete build. Clean up any temporary `vendor/` directory after regenerating the manifest to avoid accidentally committing it.
 

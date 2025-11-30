@@ -147,16 +147,16 @@ Steps for the agent (detailed)
 2. Create a `flatpak/` manifest
    - Create `flatpak/me.spaceinbox.actioneer.yaml` with a pinned SDK/runtime and sources pointing to a stable tag or branch.
    - Use `build-commands` that run `cargo build --release`. If the SDK requires installing Rust, include commands to install rustup + rust toolchain or add the rust extension for the sdk.
+   - Keep `flatpak/me.spaceinbox.actioneer.cargo-sources.json` in lockstep with `Cargo.lock`. Run `flatpak-cargo-generator -d Cargo.lock -o flatpak/me.spaceinbox.actioneer.cargo-sources.json` after every dependency change so `cargo --offline fetch` inside the sandbox can resolve the pinned crates.
 
 3. Add `data/metainfo.xml`
    - Add AppStream metadata including name, summary, description, license, project URL, and screenshots. Use existing `README.md` and `docs/` to populate descriptions.
    - Add translations if available.
 
-4. Update code for portal/sandbox compatibility
-   - Replace or gate direct system keyring calls in `src/storage/token_storage.rs`. Options:
-     - Gate the live keyring test to skip when inside Flatpak (detect via `flatpak-spawn` env or XDG_RUNTIME_DIR pattern). Keep test behavior for native builds.
-     - Implement an alternative secret storage using xdg-desktop-portal or a Flatpak-friendly secrets API.
-   - Ensure any direct file accesses use portals or are sandboxed appropriately.
+4. Verify portal-aware storage & sandbox behavior
+   - Actioneer now ships with a `PortalTokenStore` that prefers `org.freedesktop.portal.Secret` inside sandboxes. When testing Flatpak builds, confirm the logs show `Using secret portal storage` and that sign-in tokens persist across relaunches.
+   - Keep the legacy keyring path available for classic installs, but ensure unit tests that touch the system keyring are skipped or mocked when `IN_FLATPAK=1`/portal env vars are detected.
+   - Review any direct file access and make sure portals or sandbox-friendly locations (XDG config/cache) are used.
 
 5. Add CI workflow (optional but recommended)
    - Add `.github/workflows/flatpak.yml` that installs flatpak and flatpak-builder on the runner and runs the build and metainfo checks.
