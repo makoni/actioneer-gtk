@@ -26,6 +26,9 @@ Optional / next steps (low priority)
 - Enhanced streaming job logs (advanced viewer)
 - Persist cache to disk (optional)
 - Small UI micro-optimizations or accessibility checks
+- Add a CI/preflight check that ensures `Cargo.lock` and `flatpak/me.spaceinbox.actioneer.cargo-sources.json` stay in sync (fail fast when either changes without the other).
+- Factor shared `ClampScrollable`/layout helpers for detail panes so future list sections inherit the correct sizing behavior automatically.
+- Document sandbox keyring/portal expectations (Snap, Flatpak) directly in README + packaging guides so reviewers understand the default flow without digging through PR history.
 
 ## Secret portal migration plan
 
@@ -46,7 +49,7 @@ Notes
 -Recent Updates
 - [✅] 2025-11-28 — Implemented portal-first token storage (secret_portal + PortalTokenStore), migrated existing keyring secrets automatically, and documented the new snap portal verification checklist.
 - [✅] 2025-11-28 — Ensured the OAuth dialog completion automatically initializes the GitHub client so the welcome screen transitions to the main UI without restarting (auth_window.rs, main_window.rs).
-- [🔄] 2025-11-13 — Investigating Snap icon regression; pointing the desktop file icon to `/snap/actioneer/current/meta/gui/me.spaceinbox.actioneer.svg` to stop GNOME from ignoring the theme lookup.
+- [✅] 2025-11-13 — Resolved the Snap icon regression by pointing the desktop entry icon at `/snap/actioneer/current/meta/gui/me.spaceinbox.actioneer.svg`; GNOME now shows the icon in the shell and dock.
 - [✅] 2025-11-13 — Added an env-gated secret portal detector so we can validate the GNOME 49 portal without shipping it yet; remains off until the snap plug is auto-connected.
 - [✅] 2025-11-13 — Confirmed `org.freedesktop.portal.Secret` is live on GNOME 49 by wiring a `secret-test` helper that pipes secrets back from the portal without additional deps.
 - [🔄] 2025-11-13 — Snap: letting the GNOME extension supply GTK/libadwaita again and adding the password-manager-service plug so keyring access works under confinement.
