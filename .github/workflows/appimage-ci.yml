@@ -20,7 +20,7 @@ jobs:
       matrix:
         include:
           - arch: x86_64
-            runner: ubuntu-22.04
+            runner: ubuntu-24.04
             linuxdeploy_suffix: x86_64
           # - arch: aarch64
           #   runner: ubuntu-24.04-arm64
