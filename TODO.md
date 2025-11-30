@@ -35,6 +35,9 @@ Optional / next steps (low priority)
 - Add lightweight run-status filter chips (Success/Failed/Running/Branch) above the detail pane so users can quickly scope the list without scrolling. Persist the selection in Preferences so the view restores across sessions.
 - Introduce an inline job-log drawer that can be expanded from each job row instead of opening a separate window; mirror the logs view styling with syntax-colored sections and search highlighting for faster triage.
 - Provide a compact “Overview” page that aggregates the last run status for pinned repositories (favorites) using multi-pane cards, giving users a bird’s-eye view before diving into a specific repo.
+- Modernize the repo sidebar and detail lists to use `gio::ListStore` + `gtk::ListView` (`gtk::SelectionModel`) instead of `gtk::ListBox` rebuilds. This enables row recycling, reduces widget churn on large orgs (100+ repos), and unlocks smooth kinetic scrolling.
+- Rework `DataCache` to store `Arc<[WorkflowRun]>` / `Arc<[Workflow]>` snapshots or `Arc<Vec<T>>` so cache hits hand out cheap references instead of cloning the entire vec on every read/write. This should shrink allocations during rapid refresh loops.
+- Replace the current “digest = Vec<RunDigest>” comparison with a `HashMap<i64, RunDigest>` diff so we only compare updated runs instead of cloning/sorting the whole vector each time. That would also let us emit targeted completion notifications instead of reprocessing all runs.
 
 ## Secret portal migration plan
 
