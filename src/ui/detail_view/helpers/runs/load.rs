@@ -2,11 +2,7 @@ use super::super::context::JobContextMap;
 use super::super::formatting::update_workflow_status_badge;
 use super::digest::{RunDigestMap, RunDigestStore, collect_completed_notifications, digest_runs};
 use super::filters::run_matches_filters;
-use super::row::{RunRowContext, create_run_expander_row};
-use super::ui::{
-    append_empty_runs_state, append_filtered_runs_placeholder, append_runs_header, append_spinner,
-    clear_runs_box,
-};
+use super::list::WorkflowRunListModel;
 use crate::api::models::{Repo, WorkflowRun};
 use crate::api::{GitHubClient, GitHubError};
 use crate::cache::DataCache;
@@ -19,12 +15,15 @@ use gtk4::{self as gtk, glib};
 use libadwaita as adw;
 use parking_lot::Mutex;
 use std::collections::HashSet;
+use std::rc::Rc;
 use std::sync::Arc;
 use tracing::{debug, error, info, warn};
 
+const MAX_VISIBLE_RUNS: usize = 10;
+
 #[derive(Clone)]
 struct RunErrorContext {
-    runs_box: gtk::Box,
+    run_list: WorkflowRunListModel,
     client: Arc<Mutex<GitHubClient>>,
     owner: String,
     repo: String,
@@ -49,7 +48,7 @@ pub(crate) struct LoadRunsParams {
     pub repo_model: Repo,
     pub workflow_id: i64,
     pub workflow_name: String,
-    pub runs_box: gtk::Box,
+    pub run_list: WorkflowRunListModel,
     pub parent_window: adw::ApplicationWindow,
     pub status_badge: Option<gtk::Label>,
     pub expander: gtk::Expander,
@@ -74,7 +73,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
         repo_model,
         workflow_id,
         workflow_name,
-        runs_box,
+        run_list,
         parent_window,
         status_badge,
         expander,
@@ -92,11 +91,10 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
     } = params;
 
     let expanded_run_ids: HashSet<i64> = expanded_run_ids.into_iter().collect();
-    let expanded_run_ids = std::rc::Rc::new(expanded_run_ids);
+    let expanded_run_ids = Rc::new(expanded_run_ids);
 
     if !background {
-        clear_runs_box(&runs_box);
-        append_spinner(&runs_box);
+        run_list.show_loading();
     }
 
     let (sender, receiver) = glib::MainContext::default()
@@ -105,9 +103,10 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
     let client_for_spawn = client.clone();
     let owner_for_spawn = owner.clone();
     let repo_for_spawn = repo.clone();
+    let cache_for_spawn = cache.clone();
     let parent_window_clone = parent_window.clone();
     let expander_for_retry = expander.clone();
-    let cache_for_spawn = cache.clone();
+    let task_run_list = run_list.clone();
     let job_contexts_for_retry = job_contexts.clone();
     let toast_overlay_for_retry = toast_overlay.clone();
     let run_digests_for_ui = run_digests.clone();
@@ -120,10 +119,6 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
             should_rebuild_ui = false;
         }
 
-        if !background_for_ui {
-            clear_runs_box(&runs_box);
-        }
-
         match result {
             Ok(runs) if runs.is_empty() => {
                 {
@@ -132,10 +127,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                 }
 
                 if should_rebuild_ui {
-                    if background_for_ui {
-                        clear_runs_box(&runs_box);
-                    }
-                    append_empty_runs_state(&runs_box);
+                    task_run_list.show_empty();
                 }
             }
             Ok(runs) => {
@@ -235,45 +227,21 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                         active.remove(&workflow_id);
                     }
                 }
-                let filters_snapshot = run_filters.lock().clone();
-                let filtered_matches: Vec<&WorkflowRun> = runs
-                    .iter()
-                    .filter(|run| run_matches_filters(run, &filters_snapshot))
-                    .collect();
-                let visible_runs: Vec<&WorkflowRun> =
-                    filtered_matches.iter().copied().take(10).collect();
 
                 if !background_for_ui || (should_rebuild_ui && changed) {
-                    if background_for_ui {
-                        clear_runs_box(&runs_box);
-                    }
+                    let filters_snapshot = run_filters.lock().clone();
+                    let summary = summarize_visible_runs(&runs, &filters_snapshot);
 
-                    if visible_runs.is_empty() {
-                        append_filtered_runs_placeholder(&runs_box);
+                    if summary.visible_runs.is_empty() {
+                        task_run_list.show_filtered_placeholder();
                     } else {
-                        append_runs_header(
-                            &runs_box,
-                            visible_runs.len(),
-                            filtered_matches.len(),
+                        task_run_list.show_runs(
+                            summary.visible_runs.len(),
+                            summary.filtered_total,
                             runs.len(),
+                            &summary.visible_runs,
+                            &expanded_run_ids_for_ui,
                         );
-
-                        for run in visible_runs {
-                            let expand_jobs = expanded_run_ids_for_ui.contains(&run.id);
-                            let row_context = RunRowContext {
-                                client: client.clone(),
-                                owner: owner.clone(),
-                                repo: repo.clone(),
-                                repo_model: repo_model.clone(),
-                                parent_window: parent_window_clone.clone(),
-                                cache: cache.clone(),
-                                workflow_id,
-                                toast_overlay: toast_overlay.clone(),
-                                job_contexts: job_contexts.clone(),
-                            };
-                            let row = create_run_expander_row(run, &row_context, expand_jobs);
-                            runs_box.append(&row);
-                        }
                     }
                 }
             }
@@ -285,7 +253,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                     );
                 } else {
                     let error_context = RunErrorContext {
-                        runs_box: runs_box.clone(),
+                        run_list: task_run_list.clone(),
                         client: client.clone(),
                         owner: owner.clone(),
                         repo: repo.clone(),
@@ -303,7 +271,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                         run_filters: run_filters.clone(),
                     };
 
-                    append_error_state(error, workflow_id, error_context);
+                    show_error_state(error, workflow_id, error_context);
                 }
             }
         }
@@ -390,9 +358,11 @@ fn update_expander_activity(
     has_active_runs
 }
 
-fn append_error_state(error: GitHubError, workflow_id: i64, context: RunErrorContext) {
+fn show_error_state(error: GitHubError, workflow_id: i64, context: RunErrorContext) {
+    error!("Failed to load runs: {}", error);
+
     let RunErrorContext {
-        runs_box,
+        run_list,
         client,
         owner,
         repo,
@@ -410,73 +380,106 @@ fn append_error_state(error: GitHubError, workflow_id: i64, context: RunErrorCon
         run_filters,
     } = context;
 
-    error!("Failed to load runs: {}", error);
-
-    let error_box = gtk::Box::new(gtk::Orientation::Vertical, 8);
-    error_box.set_halign(gtk::Align::Start);
-    error_box.set_margin_top(8);
-    error_box.set_margin_bottom(8);
-
-    let error_label = gtk::Label::new(Some("Unable to load workflow runs"));
-    error_label.add_css_class("dim-label");
-    error_label.set_halign(gtk::Align::Start);
-    error_box.append(&error_label);
-
-    let detail_label = gtk::Label::new(Some(&format!("Error: {}", error)));
-    detail_label.add_css_class("caption");
-    detail_label.add_css_class("dim-label");
-    detail_label.set_halign(gtk::Align::Start);
-    error_box.append(&detail_label);
-
-    let retry_button = gtk::Button::with_label("Retry");
-    retry_button.add_css_class("suggested-action");
-    retry_button.set_halign(gtk::Align::Start);
-    retry_button.set_margin_top(8);
-
-    let runs_box_retry = runs_box.clone();
-    let client_retry = client.clone();
-    let owner_retry = owner.clone();
-    let repo_retry = repo.clone();
-    let parent_window_retry = parent_window.clone();
-    let expander_retry = expander.clone();
-    let cache_retry = cache.clone();
-    let toast_overlay_retry = toast_overlay.clone();
-    let job_contexts_retry = job_contexts.clone();
-    let workflows_with_active_retry = workflows_with_active.clone();
-    let run_digests_retry = run_digests.clone();
-    let workflow_name_retry = workflow_name.clone();
-    let notification_manager_retry = notification_manager.clone();
-    let preferences_manager_retry = preferences_manager.clone();
-    let repo_model_retry = repo_model.clone();
-    let run_filters_retry = run_filters.clone();
-
-    retry_button.connect_clicked(move |_| {
-        clear_runs_box(&runs_box_retry);
+    let detail = format!("Error: {}", error);
+    let retry_run_list = run_list.clone();
+    run_list.show_error(detail, move || {
         load_workflow_runs(LoadRunsParams {
-            client: client_retry.clone(),
-            owner: owner_retry.clone(),
-            repo: repo_retry.clone(),
-            repo_model: repo_model_retry.clone(),
+            client: client.clone(),
+            owner: owner.clone(),
+            repo: repo.clone(),
+            repo_model: repo_model.clone(),
             workflow_id,
-            workflow_name: workflow_name_retry.clone(),
-            runs_box: runs_box_retry.clone(),
-            parent_window: parent_window_retry.clone(),
+            workflow_name: workflow_name.clone(),
+            run_list: retry_run_list.clone(),
+            parent_window: parent_window.clone(),
             status_badge: None,
-            expander: expander_retry.clone(),
-            cache: cache_retry.clone(),
-            toast_overlay: toast_overlay_retry.clone(),
+            expander: expander.clone(),
+            cache: cache.clone(),
+            toast_overlay: toast_overlay.clone(),
             bypass_cache: true,
-            job_contexts: job_contexts_retry.clone(),
+            job_contexts: job_contexts.clone(),
             expanded_run_ids: Vec::new(),
-            workflows_with_active: workflows_with_active_retry.clone(),
+            workflows_with_active: workflows_with_active.clone(),
             background: false,
-            run_digests: run_digests_retry.clone(),
-            notification_manager: notification_manager_retry.clone(),
-            preferences_manager: preferences_manager_retry.clone(),
-            run_filters: run_filters_retry.clone(),
+            run_digests: run_digests.clone(),
+            notification_manager: notification_manager.clone(),
+            preferences_manager: preferences_manager.clone(),
+            run_filters: run_filters.clone(),
         });
     });
+}
 
-    error_box.append(&retry_button);
-    runs_box.append(&error_box);
+fn summarize_visible_runs(runs: &[WorkflowRun], filters: &RunFilters) -> RunDisplaySummary {
+    let mut filtered_total = 0;
+    let mut visible_runs = Vec::new();
+
+    for run in runs {
+        if run_matches_filters(run, filters) {
+            filtered_total += 1;
+            if visible_runs.len() < MAX_VISIBLE_RUNS {
+                visible_runs.push(run.clone());
+            }
+        }
+    }
+
+    RunDisplaySummary {
+        filtered_total,
+        visible_runs,
+    }
+}
+
+struct RunDisplaySummary {
+    filtered_total: usize,
+    visible_runs: Vec<WorkflowRun>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::summarize_visible_runs;
+    use crate::api::models::WorkflowRun;
+    use crate::ui::detail_view::RunFilters;
+
+    fn run_with_status(id: i64, status: &str, conclusion: Option<&str>) -> WorkflowRun {
+        WorkflowRun {
+            id,
+            run_number: Some(id),
+            name: Some(format!("run-{id}")),
+            display_title: Some(format!("Run {id}")),
+            head_branch: Some("main".into()),
+            status: Some(status.into()),
+            conclusion: conclusion.map(|c| c.into()),
+            run_started_at: Some("2024-01-01T00:00:00Z".into()),
+            event: Some("push".into()),
+            created_at: Some("2024-01-01T00:00:00Z".into()),
+            updated_at: Some("2024-01-01T00:10:00Z".into()),
+            html_url: Some("https://example.com".into()),
+        }
+    }
+
+    #[test]
+    fn limits_visible_runs_to_ten() {
+        let runs: Vec<_> = (0..15)
+            .map(|i| run_with_status(i, "completed", Some("success")))
+            .collect();
+        let summary = summarize_visible_runs(&runs, &RunFilters::default());
+        assert_eq!(summary.filtered_total, 15);
+        assert_eq!(summary.visible_runs.len(), 10);
+    }
+
+    #[test]
+    fn respects_filters_when_collecting_runs() {
+        let runs = vec![
+            run_with_status(1, "completed", Some("success")),
+            run_with_status(2, "completed", Some("failure")),
+            run_with_status(3, "in_progress", None),
+        ];
+
+        let mut filters = RunFilters::default();
+        filters.include_failed = false;
+        let summary = summarize_visible_runs(&runs, &filters);
+        assert_eq!(summary.filtered_total, 2);
+        assert_eq!(summary.visible_runs.len(), 2);
+        assert_eq!(summary.visible_runs[0].id, 1);
+        assert_eq!(summary.visible_runs[1].id, 3);
+    }
 }

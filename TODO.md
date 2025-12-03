@@ -31,10 +31,10 @@ Optional / next steps (low priority)
   - Decide on a cache format + location (e.g., zstd-compressed JSON in the cache dir) and document eviction rules.
   - Implement async load/save plumbing that reuses the existing `DataCache` APIs without blocking the UI thread.
   - Add tests covering cold-start hits, corruption fallback, and TTL enforcement.
-- Replace the manual `gtk::Box` run list rebuild (clearing and re-adding rows on every refresh) with a `gio::ListStore` + `gtk::ListView` factory to eliminate widget churn.
-  - Introduce a `WorkflowRunListModel` wrapper that exposes filtered runs as a `gio::ListModel`.
-  - Wire a `gtk::ListView` factory that reuses row widgets and preserves scroll position while filters change.
-  - Verify via tests (or a demo harness) that diff updates don’t recreate unaffected rows.
+- [✅] 2025-12-03 — Replaced the manual `gtk::Box` run list rebuild with a `WorkflowRunListModel` + `gtk::ListView` pipeline so filters and refreshes reuse row widgets without flicker.
+  - [✅] 2025-12-03 — Added `WorkflowRunListModel` wrapping a `gio::ListStore` with stateful placeholders and retry handling.
+  - [✅] 2025-12-03 — Wired the workflow pane to reuse a single `gtk::ListView` factory per workflow and persisted expansion state + job context IDs across diff updates.
+  - [✅] 2025-12-03 — Covered the new filtering summary helpers with unit tests to ensure visible/filtered counts stay accurate.
 - Introduce an inline job-log drawer that can be expanded from each job row instead of opening a separate window.
   - Design a row-level drawer widget (likely `AdwExpanderRow`/`AdwClamp`) that embeds the log viewer.
   - Ensure logs load lazily per row and reuse the existing log-cache/code paths.
@@ -74,6 +74,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2025-12-03 — Rebuilt workflow run lists atop `WorkflowRunListModel` + `gtk::ListView`, preserved expansion/scroll state, and removed the ad-hoc `runs_box` churn.
 - [✅] 2025-12-03 — Broke the detail view header, filter chips, favorites controls, and run-list layout into dedicated modules (`run_filters.rs`, `workflow_list.rs`, `favorite_controls.rs`, `content.rs`) so each stays under 300 LOC and gains targeted tests.
 - [✅] 2025-12-03 — Split workflow refresh plumbing into `workflow_refresh.rs` and parser helpers, plus added `digest.rs`/`filters.rs` coverage to keep HTTP/UI wiring isolated.
 - [✅] 2025-12-03 — Trimmed demo fixtures by extracting `src/demo/{mod,data,state}.rs`, enabling focused unit tests for mock run injection.

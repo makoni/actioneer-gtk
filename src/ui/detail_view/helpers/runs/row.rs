@@ -14,7 +14,7 @@ use parking_lot::Mutex;
 use std::sync::Arc;
 
 #[derive(Clone)]
-pub(super) struct RunRowContext {
+pub(crate) struct RunRowContext {
     pub(super) client: Arc<Mutex<GitHubClient>>,
     pub(super) owner: String,
     pub(super) repo: String,
@@ -27,6 +27,30 @@ pub(super) struct RunRowContext {
 }
 
 impl RunRowContext {
+    pub(crate) fn new(
+        client: Arc<Mutex<GitHubClient>>,
+        owner: String,
+        repo: String,
+        repo_model: Repo,
+        parent_window: adw::ApplicationWindow,
+        cache: Arc<DataCache>,
+        workflow_id: i64,
+        toast_overlay: adw::ToastOverlay,
+        job_contexts: JobContextMap,
+    ) -> Self {
+        Self {
+            client,
+            owner,
+            repo,
+            repo_model,
+            parent_window,
+            cache,
+            workflow_id,
+            toast_overlay,
+            job_contexts,
+        }
+    }
+
     fn actions_context(&self) -> RunActionContext {
         RunActionContext {
             client: self.client.clone(),

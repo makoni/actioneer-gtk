@@ -1,5 +1,7 @@
 use super::context::{JobContextMap, take_job_context_run_ids};
-use super::runs::{LoadRunsParams, RunDigestStore, load_workflow_runs};
+use super::runs::{
+    LoadRunsParams, RunDigestStore, RunRowContext, WorkflowRunListModel, load_workflow_runs,
+};
 use crate::api::GitHubClient;
 use crate::api::models::{Repo, Workflow};
 use crate::cache::DataCache;
@@ -101,19 +103,22 @@ pub(crate) fn create_workflow_expander_row(
         expander.set_data("actioneer-workflow-id", workflow.id);
     }
 
-    let runs_box = gtk::Box::new(gtk::Orientation::Vertical, 4);
-    runs_box.set_margin_start(24);
-    runs_box.set_margin_top(8);
-    runs_box.set_margin_bottom(8);
-
-    let placeholder = gtk::Label::new(Some("Click to load runs..."));
-    placeholder.add_css_class("dim-label");
-    placeholder.set_halign(gtk::Align::Start);
-    placeholder.set_margin_top(4);
-    placeholder.set_margin_bottom(4);
-    runs_box.append(&placeholder);
-
-    expander.set_child(Some(&runs_box));
+    let run_row_context = RunRowContext::new(
+        client.clone(),
+        owner.clone(),
+        repo.clone(),
+        repo_model.clone(),
+        parent_window.clone(),
+        cache.clone(),
+        workflow.id,
+        toast_overlay.clone(),
+        job_contexts.clone(),
+    );
+    let run_list = WorkflowRunListModel::new(run_row_context);
+    expander.set_child(Some(&run_list.widget()));
+    unsafe {
+        expander.set_data("actioneer-run-list", run_list.clone());
+    }
     main_box.append(&expander);
 
     let client_for_trigger = client.clone();
@@ -126,7 +131,6 @@ pub(crate) fn create_workflow_expander_row(
     let toast_overlay_for_trigger = toast_overlay.clone();
     let cache_for_trigger = cache.clone();
     let expander_for_trigger = expander.clone();
-    let runs_box_for_trigger = runs_box.clone();
     let job_contexts_for_trigger = job_contexts.clone();
     let run_digests_shared = run_digests.clone();
     let notification_manager_shared = notification_manager.clone();
@@ -141,7 +145,7 @@ pub(crate) fn create_workflow_expander_row(
     let repo_string = repo.clone();
     let workflow_display_shared = workflow_display_name.clone();
     let client_shared = client.clone();
-    let runs_box_shared = runs_box.clone();
+    let run_list_shared = run_list.clone();
     let parent_window_shared = parent_window.clone();
     let status_badge_shared = status_badge.clone();
     let cache_shared = cache.clone();
@@ -154,7 +158,7 @@ pub(crate) fn create_workflow_expander_row(
     let repo_for_signal = repo_string.clone();
     let workflow_display_for_signal = workflow_display_shared.clone();
     let client_for_signal = client_shared.clone();
-    let runs_box_for_signal = runs_box_shared.clone();
+    let run_list_for_signal = run_list_shared.clone();
     let parent_window_for_signal = parent_window_shared.clone();
     let status_badge_for_signal = status_badge_shared.clone();
     let cache_for_signal = cache_shared.clone();
@@ -187,11 +191,7 @@ pub(crate) fn create_workflow_expander_row(
 
         let mut should_load = force_refresh;
         if !should_load {
-            match runs_box_for_signal.first_child() {
-                None => should_load = true,
-                Some(child) if child.is::<gtk::Label>() => should_load = true,
-                _ => {}
-            }
+            should_load = run_list_for_signal.should_load_runs();
         }
 
         if should_load {
@@ -212,7 +212,7 @@ pub(crate) fn create_workflow_expander_row(
                 repo_model: repo_model_for_signal.clone(),
                 workflow_id,
                 workflow_name: workflow_display_for_signal.clone(),
-                runs_box: runs_box_for_signal.clone(),
+                run_list: run_list_for_signal.clone(),
                 parent_window: parent_window_for_signal.clone(),
                 status_badge: Some(status_badge_for_signal.clone()),
                 expander: exp.clone(),
@@ -238,9 +238,7 @@ pub(crate) fn create_workflow_expander_row(
         expander.set_expanded(true);
         is_programmatic_expand.set(false);
 
-        if let Some(child) = runs_box.first_child()
-            && child.is::<gtk::Label>()
-        {
+        if run_list_shared.should_load_runs() {
             let preserved_runs = {
                 let mut initial_opt = initial_expanded_runs_shared.borrow_mut();
                 if let Some(vec) = initial_opt.take() {
@@ -258,7 +256,7 @@ pub(crate) fn create_workflow_expander_row(
                 repo_model: repo_model_shared.clone(),
                 workflow_id,
                 workflow_name: workflow_display_shared.clone(),
-                runs_box: runs_box_shared.clone(),
+                run_list: run_list_shared.clone(),
                 parent_window: parent_window_shared.clone(),
                 status_badge: Some(status_badge_shared.clone()),
                 expander: expander.clone(),
@@ -282,7 +280,6 @@ pub(crate) fn create_workflow_expander_row(
     trigger_btn.connect_clicked(move |_| {
         let run_filters_for_dialog = run_filters_for_trigger.clone();
         let expander = expander_for_trigger.clone();
-        let runs_box = runs_box_for_trigger.clone();
         let cache = cache_for_trigger.clone();
         let client = client_for_trigger.clone();
         let owner = owner_for_trigger.clone();
@@ -370,7 +367,7 @@ pub(crate) fn create_workflow_expander_row(
         let workflow_display_rc = Rc::new(workflow_display.clone());
         let cache_clone = cache.clone();
         let expander_clone = expander.clone();
-        let runs_box_clone = runs_box.clone();
+        let run_list_clone = run_list.clone();
         let parent_window_clone = parent_window.clone();
         let workflows_with_active_clone = workflows_with_active_button.clone();
         let run_digests_clone = run_digests.clone();
@@ -418,7 +415,7 @@ pub(crate) fn create_workflow_expander_row(
                 let owner = owner_clone.clone();
                 let repo = repo_clone.clone();
                 let expander = expander_clone.clone();
-                let runs_box = runs_box_clone.clone();
+                let run_list_for_reload = run_list_clone.clone();
                 let client = client_clone.clone();
                 let parent_window = parent_window_clone.clone();
                 let job_contexts = job_contexts.clone();
@@ -442,7 +439,6 @@ pub(crate) fn create_workflow_expander_row(
                             let cache = cache.clone();
                             let cache_key = format!("{}/{}", owner, repo);
                             let expander = expander.clone();
-                            let runs_box = runs_box.clone();
                             let client_for_reload = client.clone();
                             let owner_for_reload = owner.clone();
                             let repo_for_reload = repo.clone();
@@ -465,24 +461,17 @@ pub(crate) fn create_workflow_expander_row(
                             });
 
                             let run_filters_for_idle = run_filters_for_reload.clone();
+                            let run_list_handle = run_list_for_reload.clone();
                             glib::idle_add_local_once(move || {
                                 let workflows_with_active = workflows_with_active_for_reload.clone();
                                 if expander.is_expanded() {
                                     info!("Reloading runs after workflow trigger");
-                                    loop {
-                                        let child_opt = runs_box.first_child();
-                                        let Some(child) = child_opt else {
-                                            break;
-                                        };
-                                        runs_box.remove(&child);
-                                    }
-                                    let spinner = gtk::Spinner::new();
-                                    spinner.start();
-                                    spinner.set_margin_top(8);
-                                    spinner.set_margin_bottom(8);
-                                    runs_box.append(&spinner);
+                                    run_list_handle.show_loading();
 
-                                    let preserved_runs = take_job_context_run_ids(&job_contexts_for_reload, workflow_id);
+                                    let preserved_runs = take_job_context_run_ids(
+                                        &job_contexts_for_reload,
+                                        workflow_id,
+                                    );
 
                                     let workflow_display_for_runs =
                                         workflow_display_for_reload.clone();
@@ -498,7 +487,7 @@ pub(crate) fn create_workflow_expander_row(
                                         repo_model: repo_model_for_reload.clone(),
                                         workflow_id,
                                         workflow_name: workflow_display_for_runs,
-                                        runs_box: runs_box.clone(),
+                                        run_list: run_list_handle.clone(),
                                         parent_window: parent_window_for_reload.clone(),
                                         status_badge: None,
                                         expander: expander.clone(),

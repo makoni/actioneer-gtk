@@ -1,4 +1,5 @@
 use super::helpers::{LoadRunsParams, current_job_context_run_ids, load_workflow_runs};
+use super::workflow_refresh::run_list_for_expander;
 use super::{RepoDetailPane, RunFilters};
 use crate::preferences::RunFilterPreferences;
 use crate::ui::utils::MainContextChannelExt;
@@ -130,9 +131,7 @@ impl RepoDetailPane {
                             unsafe { expander.data::<i64>("actioneer-workflow-id") }
                         {
                             let workflow_id = unsafe { *workflow_id_ptr.as_ref() };
-                            if let Some(child_widget) = expander.child()
-                                && let Ok(runs_box) = child_widget.downcast::<gtk::Box>()
-                            {
+                            if let Some(run_list) = run_list_for_expander(expander) {
                                 let status_badge = Self::status_badge_for_expander(expander);
                                 let preserved_runs =
                                     current_job_context_run_ids(&job_contexts, workflow_id);
@@ -152,7 +151,7 @@ impl RepoDetailPane {
                                     repo_model: repo_model.clone(),
                                     workflow_id,
                                     workflow_name: workflow_label,
-                                    runs_box,
+                                    run_list,
                                     parent_window: parent_window.clone(),
                                     status_badge,
                                     expander: expander.clone(),

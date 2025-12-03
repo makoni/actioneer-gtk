@@ -1,5 +1,6 @@
 use super::helpers::{
-    LoadRunsParams, current_job_context_run_ids, load_workflow_runs, refresh_jobs_for_workflows,
+    LoadRunsParams, WorkflowRunListModel, current_job_context_run_ids, load_workflow_runs,
+    refresh_jobs_for_workflows,
 };
 use super::{RepoDetailPane, WorkflowListContext};
 use crate::api::models::Workflow;
@@ -438,9 +439,7 @@ impl RepoDetailPane {
                                 observed_active.insert(workflow_id);
                             }
 
-                            if let Some(child_widget) = expander.child()
-                                && let Ok(runs_box) = child_widget.downcast::<gtk::Box>()
-                            {
+                            if let Some(run_list) = run_list_for_expander(expander) {
                                 let status_badge = Self::status_badge_for_expander(expander);
                                 let preserved_runs =
                                     current_job_context_run_ids(&job_contexts, workflow_id);
@@ -464,7 +463,7 @@ impl RepoDetailPane {
                                     repo_model: repo_model_clone,
                                     workflow_id,
                                     workflow_name: workflow_label,
-                                    runs_box,
+                                    run_list,
                                     parent_window: parent_window.clone(),
                                     status_badge,
                                     expander: expander.clone(),
@@ -624,6 +623,14 @@ fn parse_expander_widget_name(name: &str) -> Option<(i64, bool)> {
     let workflow_id = base.strip_prefix("workflow_")?.parse::<i64>().ok()?;
 
     Some((workflow_id, is_active))
+}
+
+pub(super) fn run_list_for_expander(expander: &gtk::Expander) -> Option<WorkflowRunListModel> {
+    unsafe {
+        expander
+            .data::<WorkflowRunListModel>("actioneer-run-list")
+            .map(|ptr| ptr.as_ref().clone())
+    }
 }
 
 #[cfg(test)]
