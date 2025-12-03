@@ -20,6 +20,7 @@ mod filter_controls;
 mod helpers;
 mod run_filters;
 mod workflow_list;
+mod workflow_refresh;
 use favorite_controls::{observe_favorites, setup_favorite_button};
 use filter_controls::{FilterChips, FilterControls};
 use helpers::{JobContextMap, RunDigestStore};
