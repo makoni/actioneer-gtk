@@ -38,7 +38,7 @@ Optional / next steps (low priority)
 - Modernize the repo sidebar and detail lists to use `gio::ListStore` + `gtk::ListView` (`gtk::SelectionModel`) instead of `gtk::ListBox` rebuilds. This enables row recycling, reduces widget churn on large orgs (100+ repos), and unlocks smooth kinetic scrolling.
 - Rework `DataCache` to store `Arc<[WorkflowRun]>` / `Arc<[Workflow]>` snapshots or `Arc<Vec<T>>` so cache hits hand out cheap references instead of cloning the entire vec on every read/write. This should shrink allocations during rapid refresh loops.
 - [✅] 2025-12-03 — Kicked off the large-file refactor by extracting the detail view filter/header controls into their own module; continue breaking `src/ui/detail_view/mod.rs` into submodules.
-- [🔄] Break `src/ui/main_window.rs` (~1.3K LOC) into dedicated modules (app state, repo list pane, async loaders) to unblock further readability improvements. (Sidebar panel + header controls extracted into `ui/main_window/` submodules; next up: async loader/state modules.)
+- [🔄] Break `src/ui/main_window.rs` (~1.3K LOC) into dedicated modules (app state, repo list pane, async loaders) to unblock further readability improvements. (Sidebar panel + header controls + repo loader helpers extracted into `ui/main_window/` submodules; next up: remaining async/state helpers.)
 - [🆕] Extract workflow/run loading orchestration from `src/ui/detail_view/helpers/runs/load.rs` into smaller files so we can test retry, digest, and notification logic independently.
 - [🆕] Trim `src/demo.rs` (700+ LOC) by moving fixtures and helper functions into `src/demo/` modules, keeping the entry surface small.
 

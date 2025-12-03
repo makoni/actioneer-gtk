@@ -1,11 +1,9 @@
 use super::WelcomeScreen;
 use super::detail_placeholder::schedule_status_page_update;
 use super::detail_view::{RepoDetailDeps, RepoDetailPane};
-use super::sidebar::{
-    RepoListRenderContext, find_label_by_name, rebuild_repo_list, row_matches_query,
-};
+use super::sidebar::{find_label_by_name, row_matches_query};
+use crate::api::GitHubClient;
 use crate::api::models::{RateLimitInfo, Repo};
-use crate::api::{GitHubClient, GitHubError};
 use crate::cache::DataCache;
 use crate::demo;
 use crate::favorites::FavoritesManager;
@@ -30,6 +28,7 @@ use std::time::{Duration, Instant};
 use tracing::{debug, error, info, warn};
 
 mod header_controls;
+mod loaders;
 mod sidebar_panel;
 use header_controls::HeaderControls;
 use sidebar_panel::SidebarPanel;
@@ -747,183 +746,6 @@ impl MainWindow {
         });
     }
 
-    fn load_repositories(&self) {
-        let client_opt = {
-            let guard = self.client.lock();
-            guard.clone()
-        };
-
-        if let Some(client) = client_opt {
-            info!("Starting to load repositories...");
-
-            // Show spinner in header
-            self.show_header_loading(true);
-
-            let (sender, receiver) =
-                glib::MainContext::default()
-                    .channel::<(Result<Vec<Repo>, GitHubError>, Option<RateLimitInfo>)>(
-                        glib::Priority::default(),
-                    );
-            let this = self.clone();
-
-            receiver.attach(None, move |(repos_result, rate_info)| {
-                // Hide spinner and show refresh button
-                this.show_header_loading(false);
-
-                match repos_result {
-                    Ok(repos) => {
-                        info!("✅ Loaded {} repositories, updating UI", repos.len());
-                        this.refresh_repository_view(repos, rate_info);
-                    }
-                    Err(e) => {
-                        error!("Failed to load repositories: {}", e);
-                        // Still update rate limit even on error
-                        if let Some(info) = rate_info {
-                            this.update_rate_limit_display(Some(info));
-                        }
-                    }
-                }
-
-                glib::ControlFlow::Break
-            });
-
-            crate::runtime_handle().spawn(async move {
-                let repos_result = client.list_repos().await;
-                let rate_info = client.rate_limit_info();
-
-                let _ = sender.send((repos_result, rate_info));
-            });
-        } else {
-            error!("No client available to load repositories");
-        }
-    }
-
-    fn refresh_repository_view(&self, repos: Vec<Repo>, rate_info: Option<RateLimitInfo>) {
-        // Update state synchronously - no async needed with parking_lot
-        {
-            let mut repos_guard = self.repos.lock();
-            *repos_guard = repos.clone();
-        }
-
-        {
-            let mut actions = self.actions_states.lock();
-            actions.retain(|repo_id, _| repos.iter().any(|repo| repo.id == *repo_id));
-            for repo in &repos {
-                let state = match repo.permissions.as_ref() {
-                    Some(perms) if perms.push || perms.admin => RepoActionsState::Enabled,
-                    Some(_) => RepoActionsState::Disabled,
-                    None => RepoActionsState::Unknown,
-                };
-                actions.entry(repo.id).or_insert(state);
-            }
-        }
-
-        {
-            let mut checked = self.actions_checked_at.lock();
-            checked.retain(|repo_id, _| repos.iter().any(|repo| repo.id == *repo_id));
-        }
-
-        {
-            let mut counts = self.workflow_counts.lock();
-            counts.retain(|repo_id, _| repos.iter().any(|repo| repo.id == *repo_id));
-            for repo in &repos {
-                counts.entry(repo.id).or_default();
-            }
-        }
-
-        {
-            let mut info_guard = self.rate_limit_info.lock();
-            *info_guard = rate_info.clone();
-        }
-
-        self.refresh_repo_status_summaries(&repos);
-
-        self.schedule_repo_list_refresh();
-        self.update_rate_limit_display(rate_info);
-        self.ensure_detail_matches_selection();
-    }
-
-    fn refresh_repo_status_summaries(&self, repos: &[Repo]) {
-        let client_opt = {
-            let guard = self.client.lock();
-            guard.clone()
-        };
-
-        let client = match client_opt {
-            Some(client) => client,
-            None => return,
-        };
-
-        let now = Instant::now();
-        let mut checked_map = self.actions_checked_at.lock();
-        let mut due_repos = Vec::new();
-
-        for repo in repos {
-            let last_checked = checked_map.get(&repo.id).copied();
-            let recently_checked = last_checked
-                .map(|timestamp| now.duration_since(timestamp) < REPO_STATUS_TTL)
-                .unwrap_or(false);
-
-            if recently_checked {
-                continue;
-            }
-
-            checked_map.insert(repo.id, now);
-            due_repos.push(repo.clone());
-        }
-
-        drop(checked_map);
-
-        if due_repos.is_empty() {
-            return;
-        }
-
-        let actions_state = self.actions_states.clone();
-        let workflow_state = self.workflow_counts.clone();
-        let checked_state = self.actions_checked_at.clone();
-        let this = self.clone();
-
-        crate::ui::tasks::repo_status::spawn_repo_status_tasks(
-            due_repos,
-            client,
-            actions_state,
-            workflow_state,
-            checked_state,
-            move || this.schedule_repo_list_refresh(),
-        );
-    }
-
-    fn update_rate_limit_display(&self, info: Option<RateLimitInfo>) {
-        let label = self.rate_limit_label.clone();
-        glib::idle_add_local_once(move || update_rate_limit_label(&label, info.clone()));
-    }
-
-    fn schedule_repo_list_refresh(&self) {
-        let repos_snapshot = self.repos.lock().clone();
-        let favorites_snapshot = self.favorites.lock().clone();
-        let actions_snapshot = self.actions_states.lock().clone();
-        let workflow_snapshot = self.workflow_counts.lock().clone();
-        let selected = *self.selected_repo_id.lock();
-        let favorites_arc = self.favorites.clone();
-        let favorites_manager = self.favorites_manager.clone();
-        let list_box = self.repo_list.clone();
-
-        // Schedule UI update on glib main thread
-        glib::idle_add_local_once(move || {
-            let context = RepoListRenderContext {
-                repos: repos_snapshot,
-                favorites_snapshot,
-                actions_snapshot,
-                workflow_snapshot,
-                favorites_state: favorites_arc,
-                favorites_manager,
-                selected_repo_id: selected,
-            };
-
-            rebuild_repo_list(list_box, context);
-        });
-    }
-
     fn ensure_detail_matches_selection(&self) {
         let action = {
             let selected_id = *self.selected_repo_id.lock();
@@ -980,37 +802,10 @@ impl MainWindow {
         let this = self.clone();
 
         button.connect_clicked(move |_| {
-            let client = client_arc.clone();
-            let this = this.clone();
-            let client_clone = client.lock().clone();
-
-            if let Some(github_client) = client_clone {
-                let (sender, receiver) =
-                    glib::MainContext::default()
-                        .channel::<(Result<Vec<Repo>, GitHubError>, Option<RateLimitInfo>)>(
-                            glib::Priority::default(),
-                        );
-                let this_ui = this.clone();
-
-                receiver.attach(None, move |(repos_result, rate_info)| {
-                    match repos_result {
-                        Ok(new_repos) => {
-                            info!("Refreshed {} repositories", new_repos.len());
-                            this_ui.refresh_repository_view(new_repos, rate_info);
-                        }
-                        Err(e) => {
-                            error!("Failed to refresh repositories: {}", e);
-                        }
-                    }
-
-                    glib::ControlFlow::Break
-                });
-
-                crate::runtime_handle().spawn(async move {
-                    let repos_result = github_client.list_repos().await;
-                    let rate_info = github_client.rate_limit_info();
-                    let _ = sender.send((repos_result, rate_info));
-                });
+            if client_arc.lock().is_some() {
+                this.load_repositories();
+            } else {
+                warn!("Cannot refresh: GitHub client not initialized");
             }
         });
     }
