@@ -1,13 +1,11 @@
 use super::MainWindow;
-use crate::api::models::{RateLimitInfo, Repo};
+use crate::api::models::Repo;
 use crate::ui::detail_placeholder::schedule_status_page_update;
 use crate::ui::detail_view::{RepoDetailDeps, RepoDetailPane};
-use crate::ui::utils::{MainContextChannelExt, update_rate_limit_label};
 use gtk4::prelude::WidgetExt;
 use gtk4::{self as gtk, glib};
 use parking_lot::Mutex;
 use std::sync::Arc;
-use tokio::time::{Duration, sleep};
 use tracing::{debug, info, warn};
 
 #[derive(Debug, PartialEq, Eq)]
@@ -173,72 +171,6 @@ impl MainWindow {
         });
 
         schedule_status_page_update(status_page, None);
-    }
-
-    pub(super) fn start_background_refresh(&self, _repo: Repo) {
-        self.stop_background_refresh();
-
-        let preferences_manager = match &self.preferences_manager {
-            Some(manager) => manager.clone(),
-            None => return,
-        };
-
-        let client_arc = self.client.clone();
-        let active_detail = self.active_detail.clone();
-        let rate_limit_label = self.rate_limit_label.clone();
-
-        let (sender, receiver) =
-            glib::MainContext::default().channel::<()>(glib::Priority::default());
-
-        receiver.attach(None, move |_| {
-            if let Some(pane) = active_detail.borrow().as_ref() {
-                pane.refresh_workflows_silent();
-            }
-            glib::ControlFlow::Continue
-        });
-
-        let (rate_sender, rate_receiver) =
-            glib::MainContext::default().channel::<RateLimitInfo>(glib::Priority::default());
-
-        let rate_label_clone = rate_limit_label.clone();
-        rate_receiver.attach(None, move |info| {
-            update_rate_limit_label(&rate_label_clone, Some(info));
-            glib::ControlFlow::Continue
-        });
-
-        let handle = crate::runtime_handle().spawn(async move {
-            loop {
-                let interval = preferences_manager.get().await.refresh_interval;
-                sleep(Duration::from_secs(interval)).await;
-
-                let client_opt = {
-                    let guard = client_arc.lock();
-                    guard.clone()
-                };
-
-                if let Some(client) = client_opt {
-                    if sender.send(()).is_err() {
-                        break;
-                    }
-
-                    if let Some(rate_info) = client.rate_limit_info()
-                        && rate_sender.send(rate_info).is_err()
-                    {
-                        break;
-                    }
-                } else {
-                    break;
-                }
-            }
-        });
-
-        *self.background_refresh_task.lock() = Some(handle);
-    }
-
-    pub(super) fn stop_background_refresh(&self) {
-        if let Some(handle) = self.background_refresh_task.lock().take() {
-            handle.abort();
-        }
     }
 
     pub(super) fn show_header_loading(&self, loading: bool) {

@@ -51,9 +51,11 @@ Optional / next steps (low priority)
   - Introduce snapshot types and adjust cache setters/getters to clone `Arc` handles only.
   - Update downstream call sites (filters, overview, notifications) to accept shared slices instead of owned `Vec`s.
   - Add benchmarks/tests verifying reduced allocations during refresh loops.
-- [🔄] Break `src/ui/main_window.rs` (~1.3K LOC) into dedicated modules (app state, repo list pane, async loaders) to unblock further readability improvements. (Sidebar panel + header controls + repo loader helpers + selection/background refresh logic extracted into `ui/main_window/` submodules; next up: remaining async/state helpers.)
+- [✅] Break `src/ui/main_window.rs` (~1.3K LOC) into dedicated modules (app state, repo list pane, async loaders) to unblock further readability improvements. (Sidebar panel + header controls + repo loader helpers + selection/background refresh logic extracted into `ui/main_window/` submodules; next up: remaining async/state helpers.)
   - [✅] 2025-12-03 — Moved demo-mode activation/teardown into `ui/main_window/demo_mode.rs`, reducing `main_window.rs` by ~80 LOC and isolating the mock-data entrypoint.
-  - Next: extract repository list pane widgets/event wiring into `repo_list.rs` and background refresh scheduling into `refresh.rs`, then follow up with an `state.rs` module for shared structs/tests.
+  - [✅] 2025-12-03 — Extracted repository list search/selection wiring into `ui/main_window/repo_list.rs` with unit tests covering repo resolution logic.
+  - [✅] 2025-12-03 — Isolated refresh scheduling/abort handling into `ui/main_window/refresh.rs`, keeping GTK updates and rate-limit plumbing contained.
+  - [✅] 2025-12-03 — Promoted `RepoActionsState` + `WorkflowStatusCounts` into `ui/state/` (with tests) so UI modules share typed snapshots without cloning logic inline.
 
 ## Secret portal migration plan
 

@@ -1,5 +1,4 @@
 use super::WelcomeScreen;
-use super::sidebar::{find_label_by_name, row_matches_query};
 use crate::api::GitHubClient;
 use crate::api::models::{RateLimitInfo, Repo};
 use crate::cache::DataCache;
@@ -29,6 +28,8 @@ use tracing::{error, info, warn};
 mod demo_mode;
 mod header_controls;
 mod loaders;
+mod refresh;
+mod repo_list;
 mod selection;
 mod sidebar_panel;
 use header_controls::HeaderControls;
@@ -717,63 +718,6 @@ impl MainWindow {
                 warn!("Cannot refresh: GitHub client not initialized");
             }
         });
-    }
-
-    fn connect_search(&self) {
-        let list_box = self.repo_list.clone();
-
-        self.search_entry.connect_search_changed(move |entry| {
-            let text = entry.text().to_lowercase();
-            let query = text.clone();
-            list_box.set_filter_func(move |row: &gtk::ListBoxRow| row_matches_query(row, &query));
-            list_box.invalidate_filter();
-        });
-    }
-
-    fn connect_repo_selection(&self) {
-        let window = self.clone();
-
-        self.repo_list
-            .connect_selected_rows_changed(move |list_box| {
-                let window = window.clone();
-                let repo_name = list_box
-                    .selected_row()
-                    .and_then(|row| row.child())
-                    .and_then(|child| find_label_by_name(&child, "repo-name-label"))
-                    .map(|label| label.text().to_string());
-
-                let repo = match repo_name {
-                    Some(name) => {
-                        let repos = window.repos.lock();
-                        repos.iter().find(|repo| repo.full_name == name).cloned()
-                    }
-                    None => None,
-                };
-
-                let current_selection = *window.selected_repo_id.lock();
-                let new_selection = repo.as_ref().map(|r| r.id);
-
-                if *window.handling_selection.lock() {
-                    info!("Already handling selection, ignoring signal");
-                    return;
-                }
-
-                info!(
-                    "Selection signal: current={:?}, new={:?}, repo={:?}",
-                    current_selection,
-                    new_selection,
-                    repo.as_ref().map(|r| r.full_name.as_str())
-                );
-
-                if new_selection.is_none() && window.active_detail.borrow().is_some() {
-                    info!("Ignoring transient deselection (detail pane is active)");
-                    return;
-                }
-
-                if current_selection != new_selection {
-                    window.handle_repo_selection(repo);
-                }
-            });
     }
 
     pub fn present(&self) {
