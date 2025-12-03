@@ -41,10 +41,11 @@ Optional / next steps (low priority)
 - [✅] 2025-12-03 — Extracted run-filter persistence plus workflow list loading/refresh logic into `run_filters.rs` and `workflow_list.rs`, shrinking `src/ui/detail_view/mod.rs` by ~400 LOC.
 - [✅] 2025-12-03 — Moved the favorites toggle wiring/observers into `favorite_controls.rs`, leaving `src/ui/detail_view/mod.rs` to manage layout only.
 - [✅] 2025-12-03 — Split workflow loading/refresh plumbing into `workflow_refresh.rs`, added parser tests for expander widget names, and kept `workflow_list.rs` focused on row rendering.
-- [🔄] Detail view refactor follow-up: pull the footer/empty-state toast overlay helpers into their own module so `mod.rs` no longer owns widget layout beyond the header scaffold.
+- [✅] 2025-12-03 — Extracted the run-list layout + toast overlay wiring into `content.rs`, leaving `detail_view/mod.rs` focused on header controls and wiring; added a GTK clamp test to guard the new helper.
 - [🔄] Break `src/ui/main_window.rs` (~1.3K LOC) into dedicated modules (app state, repo list pane, async loaders) to unblock further readability improvements. (Sidebar panel + header controls + repo loader helpers + selection/background refresh logic extracted into `ui/main_window/` submodules; next up: remaining async/state helpers.)
+  - [✅] 2025-12-03 — Moved demo-mode activation/teardown into `ui/main_window/demo_mode.rs`, reducing `main_window.rs` by ~80 LOC and isolating the mock-data entrypoint.
 - [✅] 2025-12-03 — Extracted the workflow/run loader helpers into `digest.rs`, `filters.rs`, and `ui.rs`, added focused tests, and shrank `helpers/runs/load.rs` below 500 LOC.
-- [🆕] Trim `src/demo.rs` (700+ LOC) by moving fixtures and helper functions into `src/demo/` modules, keeping the entry surface small.
+- [✅] 2025-12-03 — Trimmed demo fixtures by splitting `src/demo.rs` into `src/demo/{mod,data,state}.rs` with reusable helpers and unit tests for manual run injection.
 
 ## Secret portal migration plan
 

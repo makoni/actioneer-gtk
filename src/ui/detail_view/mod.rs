@@ -4,7 +4,6 @@ use crate::cache::DataCache;
 use crate::favorites::FavoritesManager;
 use crate::notifications::NotificationManager;
 use crate::preferences::{PreferencesManager, RunFilterPreferences};
-use crate::ui::utils::create_detail_clamp;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
@@ -15,6 +14,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 use tracing::info;
 
+mod content;
 mod favorite_controls;
 mod filter_controls;
 mod helpers;
@@ -219,14 +219,21 @@ impl RepoDetailPane {
     }
 
     fn build_ui(&self) {
-        // Header section with repo info, favorite and refresh buttons
+        self.build_header();
+        self.attach_run_list();
+
+        let refresh_button = self.refresh_button.clone();
+        self.connect_refresh_button(&refresh_button);
+        self.connect_workflow_selected();
+    }
+
+    fn build_header(&self) {
         let header_box = gtk::Box::new(gtk::Orientation::Horizontal, 12);
         header_box.set_margin_top(24);
         header_box.set_margin_bottom(12);
         header_box.set_margin_start(24);
         header_box.set_margin_end(24);
 
-        // Left side: repo info
         let info_box = gtk::Box::new(gtk::Orientation::Vertical, 4);
         info_box.set_hexpand(true);
 
@@ -245,7 +252,6 @@ impl RepoDetailPane {
 
         header_box.append(&info_box);
 
-        // Right side: chips + buttons
         let buttons_box = self.buttons_box.clone();
         buttons_box.set_valign(gtk::Align::Center);
         buttons_box.set_halign(gtk::Align::End);
@@ -263,31 +269,7 @@ impl RepoDetailPane {
         buttons_box.append(&favorite_button);
 
         header_box.append(&buttons_box);
-
         self.root.append(&header_box);
-
-        let separator = gtk::Separator::new(gtk::Orientation::Horizontal);
-        separator.set_margin_start(12);
-        separator.set_margin_end(12);
-        self.root.append(&separator);
-
-        let scrolled = gtk::ScrolledWindow::builder()
-            .hscrollbar_policy(gtk::PolicyType::Never)
-            .build();
-        scrolled.set_hexpand(true);
-        scrolled.set_vexpand(true);
-        scrolled.set_propagate_natural_height(false);
-        scrolled.set_child(Some(&self.list_box));
-
-        let clamp = create_detail_clamp(&scrolled);
-
-        self.root.append(&clamp);
-
-        // Set the root as the child of toast_overlay so toasts can be shown
-        self.toast_overlay.set_child(Some(&self.root));
-
-        self.connect_refresh_button(&refresh_button);
-        self.connect_workflow_selected();
     }
 
     fn connect_workflow_selected(&self) {

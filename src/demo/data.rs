@@ -3,18 +3,16 @@ use crate::api::models::{
     Branch, BranchCommit, Job, RateLimitInfo, Repo, RepoPermissions, User, Workflow, WorkflowRun,
 };
 use chrono::Utc;
-use parking_lot::Mutex;
 use std::collections::{HashMap, HashSet};
-use std::sync::OnceLock;
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-struct RepoKey {
+pub(super) struct RepoKey {
     owner: String,
     name: String,
 }
 
 impl RepoKey {
-    fn new(owner: &str, name: &str) -> Self {
+    pub(super) fn new(owner: &str, name: &str) -> Self {
         Self {
             owner: owner.to_string(),
             name: name.to_string(),
@@ -23,13 +21,13 @@ impl RepoKey {
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
-struct WorkflowKey {
+pub(super) struct WorkflowKey {
     repo: RepoKey,
     workflow_id: i64,
 }
 
 impl WorkflowKey {
-    fn new(owner: &str, name: &str, workflow_id: i64) -> Self {
+    pub(super) fn new(owner: &str, name: &str, workflow_id: i64) -> Self {
         Self {
             repo: RepoKey::new(owner, name),
             workflow_id,
@@ -38,21 +36,21 @@ impl WorkflowKey {
 }
 
 #[derive(Debug, Clone)]
-struct DemoData {
-    repos: Vec<Repo>,
-    actions_enabled: HashSet<RepoKey>,
-    branches: HashMap<RepoKey, Vec<Branch>>,
-    workflows: HashMap<RepoKey, Vec<Workflow>>,
-    runs: HashMap<WorkflowKey, Vec<WorkflowRun>>,
-    jobs: HashMap<i64, Vec<Job>>, // run_id -> jobs
-    logs: HashMap<i64, String>,   // job_id -> logs
-    rate_limit: RateLimitInfo,
-    next_run_id: i64,
-    next_job_id: i64,
+pub(super) struct DemoData {
+    pub(super) repos: Vec<Repo>,
+    pub(super) actions_enabled: HashSet<RepoKey>,
+    pub(super) branches: HashMap<RepoKey, Vec<Branch>>,
+    pub(super) workflows: HashMap<RepoKey, Vec<Workflow>>,
+    pub(super) runs: HashMap<WorkflowKey, Vec<WorkflowRun>>,
+    pub(super) jobs: HashMap<i64, Vec<Job>>, // run_id -> jobs
+    pub(super) logs: HashMap<i64, String>,   // job_id -> logs
+    pub(super) rate_limit: RateLimitInfo,
+    pub(super) next_run_id: i64,
+    pub(super) next_job_id: i64,
 }
 
 impl DemoData {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         let mut actions_enabled = HashSet::new();
         let mut repositories = Vec::new();
         let mut branches = HashMap::new();
@@ -128,7 +126,6 @@ impl DemoData {
             );
         }
 
-        // Repo one workflows and runs
         let key_one = RepoKey::new(&repo_one.owner.login, &repo_one.name);
         let workflow_ci = Workflow {
             id: 21_001,
@@ -205,198 +202,42 @@ impl DemoData {
             runs_release.clone(),
         );
 
-        let job_compile_success = Job {
-            id: 40_001,
-            run_id: 30_101,
-            status: Some("completed".to_string()),
-            conclusion: Some("success".to_string()),
-            started_at: Some("2025-10-28T07:20:05Z".to_string()),
-            completed_at: Some("2025-10-28T07:22:30Z".to_string()),
-            name: Some("Compile".to_string()),
-            html_url: Some("https://github.com/demo-org/actioneer-demo-app/runs/40001".to_string()),
+        let key_two = RepoKey::new(&repo_two.owner.login, &repo_two.name);
+        let workflow_infra = Workflow {
+            id: 22_001,
+            name: "Infrastructure".to_string(),
+            path: ".github/workflows/infra.yml".to_string(),
         };
+        workflows_map.insert(key_two.clone(), vec![workflow_infra.clone()]);
 
-        let job_tests_success = Job {
-            id: 40_002,
-            run_id: 30_101,
-            status: Some("completed".to_string()),
-            conclusion: Some("success".to_string()),
-            started_at: Some("2025-10-28T07:22:40Z".to_string()),
-            completed_at: Some("2025-10-28T07:24:40Z".to_string()),
-            name: Some("Tests".to_string()),
-            html_url: Some("https://github.com/demo-org/actioneer-demo-app/runs/40002".to_string()),
-        };
-
-        let job_lint_failure = Job {
-            id: 40_003,
-            run_id: 30_102,
+        let runs_infra = vec![WorkflowRun {
+            id: 31_001,
+            run_number: Some(210),
+            name: Some("Infrastructure".to_string()),
+            display_title: Some("Infra • terraform plan".to_string()),
+            head_branch: Some("main".to_string()),
             status: Some("completed".to_string()),
             conclusion: Some("failure".to_string()),
-            started_at: Some("2025-10-27T18:12:10Z".to_string()),
-            completed_at: Some("2025-10-27T18:14:00Z".to_string()),
-            name: Some("Lint".to_string()),
-            html_url: Some("https://github.com/demo-org/actioneer-demo-app/runs/40003".to_string()),
-        };
-
-        let job_tests_partial = Job {
-            id: 40_004,
-            run_id: 30_102,
-            status: Some("completed".to_string()),
-            conclusion: Some("success".to_string()),
-            started_at: Some("2025-10-27T18:14:10Z".to_string()),
-            completed_at: Some("2025-10-27T18:16:50Z".to_string()),
-            name: Some("Tests".to_string()),
-            html_url: Some("https://github.com/demo-org/actioneer-demo-app/runs/40004".to_string()),
-        };
-
-        jobs_map.insert(
-            30_101,
-            vec![job_compile_success.clone(), job_tests_success.clone()],
-        );
-        jobs_map.insert(
-            30_102,
-            vec![job_lint_failure.clone(), job_tests_partial.clone()],
-        );
-        jobs_map.insert(
-            30_201,
-            vec![Job {
-                id: 40_005,
-                run_id: 30_201,
-                status: Some("queued".to_string()),
-                conclusion: None,
-                started_at: None,
-                completed_at: None,
-                name: Some("Publish".to_string()),
-                html_url: None,
-            }],
-        );
-
-        logs_map.insert(
-            40_001,
-            "Cloning repository...\nResolving crate graph (86 crates)...\nRunning cargo build --workspace --all-targets...\n   Compiling actioneer v1.0.0 (src/main.rs)\n   Compiling actioneer_ui v1.0.0 (src/ui/mod.rs)\n   Compiling actioneer_api v1.0.0 (src/api/mod.rs)\nFinished dev [unoptimized + debuginfo] target(s) in 1m 45s.\nUploading build artifacts to GitHub cache.".to_string(),
-        );
-        logs_map.insert(
-            40_002,
-            "Executing cargo test...\nStarting test runner with 8 parallel jobs...\nRunning ui::detail_view::tests::loads_runs... ok\nRunning api::client::tests::creates_client_without_token... ok\nRunning storage::token_storage::tests::round_trip_token... ok\nAll 142 tests passed in 1m 58s.".to_string(),
-        );
-        logs_map.insert(
-            40_003,
-            "Running cargo fmt --check...\nDiff detected in src/ui/main_window.rs at lines 120-145.\nwarning: rustfmt would make changes.\nHint: run `cargo fmt` locally before opening a pull request.".to_string(),
-        );
-        logs_map.insert(
-            40_004,
-            "Executing cargo test --package actioneer --lib...\nFreshening cached dependencies...\nRunning repo_detail::tests::shows_jobs_table... FAILED\nthread 'repo_detail::tests::shows_jobs_table' panicked at 'expected 4 rows, found 3', src/ui/detail_view.rs:287\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace.\nTest result: FAILED. 73 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out.".to_string(),
-        );
-        logs_map.insert(
-            40_005,
-            "Preparing release artifacts...\nReading release metadata from .github/workflows/release.yml...\nPacking flatpak bundle (com.example.Actioneer.flatpak)...\nCalculating SHA256: 7c9f6df2160db3ef4cf3b0d72d4e0a9a\nUploading artifacts to release draft...\nWaiting for maintainer approval before publishing.".to_string(),
-        );
-
-        // Repo two data
-        let key_two = RepoKey::new(&repo_two.owner.login, &repo_two.name);
-        let workflow_smoke = Workflow {
-            id: 22_001,
-            name: "Smoke Tests".to_string(),
-            path: ".github/workflows/smoke.yml".to_string(),
-        };
-        let workflow_deploy = Workflow {
-            id: 22_002,
-            name: "Deploy".to_string(),
-            path: ".github/workflows/deploy.yml".to_string(),
-        };
-
-        workflows_map.insert(
-            key_two.clone(),
-            vec![workflow_smoke.clone(), workflow_deploy.clone()],
-        );
-
-        let runs_smoke = vec![WorkflowRun {
-            id: 31_101,
-            run_number: Some(67),
-            name: Some("Smoke Tests".to_string()),
-            display_title: Some("Smoke Tests • main".to_string()),
-            head_branch: Some("main".to_string()),
-            status: Some("in_progress".to_string()),
-            conclusion: None,
-            run_started_at: Some("2025-10-28T09:55:00Z".to_string()),
-            event: Some("schedule".to_string()),
-            created_at: Some("2025-10-28T09:55:00Z".to_string()),
-            updated_at: Some("2025-10-28T09:57:00Z".to_string()),
-            html_url: Some(
-                "https://github.com/demo-labs/workflow-lab/actions/runs/31101".to_string(),
-            ),
-        }];
-
-        let runs_deploy = vec![WorkflowRun {
-            id: 31_201,
-            run_number: Some(24),
-            name: Some("Deploy".to_string()),
-            display_title: Some("Deploy • production".to_string()),
-            head_branch: Some("main".to_string()),
-            status: Some("completed".to_string()),
-            conclusion: Some("success".to_string()),
-            run_started_at: Some("2025-10-26T14:10:00Z".to_string()),
+            run_started_at: Some("2025-10-26T15:00:00Z".to_string()),
             event: Some("workflow_dispatch".to_string()),
-            created_at: Some("2025-10-26T14:10:00Z".to_string()),
-            updated_at: Some("2025-10-26T14:18:30Z".to_string()),
+            created_at: Some("2025-10-26T15:00:00Z".to_string()),
+            updated_at: Some("2025-10-26T15:04:00Z".to_string()),
             html_url: Some(
-                "https://github.com/demo-labs/workflow-lab/actions/runs/31201".to_string(),
+                "https://github.com/demo-labs/workflow-lab/actions/runs/31001".to_string(),
             ),
         }];
 
         runs_map.insert(
-            WorkflowKey::new(&repo_two.owner.login, &repo_two.name, workflow_smoke.id),
-            runs_smoke.clone(),
-        );
-        runs_map.insert(
-            WorkflowKey::new(&repo_two.owner.login, &repo_two.name, workflow_deploy.id),
-            runs_deploy.clone(),
+            WorkflowKey::new(&repo_two.owner.login, &repo_two.name, workflow_infra.id),
+            runs_infra.clone(),
         );
 
-        jobs_map.insert(
-            31_101,
-            vec![Job {
-                id: 41_001,
-                run_id: 31_101,
-                status: Some("in_progress".to_string()),
-                conclusion: None,
-                started_at: Some("2025-10-28T09:55:05Z".to_string()),
-                completed_at: None,
-                name: Some("End-to-end tests".to_string()),
-                html_url: Some("https://github.com/demo-labs/workflow-lab/runs/41001".to_string()),
-            }],
-        );
-        jobs_map.insert(
-            31_201,
-            vec![Job {
-                id: 41_201,
-                run_id: 31_201,
-                status: Some("completed".to_string()),
-                conclusion: Some("success".to_string()),
-                started_at: Some("2025-10-26T14:11:00Z".to_string()),
-                completed_at: Some("2025-10-26T14:17:30Z".to_string()),
-                name: Some("Deploy to production".to_string()),
-                html_url: Some("https://github.com/demo-labs/workflow-lab/runs/41201".to_string()),
-            }],
-        );
-
-        logs_map.insert(
-            41_001,
-            "Bootstrapping test environment...\nProvisioning ephemeral runner on ubuntu-24.04...\nExporting secrets to workflow context...\nRunning smoke tests against staging...\nScenario login_flow.rs .... ok\nScenario billing_flow.rs .... ok\nScenario notifications_flow.rs .... pending (retries left: 2).".to_string(),
-        );
-        logs_map.insert(
-            41_201,
-            "Connecting to SSH bastion...\nAuthenticating with deploy key actioneer-prod...\nRolling out version 1.18.2 to production...\nScaling web pods to 6 replicas...\nWaiting for health checks (elapsed: 04m12s)...\nDeployment completed in 6m 30s.".to_string(),
-        );
-
-        // Repo three data
         let key_three = RepoKey::new(&repo_three.owner.login, &repo_three.name);
         let workflow_edge = Workflow {
             id: 23_001,
             name: "Edge Diagnostics".to_string(),
             path: ".github/workflows/edge.yml".to_string(),
         };
-
         workflows_map.insert(key_three.clone(), vec![workflow_edge.clone()]);
 
         let runs_edge = vec![WorkflowRun {
@@ -480,22 +321,49 @@ impl DemoData {
         }
     }
 
-    fn repo_key(owner: &str, name: &str) -> RepoKey {
-        RepoKey::new(owner, name)
+    pub(super) fn clone_repos(&self) -> Vec<Repo> {
+        self.repos.clone()
     }
 
-    fn workflow_key(owner: &str, name: &str, workflow_id: i64) -> WorkflowKey {
-        WorkflowKey::new(owner, name, workflow_id)
+    pub(super) fn clone_rate_limit(&self) -> RateLimitInfo {
+        self.rate_limit.clone()
     }
 
-    fn add_manual_run(
+    pub(super) fn actions_enabled(&self, owner: &str, repo: &str) -> bool {
+        let key = Self::repo_key(owner, repo);
+        self.actions_enabled.contains(&key)
+    }
+
+    pub(super) fn clone_branches(&self, owner: &str, repo: &str) -> Vec<Branch> {
+        let key = Self::repo_key(owner, repo);
+        self.branches.get(&key).cloned().unwrap_or_default()
+    }
+
+    pub(super) fn clone_workflows(&self, owner: &str, repo: &str) -> Vec<Workflow> {
+        let key = Self::repo_key(owner, repo);
+        self.workflows.get(&key).cloned().unwrap_or_default()
+    }
+
+    pub(super) fn clone_runs(&self, owner: &str, repo: &str, workflow_id: i64) -> Vec<WorkflowRun> {
+        let key = Self::workflow_key(owner, repo, workflow_id);
+        self.runs.get(&key).cloned().unwrap_or_default()
+    }
+
+    pub(super) fn clone_jobs(&self, run_id: i64) -> Vec<Job> {
+        self.jobs.get(&run_id).cloned().unwrap_or_default()
+    }
+
+    pub(super) fn clone_logs(&self, job_id: i64) -> Option<String> {
+        self.logs.get(&job_id).cloned()
+    }
+
+    pub(super) fn add_manual_run(
         &mut self,
         owner: &str,
         name: &str,
         workflow_id: i64,
         reference: &str,
     ) -> GitHubErrorResult<()> {
-        let repo_key = Self::repo_key(owner, name);
         let workflow_key = Self::workflow_key(owner, name, workflow_id);
 
         let runs = self
@@ -546,19 +414,21 @@ impl DemoData {
             "This job was created by demo mode to simulate workflow dispatch.".to_string(),
         );
 
-        // Ensure branch exists for manual references
-        self.branches.entry(repo_key).or_default().push(Branch {
-            name: reference.to_string(),
-            commit: BranchCommit {
-                sha: format!("{:x}", run_id),
-            },
-            protected: false,
-        });
+        self.branches
+            .entry(Self::repo_key(owner, name))
+            .or_default()
+            .push(Branch {
+                name: reference.to_string(),
+                commit: BranchCommit {
+                    sha: format!("{:x}", run_id),
+                },
+                protected: false,
+            });
 
         Ok(())
     }
 
-    fn update_run_status(
+    pub(super) fn update_run_status(
         &mut self,
         owner: &str,
         name: &str,
@@ -586,133 +456,42 @@ impl DemoData {
 
         Err(GitHubError::NotFound)
     }
+
+    fn repo_key(owner: &str, name: &str) -> RepoKey {
+        RepoKey::new(owner, name)
+    }
+
+    fn workflow_key(owner: &str, name: &str, workflow_id: i64) -> WorkflowKey {
+        WorkflowKey::new(owner, name, workflow_id)
+    }
 }
 
-pub type GitHubErrorResult<T> = Result<T, GitHubError>;
-
-static DEMO_STATE: OnceLock<Mutex<Option<DemoData>>> = OnceLock::new();
-
-fn store() -> &'static Mutex<Option<DemoData>> {
-    DEMO_STATE.get_or_init(|| Mutex::new(None))
-}
-
-pub fn enable() -> Vec<Repo> {
-    let mut guard = store().lock();
-    let data = DemoData::new();
-    let repos = data.repos.clone();
-    *guard = Some(data);
-    repos
-}
-
-pub fn disable() {
-    let mut guard = store().lock();
-    *guard = None;
-}
-
-pub fn is_active() -> bool {
-    store().lock().is_some()
-}
-
-fn with_data<F, R>(f: F) -> Option<R>
-where
-    F: FnOnce(&DemoData) -> R,
-{
-    let guard = store().lock();
-    guard.as_ref().map(f)
-}
-
-fn with_data_mut<F, R>(f: F) -> Option<R>
-where
-    F: FnOnce(&mut DemoData) -> R,
-{
-    let mut guard = store().lock();
-    guard.as_mut().map(f)
-}
-
-pub fn list_repos() -> Option<Vec<Repo>> {
-    with_data(|data| data.repos.clone())
-}
-
-pub fn rate_limit_info() -> Option<RateLimitInfo> {
-    with_data(|data| data.rate_limit.clone())
-}
-
-pub fn is_actions_enabled(owner: &str, repo: &str) -> Option<bool> {
-    with_data(|data| {
-        let key = DemoData::repo_key(owner, repo);
-        data.actions_enabled.contains(&key)
-    })
-}
-
-pub fn list_branches(owner: &str, repo: &str) -> Option<Vec<Branch>> {
-    with_data(|data| {
-        let key = DemoData::repo_key(owner, repo);
-        data.branches.get(&key).cloned().unwrap_or_default()
-    })
-}
-
-pub fn list_workflows(owner: &str, repo: &str) -> Option<Vec<Workflow>> {
-    with_data(|data| {
-        let key = DemoData::repo_key(owner, repo);
-        data.workflows.get(&key).cloned().unwrap_or_default()
-    })
-}
-
-pub fn list_runs(owner: &str, repo: &str, workflow_id: i64) -> Option<Vec<WorkflowRun>> {
-    with_data(|data| {
-        let key = DemoData::workflow_key(owner, repo, workflow_id);
-        data.runs.get(&key).cloned().unwrap_or_default()
-    })
-}
-
-pub fn list_jobs(owner: &str, repo: &str, run_id: i64) -> Option<Vec<Job>> {
-    with_data(|data| {
-        let _ = DemoData::repo_key(owner, repo);
-        data.jobs.get(&run_id).cloned().unwrap_or_default()
-    })
-}
-
-pub fn job_logs(job_id: i64) -> Option<String> {
-    with_data(|data| data.logs.get(&job_id).cloned()).flatten()
-}
-
-pub fn dispatch_workflow(
-    owner: &str,
-    repo: &str,
-    workflow_id: i64,
-    reference: &str,
-) -> GitHubErrorResult<()> {
-    with_data_mut(|data| data.add_manual_run(owner, repo, workflow_id, reference))
-        .unwrap_or(Err(GitHubError::NotFound))
-}
-
-pub fn rerun_workflow(owner: &str, repo: &str, run_id: i64) -> GitHubErrorResult<()> {
-    with_data_mut(|data| data.update_run_status(owner, repo, run_id, "queued", None))
-        .unwrap_or(Err(GitHubError::NotFound))
-}
-
-pub fn rerun_failed_jobs(owner: &str, repo: &str, run_id: i64) -> GitHubErrorResult<()> {
-    with_data_mut(|data| data.update_run_status(owner, repo, run_id, "in_progress", None))
-        .unwrap_or(Err(GitHubError::NotFound))
-}
-
-pub fn cancel_run(owner: &str, repo: &str, run_id: i64) -> GitHubErrorResult<()> {
-    with_data_mut(|data| {
-        data.update_run_status(owner, repo, run_id, "completed", Some("cancelled"))
-    })
-    .unwrap_or(Err(GitHubError::NotFound))
-}
+pub(super) type GitHubErrorResult<T> = Result<T, GitHubError>;
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn demo_enable_populates_repos() {
-        let repos = enable();
-        assert!(!repos.is_empty());
-        assert!(is_active());
-        disable();
-        assert!(!is_active());
+    fn add_manual_run_inserts_job_and_run() {
+        let mut data = DemoData::new();
+        let owner = "demo-org";
+        let repo = "actioneer-demo-app";
+        let workflow_id = 21_001;
+
+        assert!(
+            data.clone_runs(owner, repo, workflow_id)
+                .iter()
+                .any(|run| run.display_title.as_deref() == Some("CI • main"))
+        );
+
+        data.add_manual_run(owner, repo, workflow_id, "demo-branch")
+            .expect("manual run creation should succeed");
+
+        let runs = data.clone_runs(owner, repo, workflow_id);
+        assert!(
+            runs.iter()
+                .any(|run| run.head_branch.as_deref() == Some("demo-branch"))
+        );
     }
 }
