@@ -14,7 +14,7 @@ use crate::preferences::{Preferences, PreferencesManager};
 use crate::storage::TokenStorage;
 use crate::ui::auth_window::AuthWindow;
 use crate::ui::preferences_window::PreferencesWindow;
-use crate::ui::utils::{MainContextChannelExt, update_rate_limit_label};
+use crate::ui::utils::{MainContextChannelExt, create_sidebar_clamp, update_rate_limit_label};
 use gio::Menu;
 use gio::prelude::*;
 use gtk4::prelude::*;
@@ -136,6 +136,7 @@ impl MainWindow {
         repo_list.set_margin_bottom(12);
         repo_list.set_margin_start(12);
         repo_list.set_margin_end(12);
+        repo_list.set_accessible_role(gtk::AccessibleRole::List);
 
         let search_entry = gtk::SearchEntry::new();
         search_entry.set_placeholder_text(Some("Search repositories..."));
@@ -300,12 +301,7 @@ impl MainWindow {
             .build();
         sidebar_viewport.set_child(Some(&sidebar_box));
 
-        let sidebar_clamp = adw::ClampScrollable::new();
-        sidebar_clamp.set_maximum_size(420);
-        sidebar_clamp.set_hexpand(false);
-        sidebar_clamp.set_vexpand(true);
-        // Wrap the viewport so ClampScrollable can bind to the GtkScrollable interface safely.
-        sidebar_clamp.set_child(Some(&sidebar_viewport));
+        let sidebar_clamp = create_sidebar_clamp(&sidebar_viewport);
 
         let detail_status_page = self.detail_status_page.clone();
         detail_status_page.set_vexpand(true);

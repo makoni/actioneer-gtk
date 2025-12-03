@@ -76,6 +76,7 @@ impl DemoData {
             },
             is_private: false,
             permissions: standard_permissions.clone(),
+            default_branch: Some("main".to_string()),
         };
 
         let repo_two = Repo {
@@ -87,6 +88,7 @@ impl DemoData {
             },
             is_private: false,
             permissions: standard_permissions.clone(),
+            default_branch: Some("main".to_string()),
         };
 
         let repo_three = Repo {
@@ -98,6 +100,7 @@ impl DemoData {
             },
             is_private: false,
             permissions: standard_permissions,
+            default_branch: Some("main".to_string()),
         };
 
         repositories.extend([repo_one.clone(), repo_two.clone(), repo_three.clone()]);

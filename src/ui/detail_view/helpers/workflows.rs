@@ -5,6 +5,7 @@ use crate::api::models::{Repo, Workflow};
 use crate::cache::DataCache;
 use crate::notifications::NotificationManager;
 use crate::preferences::PreferencesManager;
+use crate::ui::detail_view::RunFilters;
 use crate::ui::utils::MainContextChannelExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
@@ -30,6 +31,7 @@ pub(crate) struct WorkflowRowContext {
     pub run_digests: Arc<Mutex<RunDigestStore>>,
     pub notification_manager: Option<NotificationManager>,
     pub preferences_manager: Option<Arc<PreferencesManager>>,
+    pub run_filters: Arc<Mutex<RunFilters>>,
 }
 
 pub(crate) struct WorkflowRowSettings {
@@ -56,6 +58,8 @@ pub(crate) fn create_workflow_expander_row(
     let run_digests = context.run_digests.clone();
     let notification_manager = context.notification_manager.clone();
     let preferences_manager = context.preferences_manager.clone();
+    let run_filters = context.run_filters.clone();
+    let run_filters_for_signal = run_filters.clone();
 
     let row = gtk::ListBoxRow::new();
     row.set_activatable(false);
@@ -94,6 +98,7 @@ pub(crate) fn create_workflow_expander_row(
     expander.set_widget_name(&format!("workflow_{}", workflow.id));
     unsafe {
         expander.set_data("actioneer-workflow-name", workflow.name.clone());
+        expander.set_data("actioneer-workflow-id", workflow.id);
     }
 
     let runs_box = gtk::Box::new(gtk::Orientation::Vertical, 4);
@@ -221,9 +226,12 @@ pub(crate) fn create_workflow_expander_row(
                 run_digests: run_digests_for_signal.clone(),
                 notification_manager: notification_manager_for_signal.clone(),
                 preferences_manager: preferences_manager_for_signal.clone(),
+                run_filters: run_filters_for_signal.clone(),
             });
         }
     });
+
+    let run_filters_for_initial = run_filters.clone();
 
     if should_expand {
         is_programmatic_expand.set(true);
@@ -264,11 +272,15 @@ pub(crate) fn create_workflow_expander_row(
                 run_digests: run_digests_shared.clone(),
                 notification_manager: notification_manager_shared.clone(),
                 preferences_manager: preferences_manager_shared.clone(),
+                run_filters: run_filters_for_initial.clone(),
             });
         }
     }
 
+    let run_filters_for_trigger = run_filters.clone();
+
     trigger_btn.connect_clicked(move |_| {
+        let run_filters_for_dialog = run_filters_for_trigger.clone();
         let expander = expander_for_trigger.clone();
         let runs_box = runs_box_for_trigger.clone();
         let cache = cache_for_trigger.clone();
@@ -365,6 +377,7 @@ pub(crate) fn create_workflow_expander_row(
         let notification_manager_rc = Rc::new(notification_manager.clone());
         let preferences_manager_rc = Rc::new(preferences_manager.clone());
 
+        let run_filters_for_response = run_filters_for_dialog.clone();
         dialog.connect_response(move |dialog, response| {
             if response == gtk::ResponseType::Accept {
                 let selected_branch = branch_dropdown
@@ -416,6 +429,7 @@ pub(crate) fn create_workflow_expander_row(
                 let preferences_manager_for_closure = preferences_manager_rc.clone();
                 let repo_model_for_closure = repo_model_for_dialog.clone();
 
+                let run_filters_for_reload = run_filters_for_response.clone();
                 receiver.attach(None, move |result| {
                     let workflows_with_active = workflows_with_active.clone();
                     let workflow_display_handle = workflow_display_for_closure.clone();
@@ -450,6 +464,7 @@ pub(crate) fn create_workflow_expander_row(
                                 cache.store_runs(Vec::new(), &cache_key, workflow_id).await;
                             });
 
+                            let run_filters_for_idle = run_filters_for_reload.clone();
                             glib::idle_add_local_once(move || {
                                 let workflows_with_active = workflows_with_active_for_reload.clone();
                                 if expander.is_expanded() {
@@ -497,6 +512,7 @@ pub(crate) fn create_workflow_expander_row(
                                         run_digests: run_digests_for_refresh.clone(),
                                         notification_manager: notification_manager_for_runs,
                                         preferences_manager: preferences_manager_for_runs,
+                                        run_filters: run_filters_for_idle.clone(),
                                     });
                                 }
                             });

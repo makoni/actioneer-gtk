@@ -3,13 +3,14 @@ use crate::api::{GitHubClient, GitHubError};
 use crate::cache::DataCache;
 use crate::favorites::FavoritesManager;
 use crate::notifications::NotificationManager;
-use crate::preferences::PreferencesManager;
-use crate::ui::utils::MainContextChannelExt;
+use crate::preferences::{PreferencesManager, RunFilterPreferences};
+use crate::ui::utils::{MainContextChannelExt, create_detail_clamp};
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
+use libadwaita::ButtonContent;
 use parking_lot::Mutex;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use std::sync::Arc;
@@ -22,6 +23,7 @@ use helpers::{
     refresh_jobs_for_workflows, take_job_context_run_ids,
 };
 
+#[derive(Clone)]
 pub struct RepoDetailPane {
     parent: adw::ApplicationWindow,
     repo: Repo,
@@ -37,6 +39,9 @@ pub struct RepoDetailPane {
     list_box: gtk::ListBox,
     root: gtk::Box,
     toast_overlay: adw::ToastOverlay,
+    filter_chips: FilterChips,
+    run_filters: Arc<Mutex<RunFilters>>,
+    filter_guard: Rc<Cell<bool>>,
     loading: Arc<Mutex<bool>>, // Guard against re-entrant loads
     auto_refresh_source: Arc<Mutex<Option<glib::SourceId>>>, // Auto-refresh timer
     workflows_with_active_runs: Arc<Mutex<HashSet<i64>>>, // Track workflows needing refresh
@@ -69,6 +74,59 @@ struct WorkflowListContext {
     run_digests: Arc<Mutex<RunDigestStore>>,
     notification_manager: Option<NotificationManager>,
     preferences_manager: Option<Arc<PreferencesManager>>,
+    run_filters: Arc<Mutex<RunFilters>>,
+}
+
+#[derive(Debug, Clone)]
+pub(crate) struct RunFilters {
+    pub include_success: bool,
+    pub include_failed: bool,
+    pub include_running: bool,
+}
+
+impl Default for RunFilters {
+    fn default() -> Self {
+        Self {
+            include_success: true,
+            include_failed: true,
+            include_running: true,
+        }
+    }
+}
+
+impl From<RunFilterPreferences> for RunFilters {
+    fn from(prefs: RunFilterPreferences) -> Self {
+        Self {
+            include_success: prefs.show_success,
+            include_failed: prefs.show_failed,
+            include_running: prefs.show_running,
+        }
+    }
+}
+
+impl From<RunFilters> for RunFilterPreferences {
+    fn from(filters: RunFilters) -> Self {
+        Self {
+            show_success: filters.include_success,
+            show_failed: filters.include_failed,
+            show_running: filters.include_running,
+            default_branch_only: false,
+        }
+    }
+}
+
+#[derive(Clone)]
+struct FilterChips {
+    success: gtk::ToggleButton,
+    failed: gtk::ToggleButton,
+    running: gtk::ToggleButton,
+}
+
+#[derive(Copy, Clone)]
+enum FilterKind {
+    Success,
+    Failed,
+    Running,
 }
 
 impl RepoDetailPane {
@@ -106,7 +164,19 @@ impl RepoDetailPane {
         let toast_overlay = adw::ToastOverlay::new();
         let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
         root.set_vexpand(true);
+
+        let success_chip = create_status_chip("Success", "emblem-ok-symbolic");
+        let failed_chip = create_status_chip("Failed", "dialog-error-symbolic");
+        let running_chip = create_status_chip("Running", "media-playback-start-symbolic");
+
+        let filter_chips = FilterChips {
+            success: success_chip,
+            failed: failed_chip,
+            running: running_chip,
+        };
         let run_digests = Arc::new(Mutex::new(HashMap::new()));
+        let run_filters = Arc::new(Mutex::new(RunFilters::default()));
+        let filter_guard = Rc::new(Cell::new(false));
         let notification_manager = deps
             .notification_manager
             .or_else(|| Some(NotificationManager::new("me.spaceinbox.actioneer")));
@@ -126,6 +196,9 @@ impl RepoDetailPane {
             list_box: list_box.clone(),
             root: root.clone(),
             toast_overlay: toast_overlay.clone(),
+            filter_chips: filter_chips.clone(),
+            run_filters: run_filters.clone(),
+            filter_guard: filter_guard.clone(),
             loading: Arc::new(Mutex::new(false)),
             auto_refresh_source: Arc::new(Mutex::new(None)),
             workflows_with_active_runs: Arc::new(Mutex::new(HashSet::new())),
@@ -135,6 +208,8 @@ impl RepoDetailPane {
         };
 
         pane.build_ui();
+        pane.connect_filter_chips();
+        pane.restore_run_filter_preferences();
         pane.setup_favorite_button();
         pane.observe_favorites();
         pane.load_workflows();
@@ -165,6 +240,7 @@ impl RepoDetailPane {
             run_digests: self.run_digests.clone(),
             notification_manager: self.notification_manager.clone(),
             preferences_manager: self.preferences_manager.clone(),
+            run_filters: self.run_filters.clone(),
         }
     }
 
@@ -195,9 +271,23 @@ impl RepoDetailPane {
 
         header_box.append(&info_box);
 
-        // Right side: buttons (use stored references)
+        // Right side: chips + buttons
         let buttons_box = self.buttons_box.clone();
+        buttons_box.set_valign(gtk::Align::Center);
+        buttons_box.set_halign(gtk::Align::End);
+        buttons_box.set_spacing(6);
+
+        let chips = self.filter_chips.clone();
+        let chips_row = gtk::Box::new(gtk::Orientation::Horizontal, 4);
+        chips_row.add_css_class("linked");
+        chips_row.set_valign(gtk::Align::Center);
+        chips_row.append(&chips.success);
+        chips_row.append(&chips.failed);
+        chips_row.append(&chips.running);
+        buttons_box.append(&chips_row);
+
         let refresh_button = self.refresh_button.clone();
+        refresh_button.set_valign(gtk::Align::Center);
         buttons_box.append(&refresh_button);
 
         let favorite_button = self.favorite_button.clone();
@@ -221,11 +311,7 @@ impl RepoDetailPane {
         scrolled.set_propagate_natural_height(false);
         scrolled.set_child(Some(&self.list_box));
 
-        let clamp = adw::ClampScrollable::new();
-        clamp.set_maximum_size(800);
-        clamp.set_hexpand(true);
-        clamp.set_vexpand(true);
-        clamp.set_child(Some(&scrolled));
+        let clamp = create_detail_clamp(&scrolled);
 
         self.root.append(&clamp);
 
@@ -234,6 +320,175 @@ impl RepoDetailPane {
 
         self.connect_refresh_button(&refresh_button);
         self.connect_workflow_selected();
+    }
+
+    fn connect_filter_chips(&self) {
+        let chips = self.filter_chips.clone();
+        self.attach_filter_chip_handler(&chips.success, FilterKind::Success);
+        self.attach_filter_chip_handler(&chips.failed, FilterKind::Failed);
+        self.attach_filter_chip_handler(&chips.running, FilterKind::Running);
+    }
+
+    fn attach_filter_chip_handler(&self, button: &gtk::ToggleButton, kind: FilterKind) {
+        let pane = self.clone();
+        button.connect_toggled(move |btn| {
+            pane.on_filter_chip_toggled(kind, btn.is_active());
+        });
+    }
+
+    fn on_filter_chip_toggled(&self, kind: FilterKind, active: bool) {
+        if self.filter_guard.get() {
+            return;
+        }
+
+        {
+            let mut filters = self.run_filters.lock();
+            match kind {
+                FilterKind::Success => filters.include_success = active,
+                FilterKind::Failed => filters.include_failed = active,
+                FilterKind::Running => filters.include_running = active,
+            }
+        }
+
+        self.persist_run_filters();
+        self.refresh_visible_runs_with_filters();
+    }
+
+    fn persist_run_filters(&self) {
+        if let Some(manager) = &self.preferences_manager {
+            let manager = manager.clone();
+            let filters: RunFilterPreferences = self.run_filters.lock().clone().into();
+            crate::runtime_handle().spawn(async move {
+                if let Err(err) = manager.set_run_filters(filters).await {
+                    warn!("Failed to persist run filters: {}", err);
+                }
+            });
+        }
+    }
+
+    fn restore_run_filter_preferences(&self) {
+        if let Some(manager) = &self.preferences_manager {
+            let (sender, receiver) =
+                glib::MainContext::default().channel::<RunFilters>(glib::Priority::default());
+            let manager = manager.clone();
+            crate::runtime_handle().spawn(async move {
+                let prefs = manager.get().await;
+                let _ = sender.send(RunFilters::from(prefs.run_filters));
+            });
+
+            let pane = self.clone();
+            receiver.attach(None, move |filters| {
+                pane.apply_saved_filters(filters);
+                pane.refresh_visible_runs_with_filters();
+                glib::ControlFlow::Break
+            });
+        } else {
+            self.apply_saved_filters(RunFilters::default());
+            self.refresh_visible_runs_with_filters();
+        }
+    }
+
+    fn apply_saved_filters(&self, filters: RunFilters) {
+        let normalized = filters.clone();
+
+        {
+            let mut guard = self.run_filters.lock();
+            *guard = normalized.clone();
+        }
+
+        self.filter_guard.set(true);
+        self.filter_chips
+            .success
+            .set_active(normalized.include_success);
+        self.filter_chips
+            .failed
+            .set_active(normalized.include_failed);
+        self.filter_chips
+            .running
+            .set_active(normalized.include_running);
+        self.filter_guard.set(false);
+    }
+
+    fn refresh_visible_runs_with_filters(&self) {
+        let context = self.workflow_list_context();
+        let run_filters_arc = self.run_filters.clone();
+        let owner = context.owner.clone();
+        let repo = context.repo.clone();
+        let repo_model = context.repo_model.clone();
+        let parent_window = context.parent_window.clone();
+        let cache = context.cache.clone();
+        let toast_overlay = context.toast_overlay.clone();
+        let workflows_with_active = context.workflows_with_active_runs.clone();
+        let job_contexts = context.job_contexts.clone();
+        let run_digests = context.run_digests.clone();
+        let notification_manager = context.notification_manager.clone();
+        let preferences_manager = context.preferences_manager.clone();
+
+        let mut child = self.list_box.first_child();
+        while let Some(widget) = child.as_ref() {
+            let next = widget.next_sibling();
+
+            if let Ok(row) = widget.clone().downcast::<gtk::ListBoxRow>()
+                && let Some(row_child) = row.child()
+                && let Some(box_widget) = row_child.downcast_ref::<gtk::Box>()
+            {
+                let mut inner = box_widget.first_child();
+                while let Some(expander_widget) = inner.as_ref() {
+                    let next_inner = expander_widget.next_sibling();
+                    if let Some(expander) = expander_widget.downcast_ref::<gtk::Expander>()
+                        && expander.is_expanded()
+                    {
+                        if let Some(workflow_id_ptr) =
+                            unsafe { expander.data::<i64>("actioneer-workflow-id") }
+                        {
+                            let workflow_id = unsafe { *workflow_id_ptr.as_ref() };
+                            if let Some(child_widget) = expander.child()
+                                && let Ok(runs_box) = child_widget.downcast::<gtk::Box>()
+                            {
+                                let status_badge = Self::status_badge_for_expander(expander);
+                                let preserved_runs =
+                                    current_job_context_run_ids(&job_contexts, workflow_id);
+                                let workflow_label = unsafe {
+                                    expander
+                                        .data::<String>("actioneer-workflow-name")
+                                        .map(|name_ptr| name_ptr.as_ref().clone())
+                                }
+                                .unwrap_or_else(|| {
+                                    format!("{}/{} • Workflow {}", owner, repo, workflow_id)
+                                });
+
+                                load_workflow_runs(LoadRunsParams {
+                                    client: context.client.clone(),
+                                    owner: owner.clone(),
+                                    repo: repo.clone(),
+                                    repo_model: repo_model.clone(),
+                                    workflow_id,
+                                    workflow_name: workflow_label,
+                                    runs_box,
+                                    parent_window: parent_window.clone(),
+                                    status_badge,
+                                    expander: expander.clone(),
+                                    cache: cache.clone(),
+                                    toast_overlay: toast_overlay.clone(),
+                                    bypass_cache: false,
+                                    job_contexts: job_contexts.clone(),
+                                    expanded_run_ids: preserved_runs,
+                                    workflows_with_active: workflows_with_active.clone(),
+                                    background: false,
+                                    run_digests: run_digests.clone(),
+                                    notification_manager: notification_manager.clone(),
+                                    preferences_manager: preferences_manager.clone(),
+                                    run_filters: run_filters_arc.clone(),
+                                });
+                            }
+                        }
+                    }
+                    inner = next_inner;
+                }
+            }
+
+            child = next;
+        }
     }
 
     fn setup_favorite_button(&self) {
@@ -348,6 +603,7 @@ impl RepoDetailPane {
         }
 
         let context = self.workflow_list_context();
+        let run_filters = context.run_filters.clone();
         let client = context.client.clone();
         let workflows = self.workflows.clone();
         let owner = context.owner.clone();
@@ -378,6 +634,7 @@ impl RepoDetailPane {
         let cache_for_spawn = cache.clone();
         let cache_for_ui = cache.clone();
 
+        let run_filters_for_ui = run_filters.clone();
         receiver.attach(None, move |result| {
             // Hide loading spinner
             callback_refs.show_loading(false);
@@ -401,6 +658,7 @@ impl RepoDetailPane {
                 run_digests: run_digests.clone(),
                 notification_manager: notification_manager_for_ui.clone(),
                 preferences_manager: preferences_manager_for_ui.clone(),
+                run_filters: run_filters_for_ui.clone(),
             };
 
             match result {
@@ -465,6 +723,7 @@ impl RepoDetailPane {
         }
 
         let context = self.workflow_list_context();
+        let run_filters = context.run_filters.clone();
         let client = context.client.clone();
         let workflows = self.workflows.clone();
         let owner = context.owner.clone();
@@ -489,6 +748,7 @@ impl RepoDetailPane {
         let owner_for_spawn = owner.clone();
         let repo_name_for_spawn = repo_name.clone();
 
+        let run_filters_for_ui = run_filters.clone();
         receiver.attach(None, move |result| {
             let run_digests = run_digests.clone();
             let notification_manager_handle = notification_manager.clone();
@@ -513,6 +773,7 @@ impl RepoDetailPane {
                 run_digests: run_digests.clone(),
                 notification_manager: notification_manager_for_ui.clone(),
                 preferences_manager: preferences_manager_for_ui.clone(),
+                run_filters: run_filters_for_ui.clone(),
             };
 
             match result {
@@ -549,6 +810,7 @@ impl RepoDetailPane {
         let client = self.client.clone();
         let workflows = self.workflows.clone();
         let context = self.workflow_list_context();
+        let run_filters = context.run_filters.clone();
         let owner = context.owner.clone();
         let repo_name = context.repo.clone();
         let list_box = context.list_box.clone();
@@ -563,6 +825,7 @@ impl RepoDetailPane {
         let notification_manager = context.notification_manager.clone();
         let preferences_manager = context.preferences_manager.clone();
         let repo_model = context.repo_model.clone();
+        let run_filters_for_button = run_filters.clone();
 
         button.connect_clicked(move |_| {
             // Guard against re-entrant calls
@@ -597,6 +860,7 @@ impl RepoDetailPane {
             let (sender, receiver) = glib::MainContext::default()
                 .channel::<Result<Vec<Workflow>, GitHubError>>(glib::Priority::default());
             let list_box_for_ui = list_box.clone();
+            let run_filters_for_ui = run_filters_for_button.clone();
             let workflows_for_ui = workflows.clone();
             let client_for_ui = client.clone();
             let owner_for_ui = owner.clone();
@@ -638,6 +902,7 @@ impl RepoDetailPane {
                             run_digests: run_digests_for_ui.clone(),
                             notification_manager: notification_manager_for_ui.clone(),
                             preferences_manager: preferences_manager_for_ui.clone(),
+                            run_filters: run_filters_for_ui.clone(),
                         };
 
                         update_workflows_list(&ui_context, &wf_list);
@@ -783,6 +1048,7 @@ impl RepoDetailPane {
                 run_digests: run_digests.clone(),
                 notification_manager: notification_manager.clone(),
                 preferences_manager: preferences_manager.clone(),
+                run_filters: list_context.run_filters.clone(),
             };
 
             Self::refresh_runs_background(&background_context);
@@ -808,6 +1074,7 @@ impl RepoDetailPane {
         let run_digests = context.run_digests.clone();
         let notification_manager = context.notification_manager.clone();
         let preferences_manager = context.preferences_manager.clone();
+        let run_filters_arc = context.run_filters.clone();
 
         let mut observed_active: HashSet<i64> = HashSet::new();
 
@@ -882,6 +1149,7 @@ impl RepoDetailPane {
                                         run_digests: run_digests.clone(),
                                         notification_manager: notification_manager_clone,
                                         preferences_manager: preferences_manager_clone,
+                                        run_filters: run_filters_arc.clone(),
                                     });
                                 }
                             }
@@ -1064,6 +1332,7 @@ fn update_workflows_list(context: &WorkflowListContext, workflows: &[Workflow]) 
         run_digests: context.run_digests.clone(),
         notification_manager: context.notification_manager.clone(),
         preferences_manager: context.preferences_manager.clone(),
+        run_filters: context.run_filters.clone(),
     };
 
     for workflow in workflows {
@@ -1091,6 +1360,25 @@ fn update_detail_favorite_button(button: &gtk::ToggleButton, is_active: bool) {
         button.add_css_class("flat");
         button.set_opacity(0.5);
     }
+}
+
+fn create_status_chip(label: &str, icon_name: &str) -> gtk::ToggleButton {
+    let button = gtk::ToggleButton::new();
+    button.add_css_class("pill");
+    button.add_css_class("flat");
+    button.add_css_class("compact");
+    button.set_focus_on_click(true);
+    button.set_halign(gtk::Align::Center);
+    button.set_valign(gtk::Align::Center);
+    button.set_size_request(-1, 28);
+
+    let content = ButtonContent::new();
+    content.set_icon_name(icon_name);
+    content.set_label(label);
+    content.add_css_class("filter-chip-content");
+    button.set_child(Some(&content));
+    button.set_active(true);
+    button
 }
 
 fn workflows_differ(a: &[Workflow], b: &[Workflow]) -> bool {

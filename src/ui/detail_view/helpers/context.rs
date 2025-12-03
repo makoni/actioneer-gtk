@@ -174,6 +174,7 @@ mod tests {
             },
             is_private: false,
             permissions: None,
+            default_branch: Some("main".to_string()),
         };
 
         let context_one = JobRefreshContext::from_params(JobRefreshContextParams {

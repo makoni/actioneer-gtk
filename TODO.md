@@ -25,14 +25,14 @@ Quick validation (local)
 Optional / next steps (low priority)
 - Enhanced streaming job logs (advanced viewer)
 - Persist cache to disk (optional)
-- Small UI micro-optimizations or accessibility checks
-- Add a CI/preflight check that ensures `Cargo.lock` and `flatpak/me.spaceinbox.actioneer.cargo-sources.json` stay in sync (fail fast when either changes without the other).
-- Factor shared `ClampScrollable`/layout helpers for detail panes so future list sections inherit the correct sizing behavior automatically.
+- [✅] Small UI micro-optimizations or accessibility checks
+- [✅] Add a CI/preflight check that ensures `Cargo.lock` and `flatpak/me.spaceinbox.actioneer.cargo-sources.json` stay in sync (fail fast when either changes without the other).
+- [✅] Factor shared `ClampScrollable`/layout helpers for detail panes so future list sections inherit the correct sizing behavior automatically.
 - [✅] Documented sandbox keyring/portal expectations (Snap + Flatpak) in the README and packaging guides so reviewers know how the secret portal is verified.
 - Refactor `src/ui/detail_view/helpers/runs/load.rs::load_workflow_runs` (currently ~325 lines) into smaller helpers/structs so error handling, digest comparison, notification dispatch, and UI updates are testable in isolation; the monolithic function makes it hard to reason about background vs foreground refresh paths.
 - Replace the manual `gtk::Box` run list rebuild (clearing and re-adding rows on every refresh) with a `gio::ListStore` + `gtk::ListView` factory. That would eliminate repeated widget construction, cut down diff churn, and prevent scroll jumps when only a single run changes.
-- Drop the duplicate cache writes when runs are fetched. Today we call `store_runs_async` when digest changes and then call `cache.store_runs` again right after the HTTP fetch completes (same data). Consolidate into a single write so we avoid extra spawn + clone work per refresh.
-- Add lightweight run-status filter chips (Success/Failed/Running/Branch) above the detail pane so users can quickly scope the list without scrolling. Persist the selection in Preferences so the view restores across sessions.
+- [✅] Drop the duplicate cache writes when runs are fetched. Today we call `store_runs_async` when digest changes and then call `cache.store_runs` again right after the HTTP fetch completes (same data). Consolidate into a single write so we avoid extra spawn + clone work per refresh.
+- [✅] Add lightweight run-status filter chips (Success/Failed/Running/Branch) above the detail pane so users can quickly scope the list without scrolling. Persist the selection in Preferences so the view restores across sessions.
 - Introduce an inline job-log drawer that can be expanded from each job row instead of opening a separate window; mirror the logs view styling with syntax-colored sections and search highlighting for faster triage.
 - Provide a compact “Overview” page that aggregates the last run status for pinned repositories (favorites) using multi-pane cards, giving users a bird’s-eye view before diving into a specific repo.
 - Modernize the repo sidebar and detail lists to use `gio::ListStore` + `gtk::ListView` (`gtk::SelectionModel`) instead of `gtk::ListBox` rebuilds. This enables row recycling, reduces widget churn on large orgs (100+ repos), and unlocks smooth kinetic scrolling.
@@ -55,6 +55,8 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2025-12-03 — Added a lockfile/Flatpak sync check to CI and a reusable script for local preflight.
+- [✅] 2025-12-03 — Added run-status filter chips with persisted preferences, shared ClampScrollable helpers, accessibility touch-ups, and removed duplicate run cache writes for workflows.
 - [✅] 2025-11-30 — Added explicit sandbox secret-portal documentation to the README, Snapcraft, and Flatpak guides so reviewers know how to verify the encrypted token flow.
 - [✅] 2025-11-30 — Swapped run digests to a HashMap diff so workflow refreshes ignore row ordering and notifications only process truly changed runs (`src/ui/detail_view/helpers/runs/load.rs`).
 - [✅] 2025-11-28 — Implemented portal-first token storage (secret_portal + PortalTokenStore), migrated existing keyring secrets automatically, and documented the new snap portal verification checklist.

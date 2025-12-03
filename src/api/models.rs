@@ -9,6 +9,8 @@ pub struct Repo {
     #[serde(rename = "private")]
     pub is_private: bool,
     pub permissions: Option<RepoPermissions>,
+    #[serde(default)]
+    pub default_branch: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

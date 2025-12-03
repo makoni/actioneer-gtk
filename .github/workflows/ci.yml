@@ -7,9 +7,20 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  lock-sync:
+    name: Lockfile sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5.0.0
+        with:
+          fetch-depth: 0
+      - name: Ensure Cargo.lock and Flatpak manifest match
+        run: scripts/check-flatpak-lock-sync.sh
+
   fmt-clippy:
     name: Format and lint
     runs-on: ubuntu-latest
+    needs: lock-sync
     steps:
       - uses: actions/checkout@v5.0.0
       - name: Install system packages (GTK4 & libadwaita)

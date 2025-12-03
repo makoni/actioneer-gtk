@@ -20,6 +20,29 @@ pub struct Preferences {
 
     /// Show notifications
     pub enable_notifications: bool,
+
+    /// Saved run filter preferences for workflow panes
+    #[serde(default)]
+    pub run_filters: RunFilterPreferences,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RunFilterPreferences {
+    pub show_success: bool,
+    pub show_failed: bool,
+    pub show_running: bool,
+    pub default_branch_only: bool,
+}
+
+impl Default for RunFilterPreferences {
+    fn default() -> Self {
+        Self {
+            show_success: true,
+            show_failed: true,
+            show_running: true,
+            default_branch_only: false,
+        }
+    }
 }
 
 impl Default for Preferences {
@@ -30,6 +53,7 @@ impl Default for Preferences {
             window_width: 1000,
             window_height: 700,
             enable_notifications: true,
+            run_filters: RunFilterPreferences::default(),
         }
     }
 }
@@ -102,6 +126,10 @@ impl PreferencesManager {
         self.update(|p| p.enable_notifications = enabled).await
     }
 
+    pub async fn set_run_filters(&self, filters: RunFilterPreferences) -> anyhow::Result<()> {
+        self.update(|p| p.run_filters = filters).await
+    }
+
     pub fn subscribe(&self) -> watch::Receiver<Preferences> {
         self.updates.subscribe()
     }
@@ -129,6 +157,10 @@ mod tests {
         assert_eq!(prefs.refresh_interval, 5); // Default 5 seconds to match macOS
         assert_eq!(prefs.window_width, 1000);
         assert!(prefs.enable_notifications);
+        assert!(prefs.run_filters.show_success);
+        assert!(prefs.run_filters.show_failed);
+        assert!(prefs.run_filters.show_running);
+        assert!(!prefs.run_filters.default_branch_only);
     }
 
     #[tokio::test]
