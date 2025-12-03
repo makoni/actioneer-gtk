@@ -8,7 +8,6 @@ use crate::ui::utils::{MainContextChannelExt, create_detail_clamp};
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
-use libadwaita::ButtonContent;
 use parking_lot::Mutex;
 use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
@@ -16,7 +15,9 @@ use std::rc::Rc;
 use std::sync::Arc;
 use tracing::{error, info, warn};
 
+mod filter_controls;
 mod helpers;
+use filter_controls::{FilterChips, FilterControls};
 use helpers::{
     JobContextMap, LoadRunsParams, RunDigestStore, WorkflowRowContext, WorkflowRowSettings,
     create_workflow_expander_row, current_job_context_run_ids, load_workflow_runs,
@@ -36,6 +37,7 @@ pub struct RepoDetailPane {
     favorite_button: gtk::ToggleButton,
     refresh_button: gtk::Button,
     buttons_box: gtk::Box,
+    filter_controls: gtk::Box,
     list_box: gtk::ListBox,
     root: gtk::Box,
     toast_overlay: adw::ToastOverlay,
@@ -115,13 +117,6 @@ impl From<RunFilters> for RunFilterPreferences {
     }
 }
 
-#[derive(Clone)]
-struct FilterChips {
-    success: gtk::ToggleButton,
-    failed: gtk::ToggleButton,
-    running: gtk::ToggleButton,
-}
-
 #[derive(Copy, Clone)]
 enum FilterKind {
     Success,
@@ -165,15 +160,9 @@ impl RepoDetailPane {
         let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
         root.set_vexpand(true);
 
-        let success_chip = create_status_chip("Success", "emblem-ok-symbolic");
-        let failed_chip = create_status_chip("Failed", "dialog-error-symbolic");
-        let running_chip = create_status_chip("Running", "media-playback-start-symbolic");
-
-        let filter_chips = FilterChips {
-            success: success_chip,
-            failed: failed_chip,
-            running: running_chip,
-        };
+        let filter_controls = FilterControls::new();
+        let filter_chips = filter_controls.chips.clone();
+        let filter_controls_widget = filter_controls.widget();
         let run_digests = Arc::new(Mutex::new(HashMap::new()));
         let run_filters = Arc::new(Mutex::new(RunFilters::default()));
         let filter_guard = Rc::new(Cell::new(false));
@@ -193,6 +182,7 @@ impl RepoDetailPane {
             favorite_button: favorite_button.clone(),
             refresh_button: refresh_button.clone(),
             buttons_box: buttons_box.clone(),
+            filter_controls: filter_controls_widget.clone(),
             list_box: list_box.clone(),
             root: root.clone(),
             toast_overlay: toast_overlay.clone(),
@@ -277,13 +267,7 @@ impl RepoDetailPane {
         buttons_box.set_halign(gtk::Align::End);
         buttons_box.set_spacing(6);
 
-        let chips = self.filter_chips.clone();
-        let chips_row = gtk::Box::new(gtk::Orientation::Horizontal, 4);
-        chips_row.add_css_class("linked");
-        chips_row.set_valign(gtk::Align::Center);
-        chips_row.append(&chips.success);
-        chips_row.append(&chips.failed);
-        chips_row.append(&chips.running);
+        let chips_row = self.filter_controls.clone();
         buttons_box.append(&chips_row);
 
         let refresh_button = self.refresh_button.clone();
@@ -1360,25 +1344,6 @@ fn update_detail_favorite_button(button: &gtk::ToggleButton, is_active: bool) {
         button.add_css_class("flat");
         button.set_opacity(0.5);
     }
-}
-
-fn create_status_chip(label: &str, icon_name: &str) -> gtk::ToggleButton {
-    let button = gtk::ToggleButton::new();
-    button.add_css_class("pill");
-    button.add_css_class("flat");
-    button.add_css_class("compact");
-    button.set_focus_on_click(true);
-    button.set_halign(gtk::Align::Center);
-    button.set_valign(gtk::Align::Center);
-    button.set_size_request(-1, 28);
-
-    let content = ButtonContent::new();
-    content.set_icon_name(icon_name);
-    content.set_label(label);
-    content.add_css_class("filter-chip-content");
-    button.set_child(Some(&content));
-    button.set_active(true);
-    button
 }
 
 fn workflows_differ(a: &[Workflow], b: &[Workflow]) -> bool {
