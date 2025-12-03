@@ -1,6 +1,4 @@
 use super::WelcomeScreen;
-use super::detail_placeholder::schedule_status_page_update;
-use super::detail_view::{RepoDetailDeps, RepoDetailPane};
 use super::sidebar::{find_label_by_name, row_matches_query};
 use crate::api::GitHubClient;
 use crate::api::models::{RateLimitInfo, Repo};
@@ -11,8 +9,9 @@ use crate::notifications::NotificationManager;
 use crate::preferences::{Preferences, PreferencesManager};
 use crate::storage::TokenStorage;
 use crate::ui::auth_window::AuthWindow;
+use crate::ui::detail_view::RepoDetailPane;
 use crate::ui::preferences_window::PreferencesWindow;
-use crate::ui::utils::{MainContextChannelExt, update_rate_limit_label};
+use crate::ui::utils::MainContextChannelExt;
 use gio::Menu;
 use gio::prelude::*;
 use gtk4::prelude::*;
@@ -25,10 +24,11 @@ use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tracing::{debug, error, info, warn};
+use tracing::{error, info, warn};
 
 mod header_controls;
 mod loaders;
+mod selection;
 mod sidebar_panel;
 use header_controls::HeaderControls;
 use sidebar_panel::SidebarPanel;
@@ -746,44 +746,6 @@ impl MainWindow {
         });
     }
 
-    fn ensure_detail_matches_selection(&self) {
-        let action = {
-            let selected_id = *self.selected_repo_id.lock();
-            let active_id = self
-                .active_detail
-                .borrow()
-                .as_ref()
-                .map(|pane| pane.repo().id);
-
-            match (selected_id, active_id) {
-                (Some(sel), Some(active)) if sel == active => None,
-                (Some(sel), _) => {
-                    let repo = {
-                        let repos = self.repos.lock();
-                        repos.iter().find(|repo| repo.id == sel).cloned()
-                    };
-                    Some(repo)
-                }
-                (None, Some(_)) => Some(None),
-                _ => None,
-            }
-        };
-
-        if let Some(repo_opt) = action {
-            let this = self.clone();
-            glib::idle_add_local_once(move || {
-                if *this.handling_selection.lock() {
-                    return;
-                }
-
-                match repo_opt {
-                    Some(repo) => this.handle_repo_selection(Some(repo)),
-                    None => this.handle_repo_selection(None),
-                }
-            });
-        }
-    }
-
     fn observe_favorites(&self) {
         if let Some(manager) = &self.favorites_manager {
             let favorites_state = self.favorites.clone();
@@ -841,11 +803,9 @@ impl MainWindow {
                     None => None,
                 };
 
-                // Check if selection actually changed
                 let current_selection = *window.selected_repo_id.lock();
                 let new_selection = repo.as_ref().map(|r| r.id);
 
-                // Check if we're already handling a selection
                 if *window.handling_selection.lock() {
                     info!("Already handling selection, ignoring signal");
                     return;
@@ -858,8 +818,6 @@ impl MainWindow {
                     repo.as_ref().map(|r| r.full_name.as_str())
                 );
 
-                // Ignore transient deselection events if we have an active detail pane
-                // This happens during widget manipulation (stack remove/add)
                 if new_selection.is_none() && window.active_detail.borrow().is_some() {
                     info!("Ignoring transient deselection (detail pane is active)");
                     return;
@@ -869,234 +827,6 @@ impl MainWindow {
                     window.handle_repo_selection(repo);
                 }
             });
-    }
-
-    fn handle_repo_selection(&self, repo: Option<Repo>) {
-        *self.handling_selection.lock() = true;
-
-        match repo {
-            Some(repo) => {
-                info!("Handling repo selection: {}", repo.full_name);
-                let repo_id = repo.id;
-                *self.selected_repo_id.lock() = Some(repo_id);
-                if let Some(manager) = &self.preferences_manager {
-                    let manager = manager.clone();
-                    crate::runtime_handle().spawn(async move {
-                        if let Err(err) = manager.set_last_selected_repo(Some(repo_id)).await {
-                            warn!("Failed to persist selected repo: {}", err);
-                        }
-                    });
-                }
-                self.start_background_refresh(repo.clone());
-                self.present_repo_detail(repo);
-            }
-            None => {
-                info!("Deselecting repo");
-                *self.selected_repo_id.lock() = None;
-                if let Some(manager) = &self.preferences_manager {
-                    let manager = manager.clone();
-                    crate::runtime_handle().spawn(async move {
-                        if let Err(err) = manager.set_last_selected_repo(None).await {
-                            warn!("Failed to clear selected repo preference: {}", err);
-                        }
-                    });
-                }
-                self.stop_background_refresh();
-                self.show_detail_placeholder();
-            }
-        }
-
-        *self.handling_selection.lock() = false;
-    }
-
-    fn present_repo_detail(&self, repo: Repo) {
-        info!("Creating detail pane for: {}", repo.full_name);
-
-        // Check if we already have a pane for this repo to avoid recreating
-        {
-            let active = self.active_detail.borrow();
-            if let Some(existing_pane) = active.as_ref()
-                && existing_pane.repo().id == repo.id
-            {
-                info!("Pane already exists for this repo, skipping creation");
-                return;
-            }
-        }
-
-        let client_opt = {
-            let guard = self.client.lock();
-            guard.clone()
-        };
-
-        match client_opt {
-            Some(client) => {
-                let deps = RepoDetailDeps {
-                    favorites_manager: self.favorites_manager.clone(),
-                    preferences_manager: self.preferences_manager.clone(),
-                    cache: self.cache.clone(),
-                    favorites: self.favorites.clone(),
-                    notification_manager: self.notification_manager.clone(),
-                };
-
-                let pane = RepoDetailPane::new(
-                    self.window.clone(),
-                    repo,
-                    Arc::new(Mutex::new(client)),
-                    deps,
-                );
-                let stack = self.detail_stack.clone();
-                let active_detail = self.active_detail.clone();
-
-                glib::idle_add_local_once(move || {
-                    if let Some(existing_child) = stack.child_by_name("detail") {
-                        stack.remove(&existing_child);
-                    }
-
-                    let widget = pane.widget();
-                    stack.add_named(&widget, Some("detail"));
-                    stack.set_visible_child_name("detail");
-                    active_detail.borrow_mut().replace(pane);
-                });
-            }
-            None => {
-                warn!("Cannot show repository details without an authenticated client");
-                self.show_detail_placeholder();
-            }
-        }
-    }
-
-    fn show_detail_placeholder(&self) {
-        let stack = self.detail_stack.clone();
-        let active_detail = self.active_detail.clone();
-        let status_page = self.detail_status_page.clone();
-
-        glib::idle_add_local_once(move || {
-            if let Some(detail_child) = stack.child_by_name("detail") {
-                stack.remove(&detail_child);
-            }
-            stack.set_visible_child_name("placeholder");
-            active_detail.borrow_mut().take();
-        });
-
-        schedule_status_page_update(status_page, None);
-    }
-
-    fn start_background_refresh(&self, _repo: Repo) {
-        // Stop any existing refresh task
-        self.stop_background_refresh();
-
-        let preferences_manager = match &self.preferences_manager {
-            Some(manager) => manager.clone(),
-            None => return,
-        };
-
-        let client_arc = self.client.clone();
-        let active_detail = self.active_detail.clone();
-        let rate_limit_label = self.rate_limit_label.clone();
-
-        let (sender, receiver) =
-            glib::MainContext::default().channel::<()>(glib::Priority::default());
-
-        receiver.attach(None, move |_| {
-            // Trigger a refresh on the active detail pane
-            if let Some(pane) = active_detail.borrow().as_ref() {
-                pane.refresh_workflows_silent();
-            }
-            glib::ControlFlow::Continue
-        });
-
-        let (rate_sender, rate_receiver) =
-            glib::MainContext::default().channel::<RateLimitInfo>(glib::Priority::default());
-
-        let rate_label_clone = rate_limit_label.clone();
-        rate_receiver.attach(None, move |info| {
-            update_rate_limit_label(&rate_label_clone, Some(info));
-            glib::ControlFlow::Continue
-        });
-
-        let handle = crate::runtime_handle().spawn(async move {
-            loop {
-                // Get the current refresh interval
-                let interval = preferences_manager.get().await.refresh_interval;
-
-                tokio::time::sleep(std::time::Duration::from_secs(interval)).await;
-
-                // Check if we still have a client
-                let client_opt = {
-                    let guard = client_arc.lock();
-                    guard.clone()
-                };
-
-                if let Some(client) = client_opt {
-                    // Signal the UI to refresh
-                    if sender.send(()).is_err() {
-                        break;
-                    }
-
-                    // Update rate limit display
-                    if let Some(rate_info) = client.rate_limit_info()
-                        && rate_sender.send(rate_info).is_err()
-                    {
-                        break;
-                    }
-                } else {
-                    break;
-                }
-            }
-        });
-
-        *self.background_refresh_task.lock() = Some(handle);
-    }
-
-    fn stop_background_refresh(&self) {
-        if let Some(handle) = self.background_refresh_task.lock().take() {
-            handle.abort();
-        }
-    }
-
-    fn show_header_loading(&self, loading: bool) {
-        let header = self.header_bar.clone();
-        let refresh_button = self.refresh_button.clone();
-        let spinner_ref = self.header_spinner.clone();
-
-        glib::idle_add_local_once(move || {
-            if loading {
-                info!("🔄 Showing header loading spinner");
-                // Hide refresh button
-                refresh_button.set_visible(false);
-
-                // Remove any existing spinner
-                if let Some(old_spinner) = spinner_ref.borrow_mut().take() {
-                    header.remove(&old_spinner);
-                }
-
-                // Create and add new spinner
-                let spinner = gtk::Spinner::new();
-                spinner.start(); // Start animation
-                spinner.set_size_request(24, 24);
-                spinner.set_tooltip_text(Some("Loading repositories..."));
-                header.pack_start(&spinner);
-                spinner.set_visible(true); // Ensure visible
-
-                // Store reference
-                *spinner_ref.borrow_mut() = Some(spinner);
-            } else {
-                info!("✅ Hiding header loading spinner");
-                // Remove spinner if it exists
-                match spinner_ref.borrow_mut().take() {
-                    Some(spinner) => {
-                        info!("Removing spinner from header");
-                        header.remove(&spinner);
-                    }
-                    _ => {
-                        debug!("No header spinner present when hiding header loader");
-                    }
-                }
-
-                // Show refresh button
-                refresh_button.set_visible(true);
-            }
-        });
     }
 
     pub fn present(&self) {
