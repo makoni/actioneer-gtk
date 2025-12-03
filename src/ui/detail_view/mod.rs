@@ -4,7 +4,7 @@ use crate::cache::DataCache;
 use crate::favorites::FavoritesManager;
 use crate::notifications::NotificationManager;
 use crate::preferences::{PreferencesManager, RunFilterPreferences};
-use crate::ui::utils::{MainContextChannelExt, create_detail_clamp};
+use crate::ui::utils::create_detail_clamp;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
@@ -13,12 +13,14 @@ use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use std::sync::Arc;
-use tracing::{info, warn};
+use tracing::info;
 
+mod favorite_controls;
 mod filter_controls;
 mod helpers;
 mod run_filters;
 mod workflow_list;
+use favorite_controls::{observe_favorites, setup_favorite_button};
 use filter_controls::{FilterChips, FilterControls};
 use helpers::{JobContextMap, RunDigestStore};
 
@@ -191,8 +193,17 @@ impl RepoDetailPane {
         pane.build_ui();
         pane.connect_filter_chips();
         pane.restore_run_filter_preferences();
-        pane.setup_favorite_button();
-        pane.observe_favorites();
+        setup_favorite_button(
+            &pane.favorite_button,
+            pane.repo.id,
+            pane.favorites_manager.clone(),
+            pane.favorites.clone(),
+        );
+        observe_favorites(
+            &pane.favorite_button,
+            pane.repo.id,
+            pane.favorites_manager.clone(),
+        );
         pane.load_workflows();
         pane.start_auto_refresh();
         pane
@@ -278,120 +289,8 @@ impl RepoDetailPane {
         self.connect_workflow_selected();
     }
 
-    fn setup_favorite_button(&self) {
-        let button = self.favorite_button.clone();
-
-        if let Some(manager) = &self.favorites_manager {
-            let repo_id = self.repo.id;
-            let manager_for_toggle = manager.clone();
-            let favorites_state = self.favorites.clone();
-
-            button.connect_toggled(move |button| {
-                let is_active = button.is_active();
-                update_detail_favorite_button(button, is_active);
-
-                let manager = manager_for_toggle.clone();
-                let favorites_state = favorites_state.clone();
-                let button_clone = button.clone();
-                let (sender, receiver) = glib::MainContext::default()
-                    .channel::<Result<(), anyhow::Error>>(glib::Priority::default());
-
-                receiver.attach(None, move |result| {
-                    match result {
-                        Ok(()) => {
-                            let mut favorites = favorites_state.lock();
-                            if is_active {
-                                favorites.insert(repo_id);
-                            } else {
-                                favorites.remove(&repo_id);
-                            }
-                        }
-                        Err(err) => {
-                            warn!("Failed to update favorite {}: {}", repo_id, err);
-                            let revert_state = !is_active;
-                            button_clone.set_active(revert_state);
-                            update_detail_favorite_button(&button_clone, revert_state);
-                        }
-                    }
-
-                    glib::ControlFlow::Break
-                });
-
-                crate::runtime_handle().spawn(async move {
-                    let outcome = if is_active {
-                        manager.add_favorite(repo_id).await
-                    } else {
-                        manager.remove_favorite(repo_id).await
-                    };
-
-                    let _ = sender.send(outcome);
-                });
-            });
-        } else {
-            button.set_sensitive(false);
-            button.set_tooltip_text(Some("Favorites unavailable"));
-        }
-    }
-
-    fn observe_favorites(&self) {
-        if let Some(manager) = &self.favorites_manager {
-            let receiver = manager.subscribe();
-            let button = self.favorite_button.clone();
-            let repo_id = self.repo.id;
-
-            let (sender, receiver_channel) =
-                glib::MainContext::default().channel::<bool>(glib::Priority::default());
-
-            receiver_channel.attach(None, move |is_favorite| {
-                if button.is_active() != is_favorite {
-                    button.set_active(is_favorite);
-                }
-                update_detail_favorite_button(&button, is_favorite);
-
-                glib::ControlFlow::Continue
-            });
-
-            crate::runtime_handle().spawn(async move {
-                let mut receiver_local = receiver;
-
-                if sender
-                    .send(receiver_local.borrow().contains(&repo_id))
-                    .is_err()
-                {
-                    return;
-                }
-
-                loop {
-                    if receiver_local.changed().await.is_err() {
-                        break;
-                    }
-
-                    let is_favorite = receiver_local.borrow().contains(&repo_id);
-                    if sender.send(is_favorite).is_err() {
-                        break;
-                    }
-                }
-            });
-        } else {
-            update_detail_favorite_button(&self.favorite_button, false);
-            self.favorite_button.set_sensitive(false);
-        }
-    }
-
     fn connect_workflow_selected(&self) {
         // Workflows are now expanded in-place, no need to open a window
         // The row activation will be handled by the expander widget
-    }
-}
-
-fn update_detail_favorite_button(button: &gtk::ToggleButton, is_active: bool) {
-    if is_active {
-        button.remove_css_class("flat");
-        button.add_css_class("suggested-action");
-        button.set_opacity(1.0);
-    } else {
-        button.remove_css_class("suggested-action");
-        button.add_css_class("flat");
-        button.set_opacity(0.5);
     }
 }

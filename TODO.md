@@ -39,7 +39,8 @@ Optional / next steps (low priority)
 - Rework `DataCache` to store `Arc<[WorkflowRun]>` / `Arc<[Workflow]>` snapshots or `Arc<Vec<T>>` so cache hits hand out cheap references instead of cloning the entire vec on every read/write. This should shrink allocations during rapid refresh loops.
 - [✅] 2025-12-03 — Kicked off the large-file refactor by extracting the detail view filter/header controls into their own module; continue breaking `src/ui/detail_view/mod.rs` into submodules.
 - [✅] 2025-12-03 — Extracted run-filter persistence plus workflow list loading/refresh logic into `run_filters.rs` and `workflow_list.rs`, shrinking `src/ui/detail_view/mod.rs` by ~400 LOC.
-- [🔄] Next up in the detail view refactor: move the favorites toggle/observer code into its own module to keep `mod.rs` focused solely on layout wiring.
+- [✅] 2025-12-03 — Moved the favorites toggle wiring/observers into `favorite_controls.rs`, leaving `src/ui/detail_view/mod.rs` to manage layout only.
+- [🔄] Detail view refactor follow-up: pull the footer/empty-state toast overlay helpers into their own module so `mod.rs` no longer owns widget layout beyond the header scaffold.
 - [🔄] Break `src/ui/main_window.rs` (~1.3K LOC) into dedicated modules (app state, repo list pane, async loaders) to unblock further readability improvements. (Sidebar panel + header controls + repo loader helpers + selection/background refresh logic extracted into `ui/main_window/` submodules; next up: remaining async/state helpers.)
 - [🆕] Extract workflow/run loading orchestration from `src/ui/detail_view/helpers/runs/load.rs` into smaller files so we can test retry, digest, and notification logic independently.
 - [🆕] Trim `src/demo.rs` (700+ LOC) by moving fixtures and helper functions into `src/demo/` modules, keeping the entry surface small.
