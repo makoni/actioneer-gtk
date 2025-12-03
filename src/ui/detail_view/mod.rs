@@ -17,6 +17,7 @@ use tracing::{error, info, warn};
 
 mod filter_controls;
 mod helpers;
+mod run_filters;
 use filter_controls::{FilterChips, FilterControls};
 use helpers::{
     JobContextMap, LoadRunsParams, RunDigestStore, WorkflowRowContext, WorkflowRowSettings,
@@ -115,13 +116,6 @@ impl From<RunFilters> for RunFilterPreferences {
             default_branch_only: false,
         }
     }
-}
-
-#[derive(Copy, Clone)]
-enum FilterKind {
-    Success,
-    Failed,
-    Running,
 }
 
 impl RepoDetailPane {
@@ -304,175 +298,6 @@ impl RepoDetailPane {
 
         self.connect_refresh_button(&refresh_button);
         self.connect_workflow_selected();
-    }
-
-    fn connect_filter_chips(&self) {
-        let chips = self.filter_chips.clone();
-        self.attach_filter_chip_handler(&chips.success, FilterKind::Success);
-        self.attach_filter_chip_handler(&chips.failed, FilterKind::Failed);
-        self.attach_filter_chip_handler(&chips.running, FilterKind::Running);
-    }
-
-    fn attach_filter_chip_handler(&self, button: &gtk::ToggleButton, kind: FilterKind) {
-        let pane = self.clone();
-        button.connect_toggled(move |btn| {
-            pane.on_filter_chip_toggled(kind, btn.is_active());
-        });
-    }
-
-    fn on_filter_chip_toggled(&self, kind: FilterKind, active: bool) {
-        if self.filter_guard.get() {
-            return;
-        }
-
-        {
-            let mut filters = self.run_filters.lock();
-            match kind {
-                FilterKind::Success => filters.include_success = active,
-                FilterKind::Failed => filters.include_failed = active,
-                FilterKind::Running => filters.include_running = active,
-            }
-        }
-
-        self.persist_run_filters();
-        self.refresh_visible_runs_with_filters();
-    }
-
-    fn persist_run_filters(&self) {
-        if let Some(manager) = &self.preferences_manager {
-            let manager = manager.clone();
-            let filters: RunFilterPreferences = self.run_filters.lock().clone().into();
-            crate::runtime_handle().spawn(async move {
-                if let Err(err) = manager.set_run_filters(filters).await {
-                    warn!("Failed to persist run filters: {}", err);
-                }
-            });
-        }
-    }
-
-    fn restore_run_filter_preferences(&self) {
-        if let Some(manager) = &self.preferences_manager {
-            let (sender, receiver) =
-                glib::MainContext::default().channel::<RunFilters>(glib::Priority::default());
-            let manager = manager.clone();
-            crate::runtime_handle().spawn(async move {
-                let prefs = manager.get().await;
-                let _ = sender.send(RunFilters::from(prefs.run_filters));
-            });
-
-            let pane = self.clone();
-            receiver.attach(None, move |filters| {
-                pane.apply_saved_filters(filters);
-                pane.refresh_visible_runs_with_filters();
-                glib::ControlFlow::Break
-            });
-        } else {
-            self.apply_saved_filters(RunFilters::default());
-            self.refresh_visible_runs_with_filters();
-        }
-    }
-
-    fn apply_saved_filters(&self, filters: RunFilters) {
-        let normalized = filters.clone();
-
-        {
-            let mut guard = self.run_filters.lock();
-            *guard = normalized.clone();
-        }
-
-        self.filter_guard.set(true);
-        self.filter_chips
-            .success
-            .set_active(normalized.include_success);
-        self.filter_chips
-            .failed
-            .set_active(normalized.include_failed);
-        self.filter_chips
-            .running
-            .set_active(normalized.include_running);
-        self.filter_guard.set(false);
-    }
-
-    fn refresh_visible_runs_with_filters(&self) {
-        let context = self.workflow_list_context();
-        let run_filters_arc = self.run_filters.clone();
-        let owner = context.owner.clone();
-        let repo = context.repo.clone();
-        let repo_model = context.repo_model.clone();
-        let parent_window = context.parent_window.clone();
-        let cache = context.cache.clone();
-        let toast_overlay = context.toast_overlay.clone();
-        let workflows_with_active = context.workflows_with_active_runs.clone();
-        let job_contexts = context.job_contexts.clone();
-        let run_digests = context.run_digests.clone();
-        let notification_manager = context.notification_manager.clone();
-        let preferences_manager = context.preferences_manager.clone();
-
-        let mut child = self.list_box.first_child();
-        while let Some(widget) = child.as_ref() {
-            let next = widget.next_sibling();
-
-            if let Ok(row) = widget.clone().downcast::<gtk::ListBoxRow>()
-                && let Some(row_child) = row.child()
-                && let Some(box_widget) = row_child.downcast_ref::<gtk::Box>()
-            {
-                let mut inner = box_widget.first_child();
-                while let Some(expander_widget) = inner.as_ref() {
-                    let next_inner = expander_widget.next_sibling();
-                    if let Some(expander) = expander_widget.downcast_ref::<gtk::Expander>()
-                        && expander.is_expanded()
-                    {
-                        if let Some(workflow_id_ptr) =
-                            unsafe { expander.data::<i64>("actioneer-workflow-id") }
-                        {
-                            let workflow_id = unsafe { *workflow_id_ptr.as_ref() };
-                            if let Some(child_widget) = expander.child()
-                                && let Ok(runs_box) = child_widget.downcast::<gtk::Box>()
-                            {
-                                let status_badge = Self::status_badge_for_expander(expander);
-                                let preserved_runs =
-                                    current_job_context_run_ids(&job_contexts, workflow_id);
-                                let workflow_label = unsafe {
-                                    expander
-                                        .data::<String>("actioneer-workflow-name")
-                                        .map(|name_ptr| name_ptr.as_ref().clone())
-                                }
-                                .unwrap_or_else(|| {
-                                    format!("{}/{} • Workflow {}", owner, repo, workflow_id)
-                                });
-
-                                load_workflow_runs(LoadRunsParams {
-                                    client: context.client.clone(),
-                                    owner: owner.clone(),
-                                    repo: repo.clone(),
-                                    repo_model: repo_model.clone(),
-                                    workflow_id,
-                                    workflow_name: workflow_label,
-                                    runs_box,
-                                    parent_window: parent_window.clone(),
-                                    status_badge,
-                                    expander: expander.clone(),
-                                    cache: cache.clone(),
-                                    toast_overlay: toast_overlay.clone(),
-                                    bypass_cache: false,
-                                    job_contexts: job_contexts.clone(),
-                                    expanded_run_ids: preserved_runs,
-                                    workflows_with_active: workflows_with_active.clone(),
-                                    background: false,
-                                    run_digests: run_digests.clone(),
-                                    notification_manager: notification_manager.clone(),
-                                    preferences_manager: preferences_manager.clone(),
-                                    run_filters: run_filters_arc.clone(),
-                                });
-                            }
-                        }
-                    }
-                    inner = next_inner;
-                }
-            }
-
-            child = next;
-        }
     }
 
     fn setup_favorite_button(&self) {
