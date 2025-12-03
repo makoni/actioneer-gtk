@@ -1,112 +1,75 @@
 use super::MainWindow;
-use crate::api::models::Repo;
-use crate::ui::sidebar::{find_label_by_name, row_matches_query};
-use gtk4::{self as gtk, prelude::*};
+use crate::ui::sidebar::{find_repo_index, repo_from_object};
+use gtk4::{self as gtk, glib, prelude::*};
 use tracing::info;
 
 impl MainWindow {
     pub(super) fn connect_search(&self) {
-        let list_box = self.repo_list.clone();
+        let panel = self.sidebar_panel.clone();
+        let window = self.clone();
 
         self.search_entry.connect_search_changed(move |entry| {
             let text = entry.text().to_lowercase();
-            let query = text.clone();
-            list_box.set_filter_func(move |row: &gtk::ListBoxRow| row_matches_query(row, &query));
-            list_box.invalidate_filter();
+            panel.update_filter_query(&text);
+            window.restore_repo_selection_async();
         });
     }
 
     pub(super) fn connect_repo_selection(&self) {
         let window = self.clone();
+        let selection = self.repo_selection.clone();
 
-        self.repo_list
-            .connect_selected_rows_changed(move |list_box| {
-                let window = window.clone();
-                let repo_name = selected_repo_name(list_box);
+        selection.connect_selected_notify(move |sel| {
+            let window = window.clone();
+            let repo = sel.selected_item().and_then(|obj| repo_from_object(&obj));
 
-                let repo = {
-                    let repos = window.repos.lock();
-                    resolve_repo_by_name(&repos, repo_name)
-                };
+            let current_selection = *window.selected_repo_id.lock();
+            let new_selection = repo.as_ref().map(|r| r.id);
 
-                let current_selection = *window.selected_repo_id.lock();
-                let new_selection = repo.as_ref().map(|r| r.id);
+            if *window.handling_selection.lock() {
+                info!("Already handling selection, ignoring signal");
+                return;
+            }
 
-                if *window.handling_selection.lock() {
-                    info!("Already handling selection, ignoring signal");
-                    return;
-                }
+            info!(
+                "Selection signal: current={:?}, new={:?}, repo={:?}",
+                current_selection,
+                new_selection,
+                repo.as_ref().map(|r| r.full_name.as_str())
+            );
 
-                info!(
-                    "Selection signal: current={:?}, new={:?}, repo={:?}",
-                    current_selection,
-                    new_selection,
-                    repo.as_ref().map(|r| r.full_name.as_str())
-                );
+            if new_selection.is_none() && window.active_detail.borrow().is_some() {
+                info!("Ignoring transient deselection (detail pane is active)");
+                return;
+            }
 
-                if new_selection.is_none() && window.active_detail.borrow().is_some() {
-                    info!("Ignoring transient deselection (detail pane is active)");
-                    return;
-                }
+            if current_selection != new_selection {
+                window.handle_repo_selection(repo);
+            }
+        });
+    }
 
-                if current_selection != new_selection {
-                    window.handle_repo_selection(repo);
-                }
-            });
+    pub(super) fn restore_repo_selection_async(&self) {
+        let selection = self.repo_selection.clone();
+        let model = self.repo_filter_model.clone();
+        let target = *self.selected_repo_id.lock();
+
+        glib::idle_add_local_once(move || {
+            restore_sidebar_selection(&selection, &model, target);
+        });
     }
 }
 
-fn selected_repo_name(list_box: &gtk::ListBox) -> Option<String> {
-    list_box
-        .selected_row()
-        .and_then(|row| row.child())
-        .and_then(|child| find_label_by_name(&child, "repo-name-label"))
-        .map(|label| label.text().to_string())
-}
-
-fn resolve_repo_by_name(repos: &[Repo], name: Option<String>) -> Option<Repo> {
-    let target = name?;
-    repos.iter().find(|repo| repo.full_name == target).cloned()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::api::models::{Repo, User};
-
-    fn make_repo(id: i64, full_name: &str) -> Repo {
-        let name = full_name.split('/').last().unwrap_or(full_name).to_string();
-        Repo {
-            id,
-            name,
-            full_name: full_name.to_string(),
-            owner: User {
-                login: "tester".into(),
-            },
-            is_private: false,
-            permissions: None,
-            default_branch: Some("main".into()),
+pub(super) fn restore_sidebar_selection(
+    selection: &gtk::SingleSelection,
+    model: &gtk::FilterListModel,
+    repo_id: Option<i64>,
+) {
+    if let Some(repo_id) = repo_id {
+        if let Some(index) = find_repo_index(model, repo_id) {
+            selection.set_selected(index);
+            return;
         }
     }
-
-    #[test]
-    fn resolves_repo_by_matching_full_name() {
-        let repos = vec![make_repo(1, "makoni/actioneer"), make_repo(2, "foo/bar")];
-        let repo = resolve_repo_by_name(&repos, Some("foo/bar".into()));
-        assert_eq!(repo.map(|r| r.id), Some(2));
-    }
-
-    #[test]
-    fn returns_none_for_unknown_repo() {
-        let repos = vec![make_repo(1, "makoni/actioneer")];
-        let repo = resolve_repo_by_name(&repos, Some("nope".into()));
-        assert!(repo.is_none());
-    }
-
-    #[test]
-    fn returns_none_when_missing_name() {
-        let repos = vec![make_repo(1, "makoni/actioneer")];
-        let repo = resolve_repo_by_name(&repos, None);
-        assert!(repo.is_none());
-    }
+    selection.unselect_all();
 }

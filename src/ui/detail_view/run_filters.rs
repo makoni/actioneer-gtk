@@ -113,12 +113,8 @@ impl RepoDetailPane {
         let notification_manager = context.notification_manager.clone();
         let preferences_manager = context.preferences_manager.clone();
 
-        let mut child = self.list_box.first_child();
-        while let Some(widget) = child.as_ref() {
-            let next = widget.next_sibling();
-
-            if let Ok(row) = widget.clone().downcast::<gtk::ListBoxRow>()
-                && let Some(row_child) = row.child()
+        for row in super::workflow_list::collect_workflow_rows(&context.store) {
+            if let Some(row_child) = row.child()
                 && let Some(box_widget) = row_child.downcast_ref::<gtk::Box>()
             {
                 let mut inner = box_widget.first_child();
@@ -173,8 +169,6 @@ impl RepoDetailPane {
                     inner = next_inner;
                 }
             }
-
-            child = next;
         }
     }
 }

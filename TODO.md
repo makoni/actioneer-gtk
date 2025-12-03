@@ -31,10 +31,6 @@ Optional / next steps (low priority)
   - Decide on a cache format + location (e.g., zstd-compressed JSON in the cache dir) and document eviction rules.
   - Implement async load/save plumbing that reuses the existing `DataCache` APIs without blocking the UI thread.
   - Add tests covering cold-start hits, corruption fallback, and TTL enforcement.
-- [✅] 2025-12-03 — Replaced the manual `gtk::Box` run list rebuild with a `WorkflowRunListModel` + `gtk::ListView` pipeline so filters and refreshes reuse row widgets without flicker.
-  - [✅] 2025-12-03 — Added `WorkflowRunListModel` wrapping a `gio::ListStore` with stateful placeholders and retry handling.
-  - [✅] 2025-12-03 — Wired the workflow pane to reuse a single `gtk::ListView` factory per workflow and persisted expansion state + job context IDs across diff updates.
-  - [✅] 2025-12-03 — Covered the new filtering summary helpers with unit tests to ensure visible/filtered counts stay accurate.
 - Introduce an inline job-log drawer that can be expanded from each job row instead of opening a separate window.
   - Design a row-level drawer widget (likely `AdwExpanderRow`/`AdwClamp`) that embeds the log viewer.
   - Ensure logs load lazily per row and reuse the existing log-cache/code paths.
@@ -43,19 +39,10 @@ Optional / next steps (low priority)
   - Define the summary data structure (favorite repo -> last run digest) and extend the cache to supply it.
   - Build an `OverviewPage` with cards + refresh controls, adapting to narrow/wide layouts.
   - Add smoke tests ensuring the overview reflects cache updates and respects offline data.
-- Modernize the repo sidebar and detail lists to use `gio::ListStore` + `gtk::ListView` (`gtk::SelectionModel`) instead of `gtk::ListBox` rebuilds.
-  - Convert the repo sidebar to `gtk::ListView` while preserving selection/favorites behavior.
-  - Port the workflow detail list to the same pattern once the run list model exists.
-  - Benchmark large orgs (100+ repos) to confirm smoother scrolling.
 - Rework `DataCache` to store `Arc<[WorkflowRun]>` / `Arc<[Workflow]>` snapshots or `Arc<Vec<T>>` so cache hits hand out cheap references instead of cloning entire vecs.
   - Introduce snapshot types and adjust cache setters/getters to clone `Arc` handles only.
   - Update downstream call sites (filters, overview, notifications) to accept shared slices instead of owned `Vec`s.
   - Add benchmarks/tests verifying reduced allocations during refresh loops.
-- [✅] Break `src/ui/main_window.rs` (~1.3K LOC) into dedicated modules (app state, repo list pane, async loaders) to unblock further readability improvements. (Sidebar panel + header controls + repo loader helpers + selection/background refresh logic extracted into `ui/main_window/` submodules; next up: remaining async/state helpers.)
-  - [✅] 2025-12-03 — Moved demo-mode activation/teardown into `ui/main_window/demo_mode.rs`, reducing `main_window.rs` by ~80 LOC and isolating the mock-data entrypoint.
-  - [✅] 2025-12-03 — Extracted repository list search/selection wiring into `ui/main_window/repo_list.rs` with unit tests covering repo resolution logic.
-  - [✅] 2025-12-03 — Isolated refresh scheduling/abort handling into `ui/main_window/refresh.rs`, keeping GTK updates and rate-limit plumbing contained.
-  - [✅] 2025-12-03 — Promoted `RepoActionsState` + `WorkflowStatusCounts` into `ui/state/` (with tests) so UI modules share typed snapshots without cloning logic inline.
 
 ## Secret portal migration plan
 
@@ -74,6 +61,19 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2025-12-03 — Replaced the manual `gtk::Box` run list rebuild with a `WorkflowRunListModel` + `gtk::ListView` pipeline so filters and refreshes reuse row widgets without flicker.
+  - [✅] 2025-12-03 — Added `WorkflowRunListModel` wrapping a `gio::ListStore` with stateful placeholders and retry handling.
+  - [✅] 2025-12-03 — Wired the workflow pane to reuse a single `gtk::ListView` factory per workflow and persisted expansion state + job context IDs across diff updates.
+  - [✅] 2025-12-03 — Covered the new filtering summary helpers with unit tests to ensure visible/filtered counts stay accurate.
+- [✅] Break `src/ui/main_window.rs` (~1.3K LOC) into dedicated modules (app state, repo list pane, async loaders) to unblock further readability improvements. (Sidebar panel + header controls + repo loader helpers + selection/background refresh logic extracted into `ui/main_window/` submodules; next up: remaining async/state helpers.)
+  - [✅] 2025-12-03 — Moved demo-mode activation/teardown into `ui/main_window/demo_mode.rs`, reducing `main_window.rs` by ~80 LOC and isolating the mock-data entrypoint.
+  - [✅] 2025-12-03 — Extracted repository list search/selection wiring into `ui/main_window/repo_list.rs` with unit tests covering repo resolution logic.
+  - [✅] 2025-12-03 — Isolated refresh scheduling/abort handling into `ui/main_window/refresh.rs`, keeping GTK updates and rate-limit plumbing contained.
+  - [✅] 2025-12-03 — Promoted `RepoActionsState` + `WorkflowStatusCounts` into `ui/state/` (with tests) so UI modules share typed snapshots without cloning logic inline.
+- [✅] 2025-12-03 — Modernized the repo sidebar and workflow detail panes to `gio::ListStore` + `gtk::ListView`, keeping selection/filter state stable and logging rebuild timings for >100-row lists to guard large-org performance.
+  - [✅] 2025-12-03 — Migrated the sidebar to a single `gtk::ListView` + `gtk::FilterListModel`, carried favorites/selection metadata on each row, and re-used widgets via reparenting to avoid churn.
+  - [✅] 2025-12-03 — Swapped the workflow pane’s `gtk::ListBox` rebuild for a persistent `gio::ListStore`, updated refresh/filter plumbing to iterate the store, and instrumented rebuild durations for large workflow sets.
+  - [✅] 2025-12-03 — Added tracing-based benchmarks that log rebuild timings whenever repo counts exceed 100 (or workflows exceed 50) so we can spot regressions when testing large orgs.
 - [✅] 2025-12-03 — Rebuilt workflow run lists atop `WorkflowRunListModel` + `gtk::ListView`, preserved expansion/scroll state, and removed the ad-hoc `runs_box` churn.
 - [✅] 2025-12-03 — Broke the detail view header, filter chips, favorites controls, and run-list layout into dedicated modules (`run_filters.rs`, `workflow_list.rs`, `favorite_controls.rs`, `content.rs`) so each stays under 300 LOC and gains targeted tests.
 - [✅] 2025-12-03 — Split workflow refresh plumbing into `workflow_refresh.rs` and parser helpers, plus added `digest.rs`/`filters.rs` coverage to keep HTTP/UI wiring isolated.

@@ -66,6 +66,8 @@ pub(crate) fn create_workflow_expander_row(
     let row = gtk::ListBoxRow::new();
     row.set_activatable(false);
     row.set_selectable(false);
+    row.add_css_class("hoverless-row");
+    row.add_css_class("workflow-row");
 
     let main_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
     let workflow_display_name = format!("{}/{} • {}", owner, repo, workflow.name);
@@ -120,6 +122,9 @@ pub(crate) fn create_workflow_expander_row(
         expander.set_data("actioneer-run-list", run_list.clone());
     }
     main_box.append(&expander);
+
+    let card = workflow_row_card(&main_box);
+    row.set_child(Some(&card));
 
     let client_for_trigger = client.clone();
     let owner_for_trigger = owner.clone();
@@ -540,6 +545,21 @@ pub(crate) fn create_workflow_expander_row(
         dialog.present();
     });
 
-    row.set_child(Some(&main_box));
     row
+}
+
+pub(crate) fn workflow_row_card<W: IsA<gtk::Widget>>(child: &W) -> gtk::Box {
+    let card = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    card.add_css_class("workflow-card");
+    card.add_css_class("card");
+    card.add_css_class("background");
+    card.set_margin_start(6);
+    card.set_margin_end(6);
+    card.set_margin_top(4);
+    card.set_margin_bottom(4);
+    card.set_hexpand(true);
+    card.set_vexpand(false);
+    card.set_overflow(gtk::Overflow::Hidden);
+    card.append(child);
+    card
 }

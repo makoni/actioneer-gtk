@@ -47,6 +47,8 @@ pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -
     job_box.set_margin_bottom(4);
     job_box.set_valign(gtk::Align::Center);
     job_box.set_hexpand(true);
+    job_box.add_css_class("job-row");
+    job_box.add_css_class("hoverless-row");
 
     let icon = gtk::Image::from_icon_name(get_job_status_icon(job));
     let status_class = get_job_status_class(job);

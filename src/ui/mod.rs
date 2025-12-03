@@ -7,6 +7,7 @@ pub mod auth_window;
 pub mod job_logs_window;
 pub mod main_window;
 pub mod preferences_window;
+pub mod style;
 
 // New modules for better organization
 pub mod state;

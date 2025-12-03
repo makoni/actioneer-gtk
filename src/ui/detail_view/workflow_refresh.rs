@@ -29,7 +29,7 @@ impl RepoDetailPane {
         let workflows = self.workflows.clone();
         let owner = context.owner.clone();
         let repo_name = context.repo.clone();
-        let list_box = context.list_box.clone();
+        let list_store = context.store.clone();
         let parent_window = context.parent_window.clone();
         let loading_guard = self.loading.clone();
         let cache = context.cache.clone();
@@ -61,7 +61,7 @@ impl RepoDetailPane {
             let notification_manager_for_ui = notification_manager.clone();
             let preferences_manager_for_ui = preferences_manager.clone();
             let ui_context = WorkflowListContext {
-                list_box: list_box.clone(),
+                store: list_store.clone(),
                 client: client.clone(),
                 owner: owner.clone(),
                 repo: repo_name.clone(),
@@ -140,7 +140,7 @@ impl RepoDetailPane {
         let workflows = self.workflows.clone();
         let owner = context.owner.clone();
         let repo_name = context.repo.clone();
-        let list_box = context.list_box.clone();
+        let list_store = context.store.clone();
         let parent_window = context.parent_window.clone();
         let loading_guard = self.loading.clone();
         let cache = context.cache.clone();
@@ -170,7 +170,7 @@ impl RepoDetailPane {
             let notification_manager_for_ui = notification_manager_handle.clone();
             let preferences_manager_for_ui = preferences_manager_handle.clone();
             let ui_context = WorkflowListContext {
-                list_box: list_box.clone(),
+                store: list_store.clone(),
                 client: client.clone(),
                 owner: owner.clone(),
                 repo: repo_name.clone(),
@@ -221,7 +221,7 @@ impl RepoDetailPane {
         let run_filters = context.run_filters.clone();
         let owner = context.owner.clone();
         let repo_name = context.repo.clone();
-        let list_box = context.list_box.clone();
+        let list_store = context.store.clone();
         let callback_refs = self.clone_for_callbacks();
         let parent_window = context.parent_window.clone();
         let loading_guard = self.loading.clone();
@@ -250,7 +250,7 @@ impl RepoDetailPane {
             let owner = owner.clone();
             let repo_name = repo_name.clone();
             let repo_model = repo_model.clone();
-            let list_box = list_box.clone();
+            let store = list_store.clone();
             let callback_refs = callback_refs.clone();
             let parent_window = parent_window.clone();
             let loading_guard = loading_guard.clone();
@@ -265,7 +265,7 @@ impl RepoDetailPane {
 
             let (sender, receiver) = glib::MainContext::default()
                 .channel::<Result<Vec<Workflow>, GitHubError>>(glib::Priority::default());
-            let list_box_for_ui = list_box.clone();
+            let list_store_for_ui = store.clone();
             let run_filters_for_ui = run_filters_for_button.clone();
             let workflows_for_ui = workflows.clone();
             let client_for_ui = client.clone();
@@ -292,7 +292,7 @@ impl RepoDetailPane {
                         *workflows_for_ui.lock() = wf_list.clone();
 
                         let ui_context = WorkflowListContext {
-                            list_box: list_box_for_ui.clone(),
+                            store: list_store_for_ui.clone(),
                             client: client_for_ui.clone(),
                             owner: owner_for_ui.clone(),
                             repo: repo_name_for_ui.clone(),
@@ -357,7 +357,7 @@ impl RepoDetailPane {
         let repo_name = list_context.repo.clone();
         let repo_model = list_context.repo_model.clone();
         let parent_window = list_context.parent_window.clone();
-        let list_box = list_context.list_box.clone();
+        let list_store = list_context.store.clone();
         let workflows_with_active = list_context.workflows_with_active_runs.clone();
         let auto_refresh_source = self.auto_refresh_source.clone();
         let job_contexts = list_context.job_contexts.clone();
@@ -377,7 +377,7 @@ impl RepoDetailPane {
             info!("Auto-refreshing workflow runs in background");
 
             let background_context = WorkflowListContext {
-                list_box: list_box.clone(),
+                store: list_store.clone(),
                 client: client.clone(),
                 owner: owner.clone(),
                 repo: repo_name.clone(),
@@ -402,7 +402,6 @@ impl RepoDetailPane {
     }
 
     fn refresh_runs_background(context: &WorkflowListContext) {
-        let list_box = context.list_box.clone();
         let client = context.client.clone();
         let owner = context.owner.clone();
         let repo = context.repo.clone();
@@ -419,12 +418,8 @@ impl RepoDetailPane {
 
         let mut observed_active: HashSet<i64> = HashSet::new();
 
-        let mut child = list_box.first_child();
-        while let Some(widget) = child.as_ref() {
-            let next_sibling = widget.next_sibling();
-
-            if let Ok(row) = widget.clone().downcast::<gtk::ListBoxRow>()
-                && let Some(row_child) = row.child()
+        for row in super::workflow_list::collect_workflow_rows(&context.store) {
+            if let Some(row_child) = row.child()
                 && let Some(box_widget) = row_child.downcast_ref::<gtk::Box>()
             {
                 let mut inner_child = box_widget.first_child();
@@ -485,7 +480,6 @@ impl RepoDetailPane {
                     inner_child = next;
                 }
             }
-            child = next_sibling;
         }
 
         refresh_jobs_for_workflows(&job_contexts, &observed_active);

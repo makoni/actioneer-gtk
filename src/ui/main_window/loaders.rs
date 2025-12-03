@@ -164,7 +164,9 @@ impl MainWindow {
         let selected = *self.selected_repo_id.lock();
         let favorites_arc = self.favorites.clone();
         let favorites_manager = self.favorites_manager.clone();
-        let list_box = self.repo_list.clone();
+        let store = self.repo_store.clone();
+        let filter_model = self.repo_filter_model.clone();
+        let selection = self.repo_selection.clone();
 
         glib::idle_add_local_once(move || {
             let context = RepoListRenderContext {
@@ -174,10 +176,10 @@ impl MainWindow {
                 workflow_snapshot,
                 favorites_state: favorites_arc,
                 favorites_manager,
-                selected_repo_id: selected,
             };
 
-            rebuild_repo_list(list_box, context);
+            rebuild_repo_list(store.clone(), context);
+            super::repo_list::restore_sidebar_selection(&selection, &filter_model, selected);
         });
     }
 }

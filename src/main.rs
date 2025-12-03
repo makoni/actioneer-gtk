@@ -17,7 +17,7 @@ use std::path::Path;
 use std::sync::OnceLock;
 use tokio::runtime::{Builder, Handle};
 use tracing::info;
-use ui::MainWindow;
+use ui::{MainWindow, style};
 
 pub const APP_ID: &str = "me.spaceinbox.actioneer";
 pub const APP_ICON_NAME: &str = APP_ID;
@@ -77,6 +77,7 @@ fn main() -> anyhow::Result<()> {
     app.connect_startup(|_| {
         register_icon_theme_paths();
         gtk4::Window::set_default_icon_name(APP_ICON_NAME);
+        style::install_app_css();
     });
 
     app.connect_activate(build_ui);

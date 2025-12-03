@@ -3,11 +3,12 @@ use crate::favorites::FavoritesManager;
 use crate::ui::state::{RepoActionsState, WorkflowStatusCounts};
 use crate::ui::utils::MainContextChannelExt;
 use gtk::prelude::*;
-use gtk4::{self as gtk, glib};
+use gtk4::{self as gtk, gio, glib};
 use parking_lot::Mutex;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
-use tracing::warn;
+use std::time::Instant;
+use tracing::{debug, warn};
 
 const MAX_WORKFLOWS_PER_REPO: usize = 3;
 
@@ -19,10 +20,9 @@ pub struct RepoListRenderContext {
     pub workflow_snapshot: HashMap<i64, WorkflowStatusCounts>,
     pub favorites_state: Arc<Mutex<HashSet<i64>>>,
     pub favorites_manager: Option<Arc<FavoritesManager>>,
-    pub selected_repo_id: Option<i64>,
 }
 
-pub fn rebuild_repo_list(list_box: gtk::ListBox, context: RepoListRenderContext) {
+pub fn rebuild_repo_list(store: gio::ListStore, context: RepoListRenderContext) {
     let RepoListRenderContext {
         repos,
         favorites_snapshot,
@@ -30,16 +30,11 @@ pub fn rebuild_repo_list(list_box: gtk::ListBox, context: RepoListRenderContext)
         workflow_snapshot,
         favorites_state,
         favorites_manager,
-        selected_repo_id,
     } = context;
 
-    loop {
-        let child_opt = list_box.first_child();
-        let Some(child) = child_opt else {
-            break;
-        };
-        list_box.remove(&child);
-    }
+    let render_start = Instant::now();
+
+    store.remove_all();
 
     let mut favorites_section = Vec::new();
     let mut enabled_section = Vec::new();
@@ -60,34 +55,26 @@ pub fn rebuild_repo_list(list_box: gtk::ListBox, context: RepoListRenderContext)
         }
     }
 
-    let selected_full_name = selected_repo_id.and_then(|id| {
-        repos
-            .iter()
-            .find(|repo| repo.id == id)
-            .map(|repo| repo.full_name.clone())
-    });
-
-    let mut selected_row: Option<gtk::ListBoxRow> = None;
-
     let favorites_state_for_rows = favorites_state.clone();
     let favorites_manager_for_rows = favorites_manager.clone();
     let actions_snapshot_for_rows = actions_snapshot.clone();
     let workflow_snapshot_for_rows = workflow_snapshot.clone();
+    let store_ref = store.clone();
 
-    let mut append_section =
-        |title: &str, icon_name: &str, repos: Vec<Repo>, favorites_snapshot: &HashSet<i64>| {
+    let append_section =
+        move |title: &str, icon_name: &str, repos: Vec<Repo>, favorites_snapshot: &HashSet<i64>| {
             if repos.is_empty() {
                 return;
             }
 
             let header = create_section_header(title, icon_name);
-            list_box.append(&header);
+            store_ref.append(&header);
 
             let grouped = group_repos_by_owner(repos);
 
             for (owner, repos) in grouped {
                 let owner_row = create_owner_header(&owner);
-                list_box.append(&owner_row);
+                store_ref.append(&owner_row);
 
                 for repo in repos {
                     let repo_id = repo.id;
@@ -109,13 +96,7 @@ pub fn rebuild_repo_list(list_box: gtk::ListBox, context: RepoListRenderContext)
                         favorites_manager_for_rows.clone(),
                     );
 
-                    if let Some(full_name) = &selected_full_name
-                        && repo.full_name == *full_name
-                    {
-                        selected_row = Some(row.clone());
-                    }
-
-                    list_box.append(&row);
+                    store_ref.append(&row);
                 }
             }
         };
@@ -139,10 +120,13 @@ pub fn rebuild_repo_list(list_box: gtk::ListBox, context: RepoListRenderContext)
         &favorites_snapshot,
     );
 
-    if let Some(row) = selected_row {
-        list_box.select_row(Some(&row));
-    } else {
-        list_box.unselect_all();
+    let elapsed = render_start.elapsed();
+    if repos.len() >= 100 {
+        debug!(
+            repo_count = repos.len(),
+            duration_ms = elapsed.as_millis(),
+            "Rebuilt repo sidebar list store"
+        );
     }
 }
 
@@ -337,14 +321,60 @@ fn build_repo_row(
     wrapper.append(&content_box);
 
     row.set_child(Some(&wrapper));
+
+    unsafe {
+        row.set_data("actioneer-repo-id", repo_id);
+        row.set_data("actioneer-repo-full-name", repo.full_name.clone());
+        row.set_data("actioneer-repo-model", repo);
+    }
+
     row
+}
+
+fn repo_from_row(row: &gtk::ListBoxRow) -> Option<Repo> {
+    unsafe {
+        row.data::<Repo>("actioneer-repo-model")
+            .map(|ptr| ptr.as_ref().clone())
+    }
+}
+
+pub fn repo_from_object(obj: &glib::Object) -> Option<Repo> {
+    obj.downcast_ref::<gtk::ListBoxRow>()
+        .and_then(|row| repo_from_row(row))
+}
+
+fn repo_id_from_row(row: &gtk::ListBoxRow) -> Option<i64> {
+    unsafe {
+        row.data::<i64>("actioneer-repo-id")
+            .map(|ptr| *ptr.as_ref())
+    }
+}
+
+pub fn repo_id_from_object(obj: &glib::Object) -> Option<i64> {
+    obj.downcast_ref::<gtk::ListBoxRow>()
+        .and_then(|row| repo_id_from_row(row))
+}
+
+pub fn find_repo_index(model: &gtk::FilterListModel, repo_id: i64) -> Option<u32> {
+    for idx in 0..model.n_items() {
+        if let Some(obj) = model.item(idx)
+            && let Some(id) = repo_id_from_object(&obj)
+            && id == repo_id
+        {
+            return Some(idx);
+        }
+    }
+    None
 }
 
 fn create_section_header(title: &str, icon_name: &str) -> gtk::ListBoxRow {
     let row = gtk::ListBoxRow::new();
     row.set_selectable(false);
     row.set_activatable(false);
+    row.set_can_focus(false);
+    row.set_can_target(false);
     row.add_css_class("section-header");
+    row.add_css_class("hoverless-row");
 
     let container = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     container.set_margin_top(18);
@@ -372,7 +402,10 @@ fn create_owner_header(owner: &str) -> gtk::ListBoxRow {
     let row = gtk::ListBoxRow::new();
     row.set_selectable(false);
     row.set_activatable(false);
+    row.set_can_focus(false);
+    row.set_can_target(false);
     row.add_css_class("owner-header");
+    row.add_css_class("hoverless-row");
 
     let container = gtk::Box::new(gtk::Orientation::Horizontal, 0);
     container.set_margin_top(4);

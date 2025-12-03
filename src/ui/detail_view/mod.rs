@@ -5,7 +5,7 @@ use crate::favorites::FavoritesManager;
 use crate::notifications::NotificationManager;
 use crate::preferences::{PreferencesManager, RunFilterPreferences};
 use gtk4::prelude::*;
-use gtk4::{self as gtk, glib};
+use gtk4::{self as gtk, gio, glib};
 use libadwaita as adw;
 use parking_lot::Mutex;
 use std::cell::{Cell, RefCell};
@@ -39,7 +39,8 @@ pub struct RepoDetailPane {
     refresh_button: gtk::Button,
     buttons_box: gtk::Box,
     filter_controls: gtk::Box,
-    list_box: gtk::ListBox,
+    workflow_view: gtk::ListView,
+    workflow_store: gio::ListStore,
     root: gtk::Box,
     toast_overlay: adw::ToastOverlay,
     filter_chips: FilterChips,
@@ -64,7 +65,7 @@ pub struct RepoDetailDeps {
 
 #[derive(Clone)]
 struct WorkflowListContext {
-    list_box: gtk::ListBox,
+    store: gio::ListStore,
     client: Arc<Mutex<GitHubClient>>,
     owner: String,
     repo: String,
@@ -141,14 +142,34 @@ impl RepoDetailPane {
         let buttons_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         buttons_box.set_valign(gtk::Align::Center);
 
-        let list_box = gtk::ListBox::new();
-        list_box.add_css_class("boxed-list");
-        list_box.set_margin_top(12);
-        list_box.set_margin_bottom(12);
-        list_box.set_margin_start(12);
-        list_box.set_margin_end(12);
-        list_box.set_valign(gtk::Align::Fill);
-        list_box.set_vexpand(true);
+        let workflow_store = gio::ListStore::new::<gtk::ListBoxRow>();
+        let workflow_selection = gtk::NoSelection::new(Some(workflow_store.clone()));
+        let workflow_factory = gtk::SignalListItemFactory::new();
+        workflow_factory.connect_bind(|_, list_item| {
+            let Some(row) = list_item
+                .item()
+                .and_then(|obj| obj.downcast::<gtk::ListBoxRow>().ok())
+            else {
+                return;
+            };
+            row.unparent();
+            list_item.set_child(Some(&row));
+        });
+        workflow_factory.connect_unbind(|_, list_item| {
+            if let Some(child) = list_item.child() {
+                child.unparent();
+                list_item.set_child(None::<&gtk::Widget>);
+            }
+        });
+        let workflow_view = gtk::ListView::new(Some(workflow_selection), Some(workflow_factory));
+        workflow_view.add_css_class("boxed-list");
+        workflow_view.add_css_class("hoverless-list");
+        workflow_view.set_margin_top(12);
+        workflow_view.set_margin_bottom(12);
+        workflow_view.set_margin_start(12);
+        workflow_view.set_margin_end(12);
+        workflow_view.set_valign(gtk::Align::Fill);
+        workflow_view.set_vexpand(true);
         // Create ToastOverlay to wrap the content for showing feedback
         let toast_overlay = adw::ToastOverlay::new();
         let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
@@ -177,7 +198,8 @@ impl RepoDetailPane {
             refresh_button: refresh_button.clone(),
             buttons_box: buttons_box.clone(),
             filter_controls: filter_controls_widget.clone(),
-            list_box: list_box.clone(),
+            workflow_view: workflow_view.clone(),
+            workflow_store: workflow_store.clone(),
             root: root.clone(),
             toast_overlay: toast_overlay.clone(),
             filter_chips: filter_chips.clone(),

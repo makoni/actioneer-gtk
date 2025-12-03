@@ -1,17 +1,19 @@
 use super::helpers::{
-    WorkflowRowContext, WorkflowRowSettings, create_workflow_expander_row, take_job_context_run_ids,
+    WorkflowRowContext, WorkflowRowSettings, create_workflow_expander_row,
+    take_job_context_run_ids, workflow_row_card,
 };
 use super::{RepoDetailPane, WorkflowListContext};
 use crate::api::models::Workflow;
 use gtk4::prelude::*;
-use gtk4::{self as gtk};
+use gtk4::{self as gtk, gio};
 use std::collections::HashSet;
-use tracing::info;
+use std::time::Instant;
+use tracing::{debug, info};
 
 impl RepoDetailPane {
     pub(super) fn workflow_list_context(&self) -> WorkflowListContext {
         WorkflowListContext {
-            list_box: self.list_box.clone(),
+            store: self.workflow_store.clone(),
             client: self.client.clone(),
             owner: self.repo.owner.login.clone(),
             repo: self.repo.name.clone(),
@@ -30,39 +32,14 @@ impl RepoDetailPane {
 }
 
 pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[Workflow]) {
-    let list_box = context.list_box.clone();
+    let store = context.store.clone();
+    let render_start = Instant::now();
 
     let mut expanded_ids = HashSet::new();
-    let mut child = list_box.first_child();
-    while let Some(widget) = child.as_ref() {
-        let next_sibling = widget.next_sibling();
-
-        if let Ok(row) = widget.clone().downcast::<gtk::ListBoxRow>()
-            && let Some(row_child) = row.child()
-            && let Some(box_widget) = row_child.downcast_ref::<gtk::Box>()
-        {
-            let mut inner_child = box_widget.first_child();
-            while let Some(widget) = inner_child.as_ref() {
-                let next = widget.next_sibling();
-
-                if let Some(expander) = widget.downcast_ref::<gtk::Expander>()
-                    && expander.is_expanded()
-                {
-                    let name = expander.widget_name();
-                    if let Some(id) = name
-                        .as_str()
-                        .strip_prefix("workflow_")
-                        .and_then(|id_str| id_str.parse::<i64>().ok())
-                    {
-                        info!("Preserving expansion for workflow ID {}", id);
-                        expanded_ids.insert(id);
-                    }
-                }
-
-                inner_child = next;
-            }
+    for row in collect_workflow_rows(&store) {
+        if let Some(row_child) = row.child() {
+            capture_expanded_workflows(&row_child, &mut expanded_ids);
         }
-        child = next_sibling;
     }
 
     info!("💾 Preserved {} expanded workflow(s)", expanded_ids.len());
@@ -81,14 +58,14 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
         digests.retain(|workflow_id, _| visible_workflows.contains(workflow_id));
     }
 
-    while let Some(child) = list_box.first_child() {
-        list_box.remove(&child);
-    }
+    store.remove_all();
 
     if workflows.is_empty() {
         let row = gtk::ListBoxRow::new();
         row.set_selectable(false);
         row.set_activatable(false);
+        row.add_css_class("hoverless-row");
+        row.add_css_class("workflow-row");
 
         let placeholder = gtk::Label::new(Some("No workflows found."));
         placeholder.add_css_class("dim-label");
@@ -97,8 +74,12 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
         placeholder.set_margin_start(12);
         placeholder.set_margin_end(12);
 
-        row.set_child(Some(&placeholder));
-        list_box.append(&row);
+        let placeholder_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        placeholder_box.append(&placeholder);
+
+        let card = workflow_row_card(&placeholder_box);
+        row.set_child(Some(&card));
+        store.append(&row);
         return;
     }
 
@@ -129,7 +110,16 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
         };
 
         let expander_row = create_workflow_expander_row(workflow, &row_context, settings);
-        list_box.append(&expander_row);
+        store.append(&expander_row);
+    }
+
+    let elapsed = render_start.elapsed();
+    if workflows.len() >= 50 {
+        debug!(
+            workflow_count = workflows.len(),
+            duration_ms = elapsed.as_millis(),
+            "Rebuilt workflow detail list"
+        );
     }
 }
 
@@ -176,5 +166,34 @@ mod tests {
         let a = vec![workflow(1), workflow(2)];
         let b = vec![workflow(2), workflow(1)];
         assert!(!workflows_differ(&a, &b));
+    }
+}
+
+pub(super) fn collect_workflow_rows(store: &gio::ListStore) -> Vec<gtk::ListBoxRow> {
+    (0..store.n_items())
+        .filter_map(|idx| store.item(idx))
+        .filter_map(|obj| obj.downcast::<gtk::ListBoxRow>().ok())
+        .collect()
+}
+
+fn capture_expanded_workflows(widget: &gtk::Widget, expanded_ids: &mut HashSet<i64>) {
+    if let Some(expander) = widget.downcast_ref::<gtk::Expander>()
+        && expander.is_expanded()
+    {
+        let name = expander.widget_name();
+        if let Some(id) = name
+            .as_str()
+            .strip_prefix("workflow_")
+            .and_then(|id_str| id_str.parse::<i64>().ok())
+        {
+            info!("Preserving expansion for workflow ID {}", id);
+            expanded_ids.insert(id);
+        }
+    }
+
+    let mut child = widget.first_child();
+    while let Some(current) = child {
+        capture_expanded_workflows(&current, expanded_ids);
+        child = current.next_sibling();
     }
 }

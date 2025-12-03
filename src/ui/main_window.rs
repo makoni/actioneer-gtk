@@ -46,7 +46,9 @@ pub struct MainWindow {
     client: Arc<Mutex<Option<GitHubClient>>>,
     repos: Arc<Mutex<Vec<Repo>>>,
     sidebar_panel: SidebarPanel,
-    repo_list: gtk::ListBox,
+    repo_store: gio::ListStore,
+    repo_filter_model: gtk::FilterListModel,
+    repo_selection: gtk::SingleSelection,
     search_entry: gtk::SearchEntry,
     rate_limit_label: gtk::Label,
     refresh_button: gtk::Button,
@@ -84,7 +86,9 @@ impl MainWindow {
         let repos = Arc::new(Mutex::new(Vec::new()));
 
         let sidebar_panel = SidebarPanel::new();
-        let repo_list = sidebar_panel.repo_list();
+        let repo_store = sidebar_panel.repo_store();
+        let repo_filter_model = sidebar_panel.filter_model();
+        let repo_selection = sidebar_panel.selection();
         let search_entry = sidebar_panel.search_entry();
 
         let header_controls = HeaderControls::new();
@@ -143,7 +147,9 @@ impl MainWindow {
             client: client.clone(),
             repos: repos.clone(),
             sidebar_panel: sidebar_panel.clone(),
-            repo_list: repo_list.clone(),
+            repo_store: repo_store.clone(),
+            repo_filter_model: repo_filter_model.clone(),
+            repo_selection: repo_selection.clone(),
             search_entry: search_entry.clone(),
             rate_limit_label: rate_limit_label.clone(),
             refresh_button: refresh_button.clone(),
@@ -629,9 +635,9 @@ impl MainWindow {
             });
         }
 
-        let list_box = self.repo_list.clone();
+        let selection = self.repo_selection.clone();
         glib::idle_add_local_once(move || {
-            list_box.unselect_all();
+            selection.unselect_all();
         });
 
         let search_entry = self.search_entry.clone();

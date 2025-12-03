@@ -107,6 +107,7 @@ pub(crate) fn create_run_expander_row(
 fn create_run_container() -> gtk::Box {
     let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
     container.add_css_class("run-row");
+    container.add_css_class("hoverless-row");
     container
 }
 
