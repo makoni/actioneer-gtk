@@ -29,7 +29,9 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tracing::{debug, error, info, warn};
 
+mod header_controls;
 mod sidebar_panel;
+use header_controls::HeaderControls;
 use sidebar_panel::SidebarPanel;
 
 // Import refactored modules
@@ -138,14 +140,10 @@ impl MainWindow {
         let repo_list = sidebar_panel.repo_list();
         let search_entry = sidebar_panel.search_entry();
 
-        let rate_limit_label = gtk::Label::new(Some("Rate limit: –"));
-        rate_limit_label.add_css_class("dim-label");
-        rate_limit_label.add_css_class("caption");
-
-        let refresh_button = gtk::Button::from_icon_name("view-refresh-symbolic");
-        refresh_button.set_tooltip_text(Some("Refresh repositories"));
-
-        let header_bar = adw::HeaderBar::new();
+        let header_controls = HeaderControls::new();
+        let header_bar = header_controls.header_bar();
+        let refresh_button = header_controls.refresh_button();
+        let rate_limit_label = header_controls.rate_limit_label();
 
         let detail_status_page = adw::StatusPage::builder()
             .title("Select a repository")
@@ -258,17 +256,7 @@ impl MainWindow {
         let header = self.header_bar.clone();
         let root_stack = self.root_stack.clone();
 
-        let refresh_button = self.refresh_button.clone();
-        header.pack_start(&refresh_button);
-
         self.setup_header_menu(&header);
-
-        let rate_limit_label = self.rate_limit_label.clone();
-        rate_limit_label.set_halign(gtk::Align::End);
-        let rate_limit_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-        rate_limit_box.add_css_class("linked");
-        rate_limit_box.append(&rate_limit_label);
-        header.pack_end(&rate_limit_box);
 
         let main_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
         main_box.append(&header);
@@ -353,6 +341,7 @@ impl MainWindow {
             }
         });
 
+        let refresh_button = self.refresh_button.clone();
         self.connect_refresh_button(&refresh_button);
         self.connect_search();
         self.connect_repo_selection();
