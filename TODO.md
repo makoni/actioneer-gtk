@@ -43,7 +43,7 @@ Optional / next steps (low priority)
 - [✅] 2025-12-03 — Split workflow loading/refresh plumbing into `workflow_refresh.rs`, added parser tests for expander widget names, and kept `workflow_list.rs` focused on row rendering.
 - [🔄] Detail view refactor follow-up: pull the footer/empty-state toast overlay helpers into their own module so `mod.rs` no longer owns widget layout beyond the header scaffold.
 - [🔄] Break `src/ui/main_window.rs` (~1.3K LOC) into dedicated modules (app state, repo list pane, async loaders) to unblock further readability improvements. (Sidebar panel + header controls + repo loader helpers + selection/background refresh logic extracted into `ui/main_window/` submodules; next up: remaining async/state helpers.)
-- [🆕] Extract workflow/run loading orchestration from `src/ui/detail_view/helpers/runs/load.rs` into smaller files so we can test retry, digest, and notification logic independently.
+- [✅] 2025-12-03 — Extracted the workflow/run loader helpers into `digest.rs`, `filters.rs`, and `ui.rs`, added focused tests, and shrank `helpers/runs/load.rs` below 500 LOC.
 - [🆕] Trim `src/demo.rs` (700+ LOC) by moving fixtures and helper functions into `src/demo/` modules, keeping the entry surface small.
 
 ## Secret portal migration plan

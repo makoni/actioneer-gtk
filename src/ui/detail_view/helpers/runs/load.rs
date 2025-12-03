@@ -1,6 +1,12 @@
 use super::super::context::JobContextMap;
 use super::super::formatting::update_workflow_status_badge;
+use super::digest::{RunDigestMap, RunDigestStore, collect_completed_notifications, digest_runs};
+use super::filters::run_matches_filters;
 use super::row::{RunRowContext, create_run_expander_row};
+use super::ui::{
+    append_empty_runs_state, append_filtered_runs_placeholder, append_runs_header, append_spinner,
+    clear_runs_box,
+};
 use crate::api::models::{Repo, WorkflowRun};
 use crate::api::{GitHubClient, GitHubError};
 use crate::cache::DataCache;
@@ -12,20 +18,9 @@ use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
 use parking_lot::Mutex;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::sync::Arc;
 use tracing::{debug, error, info, warn};
-
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub(crate) struct RunDigest {
-    pub(crate) id: i64,
-    pub(crate) status: Option<String>,
-    pub(crate) conclusion: Option<String>,
-    pub(crate) updated_at: Option<String>,
-}
-
-pub(crate) type RunDigestMap = HashMap<i64, RunDigest>;
-pub(crate) type RunDigestStore = HashMap<i64, RunDigestMap>;
 
 #[derive(Clone)]
 struct RunErrorContext {
@@ -344,101 +339,6 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
     });
 }
 
-fn clear_runs_box(runs_box: &gtk::Box) {
-    loop {
-        let child_opt = runs_box.first_child();
-        let Some(child) = child_opt else {
-            break;
-        };
-        runs_box.remove(&child);
-    }
-}
-
-fn append_spinner(runs_box: &gtk::Box) {
-    let spinner = gtk::Spinner::new();
-    spinner.start();
-    spinner.set_margin_top(8);
-    spinner.set_margin_bottom(8);
-    runs_box.append(&spinner);
-}
-
-fn append_empty_runs_state(runs_box: &gtk::Box) {
-    let vbox = gtk::Box::new(gtk::Orientation::Vertical, 6);
-    vbox.set_halign(gtk::Align::Start);
-    vbox.set_margin_top(4);
-    vbox.set_margin_bottom(4);
-
-    let label = gtk::Label::new(Some("No recent runs"));
-    label.add_css_class("dim-label");
-    label.set_halign(gtk::Align::Start);
-    vbox.append(&label);
-
-    let info_label = gtk::Label::new(Some("Triggered runs may take 10-30 seconds to appear"));
-    info_label.add_css_class("dim-label");
-    info_label.add_css_class("caption");
-    info_label.set_halign(gtk::Align::Start);
-    vbox.append(&info_label);
-
-    runs_box.append(&vbox);
-}
-
-fn append_filtered_runs_placeholder(runs_box: &gtk::Box) {
-    let vbox = gtk::Box::new(gtk::Orientation::Vertical, 6);
-    vbox.set_halign(gtk::Align::Start);
-    vbox.set_margin_top(4);
-    vbox.set_margin_bottom(4);
-
-    let label = gtk::Label::new(Some("No runs match the current filters"));
-    label.add_css_class("dim-label");
-    label.set_halign(gtk::Align::Start);
-    vbox.append(&label);
-
-    let hint = gtk::Label::new(Some("Adjust the status chips above to see more runs."));
-    hint.add_css_class("dim-label");
-    hint.add_css_class("caption");
-    hint.set_halign(gtk::Align::Start);
-    vbox.append(&hint);
-
-    runs_box.append(&vbox);
-}
-
-#[derive(Copy, Clone, PartialEq, Eq)]
-enum RunStatusFilterKind {
-    Success,
-    Failed,
-    Running,
-}
-
-fn run_matches_filters(run: &WorkflowRun, filters: &RunFilters) -> bool {
-    match classify_run_status(run) {
-        RunStatusFilterKind::Success => filters.include_success,
-        RunStatusFilterKind::Failed => filters.include_failed,
-        RunStatusFilterKind::Running => filters.include_running,
-    }
-}
-
-fn classify_run_status(run: &WorkflowRun) -> RunStatusFilterKind {
-    if run.is_active() {
-        return RunStatusFilterKind::Running;
-    }
-
-    if let Some(conclusion) = run.conclusion.as_deref() {
-        if conclusion.eq_ignore_ascii_case("success") {
-            RunStatusFilterKind::Success
-        } else {
-            RunStatusFilterKind::Failed
-        }
-    } else if let Some(status) = run.status.as_deref() {
-        if status.eq_ignore_ascii_case("completed") {
-            RunStatusFilterKind::Success
-        } else {
-            RunStatusFilterKind::Failed
-        }
-    } else {
-        RunStatusFilterKind::Success
-    }
-}
-
 fn prune_stale_job_contexts(job_contexts: &JobContextMap, workflow_id: i64, runs: &[WorkflowRun]) {
     let active_run_ids: HashSet<i64> = runs.iter().map(|run| run.id).collect();
     let mut contexts = job_contexts.borrow_mut();
@@ -488,103 +388,6 @@ fn update_expander_activity(
     }
 
     has_active_runs
-}
-
-fn digest_runs(runs: &[WorkflowRun]) -> RunDigestMap {
-    runs.iter()
-        .map(|run| {
-            (
-                run.id,
-                RunDigest {
-                    id: run.id,
-                    status: run.status.clone(),
-                    conclusion: run.conclusion.clone(),
-                    updated_at: run.updated_at.clone(),
-                },
-            )
-        })
-        .collect()
-}
-
-fn collect_completed_notifications(
-    previous: &RunDigestMap,
-    runs: &[WorkflowRun],
-) -> Vec<(String, String, Option<String>)> {
-    runs.iter()
-        .filter(|run| is_completed_status(run.status.as_ref()))
-        .filter_map(|run| {
-            let prior = previous.get(&run.id)?;
-
-            let prev_completed = is_completed_status(prior.status.as_ref());
-            let conclusion_changed = prior.conclusion != run.conclusion;
-
-            if !prev_completed || conclusion_changed {
-                let title = build_run_notification_title(run);
-                let status = run
-                    .status
-                    .clone()
-                    .unwrap_or_else(|| "completed".to_string());
-                let conclusion = run.conclusion.clone();
-                Some((title, status, conclusion))
-            } else {
-                None
-            }
-        })
-        .collect()
-}
-
-fn is_completed_status(status: Option<&String>) -> bool {
-    status
-        .map(|value| value.eq_ignore_ascii_case("completed"))
-        .unwrap_or(false)
-}
-
-fn build_run_notification_title(run: &WorkflowRun) -> String {
-    let base = run
-        .display_title
-        .clone()
-        .or(run.name.clone())
-        .unwrap_or_else(|| {
-            run.run_number
-                .map(|num| format!("Run #{}", num))
-                .unwrap_or_else(|| format!("Run {}", run.id))
-        });
-
-    if let Some(branch) = run.head_branch.as_ref().filter(|b| !b.is_empty()) {
-        format!("{} ({})", base, branch)
-    } else {
-        base
-    }
-}
-
-fn append_runs_header(
-    runs_box: &gtk::Box,
-    visible_count: usize,
-    filtered_total: usize,
-    overall_total: usize,
-) {
-    let label_text = if filtered_total == overall_total {
-        if visible_count < overall_total {
-            format!(
-                "Recent runs (showing {} of {})",
-                visible_count, overall_total
-            )
-        } else {
-            format!("Recent runs ({})", overall_total)
-        }
-    } else {
-        format!(
-            "Recent runs (showing {} of {} matching filters)",
-            visible_count, filtered_total
-        )
-    };
-
-    let count_label = gtk::Label::new(Some(&label_text));
-    count_label.add_css_class("dim-label");
-    count_label.add_css_class("caption");
-    count_label.set_halign(gtk::Align::Start);
-    count_label.set_margin_bottom(8);
-    runs_box.append(&count_label);
 }
 
 fn append_error_state(error: GitHubError, workflow_id: i64, context: RunErrorContext) {
@@ -676,51 +479,4 @@ fn append_error_state(error: GitHubError, workflow_id: i64, context: RunErrorCon
 
     error_box.append(&retry_button);
     runs_box.append(&error_box);
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::ui::test_helpers::gtk_test_guard;
-
-    #[test]
-    #[ignore = "requires GTK display"]
-    fn append_empty_runs_creates_notice() {
-        let Some(_guard) = gtk_test_guard("append_empty_runs_creates_notice") else {
-            return;
-        };
-
-        let runs_box = gtk::Box::new(gtk::Orientation::Vertical, 4);
-        append_empty_runs_state(&runs_box);
-
-        assert!(runs_box.first_child().is_some());
-    }
-
-    fn build_run(id: i64, status: &str, conclusion: Option<&str>) -> WorkflowRun {
-        WorkflowRun {
-            id,
-            run_number: Some(id),
-            name: Some(format!("Run {}", id)),
-            display_title: Some(format!("Run {}", id)),
-            head_branch: Some("main".to_string()),
-            status: Some(status.to_string()),
-            conclusion: conclusion.map(|c| c.to_string()),
-            run_started_at: None,
-            event: None,
-            created_at: None,
-            updated_at: Some("2024-01-01T00:00:00Z".to_string()),
-            html_url: None,
-        }
-    }
-
-    #[test]
-    fn digest_runs_treats_reordering_as_unchanged() {
-        let run_a = build_run(1, "completed", Some("success"));
-        let run_b = build_run(2, "in_progress", None);
-
-        let digest_first = digest_runs(&[run_a.clone(), run_b.clone()]);
-        let digest_second = digest_runs(&[run_b, run_a]);
-
-        assert_eq!(digest_first, digest_second);
-    }
 }
