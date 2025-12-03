@@ -1,7 +1,7 @@
 use super::WelcomeScreen;
 use crate::api::GitHubClient;
 use crate::api::models::{RateLimitInfo, Repo};
-use crate::cache::DataCache;
+use crate::cache::{CachePersistenceConfig, DataCache};
 use crate::demo;
 use crate::favorites::FavoritesManager;
 use crate::notifications::NotificationManager;
@@ -84,6 +84,19 @@ impl MainWindow {
 
         let client = Arc::new(Mutex::new(None));
         let repos = Arc::new(Mutex::new(Vec::new()));
+        let cache = Arc::new(
+            CachePersistenceConfig::for_app(crate::APP_ID)
+                .map(DataCache::with_persistence)
+                .unwrap_or_else(DataCache::new),
+        );
+        if cache.has_persistence() {
+            let cache_clone = cache.clone();
+            crate::runtime_handle().spawn(async move {
+                if cache_clone.hydrate_from_disk().await {
+                    info!("Loaded cache snapshot from disk");
+                }
+            });
+        }
 
         let sidebar_panel = SidebarPanel::new();
         let repo_store = sidebar_panel.repo_store();
@@ -157,7 +170,7 @@ impl MainWindow {
             header_spinner: header_spinner.clone(),
             favorites_manager: favorites_manager.clone(),
             favorites: favorites.clone(),
-            cache: Arc::new(DataCache::new()),
+            cache: cache.clone(),
             actions_states: actions_states.clone(),
             actions_checked_at: actions_checked_at.clone(),
             workflow_counts: workflow_counts.clone(),

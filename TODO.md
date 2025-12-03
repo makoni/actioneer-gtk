@@ -27,10 +27,6 @@ Optional / next steps (low priority)
   - Prototype incremental log streaming in the API client (chunked transfer, retries, resume markers).
   - Build a streaming log viewer widget with live append and search affordances.
   - Add integration tests that simulate slow/partial streams so we don’t regress buffering or cancellation.
-- Persist cache to disk (optional)
-  - Decide on a cache format + location (e.g., zstd-compressed JSON in the cache dir) and document eviction rules.
-  - Implement async load/save plumbing that reuses the existing `DataCache` APIs without blocking the UI thread.
-  - Add tests covering cold-start hits, corruption fallback, and TTL enforcement.
 - Introduce an inline job-log drawer that can be expanded from each job row instead of opening a separate window.
   - Design a row-level drawer widget (likely `AdwExpanderRow`/`AdwClamp`) that embeds the log viewer.
   - Ensure logs load lazily per row and reuse the existing log-cache/code paths.
@@ -61,6 +57,9 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2025-12-03 — Persisted the workflow/run cache to disk (JSON snapshots under the app cache dir) so cold starts can reuse offline data in sandboxed builds.
+  - [✅] 2025-12-03 — Added async hydrate/save plumbing with TTL-based invalidation and sandbox-safe XDG cache discovery.
+  - [✅] 2025-12-03 — Covered persistence with unit tests for cold-start hits, TTL expiry, and corruption fallback, plus auto-warmed the cache at startup.
 - [✅] 2025-12-03 — Replaced the manual `gtk::Box` run list rebuild with a `WorkflowRunListModel` + `gtk::ListView` pipeline so filters and refreshes reuse row widgets without flicker.
   - [✅] 2025-12-03 — Added `WorkflowRunListModel` wrapping a `gio::ListStore` with stateful placeholders and retry handling.
   - [✅] 2025-12-03 — Wired the workflow pane to reuse a single `gtk::ListView` factory per workflow and persisted expansion state + job context IDs across diff updates.

@@ -367,6 +367,17 @@ pub fn find_repo_index(model: &gtk::FilterListModel, repo_id: i64) -> Option<u32
     None
 }
 
+pub fn find_first_repo_index(model: &gtk::FilterListModel) -> Option<u32> {
+    for idx in 0..model.n_items() {
+        if let Some(obj) = model.item(idx)
+            && repo_id_from_object(&obj).is_some()
+        {
+            return Some(idx);
+        }
+    }
+    None
+}
+
 fn create_section_header(title: &str, icon_name: &str) -> gtk::ListBoxRow {
     let row = gtk::ListBoxRow::new();
     row.set_selectable(false);

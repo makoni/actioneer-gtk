@@ -1,5 +1,5 @@
 use super::MainWindow;
-use crate::ui::sidebar::{find_repo_index, repo_from_object};
+use crate::ui::sidebar::{find_first_repo_index, find_repo_index, repo_from_object};
 use gtk4::{self as gtk, glib, prelude::*};
 use tracing::info;
 
@@ -70,6 +70,10 @@ pub(super) fn restore_sidebar_selection(
             selection.set_selected(index);
             return;
         }
+    } else if let Some(index) = find_first_repo_index(model) {
+        selection.set_selected(index);
+        return;
     }
+
     selection.unselect_all();
 }
