@@ -14,7 +14,7 @@ use crate::preferences::{Preferences, PreferencesManager};
 use crate::storage::TokenStorage;
 use crate::ui::auth_window::AuthWindow;
 use crate::ui::preferences_window::PreferencesWindow;
-use crate::ui::utils::{MainContextChannelExt, create_sidebar_clamp, update_rate_limit_label};
+use crate::ui::utils::{MainContextChannelExt, update_rate_limit_label};
 use gio::Menu;
 use gio::prelude::*;
 use gtk4::prelude::*;
@@ -29,6 +29,9 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tracing::{debug, error, info, warn};
 
+mod sidebar_panel;
+use sidebar_panel::SidebarPanel;
+
 // Import refactored modules
 use crate::ui::state::{RepoActionsState, WorkflowStatusCounts};
 
@@ -39,6 +42,7 @@ pub struct MainWindow {
     window: adw::ApplicationWindow,
     client: Arc<Mutex<Option<GitHubClient>>>,
     repos: Arc<Mutex<Vec<Repo>>>,
+    sidebar_panel: SidebarPanel,
     repo_list: gtk::ListBox,
     search_entry: gtk::SearchEntry,
     rate_limit_label: gtk::Label,
@@ -130,20 +134,9 @@ impl MainWindow {
         let client = Arc::new(Mutex::new(None));
         let repos = Arc::new(Mutex::new(Vec::new()));
 
-        let repo_list = gtk::ListBox::new();
-        repo_list.add_css_class("boxed-list");
-        repo_list.set_margin_top(0);
-        repo_list.set_margin_bottom(12);
-        repo_list.set_margin_start(12);
-        repo_list.set_margin_end(12);
-        repo_list.set_accessible_role(gtk::AccessibleRole::List);
-
-        let search_entry = gtk::SearchEntry::new();
-        search_entry.set_placeholder_text(Some("Search repositories..."));
-        search_entry.set_margin_top(12);
-        search_entry.set_margin_bottom(12);
-        search_entry.set_margin_start(12);
-        search_entry.set_margin_end(12);
+        let sidebar_panel = SidebarPanel::new();
+        let repo_list = sidebar_panel.repo_list();
+        let search_entry = sidebar_panel.search_entry();
 
         let rate_limit_label = gtk::Label::new(Some("Rate limit: –"));
         rate_limit_label.add_css_class("dim-label");
@@ -204,6 +197,7 @@ impl MainWindow {
             window: window.clone(),
             client: client.clone(),
             repos: repos.clone(),
+            sidebar_panel: sidebar_panel.clone(),
             repo_list: repo_list.clone(),
             search_entry: search_entry.clone(),
             rate_limit_label: rate_limit_label.clone(),
@@ -279,29 +273,7 @@ impl MainWindow {
         let main_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
         main_box.append(&header);
 
-        let search_entry = self.search_entry.clone();
-        let scrolled = gtk::ScrolledWindow::builder()
-            .hscrollbar_policy(gtk::PolicyType::Never)
-            .vexpand(true)
-            .build();
-
-        let list_box = self.repo_list.clone();
-        scrolled.set_child(Some(&list_box));
-
-        let sidebar_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        sidebar_box.append(&search_entry);
-        sidebar_box.append(&scrolled);
-        sidebar_box.set_hexpand(false);
-        sidebar_box.set_vexpand(true);
-
-        let sidebar_viewport = gtk::Viewport::builder()
-            .scroll_to_focus(true)
-            .hexpand(false)
-            .vexpand(true)
-            .build();
-        sidebar_viewport.set_child(Some(&sidebar_box));
-
-        let sidebar_clamp = create_sidebar_clamp(&sidebar_viewport);
+        let sidebar_clamp = self.sidebar_panel.clamp();
 
         let detail_status_page = self.detail_status_page.clone();
         detail_status_page.set_vexpand(true);
