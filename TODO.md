@@ -24,28 +24,36 @@ Quick validation (local)
 
 Optional / next steps (low priority)
 - Enhanced streaming job logs (advanced viewer)
+  - Prototype incremental log streaming in the API client (chunked transfer, retries, resume markers).
+  - Build a streaming log viewer widget with live append and search affordances.
+  - Add integration tests that simulate slow/partial streams so we don’t regress buffering or cancellation.
 - Persist cache to disk (optional)
-- [✅] Small UI micro-optimizations or accessibility checks
-- [✅] Add a CI/preflight check that ensures `Cargo.lock` and `flatpak/me.spaceinbox.actioneer.cargo-sources.json` stay in sync (fail fast when either changes without the other).
-- [✅] Factor shared `ClampScrollable`/layout helpers for detail panes so future list sections inherit the correct sizing behavior automatically.
-- [✅] Documented sandbox keyring/portal expectations (Snap + Flatpak) in the README and packaging guides so reviewers know how the secret portal is verified.
-- Refactor `src/ui/detail_view/helpers/runs/load.rs::load_workflow_runs` (currently ~325 lines) into smaller helpers/structs so error handling, digest comparison, notification dispatch, and UI updates are testable in isolation; the monolithic function makes it hard to reason about background vs foreground refresh paths.
-- Replace the manual `gtk::Box` run list rebuild (clearing and re-adding rows on every refresh) with a `gio::ListStore` + `gtk::ListView` factory. That would eliminate repeated widget construction, cut down diff churn, and prevent scroll jumps when only a single run changes.
-- [✅] Drop the duplicate cache writes when runs are fetched. Today we call `store_runs_async` when digest changes and then call `cache.store_runs` again right after the HTTP fetch completes (same data). Consolidate into a single write so we avoid extra spawn + clone work per refresh.
-- [✅] Add lightweight run-status filter chips (Success/Failed/Running/Branch) above the detail pane so users can quickly scope the list without scrolling. Persist the selection in Preferences so the view restores across sessions.
-- Introduce an inline job-log drawer that can be expanded from each job row instead of opening a separate window; mirror the logs view styling with syntax-colored sections and search highlighting for faster triage.
-- Provide a compact “Overview” page that aggregates the last run status for pinned repositories (favorites) using multi-pane cards, giving users a bird’s-eye view before diving into a specific repo.
-- Modernize the repo sidebar and detail lists to use `gio::ListStore` + `gtk::ListView` (`gtk::SelectionModel`) instead of `gtk::ListBox` rebuilds. This enables row recycling, reduces widget churn on large orgs (100+ repos), and unlocks smooth kinetic scrolling.
-- Rework `DataCache` to store `Arc<[WorkflowRun]>` / `Arc<[Workflow]>` snapshots or `Arc<Vec<T>>` so cache hits hand out cheap references instead of cloning the entire vec on every read/write. This should shrink allocations during rapid refresh loops.
-- [✅] 2025-12-03 — Kicked off the large-file refactor by extracting the detail view filter/header controls into their own module; continue breaking `src/ui/detail_view/mod.rs` into submodules.
-- [✅] 2025-12-03 — Extracted run-filter persistence plus workflow list loading/refresh logic into `run_filters.rs` and `workflow_list.rs`, shrinking `src/ui/detail_view/mod.rs` by ~400 LOC.
-- [✅] 2025-12-03 — Moved the favorites toggle wiring/observers into `favorite_controls.rs`, leaving `src/ui/detail_view/mod.rs` to manage layout only.
-- [✅] 2025-12-03 — Split workflow loading/refresh plumbing into `workflow_refresh.rs`, added parser tests for expander widget names, and kept `workflow_list.rs` focused on row rendering.
-- [✅] 2025-12-03 — Extracted the run-list layout + toast overlay wiring into `content.rs`, leaving `detail_view/mod.rs` focused on header controls and wiring; added a GTK clamp test to guard the new helper.
+  - Decide on a cache format + location (e.g., zstd-compressed JSON in the cache dir) and document eviction rules.
+  - Implement async load/save plumbing that reuses the existing `DataCache` APIs without blocking the UI thread.
+  - Add tests covering cold-start hits, corruption fallback, and TTL enforcement.
+- Replace the manual `gtk::Box` run list rebuild (clearing and re-adding rows on every refresh) with a `gio::ListStore` + `gtk::ListView` factory to eliminate widget churn.
+  - Introduce a `WorkflowRunListModel` wrapper that exposes filtered runs as a `gio::ListModel`.
+  - Wire a `gtk::ListView` factory that reuses row widgets and preserves scroll position while filters change.
+  - Verify via tests (or a demo harness) that diff updates don’t recreate unaffected rows.
+- Introduce an inline job-log drawer that can be expanded from each job row instead of opening a separate window.
+  - Design a row-level drawer widget (likely `AdwExpanderRow`/`AdwClamp`) that embeds the log viewer.
+  - Ensure logs load lazily per row and reuse the existing log-cache/code paths.
+  - Add UI tests (ignored) that open/close drawers to guard against regressions.
+- Provide a compact “Overview” page that aggregates the last run status for pinned repositories (favorites) using multi-pane cards.
+  - Define the summary data structure (favorite repo -> last run digest) and extend the cache to supply it.
+  - Build an `OverviewPage` with cards + refresh controls, adapting to narrow/wide layouts.
+  - Add smoke tests ensuring the overview reflects cache updates and respects offline data.
+- Modernize the repo sidebar and detail lists to use `gio::ListStore` + `gtk::ListView` (`gtk::SelectionModel`) instead of `gtk::ListBox` rebuilds.
+  - Convert the repo sidebar to `gtk::ListView` while preserving selection/favorites behavior.
+  - Port the workflow detail list to the same pattern once the run list model exists.
+  - Benchmark large orgs (100+ repos) to confirm smoother scrolling.
+- Rework `DataCache` to store `Arc<[WorkflowRun]>` / `Arc<[Workflow]>` snapshots or `Arc<Vec<T>>` so cache hits hand out cheap references instead of cloning entire vecs.
+  - Introduce snapshot types and adjust cache setters/getters to clone `Arc` handles only.
+  - Update downstream call sites (filters, overview, notifications) to accept shared slices instead of owned `Vec`s.
+  - Add benchmarks/tests verifying reduced allocations during refresh loops.
 - [🔄] Break `src/ui/main_window.rs` (~1.3K LOC) into dedicated modules (app state, repo list pane, async loaders) to unblock further readability improvements. (Sidebar panel + header controls + repo loader helpers + selection/background refresh logic extracted into `ui/main_window/` submodules; next up: remaining async/state helpers.)
   - [✅] 2025-12-03 — Moved demo-mode activation/teardown into `ui/main_window/demo_mode.rs`, reducing `main_window.rs` by ~80 LOC and isolating the mock-data entrypoint.
-- [✅] 2025-12-03 — Extracted the workflow/run loader helpers into `digest.rs`, `filters.rs`, and `ui.rs`, added focused tests, and shrank `helpers/runs/load.rs` below 500 LOC.
-- [✅] 2025-12-03 — Trimmed demo fixtures by splitting `src/demo.rs` into `src/demo/{mod,data,state}.rs` with reusable helpers and unit tests for manual run injection.
+  - Next: extract repository list pane widgets/event wiring into `repo_list.rs` and background refresh scheduling into `refresh.rs`, then follow up with an `state.rs` module for shared structs/tests.
 
 ## Secret portal migration plan
 
@@ -64,6 +72,9 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2025-12-03 — Broke the detail view header, filter chips, favorites controls, and run-list layout into dedicated modules (`run_filters.rs`, `workflow_list.rs`, `favorite_controls.rs`, `content.rs`) so each stays under 300 LOC and gains targeted tests.
+- [✅] 2025-12-03 — Split workflow refresh plumbing into `workflow_refresh.rs` and parser helpers, plus added `digest.rs`/`filters.rs` coverage to keep HTTP/UI wiring isolated.
+- [✅] 2025-12-03 — Trimmed demo fixtures by extracting `src/demo/{mod,data,state}.rs`, enabling focused unit tests for mock run injection.
 - [✅] 2025-12-03 — Added a lockfile/Flatpak sync check to CI and a reusable script for local preflight.
 - [✅] 2025-12-03 — Added run-status filter chips with persisted preferences, shared ClampScrollable helpers, accessibility touch-ups, and removed duplicate run cache writes for workflows.
 - [✅] 2025-11-30 — Added explicit sandbox secret-portal documentation to the README, Snapcraft, and Flatpak guides so reviewers know how to verify the encrypted token flow.
