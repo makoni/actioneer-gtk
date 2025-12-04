@@ -44,6 +44,7 @@ impl ResponseHandler {
         if let Some(key) = cache_key
             && let Some(etag) = self.cached_etag(key)
         {
+            debug!(cache_key = key, etag = %etag, "Applying conditional GET with cached ETag");
             return request.header(header::IF_NONE_MATCH, etag);
         }
 
@@ -95,6 +96,10 @@ impl ResponseHandler {
                 if let Some(key) = cache_key
                     && let Some(cached) = self.cached_body(key)
                 {
+                    debug!(
+                        cache_key = key,
+                        "Received 304 Not Modified; returning cached body"
+                    );
                     return self.deserialize_json(cached.as_slice());
                 }
 

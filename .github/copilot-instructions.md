@@ -323,5 +323,7 @@ glib::spawn_future_local(clone!(@weak self as widget => async move {
 - **Handle errors gracefully.** Use `Result` and `Option` to handle potential failures.
 - **Use `clone!` macro** to avoid ownership issues in closures and callbacks.
 - **Adhere to XDG Base Directory Specification** for storing user data, configuration, and cache.
+- Prefer small clean functions over large monolithic ones for better readability and maintainability.
+- Prefer small files/modules over large ones to enhance code organization. Files should ideally be under 500 lines when possible.
 
 By following these best practices, an AI agent can create a robust, modern, and well-integrated GNOME application that provides an excellent user experience on the Linux desktop.

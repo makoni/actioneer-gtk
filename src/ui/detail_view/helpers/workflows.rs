@@ -471,51 +471,90 @@ pub(crate) fn create_workflow_expander_row(
                                     .await;
                             });
 
+                            let client_for_idle = client_for_reload.clone();
+                            let owner_for_idle = owner_for_reload.clone();
+                            let repo_for_idle = repo_for_reload.clone();
+                            let repo_model_for_idle = repo_model_for_reload.clone();
+                            let workflow_display_for_idle = workflow_display_for_reload.clone();
+                            let parent_window_for_idle = parent_window_for_reload.clone();
+                            let cache_for_idle = cache_for_reload.clone();
+                            let toast_overlay_for_idle = toast_overlay_for_reload.clone();
+                            let job_contexts_for_idle = job_contexts_for_reload.clone();
+                            let workflows_with_active_idle =
+                                workflows_with_active_for_reload.clone();
+                            let run_digests_for_idle = run_digests_for_refresh.clone();
+                            let notification_manager_idle =
+                                notification_manager_for_reload.clone();
+                            let preferences_manager_idle =
+                                preferences_manager_for_reload.clone();
                             let run_filters_for_idle = run_filters_for_reload.clone();
                             let run_list_handle = run_list_for_reload.clone();
+                            let expander_for_idle = expander.clone();
                             glib::idle_add_local_once(move || {
-                                let workflows_with_active = workflows_with_active_for_reload.clone();
-                                if expander.is_expanded() {
+                                let workflows_with_active = workflows_with_active_idle.clone();
+                                if expander_for_idle.is_expanded() {
                                     info!("Reloading runs after workflow trigger");
                                     run_list_handle.show_loading();
 
                                     let preserved_runs = take_job_context_run_ids(
-                                        &job_contexts_for_reload,
+                                        &job_contexts_for_idle,
                                         workflow_id,
                                     );
 
                                     let workflow_display_for_runs =
-                                        workflow_display_for_reload.clone();
+                                        workflow_display_for_idle.clone();
                                     let notification_manager_for_runs =
-                                        notification_manager_for_reload.clone();
+                                        notification_manager_idle.clone();
                                     let preferences_manager_for_runs =
-                                        preferences_manager_for_reload.clone();
+                                        preferences_manager_idle.clone();
 
                                     load_workflow_runs(LoadRunsParams {
-                                        client: client_for_reload.clone(),
-                                        owner: owner_for_reload.clone(),
-                                        repo: repo_for_reload.clone(),
-                                        repo_model: repo_model_for_reload.clone(),
+                                        client: client_for_idle.clone(),
+                                        owner: owner_for_idle.clone(),
+                                        repo: repo_for_idle.clone(),
+                                        repo_model: repo_model_for_idle.clone(),
                                         workflow_id,
                                         workflow_name: workflow_display_for_runs,
                                         run_list: run_list_handle.clone(),
-                                        parent_window: parent_window_for_reload.clone(),
+                                        parent_window: parent_window_for_idle.clone(),
                                         status_badge: None,
-                                        expander: expander.clone(),
-                                        cache: cache_for_reload.clone(),
-                                        toast_overlay: toast_overlay_for_reload.clone(),
+                                        expander: expander_for_idle.clone(),
+                                        cache: cache_for_idle.clone(),
+                                        toast_overlay: toast_overlay_for_idle.clone(),
                                         bypass_cache: true,
-                                        job_contexts: job_contexts_for_reload.clone(),
+                                        job_contexts: job_contexts_for_idle.clone(),
                                         expanded_run_ids: preserved_runs,
                                         workflows_with_active,
                                         background: false,
-                                        run_digests: run_digests_for_refresh.clone(),
+                                        run_digests: run_digests_for_idle.clone(),
                                         notification_manager: notification_manager_for_runs,
                                         preferences_manager: preferences_manager_for_runs,
                                         run_filters: run_filters_for_idle.clone(),
                                     });
                                 }
                             });
+
+                            let follow_up_params = FollowUpRefreshParams {
+                                client: client_for_reload.clone(),
+                                owner: owner_for_reload.clone(),
+                                repo: repo_for_reload.clone(),
+                                repo_model: repo_model_for_reload.clone(),
+                                workflow_id,
+                                workflow_name: workflow_display_for_reload.clone(),
+                                run_list: run_list_for_reload.clone(),
+                                parent_window: parent_window_for_reload.clone(),
+                                status_badge: None,
+                                expander: expander.clone(),
+                                cache: cache_for_reload.clone(),
+                                toast_overlay: toast_overlay_for_reload.clone(),
+                                job_contexts: job_contexts_for_reload.clone(),
+                                workflows_with_active: workflows_with_active_for_reload.clone(),
+                                run_digests: run_digests_for_refresh.clone(),
+                                notification_manager: notification_manager_for_reload.clone(),
+                                preferences_manager: preferences_manager_for_reload.clone(),
+                                run_filters: run_filters_for_reload.clone(),
+                            };
+                            schedule_post_trigger_refresh(follow_up_params);
 
                             let toast_overlay = toast_overlay.clone();
                             let workflow_name = workflow_name.clone();
@@ -568,4 +607,142 @@ pub(crate) fn workflow_row_card<W: IsA<gtk::Widget>>(child: &W) -> gtk::Box {
     card.set_overflow(gtk::Overflow::Hidden);
     card.append(child);
     card
+}
+
+#[derive(Clone)]
+struct FollowUpRefreshParams {
+    client: Arc<Mutex<GitHubClient>>,
+    owner: String,
+    repo: String,
+    repo_model: Repo,
+    workflow_id: i64,
+    workflow_name: String,
+    run_list: WorkflowRunListModel,
+    parent_window: adw::ApplicationWindow,
+    status_badge: Option<gtk::Label>,
+    expander: gtk::Expander,
+    cache: Arc<DataCache>,
+    toast_overlay: adw::ToastOverlay,
+    job_contexts: JobContextMap,
+    workflows_with_active: Arc<Mutex<HashSet<i64>>>,
+    run_digests: Arc<Mutex<RunDigestStore>>,
+    notification_manager: Option<NotificationManager>,
+    preferences_manager: Option<Arc<PreferencesManager>>,
+    run_filters: Arc<Mutex<RunFilters>>,
+}
+
+#[derive(Clone, Copy)]
+struct RunDigestMarker {
+    count: usize,
+    max_id: Option<i64>,
+}
+
+fn schedule_post_trigger_refresh(params: FollowUpRefreshParams) {
+    const MAX_ATTEMPTS: u8 = 5;
+    const INTERVAL_SECS: u32 = 4;
+    const SOURCE_KEY: &str = "actioneer-follow-up-refresh";
+
+    let initial_marker = current_run_marker(&params.run_digests, params.workflow_id);
+    let expander = params.expander.clone();
+
+    if let Some(existing) = unsafe { expander.steal_data::<glib::SourceId>(SOURCE_KEY) } {
+        existing.remove();
+    }
+
+    let attempts = Rc::new(Cell::new(0));
+    let params_rc = Rc::new(params);
+
+    let source_id = glib::timeout_add_seconds_local(INTERVAL_SECS, {
+        let params = params_rc.clone();
+        let attempts = attempts.clone();
+        move || {
+            let current_marker = current_run_marker(&params.run_digests, params.workflow_id);
+            if has_marker_advanced(initial_marker, current_marker) {
+                info!(
+                    workflow_id = params.workflow_id,
+                    "Detected new run after trigger; stopping follow-up refresh"
+                );
+                unsafe {
+                    params
+                        .expander
+                        .steal_data::<glib::SourceId>("actioneer-follow-up-refresh");
+                }
+                return glib::ControlFlow::Break;
+            }
+
+            if attempts.get() >= MAX_ATTEMPTS {
+                info!(
+                    workflow_id = params.workflow_id,
+                    "Follow-up refresh attempts exhausted without new run"
+                );
+                unsafe {
+                    params
+                        .expander
+                        .steal_data::<glib::SourceId>("actioneer-follow-up-refresh");
+                }
+                return glib::ControlFlow::Break;
+            }
+
+            attempts.set(attempts.get() + 1);
+            let preserved_runs = take_job_context_run_ids(&params.job_contexts, params.workflow_id);
+
+            load_workflow_runs(LoadRunsParams {
+                client: params.client.clone(),
+                owner: params.owner.clone(),
+                repo: params.repo.clone(),
+                repo_model: params.repo_model.clone(),
+                workflow_id: params.workflow_id,
+                workflow_name: params.workflow_name.clone(),
+                run_list: params.run_list.clone(),
+                parent_window: params.parent_window.clone(),
+                status_badge: params.status_badge.clone(),
+                expander: params.expander.clone(),
+                cache: params.cache.clone(),
+                toast_overlay: params.toast_overlay.clone(),
+                bypass_cache: true,
+                job_contexts: params.job_contexts.clone(),
+                expanded_run_ids: preserved_runs,
+                workflows_with_active: params.workflows_with_active.clone(),
+                background: true,
+                run_digests: params.run_digests.clone(),
+                notification_manager: params.notification_manager.clone(),
+                preferences_manager: params.preferences_manager.clone(),
+                run_filters: params.run_filters.clone(),
+            });
+
+            glib::ControlFlow::Continue
+        }
+    });
+
+    unsafe {
+        expander.set_data(SOURCE_KEY, source_id);
+    }
+}
+
+fn current_run_marker(store: &Arc<Mutex<RunDigestStore>>, workflow_id: i64) -> RunDigestMarker {
+    let guard = store.lock();
+    if let Some(digest) = guard.get(&workflow_id) {
+        let max_id = digest.keys().max().copied();
+        RunDigestMarker {
+            count: digest.len(),
+            max_id,
+        }
+    } else {
+        RunDigestMarker {
+            count: 0,
+            max_id: None,
+        }
+    }
+}
+
+fn has_marker_advanced(previous: RunDigestMarker, current: RunDigestMarker) -> bool {
+    if current.count > previous.count {
+        return true;
+    }
+
+    match (previous.max_id, current.max_id) {
+        (Some(prev), Some(cur)) => cur > prev,
+        (None, Some(_)) => true,
+        _ => false,
+    }
 }

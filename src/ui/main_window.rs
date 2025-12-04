@@ -265,7 +265,13 @@ impl MainWindow {
 
         let welcome_screen = WelcomeScreen::new();
         let welcome_widget = welcome_screen.widget();
-        let welcome_container = create_detail_clamp(welcome_widget);
+        let welcome_scrolled = gtk::ScrolledWindow::builder()
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .vexpand(true)
+            .hexpand(true)
+            .build();
+        welcome_scrolled.set_child(Some(welcome_widget));
+        let welcome_container = create_detail_clamp(&welcome_scrolled);
         welcome_container.set_hexpand(true);
         welcome_container.set_vexpand(true);
         root_stack.add_named(&welcome_container, Some("welcome"));

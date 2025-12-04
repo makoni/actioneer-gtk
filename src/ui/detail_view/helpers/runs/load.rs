@@ -103,7 +103,6 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
     let client_for_spawn = client.clone();
     let owner_for_spawn = owner.clone();
     let repo_for_spawn = repo.clone();
-    let cache_for_spawn = cache.clone();
     let parent_window_clone = parent_window.clone();
     let expander_for_retry = expander.clone();
     let task_run_list = run_list.clone();
@@ -278,21 +277,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
     });
 
     crate::runtime_handle().spawn(async move {
-        let cache_key = format!("{}/{}", owner_for_spawn, repo_for_spawn);
-
-        if !bypass_cache {
-            if let Some(cached_runs) = cache_for_spawn.runs(&cache_key, workflow_id).await {
-                if !cached_runs.is_empty() {
-                    info!("Using cached runs for workflow {}", workflow_id);
-                    let _ = sender.send(Ok(cached_runs));
-                    return;
-                }
-                info!(
-                    "Cache invalidated for workflow {}, fetching fresh data",
-                    workflow_id
-                );
-            }
-        } else {
+        if bypass_cache {
             info!("Bypassing run cache for workflow {}", workflow_id);
         }
 

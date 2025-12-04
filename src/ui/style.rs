@@ -6,7 +6,6 @@ const APP_CSS: &str = r#"
 .detail-surface {
     border-radius: 22px;
     box-shadow: 0 18px 48px rgba(0, 0, 0, 0.08);
-    overflow: hidden;
 }
 
 .sidebar-surface > *,
@@ -22,7 +21,6 @@ const APP_CSS: &str = r#"
 
 .workflow-card {
     border-radius: 18px;
-    overflow: hidden;
 }
 
 .hoverless-row,

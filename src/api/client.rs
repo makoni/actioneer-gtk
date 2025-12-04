@@ -6,6 +6,7 @@ use crate::demo;
 use anyhow::Result;
 use reqwest::Client;
 use std::sync::{Arc, Mutex as StdMutex};
+use tracing::debug;
 
 #[derive(Clone)]
 pub struct GitHubClient {
@@ -131,6 +132,10 @@ impl GitHubClient {
         let cache_key = format!(
             "GET /repos/{}/{}/actions/workflows/{}/runs?per_page=50",
             owner, repo, workflow_id
+        );
+        debug!(
+            cache_key,
+            "Clearing cached response for workflow runs endpoint"
         );
         self.response_handler.clear_cache_entry(&cache_key);
     }

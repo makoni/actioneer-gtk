@@ -3,7 +3,7 @@ use super::error::GitHubError;
 use super::http::{GITHUB_API_BASE, ResponseHandler, add_auth_header};
 use crate::api::models::{WorkflowRun, WorkflowRunsResponse};
 use reqwest::Client;
-use tracing::info;
+use tracing::{debug, info};
 
 /// List workflow runs
 pub async fn list_runs(
@@ -15,11 +15,11 @@ pub async fn list_runs(
     workflow_id: i64,
 ) -> Result<Vec<WorkflowRun>, GitHubError> {
     info!("Fetching runs for workflow {}", workflow_id);
-
-    let cache_key = format!(
-        "GET /repos/{}/{}/actions/workflows/{}/runs?per_page=50",
-        owner, repo, workflow_id
+    debug!(
+        owner,
+        repo, workflow_id, "Requesting runs without HTTP ETag caching to avoid stale results"
     );
+
     let request = client
         .get(format!(
             "{}/repos/{}/{}/actions/workflows/{}/runs",
@@ -28,11 +28,12 @@ pub async fn list_runs(
         .query(&[("per_page", "50")]);
 
     let request = add_auth_header(request, token);
-    let request = response_handler.apply_cache_headers(request, Some(&cache_key));
+    // Runs are highly dynamic; always fetch fresh data rather than relying on
+    // cached ETags.
+    let request = response_handler.apply_cache_headers(request, None);
     let response = request.send().await?;
-    let runs_response: WorkflowRunsResponse = response_handler
-        .handle_response(response, Some(&cache_key))
-        .await?;
+    let runs_response: WorkflowRunsResponse =
+        response_handler.handle_response(response, None).await?;
     Ok(runs_response.workflow_runs)
 }
 
