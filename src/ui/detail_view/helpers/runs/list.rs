@@ -14,13 +14,15 @@ const STATE_FILTERED: &str = "filtered";
 const STATE_ERROR: &str = "error";
 const STATE_CONTENT: &str = "content";
 
+type RetryHandler = Rc<RefCell<Option<Box<dyn Fn() + 'static>>>>;
+
 #[derive(Clone)]
 pub(crate) struct WorkflowRunListModel {
     stack: gtk::Stack,
     header_label: gtk::Label,
     list_store: gio::ListStore,
     error_detail: gtk::Label,
-    retry_handler: Rc<RefCell<Option<Box<dyn Fn() + 'static>>>>,
+    retry_handler: RetryHandler,
 }
 
 impl WorkflowRunListModel {
@@ -76,6 +78,10 @@ impl WorkflowRunListModel {
         list_view.add_css_class("hoverless-list");
         list_view.set_valign(gtk::Align::Start);
         list_view.set_vexpand(false);
+        list_view.set_margin_top(12);
+        list_view.set_margin_bottom(12);
+        list_view.set_margin_start(12);
+        list_view.set_margin_end(12);
 
         let header_label = gtk::Label::new(None);
         header_label.add_css_class("dim-label");
@@ -239,11 +245,7 @@ fn build_filtered_placeholder() -> gtk::Widget {
     container.upcast()
 }
 
-fn build_error_placeholder() -> (
-    gtk::Widget,
-    gtk::Label,
-    Rc<RefCell<Option<Box<dyn Fn() + 'static>>>>,
-) {
+fn build_error_placeholder() -> (gtk::Widget, gtk::Label, RetryHandler) {
     let container = gtk::Box::new(gtk::Orientation::Vertical, 8);
     container.set_halign(gtk::Align::Start);
 
@@ -262,7 +264,7 @@ fn build_error_placeholder() -> (
     retry_button.add_css_class("suggested-action");
     retry_button.set_halign(gtk::Align::Start);
     retry_button.set_margin_top(8);
-    let retry_handler: Rc<RefCell<Option<Box<dyn Fn() + 'static>>>> = Rc::new(RefCell::new(None));
+    let retry_handler: RetryHandler = Rc::new(RefCell::new(None));
     let handler_ref = retry_handler.clone();
     retry_button.connect_clicked(move |_| {
         if let Some(callback) = handler_ref.borrow().as_ref() {
@@ -293,10 +295,10 @@ fn format_runs_header(visible_count: usize, filtered_total: usize, overall_total
 }
 
 fn state_requires_load(state: Option<glib::GString>) -> bool {
-    match state.as_deref() {
-        Some(STATE_IDLE) | Some(STATE_ERROR) | None => true,
-        _ => false,
-    }
+    matches!(
+        state.as_deref(),
+        Some(STATE_IDLE) | Some(STATE_ERROR) | None
+    )
 }
 
 glib::wrapper! {

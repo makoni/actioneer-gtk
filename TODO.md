@@ -35,10 +35,10 @@ Optional / next steps (low priority)
   - Define the summary data structure (favorite repo -> last run digest) and extend the cache to supply it.
   - Build an `OverviewPage` with cards + refresh controls, adapting to narrow/wide layouts.
   - Add smoke tests ensuring the overview reflects cache updates and respects offline data.
-- Rework `DataCache` to store `Arc<[WorkflowRun]>` / `Arc<[Workflow]>` snapshots or `Arc<Vec<T>>` so cache hits hand out cheap references instead of cloning entire vecs.
-  - Introduce snapshot types and adjust cache setters/getters to clone `Arc` handles only.
-  - Update downstream call sites (filters, overview, notifications) to accept shared slices instead of owned `Vec`s.
-  - Add benchmarks/tests verifying reduced allocations during refresh loops.
+- [✅] Rework `DataCache` to store `Arc<[WorkflowRun]>` / `Arc<[Workflow]>` snapshots or `Arc<Vec<T>>` so cache hits hand out cheap references instead of cloning entire vecs.
+  - [✅] Introduce snapshot types and adjust cache setters/getters to clone `Arc` handles only.
+  - [✅] Update downstream call sites (filters, overview, notifications) to accept shared slices instead of owned `Vec`s.
+  - [✅] Add tests verifying we hand back shared snapshots (strong-count checks guard against Vec reallocations during refresh loops).
 
 ## Secret portal migration plan
 
@@ -57,6 +57,9 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2025-12-04 — Reworked the `DataCache` to return `Arc<Vec<_>>` snapshots so workflow/run/job cache hits share data without cloning entire `Vec`s.
+  - [✅] 2025-12-04 — Updated workflow/run/job refresh pipelines to pass `Arc` handles through GTK/Tokio channels and reuse them when persisting caches.
+  - [✅] 2025-12-04 — Added unit tests that assert `Arc::ptr_eq` for workflows/runs/jobs to ensure future refactors keep cache snapshots zero-copy.
 - [✅] 2025-12-03 — Persisted the workflow/run cache to disk (JSON snapshots under the app cache dir) so cold starts can reuse offline data in sandboxed builds.
   - [✅] 2025-12-03 — Added async hydrate/save plumbing with TTL-based invalidation and sandbox-safe XDG cache discovery.
   - [✅] 2025-12-03 — Covered persistence with unit tests for cold-start hits, TTL expiry, and corruption fallback, plus auto-warmed the cache at startup.

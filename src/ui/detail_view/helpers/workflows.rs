@@ -66,6 +66,7 @@ pub(crate) fn create_workflow_expander_row(
     let row = gtk::ListBoxRow::new();
     row.set_activatable(false);
     row.set_selectable(false);
+    row.set_can_focus(false);
     row.add_css_class("hoverless-row");
     row.add_css_class("workflow-row");
 
@@ -462,7 +463,9 @@ pub(crate) fn create_workflow_expander_row(
                             let repo_model_for_reload = repo_model_for_closure.clone();
 
                             crate::runtime_handle().spawn(async move {
-                                cache.store_runs(Vec::new(), &cache_key, workflow_id).await;
+                                cache
+                                    .store_runs(Arc::new(Vec::new()), &cache_key, workflow_id)
+                                    .await;
                             });
 
                             let run_filters_for_idle = run_filters_for_reload.clone();

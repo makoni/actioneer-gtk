@@ -113,31 +113,26 @@ impl NotificationManager {
         body: Option<String>,
         priority: gio::NotificationPriority,
     ) -> anyhow::Result<()> {
-        let icon_name = self.icon_name.clone();
+        let payload = NotificationPayload {
+            identifier,
+            title,
+            body,
+            priority,
+            icon_name: self.icon_name.clone(),
+        };
+
+        Self::dispatch_via_main_context(payload).await
+    }
+
+    async fn dispatch_via_main_context(payload: NotificationPayload) -> anyhow::Result<()> {
         let (sender, receiver) = oneshot::channel();
 
         glib::MainContext::default().invoke(move || {
             let result = (|| -> anyhow::Result<()> {
-                let Some(application) = gio::Application::default() else {
-                    return Err(anyhow!("No active GApplication registered"));
-                };
+                let application = gio::Application::default()
+                    .ok_or_else(|| anyhow!("No active GApplication registered"))?;
 
-                let notification = gio::Notification::new(&title);
-                if let Some(body) = body.as_ref() {
-                    notification.set_body(Some(body));
-                }
-                notification.set_priority(priority);
-
-                let icon = gio::ThemedIcon::new(&icon_name);
-                notification.set_icon(&icon);
-
-                if let Some(identifier) = identifier.as_ref() {
-                    application.send_notification(Some(identifier), &notification);
-                } else {
-                    application.send_notification(None, &notification);
-                }
-
-                Ok(())
+                Self::deliver_notification(&application, payload)
             })();
 
             if sender.send(result).is_err() {
@@ -157,6 +152,36 @@ impl NotificationManager {
                 Err(anyhow!("Notification dispatcher dropped before sending"))
             }
         }
+    }
+
+    fn deliver_notification(
+        application: &gio::Application,
+        payload: NotificationPayload,
+    ) -> anyhow::Result<()> {
+        let NotificationPayload {
+            identifier,
+            title,
+            body,
+            priority,
+            icon_name,
+        } = payload;
+
+        let notification = gio::Notification::new(&title);
+        if let Some(ref body_text) = body {
+            notification.set_body(Some(body_text));
+        }
+        notification.set_priority(priority);
+
+        let icon = gio::ThemedIcon::new(&icon_name);
+        notification.set_icon(&icon);
+
+        if let Some(ref identifier) = identifier {
+            application.send_notification(Some(identifier.as_str()), &notification);
+        } else {
+            application.send_notification(None, &notification);
+        }
+
+        Ok(())
     }
 
     fn make_notification_id(&self, scope: &str, key: &str) -> String {
@@ -186,6 +211,15 @@ impl NotificationManager {
             })
             .collect()
     }
+}
+
+#[derive(Clone)]
+struct NotificationPayload {
+    identifier: Option<String>,
+    title: String,
+    body: Option<String>,
+    priority: gio::NotificationPriority,
+    icon_name: String,
 }
 
 #[cfg(test)]

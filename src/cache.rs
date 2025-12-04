@@ -3,6 +3,7 @@ use dirs::cache_dir;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::io;
+use std::ops::Deref;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -16,13 +17,13 @@ const CACHE_FILE_NAME: &str = "data-cache.json";
 const DEFAULT_CACHE_TTL: Duration = Duration::from_secs(900);
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct WorkflowCache {
-    runs: Vec<WorkflowRun>,
-    jobs: HashMap<i64, Vec<Job>>, // run_id -> jobs
+    runs: Arc<Vec<WorkflowRun>>,
+    jobs: HashMap<i64, Arc<Vec<Job>>>, // run_id -> jobs
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct RepoCacheEntry {
-    workflows: Vec<Workflow>,
+    workflows: Arc<Vec<Workflow>>,
     workflow_data: HashMap<i64, WorkflowCache>, // workflow_id -> cache
 }
 
@@ -147,14 +148,14 @@ impl CachePersistenceInner {
     }
 
     async fn remove_file(&self) {
-        if let Err(err) = fs::remove_file(&self.path).await {
-            if err.kind() != io::ErrorKind::NotFound {
-                warn!(
-                    path = %self.path.display(),
-                    "Failed to remove cache snapshot: {}",
-                    err
-                );
-            }
+        if let Err(err) = fs::remove_file(&self.path).await
+            && err.kind() != io::ErrorKind::NotFound
+        {
+            warn!(
+                path = %self.path.display(),
+                "Failed to remove cache snapshot: {}",
+                err
+            );
         }
     }
 }
@@ -228,7 +229,7 @@ impl DataCache {
             let snapshot = PersistentCacheSnapshot {
                 version: CACHE_VERSION,
                 saved_at,
-                repositories: &*repositories,
+                repositories: repositories.deref(),
             };
             match serde_json::to_vec(&snapshot) {
                 Ok(bytes) => bytes,
@@ -254,16 +255,16 @@ impl DataCache {
             );
         }
     }
-    pub async fn workflows(&self, key: &str) -> Option<Vec<Workflow>> {
+    pub async fn workflows(&self, key: &str) -> Option<Arc<Vec<Workflow>>> {
         let repos = self.repositories.read().await;
         repos.get(key).map(|entry| entry.workflows.clone())
     }
 
-    pub async fn store_workflows(&self, workflows: Vec<Workflow>, key: &str) {
+    pub async fn store_workflows(&self, workflows: Arc<Vec<Workflow>>, key: &str) {
         {
             let mut repos = self.repositories.write().await;
             let entry = repos.entry(key.to_string()).or_insert(RepoCacheEntry {
-                workflows: Vec::new(),
+                workflows: Arc::new(Vec::new()),
                 workflow_data: HashMap::new(),
             });
             entry.workflows = workflows;
@@ -272,7 +273,7 @@ impl DataCache {
         self.persist_if_needed().await;
     }
 
-    pub async fn runs(&self, key: &str, workflow_id: i64) -> Option<Vec<WorkflowRun>> {
+    pub async fn runs(&self, key: &str, workflow_id: i64) -> Option<Arc<Vec<WorkflowRun>>> {
         let repos = self.repositories.read().await;
         repos
             .get(key)
@@ -280,11 +281,11 @@ impl DataCache {
             .map(|cache| cache.runs.clone())
     }
 
-    pub async fn store_runs(&self, runs: Vec<WorkflowRun>, key: &str, workflow_id: i64) {
+    pub async fn store_runs(&self, runs: Arc<Vec<WorkflowRun>>, key: &str, workflow_id: i64) {
         {
             let mut repos = self.repositories.write().await;
             let entry = repos.entry(key.to_string()).or_insert(RepoCacheEntry {
-                workflows: Vec::new(),
+                workflows: Arc::new(Vec::new()),
                 workflow_data: HashMap::new(),
             });
 
@@ -292,7 +293,7 @@ impl DataCache {
                 .workflow_data
                 .entry(workflow_id)
                 .or_insert(WorkflowCache {
-                    runs: Vec::new(),
+                    runs: Arc::new(Vec::new()),
                     jobs: HashMap::new(),
                 });
 
@@ -306,7 +307,7 @@ impl DataCache {
         self.persist_if_needed().await;
     }
 
-    pub async fn jobs(&self, key: &str, workflow_id: i64, run_id: i64) -> Option<Vec<Job>> {
+    pub async fn jobs(&self, key: &str, workflow_id: i64, run_id: i64) -> Option<Arc<Vec<Job>>> {
         let repos = self.repositories.read().await;
         repos
             .get(key)
@@ -315,11 +316,11 @@ impl DataCache {
             .cloned()
     }
 
-    pub async fn store_jobs(&self, jobs: Vec<Job>, key: &str, workflow_id: i64, run_id: i64) {
+    pub async fn store_jobs(&self, jobs: Arc<Vec<Job>>, key: &str, workflow_id: i64, run_id: i64) {
         {
             let mut repos = self.repositories.write().await;
             let entry = repos.entry(key.to_string()).or_insert(RepoCacheEntry {
-                workflows: Vec::new(),
+                workflows: Arc::new(Vec::new()),
                 workflow_data: HashMap::new(),
             });
 
@@ -327,7 +328,7 @@ impl DataCache {
                 .workflow_data
                 .entry(workflow_id)
                 .or_insert(WorkflowCache {
-                    runs: Vec::new(),
+                    runs: Arc::new(Vec::new()),
                     jobs: HashMap::new(),
                 });
 
@@ -364,6 +365,44 @@ mod tests {
     use serde_json::json;
     use tempfile::tempdir;
 
+    fn sample_workflow(id: i64) -> Workflow {
+        Workflow {
+            id,
+            name: format!("workflow-{id}"),
+            path: format!(".github/workflows/{id}.yml"),
+        }
+    }
+
+    fn sample_run(id: i64, name: &str) -> WorkflowRun {
+        WorkflowRun {
+            id,
+            run_number: Some(id),
+            name: Some(name.to_string()),
+            display_title: Some(name.to_string()),
+            head_branch: Some("main".into()),
+            status: Some("completed".into()),
+            conclusion: Some("success".into()),
+            run_started_at: None,
+            event: None,
+            created_at: None,
+            updated_at: None,
+            html_url: None,
+        }
+    }
+
+    fn sample_job(id: i64, run_id: i64, name: &str) -> Job {
+        Job {
+            id,
+            run_id,
+            status: Some("completed".into()),
+            conclusion: Some("success".into()),
+            started_at: None,
+            completed_at: None,
+            name: Some(name.into()),
+            html_url: None,
+        }
+    }
+
     #[tokio::test]
     async fn test_workflow_caching() {
         let cache = DataCache::new();
@@ -371,9 +410,10 @@ mod tests {
 
         assert!(cache.workflows(key).await.is_none());
 
-        let workflows = vec![];
+        let workflows = Arc::new(Vec::new());
         cache.store_workflows(workflows.clone(), key).await;
-        assert_eq!(cache.workflows(key).await, Some(workflows));
+        let cached = cache.workflows(key).await.unwrap();
+        assert_eq!(cached.as_ref(), workflows.as_ref());
     }
 
     #[tokio::test]
@@ -381,11 +421,52 @@ mod tests {
         let cache = DataCache::new();
         let key = "owner/repo";
 
-        cache.store_workflows(vec![], key).await;
+        cache.store_workflows(Arc::new(Vec::new()), key).await;
         assert!(cache.workflows(key).await.is_some());
 
         cache.clear_repo(key).await;
         assert!(cache.workflows(key).await.is_none());
+    }
+
+    #[tokio::test]
+    async fn workflows_cache_returns_arc_snapshot() {
+        let cache = DataCache::new();
+        let key = "owner/repo";
+        let workflows = Arc::new(vec![sample_workflow(7)]);
+
+        cache.store_workflows(workflows.clone(), key).await;
+        let cached = cache.workflows(key).await.unwrap();
+
+        assert!(Arc::ptr_eq(&workflows, &cached));
+    }
+
+    #[tokio::test]
+    async fn runs_cache_returns_arc_snapshot() {
+        let cache = DataCache::new();
+        let key = "owner/repo";
+        let workflow_id = 99;
+        let runs = Arc::new(vec![sample_run(1, "Run 1")]);
+
+        cache.store_runs(runs.clone(), key, workflow_id).await;
+        let cached = cache.runs(key, workflow_id).await.unwrap();
+
+        assert!(Arc::ptr_eq(&runs, &cached));
+    }
+
+    #[tokio::test]
+    async fn jobs_cache_returns_arc_snapshot() {
+        let cache = DataCache::new();
+        let key = "owner/repo";
+        let workflow_id = 77;
+        let run_id = 5;
+        let jobs = Arc::new(vec![sample_job(1, run_id, "job")]);
+
+        cache
+            .store_jobs(jobs.clone(), key, workflow_id, run_id)
+            .await;
+        let cached = cache.jobs(key, workflow_id, run_id).await.unwrap();
+
+        assert!(Arc::ptr_eq(&jobs, &cached));
     }
 
     #[tokio::test]
@@ -401,11 +482,14 @@ mod tests {
             name: "CI".into(),
             path: "ci.yml".into(),
         };
-        cache.store_workflows(vec![workflow.clone()], key).await;
+        cache
+            .store_workflows(Arc::new(vec![workflow.clone()]), key)
+            .await;
 
         let reloaded = DataCache::with_persistence(config);
         assert!(reloaded.hydrate_from_disk().await);
-        assert_eq!(reloaded.workflows(key).await, Some(vec![workflow]));
+        let cached = reloaded.workflows(key).await.unwrap();
+        assert_eq!(cached.as_ref(), &vec![workflow]);
     }
 
     #[tokio::test]
@@ -415,7 +499,7 @@ mod tests {
         let config = CachePersistenceConfig::new(path.clone(), Duration::from_secs(1));
         let cache = DataCache::with_persistence(config.clone());
         let key = "owner/repo";
-        cache.store_workflows(vec![], key).await;
+        cache.store_workflows(Arc::new(Vec::new()), key).await;
 
         let mut file = fs::File::open(&path).await.unwrap();
         let mut bytes = Vec::new();
@@ -443,11 +527,11 @@ mod tests {
         let cache = DataCache::with_persistence(config.clone());
         cache
             .store_workflows(
-                vec![Workflow {
+                Arc::new(vec![Workflow {
                     id: 1,
                     name: "Test".into(),
                     path: "test.yml".into(),
-                }],
+                }]),
                 "owner/repo",
             )
             .await;

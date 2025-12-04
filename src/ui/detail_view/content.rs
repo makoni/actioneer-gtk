@@ -21,15 +21,12 @@ impl RepoDetailPane {
 }
 
 fn build_runs_container(list_view: &gtk::ListView) -> adw::ClampScrollable {
-    let scrolled = gtk::ScrolledWindow::builder()
-        .hscrollbar_policy(gtk::PolicyType::Never)
-        .build();
-    scrolled.set_hexpand(true);
-    scrolled.set_vexpand(true);
-    scrolled.set_propagate_natural_height(false);
-    scrolled.set_child(Some(list_view));
+    list_view.set_hexpand(true);
+    list_view.set_vexpand(true);
+    list_view.set_halign(gtk::Align::Fill);
+    list_view.set_valign(gtk::Align::Fill);
 
-    create_detail_clamp(&scrolled)
+    create_detail_clamp(list_view)
 }
 
 #[cfg(test)]
@@ -49,6 +46,6 @@ mod tests {
         let list_view = gtk::ListView::new(Some(selection), Some(factory));
         let clamp = build_runs_container(&list_view);
         let child = clamp.child().expect("Clamp should wrap a widget");
-        assert!(child.downcast_ref::<gtk::ScrolledWindow>().is_some());
+        assert!(child.downcast_ref::<gtk::ListView>().is_some());
     }
 }

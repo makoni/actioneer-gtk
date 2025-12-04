@@ -10,6 +10,7 @@ use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
 use std::collections::HashSet;
+use std::sync::Arc;
 use tracing::{error, info, warn};
 
 impl RepoDetailPane {
@@ -45,7 +46,7 @@ impl RepoDetailPane {
         let callback_refs = self.clone_for_callbacks();
 
         let (sender, receiver) = glib::MainContext::default()
-            .channel::<Result<Vec<Workflow>, GitHubError>>(glib::Priority::default());
+            .channel::<Result<Arc<Vec<Workflow>>, GitHubError>>(glib::Priority::default());
 
         let client_for_spawn = client.clone();
         let owner_for_spawn = owner.clone();
@@ -89,11 +90,11 @@ impl RepoDetailPane {
                         cache_store.store_workflows(wf_list_cache, &cache_key).await;
                     });
 
-                    super::workflow_list::update_workflows_list(&ui_context, &wf_list);
+                    super::workflow_list::update_workflows_list(&ui_context, wf_list.as_ref());
                 }
                 Err(e) => {
                     error!("Failed to load workflows: {}", e);
-                    *workflows.lock() = Vec::new();
+                    *workflows.lock() = Arc::new(Vec::new());
                     super::workflow_list::update_workflows_list(&ui_context, &[]);
                     let message = format!("Failed to load workflows: {}", e);
                     let overlay = toast_overlay.clone();
@@ -118,8 +119,9 @@ impl RepoDetailPane {
             }
 
             let client_clone = client_for_spawn.lock().clone();
-            let result =
-                fetch_workflows(&client_clone, &owner_for_spawn, &repo_name_for_spawn).await;
+            let result = fetch_workflows(&client_clone, &owner_for_spawn, &repo_name_for_spawn)
+                .await
+                .map(Arc::new);
             let _ = sender.send(result);
         });
     }
@@ -153,7 +155,7 @@ impl RepoDetailPane {
         let repo_model = context.repo_model.clone();
 
         let (sender, receiver) = glib::MainContext::default()
-            .channel::<Result<Vec<Workflow>, GitHubError>>(glib::Priority::default());
+            .channel::<Result<Arc<Vec<Workflow>>, GitHubError>>(glib::Priority::default());
 
         let client_for_spawn = client.clone();
         let owner_for_spawn = owner.clone();
@@ -189,10 +191,10 @@ impl RepoDetailPane {
             match result {
                 Ok(wf_list) => {
                     let current = workflows.lock().clone();
-                    if super::workflow_list::workflows_differ(&current, &wf_list) {
+                    if super::workflow_list::workflows_differ(current.as_ref(), wf_list.as_ref()) {
                         info!("Silent refresh detected workflow changes");
                         *workflows.lock() = wf_list.clone();
-                        super::workflow_list::update_workflows_list(&ui_context, &wf_list);
+                        super::workflow_list::update_workflows_list(&ui_context, wf_list.as_ref());
                     }
                 }
                 Err(e) => {
@@ -208,8 +210,9 @@ impl RepoDetailPane {
 
         crate::runtime_handle().spawn(async move {
             let client_clone = client_for_spawn.lock().clone();
-            let result =
-                fetch_workflows(&client_clone, &owner_for_spawn, &repo_name_for_spawn).await;
+            let result = fetch_workflows(&client_clone, &owner_for_spawn, &repo_name_for_spawn)
+                .await
+                .map(Arc::new);
             let _ = sender.send(result);
         });
     }
@@ -263,8 +266,9 @@ impl RepoDetailPane {
 
             callback_refs.show_loading(true);
 
-            let (sender, receiver) = glib::MainContext::default()
-                .channel::<Result<Vec<Workflow>, GitHubError>>(glib::Priority::default());
+            let (sender, receiver) =
+                glib::MainContext::default()
+                    .channel::<Result<Arc<Vec<Workflow>>, GitHubError>>(glib::Priority::default());
             let list_store_for_ui = store.clone();
             let run_filters_for_ui = run_filters_for_button.clone();
             let workflows_for_ui = workflows.clone();
@@ -308,7 +312,7 @@ impl RepoDetailPane {
                             run_filters: run_filters_for_ui.clone(),
                         };
 
-                        super::workflow_list::update_workflows_list(&ui_context, &wf_list);
+                        super::workflow_list::update_workflows_list(&ui_context, wf_list.as_ref());
                     }
                     Err(e) => {
                         error!("Failed to refresh workflows: {}", e);
@@ -328,8 +332,9 @@ impl RepoDetailPane {
                 cache_for_spawn.clear_repo(&cache_key).await;
 
                 let client_clone = client_for_spawn.lock().clone();
-                let result =
-                    fetch_workflows(&client_clone, &owner_for_spawn, &repo_name_for_spawn).await;
+                let result = fetch_workflows(&client_clone, &owner_for_spawn, &repo_name_for_spawn)
+                    .await
+                    .map(Arc::new);
                 let _ = sender.send(result);
             });
         });
@@ -426,55 +431,54 @@ impl RepoDetailPane {
                 while let Some(widget) = inner_child.as_ref() {
                     let next = widget.next_sibling();
 
-                    if let Some(expander) = widget.downcast_ref::<gtk::Expander>() {
-                        if let Some((workflow_id, is_active)) =
+                    if let Some(expander) = widget.downcast_ref::<gtk::Expander>()
+                        && let Some((workflow_id, is_active)) =
                             parse_expander_widget_name(expander.widget_name().as_str())
-                        {
-                            if is_active {
-                                observed_active.insert(workflow_id);
+                    {
+                        if is_active {
+                            observed_active.insert(workflow_id);
+                        }
+
+                        if let Some(run_list) = run_list_for_expander(expander) {
+                            let status_badge = Self::status_badge_for_expander(expander);
+                            let preserved_runs =
+                                current_job_context_run_ids(&job_contexts, workflow_id);
+                            let workflow_label = unsafe {
+                                expander
+                                    .data::<String>("actioneer-workflow-name")
+                                    .map(|name_ptr| name_ptr.as_ref().clone())
                             }
+                            .unwrap_or_else(|| {
+                                format!("{}/{} • Workflow {}", owner, repo, workflow_id)
+                            });
 
-                            if let Some(run_list) = run_list_for_expander(expander) {
-                                let status_badge = Self::status_badge_for_expander(expander);
-                                let preserved_runs =
-                                    current_job_context_run_ids(&job_contexts, workflow_id);
-                                let workflow_label = unsafe {
-                                    expander
-                                        .data::<String>("actioneer-workflow-name")
-                                        .map(|name_ptr| name_ptr.as_ref().clone())
-                                }
-                                .unwrap_or_else(|| {
-                                    format!("{}/{} • Workflow {}", owner, repo, workflow_id)
-                                });
+                            let notification_manager_clone = notification_manager.clone();
+                            let preferences_manager_clone = preferences_manager.clone();
+                            let repo_model_clone = repo_model.clone();
 
-                                let notification_manager_clone = notification_manager.clone();
-                                let preferences_manager_clone = preferences_manager.clone();
-                                let repo_model_clone = repo_model.clone();
-
-                                load_workflow_runs(LoadRunsParams {
-                                    client: client.clone(),
-                                    owner: owner.to_string(),
-                                    repo: repo.to_string(),
-                                    repo_model: repo_model_clone,
-                                    workflow_id,
-                                    workflow_name: workflow_label,
-                                    run_list,
-                                    parent_window: parent_window.clone(),
-                                    status_badge,
-                                    expander: expander.clone(),
-                                    cache: cache.clone(),
-                                    toast_overlay: toast_overlay.clone(),
-                                    bypass_cache: true,
-                                    job_contexts: job_contexts.clone(),
-                                    expanded_run_ids: preserved_runs,
-                                    workflows_with_active: workflows_with_active.clone(),
-                                    background: true,
-                                    run_digests: run_digests.clone(),
-                                    notification_manager: notification_manager_clone,
-                                    preferences_manager: preferences_manager_clone,
-                                    run_filters: run_filters_arc.clone(),
-                                });
-                            }
+                            load_workflow_runs(LoadRunsParams {
+                                client: client.clone(),
+                                owner: owner.to_string(),
+                                repo: repo.to_string(),
+                                repo_model: repo_model_clone,
+                                workflow_id,
+                                workflow_name: workflow_label,
+                                run_list,
+                                parent_window: parent_window.clone(),
+                                status_badge,
+                                expander: expander.clone(),
+                                cache: cache.clone(),
+                                toast_overlay: toast_overlay.clone(),
+                                bypass_cache: true,
+                                job_contexts: job_contexts.clone(),
+                                expanded_run_ids: preserved_runs,
+                                workflows_with_active: workflows_with_active.clone(),
+                                background: true,
+                                run_digests: run_digests.clone(),
+                                notification_manager: notification_manager_clone,
+                                preferences_manager: preferences_manager_clone,
+                                run_filters: run_filters_arc.clone(),
+                            });
                         }
                     }
                     inner_child = next;

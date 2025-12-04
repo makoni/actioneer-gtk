@@ -30,7 +30,7 @@ pub struct RepoDetailPane {
     parent: adw::ApplicationWindow,
     repo: Repo,
     client: Arc<Mutex<GitHubClient>>,
-    workflows: Arc<Mutex<Vec<Workflow>>>,
+    workflows: Arc<Mutex<Arc<Vec<Workflow>>>>,
     favorites_manager: Option<Arc<FavoritesManager>>,
     preferences_manager: Option<Arc<PreferencesManager>>,
     cache: Arc<DataCache>,
@@ -127,7 +127,7 @@ impl RepoDetailPane {
         deps: RepoDetailDeps,
     ) -> Self {
         info!("Creating RepoDetailPane for: {}", repo.full_name);
-        let workflows = Arc::new(Mutex::new(Vec::new()));
+        let workflows = Arc::new(Mutex::new(Arc::new(Vec::new())));
         let job_contexts = Rc::new(RefCell::new(HashMap::new()));
 
         let favorite_button = gtk::ToggleButton::new();
@@ -183,7 +183,7 @@ impl RepoDetailPane {
         let filter_guard = Rc::new(Cell::new(false));
         let notification_manager = deps
             .notification_manager
-            .or_else(|| Some(NotificationManager::new("me.spaceinbox.actioneer")));
+            .or_else(|| Some(NotificationManager::new(crate::APP_ID)));
 
         let pane = Self {
             parent: parent.clone(),

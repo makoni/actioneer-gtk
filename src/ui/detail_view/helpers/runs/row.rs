@@ -27,6 +27,7 @@ pub(crate) struct RunRowContext {
 }
 
 impl RunRowContext {
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
         client: Arc<Mutex<GitHubClient>>,
         owner: String,

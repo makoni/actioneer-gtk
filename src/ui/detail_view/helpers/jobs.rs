@@ -177,7 +177,7 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
     }
 
     let (sender, receiver) = glib::MainContext::default()
-        .channel::<Result<Vec<Job>, GitHubError>>(glib::Priority::default());
+        .channel::<Result<Arc<Vec<Job>>, GitHubError>>(glib::Priority::default());
 
     let client_for_retry = client.clone();
     let owner_for_retry = owner.clone();
@@ -224,7 +224,7 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
                 });
 
                 if let Some(ref badges) = badges_box {
-                    update_job_summary_badges(badges, &jobs);
+                    update_job_summary_badges(badges, jobs.as_ref());
                 }
 
                 let context = JobRefreshContext::from_params(JobRefreshContextParams {
@@ -363,7 +363,8 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
         let client_guard = client_for_api.lock().clone();
         let result = client_guard
             .list_jobs(&owner_for_api, &repo_for_api, run_id)
-            .await;
+            .await
+            .map(Arc::new);
         let _ = sender.send(result);
     });
 }

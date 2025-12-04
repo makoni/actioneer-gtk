@@ -134,7 +134,9 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
                 match rerun_result {
                     Ok(_) => {
                         let cache_key = format!("{}/{}", owner_for_cache, repo_for_cache);
-                        cache.store_runs(Vec::new(), &cache_key, workflow_id).await;
+                        cache
+                            .store_runs(Arc::new(Vec::new()), &cache_key, workflow_id)
+                            .await;
                         let _ = sender.send(true);
                     }
                     Err(err) => {
@@ -228,7 +230,9 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
                 match rerun_result {
                     Ok(_) => {
                         let cache_key = format!("{}/{}", owner_for_cache, repo_for_cache);
-                        cache.store_runs(Vec::new(), &cache_key, workflow_id).await;
+                        cache
+                            .store_runs(Arc::new(Vec::new()), &cache_key, workflow_id)
+                            .await;
                         let _ = sender.send(true);
                     }
                     Err(err) => {
@@ -322,7 +326,9 @@ fn create_cancel_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::B
                 match cancel_result {
                     Ok(_) => {
                         let cache_key = format!("{}/{}", owner_for_cache, repo_for_cache);
-                        cache.store_runs(Vec::new(), &cache_key, workflow_id).await;
+                        cache
+                            .store_runs(Arc::new(Vec::new()), &cache_key, workflow_id)
+                            .await;
                         let _ = sender.send(true);
                     }
                     Err(err) => {

@@ -340,7 +340,7 @@ fn repo_from_row(row: &gtk::ListBoxRow) -> Option<Repo> {
 
 pub fn repo_from_object(obj: &glib::Object) -> Option<Repo> {
     obj.downcast_ref::<gtk::ListBoxRow>()
-        .and_then(|row| repo_from_row(row))
+        .and_then(repo_from_row)
 }
 
 fn repo_id_from_row(row: &gtk::ListBoxRow) -> Option<i64> {
@@ -352,7 +352,7 @@ fn repo_id_from_row(row: &gtk::ListBoxRow) -> Option<i64> {
 
 pub fn repo_id_from_object(obj: &glib::Object) -> Option<i64> {
     obj.downcast_ref::<gtk::ListBoxRow>()
-        .and_then(|row| repo_id_from_row(row))
+        .and_then(repo_id_from_row)
 }
 
 pub fn find_repo_index(model: &gtk::FilterListModel, repo_id: i64) -> Option<u32> {

@@ -86,8 +86,7 @@ impl MainWindow {
         let repos = Arc::new(Mutex::new(Vec::new()));
         let cache = Arc::new(
             CachePersistenceConfig::for_app(crate::APP_ID)
-                .map(DataCache::with_persistence)
-                .unwrap_or_else(DataCache::new),
+                .map_or_else(DataCache::new, DataCache::with_persistence),
         );
         if cache.has_persistence() {
             let cache_clone = cache.clone();
@@ -152,7 +151,7 @@ impl MainWindow {
         let background_refresh_task = Arc::new(Mutex::new(None));
         let handling_selection = Arc::new(Mutex::new(false));
         let header_spinner = Rc::new(RefCell::new(None));
-        let notification_manager = Some(NotificationManager::new("me.spaceinbox.actioneer"));
+        let notification_manager = Some(NotificationManager::new(crate::APP_ID));
         let demo_mode = Arc::new(Mutex::new(false));
 
         let main_window = Self {

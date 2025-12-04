@@ -64,6 +64,7 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
         let row = gtk::ListBoxRow::new();
         row.set_selectable(false);
         row.set_activatable(false);
+        row.set_can_focus(false);
         row.add_css_class("hoverless-row");
         row.add_css_class("workflow-row");
 
@@ -134,6 +135,35 @@ pub(super) fn workflows_differ(a: &[Workflow], b: &[Workflow]) -> bool {
     a_ids != b_ids
 }
 
+pub(super) fn collect_workflow_rows(store: &gio::ListStore) -> Vec<gtk::ListBoxRow> {
+    (0..store.n_items())
+        .filter_map(|idx| store.item(idx))
+        .filter_map(|obj| obj.downcast::<gtk::ListBoxRow>().ok())
+        .collect()
+}
+
+fn capture_expanded_workflows(widget: &gtk::Widget, expanded_ids: &mut HashSet<i64>) {
+    if let Some(expander) = widget.downcast_ref::<gtk::Expander>()
+        && expander.is_expanded()
+    {
+        let name = expander.widget_name();
+        if let Some(id) = name
+            .as_str()
+            .strip_prefix("workflow_")
+            .and_then(|id_str| id_str.parse::<i64>().ok())
+        {
+            info!("Preserving expansion for workflow ID {}", id);
+            expanded_ids.insert(id);
+        }
+    }
+
+    let mut child = widget.first_child();
+    while let Some(current) = child {
+        capture_expanded_workflows(&current, expanded_ids);
+        child = current.next_sibling();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::workflows_differ;
@@ -166,34 +196,5 @@ mod tests {
         let a = vec![workflow(1), workflow(2)];
         let b = vec![workflow(2), workflow(1)];
         assert!(!workflows_differ(&a, &b));
-    }
-}
-
-pub(super) fn collect_workflow_rows(store: &gio::ListStore) -> Vec<gtk::ListBoxRow> {
-    (0..store.n_items())
-        .filter_map(|idx| store.item(idx))
-        .filter_map(|obj| obj.downcast::<gtk::ListBoxRow>().ok())
-        .collect()
-}
-
-fn capture_expanded_workflows(widget: &gtk::Widget, expanded_ids: &mut HashSet<i64>) {
-    if let Some(expander) = widget.downcast_ref::<gtk::Expander>()
-        && expander.is_expanded()
-    {
-        let name = expander.widget_name();
-        if let Some(id) = name
-            .as_str()
-            .strip_prefix("workflow_")
-            .and_then(|id_str| id_str.parse::<i64>().ok())
-        {
-            info!("Preserving expansion for workflow ID {}", id);
-            expanded_ids.insert(id);
-        }
-    }
-
-    let mut child = widget.first_child();
-    while let Some(current) = child {
-        capture_expanded_workflows(&current, expanded_ids);
-        child = current.next_sibling();
     }
 }

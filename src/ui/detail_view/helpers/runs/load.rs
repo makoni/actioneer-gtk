@@ -98,7 +98,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
     }
 
     let (sender, receiver) = glib::MainContext::default()
-        .channel::<Result<Vec<WorkflowRun>, GitHubError>>(glib::Priority::default());
+        .channel::<Result<Arc<Vec<WorkflowRun>>, GitHubError>>(glib::Priority::default());
 
     let client_for_spawn = client.clone();
     let owner_for_spawn = owner.clone();
@@ -114,10 +114,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
 
     receiver.attach(None, move |result| {
         let expanded_run_ids_for_ui = expanded_run_ids.clone();
-        let mut should_rebuild_ui = true;
-        if background_for_ui && !expander.is_expanded() {
-            should_rebuild_ui = false;
-        }
+        let expander_expanded = expander.is_expanded();
 
         match result {
             Ok(runs) if runs.is_empty() => {
@@ -126,12 +123,12 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                     digests.insert(workflow_id, RunDigestMap::new());
                 }
 
-                if should_rebuild_ui {
+                if should_render_run_list(background_for_ui, expander_expanded, true) {
                     task_run_list.show_empty();
                 }
             }
             Ok(runs) => {
-                let digest = digest_runs(&runs);
+                let digest = digest_runs(runs.as_ref());
                 let (previous_digest, changed) = {
                     let mut digests = run_digests_for_ui.lock();
                     let previous = digests.insert(workflow_id, digest.clone());
@@ -143,13 +140,13 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                 };
 
                 if changed {
-                    prune_stale_job_contexts(&job_contexts, workflow_id, &runs);
+                    prune_stale_job_contexts(&job_contexts, workflow_id, runs.as_ref());
                     store_runs_async(
                         cache.clone(),
                         owner.clone(),
                         repo.clone(),
                         workflow_id,
-                        &runs,
+                        runs.as_ref(),
                     );
 
                     if let (Some(prev), Some(manager)) =
@@ -217,7 +214,8 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                     badge.set_visible(true);
                 }
 
-                let has_active_runs = update_expander_activity(&expander, workflow_id, &runs);
+                let has_active_runs =
+                    update_expander_activity(&expander, workflow_id, runs.as_ref());
 
                 {
                     let mut active = workflows_with_active.lock();
@@ -228,9 +226,9 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                     }
                 }
 
-                if !background_for_ui || (should_rebuild_ui && changed) {
+                if should_render_run_list(background_for_ui, expander_expanded, changed) {
                     let filters_snapshot = run_filters.lock().clone();
-                    let summary = summarize_visible_runs(&runs, &filters_snapshot);
+                    let summary = summarize_visible_runs(runs.as_ref(), &filters_snapshot);
 
                     if summary.visible_runs.is_empty() {
                         task_run_list.show_filtered_placeholder();
@@ -301,7 +299,8 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
         let client_guard = client_for_spawn.lock().clone();
         let result = client_guard
             .list_runs(&owner_for_spawn, &repo_for_spawn, workflow_id)
-            .await;
+            .await
+            .map(Arc::new);
 
         let _ = sender.send(result);
     });
@@ -326,10 +325,26 @@ fn store_runs_async(
     runs: &[WorkflowRun],
 ) {
     let cache_key = format!("{}/{}", owner, repo);
-    let runs_cache = runs.to_vec();
+    let runs_cache = Arc::new(runs.to_vec());
     crate::runtime_handle().spawn(async move {
         cache.store_runs(runs_cache, &cache_key, workflow_id).await;
     });
+}
+
+fn should_render_run_list(
+    background_refresh: bool,
+    expander_expanded: bool,
+    digest_changed: bool,
+) -> bool {
+    if !background_refresh {
+        return true;
+    }
+
+    if digest_changed {
+        return true;
+    }
+
+    expander_expanded
 }
 
 fn update_expander_activity(
@@ -435,7 +450,7 @@ struct RunDisplaySummary {
 
 #[cfg(test)]
 mod tests {
-    use super::summarize_visible_runs;
+    use super::{should_render_run_list, summarize_visible_runs};
     use crate::api::models::WorkflowRun;
     use crate::ui::detail_view::RunFilters;
 
@@ -474,12 +489,34 @@ mod tests {
             run_with_status(3, "in_progress", None),
         ];
 
-        let mut filters = RunFilters::default();
-        filters.include_failed = false;
+        let filters = RunFilters {
+            include_failed: false,
+            ..RunFilters::default()
+        };
         let summary = summarize_visible_runs(&runs, &filters);
         assert_eq!(summary.filtered_total, 2);
         assert_eq!(summary.visible_runs.len(), 2);
         assert_eq!(summary.visible_runs[0].id, 1);
         assert_eq!(summary.visible_runs[1].id, 3);
+    }
+
+    #[test]
+    fn background_refresh_updates_collapsed_rows_when_data_changes() {
+        assert!(should_render_run_list(true, false, true));
+    }
+
+    #[test]
+    fn background_refresh_skips_collapsed_rows_without_changes() {
+        assert!(!should_render_run_list(true, false, false));
+    }
+
+    #[test]
+    fn background_refresh_updates_expanded_rows_even_without_changes() {
+        assert!(should_render_run_list(true, true, false));
+    }
+
+    #[test]
+    fn foreground_refresh_always_updates() {
+        assert!(should_render_run_list(false, false, false));
     }
 }
