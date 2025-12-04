@@ -125,6 +125,16 @@ impl GitHubClient {
         .await
     }
 
+    /// Invalidate the cached HTTP response for the workflow runs endpoint so
+    /// the next fetch is guaranteed to hit the network.
+    pub fn invalidate_runs_cache(&self, owner: &str, repo: &str, workflow_id: i64) {
+        let cache_key = format!(
+            "GET /repos/{}/{}/actions/workflows/{}/runs?per_page=50",
+            owner, repo, workflow_id
+        );
+        self.response_handler.clear_cache_entry(&cache_key);
+    }
+
     // Run operations
     pub async fn list_runs(
         &self,

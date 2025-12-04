@@ -10,7 +10,7 @@ use crate::storage::TokenStorage;
 use crate::ui::auth_window::AuthWindow;
 use crate::ui::detail_view::RepoDetailPane;
 use crate::ui::preferences_window::PreferencesWindow;
-use crate::ui::utils::MainContextChannelExt;
+use crate::ui::utils::{MainContextChannelExt, create_detail_clamp};
 use gio::Menu;
 use gio::prelude::*;
 use gtk4::prelude::*;
@@ -39,6 +39,8 @@ use sidebar_panel::SidebarPanel;
 use crate::ui::state::{RepoActionsState, WorkflowStatusCounts};
 
 const REPO_STATUS_TTL: Duration = Duration::from_secs(300);
+const MIN_WINDOW_WIDTH: i32 = 860;
+const MIN_WINDOW_HEIGHT: i32 = 520;
 
 #[derive(Clone)]
 pub struct MainWindow {
@@ -81,6 +83,8 @@ impl MainWindow {
             .default_width(1000)
             .default_height(700)
             .build();
+        window.set_resizable(true);
+        window.set_size_request(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT);
 
         let client = Arc::new(Mutex::new(None));
         let repos = Arc::new(Mutex::new(Vec::new()));
@@ -248,7 +252,7 @@ impl MainWindow {
             .start_child(&sidebar_clamp)
             .end_child(&detail_stack)
             .shrink_start_child(false)
-            .shrink_end_child(false)
+            .shrink_end_child(true)
             .build();
         // Keep the sidebar at its natural width and let the detail pane use remaining space.
         split_pane.set_resize_start_child(false);
@@ -261,11 +265,10 @@ impl MainWindow {
 
         let welcome_screen = WelcomeScreen::new();
         let welcome_widget = welcome_screen.widget();
-        welcome_widget.set_margin_top(48);
-        welcome_widget.set_margin_bottom(48);
-        welcome_widget.set_margin_start(48);
-        welcome_widget.set_margin_end(48);
-        root_stack.add_named(welcome_widget, Some("welcome"));
+        let welcome_container = create_detail_clamp(welcome_widget);
+        welcome_container.set_hexpand(true);
+        welcome_container.set_vexpand(true);
+        root_stack.add_named(&welcome_container, Some("welcome"));
         root_stack.set_visible_child_name("welcome");
 
         self.window.set_content(Some(&root_stack));

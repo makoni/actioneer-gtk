@@ -174,6 +174,14 @@ impl ResponseHandler {
             .and_then(|guard| guard.get(cache_key).map(|entry| entry.etag.clone()))
     }
 
+    /// Remove a cached response (and its ETag) so the next request bypasses
+    /// conditional GET handling.
+    pub fn clear_cache_entry(&self, cache_key: &str) {
+        if let Ok(mut guard) = self.cache.lock() {
+            guard.remove(cache_key);
+        }
+    }
+
     fn deserialize_json<T: DeserializeOwned>(&self, body: &[u8]) -> Result<T, GitHubError> {
         serde_json::from_slice(body).map_err(|error| {
             GitHubError::ApiError(format!("Failed to parse response body: {}", error))

@@ -297,6 +297,9 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
         }
 
         let client_guard = client_for_spawn.lock().clone();
+        if bypass_cache {
+            client_guard.invalidate_runs_cache(&owner_for_spawn, &repo_for_spawn, workflow_id);
+        }
         let result = client_guard
             .list_runs(&owner_for_spawn, &repo_for_spawn, workflow_id)
             .await

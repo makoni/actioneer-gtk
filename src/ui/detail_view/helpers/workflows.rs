@@ -406,6 +406,9 @@ pub(crate) fn create_workflow_expander_row(
 
                     match dispatch_result {
                         Ok(_) => {
+                            if let Ok(wf_id) = workflow_id_str.parse::<i64>() {
+                                client_guard.invalidate_runs_cache(&owner, &repo, wf_id);
+                            }
                             let _ = sender.send(Ok(branch));
                         }
                         Err(e) => {
