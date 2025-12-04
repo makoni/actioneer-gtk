@@ -17,18 +17,14 @@ pub async fn list_jobs(
 ) -> Result<Vec<Job>, GitHubError> {
     info!("Fetching jobs for run {}", run_id);
 
-    let cache_key = format!("GET /repos/{}/{}/actions/runs/{}/jobs", owner, repo, run_id);
     let request = client.get(format!(
         "{}/repos/{}/{}/actions/runs/{}/jobs",
         GITHUB_API_BASE, owner, repo, run_id
     ));
 
     let request = add_auth_header(request, token);
-    let request = response_handler.apply_cache_headers(request, Some(&cache_key));
     let response = request.send().await?;
-    let jobs_response: JobsResponse = response_handler
-        .handle_response(response, Some(&cache_key))
-        .await?;
+    let jobs_response: JobsResponse = response_handler.handle_response(response).await?;
     Ok(jobs_response.jobs)
 }
 
@@ -43,14 +39,12 @@ pub async fn get_job_logs(
 ) -> Result<String, GitHubError> {
     info!("Fetching logs for job {}", job_id);
 
-    let cache_key = format!("GET /repos/{}/{}/actions/jobs/{}/logs", owner, repo, job_id);
     let request = client.get(format!(
         "{}/repos/{}/{}/actions/jobs/{}/logs",
         GITHUB_API_BASE, owner, repo, job_id
     ));
 
     let request = add_auth_header(request, token);
-    let request = response_handler.apply_cache_headers(request, Some(&cache_key));
     let response = request.send().await?;
 
     let status = response.status();
@@ -59,25 +53,10 @@ pub async fn get_job_logs(
 
     if status == StatusCode::OK {
         let body = response.bytes().await?;
-        response_handler.store_cache_entry(&cache_key, &headers, &body);
         let logs = String::from_utf8(body.to_vec()).map_err(|error| {
             GitHubError::ApiError(format!("Failed to parse job logs as UTF-8: {}", error))
         })?;
         Ok(logs)
-    } else if status == StatusCode::NOT_MODIFIED {
-        if let Some(cached) = response_handler.cached_body(&cache_key) {
-            let logs = String::from_utf8((*cached).clone()).map_err(|error| {
-                GitHubError::ApiError(format!(
-                    "Failed to parse cached job logs as UTF-8: {}",
-                    error
-                ))
-            })?;
-            Ok(logs)
-        } else {
-            Err(GitHubError::ApiError(
-                "Job logs cache miss after 304 Not Modified".to_string(),
-            ))
-        }
     } else if status == StatusCode::NOT_FOUND {
         Err(GitHubError::NotFound)
     } else if status.is_success() {

@@ -3,30 +3,19 @@ use super::error::GitHubError;
 use crate::api::models::RateLimitInfo;
 use reqwest::{Response, StatusCode, header};
 use serde::de::DeserializeOwned;
-use std::collections::HashMap;
 use std::sync::{Arc, Mutex as StdMutex};
-use tracing::{debug, warn};
+use tracing::warn;
 
 pub const GITHUB_API_BASE: &str = "https://api.github.com";
 
 /// Handles common response processing including rate limit tracking
 pub(super) struct ResponseHandler {
     rate_limit: Arc<StdMutex<Option<RateLimitInfo>>>,
-    cache: Arc<StdMutex<HashMap<String, CachedResponse>>>,
-}
-
-#[derive(Clone)]
-struct CachedResponse {
-    etag: String,
-    body: Arc<Vec<u8>>,
 }
 
 impl ResponseHandler {
     pub fn new(rate_limit: Arc<StdMutex<Option<RateLimitInfo>>>) -> Self {
-        Self {
-            rate_limit,
-            cache: Arc::new(StdMutex::new(HashMap::new())),
-        }
+        Self { rate_limit }
     }
 
     pub fn get_rate_limit(&self) -> Option<RateLimitInfo> {
@@ -36,18 +25,8 @@ impl ResponseHandler {
             .and_then(|guard| (*guard).clone())
     }
 
-    pub fn apply_cache_headers(
-        &self,
-        request: reqwest::RequestBuilder,
-        cache_key: Option<&str>,
-    ) -> reqwest::RequestBuilder {
-        if let Some(key) = cache_key
-            && let Some(etag) = self.cached_etag(key)
-        {
-            debug!(cache_key = key, etag = %etag, "Applying conditional GET with cached ETag");
-            return request.header(header::IF_NONE_MATCH, etag);
-        }
-
+    pub fn apply_cache_headers(&self, request: reqwest::RequestBuilder) -> reqwest::RequestBuilder {
+        // HTTP caching has been disabled because GitHub's workflow endpoints are too dynamic.
         request
     }
 
@@ -75,10 +54,9 @@ impl ResponseHandler {
         }
     }
 
-    pub async fn handle_response<T: serde::de::DeserializeOwned>(
+    pub async fn handle_response<T: DeserializeOwned>(
         &self,
         response: Response,
-        cache_key: Option<&str>,
     ) -> Result<T, GitHubError> {
         let status = response.status();
         let headers = response.headers().clone();
@@ -87,103 +65,25 @@ impl ResponseHandler {
         match status {
             StatusCode::OK | StatusCode::CREATED => {
                 let body = response.bytes().await?;
-                if let Some(key) = cache_key {
-                    self.store_cache_entry(key, &headers, &body);
-                }
                 self.deserialize_json(body.as_ref())
-            }
-            StatusCode::NOT_MODIFIED => {
-                if let Some(key) = cache_key
-                    && let Some(cached) = self.cached_body(key)
-                {
-                    debug!(
-                        cache_key = key,
-                        "Received 304 Not Modified; returning cached body"
-                    );
-                    return self.deserialize_json(cached.as_slice());
-                }
-
-                warn!("Received 304 Not Modified but no cached response available");
-                Err(GitHubError::ApiError(
-                    "Not modified but no cached response available".to_string(),
-                ))
             }
             StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
                 warn!("Authentication failed with status: {}", status);
                 Err(GitHubError::AuthenticationFailed)
             }
             StatusCode::NOT_FOUND => {
-                debug!("Resource not found");
+                warn!("Resource not found");
                 Err(GitHubError::NotFound)
             }
             StatusCode::TOO_MANY_REQUESTS => {
                 warn!("Rate limit exceeded");
                 Err(GitHubError::RateLimitExceeded)
             }
-            _ => {
+            other => {
                 let text = response.text().await.unwrap_or_default();
-                warn!("API error {}: {}", status, text);
-                Err(GitHubError::ApiError(format!(
-                    "Status {}: {}",
-                    status, text
-                )))
+                warn!("API error {}: {}", other, text);
+                Err(GitHubError::ApiError(format!("Status {}: {}", other, text)))
             }
-        }
-    }
-
-    pub(super) fn store_cache_entry(
-        &self,
-        cache_key: &str,
-        headers: &header::HeaderMap,
-        body: &[u8],
-    ) {
-        if let Some(etag) = headers
-            .get(header::ETAG)
-            .and_then(|value| value.to_str().ok())
-            .filter(|etag| !etag.is_empty())
-        {
-            let entry = CachedResponse {
-                etag: etag.to_string(),
-                body: Arc::new(body.to_vec()),
-            };
-
-            if let Ok(mut guard) = self.cache.lock() {
-                guard.insert(cache_key.to_string(), entry);
-            }
-        }
-    }
-
-    pub(super) fn cached_json<T: DeserializeOwned>(
-        &self,
-        cache_key: &str,
-    ) -> Result<Option<T>, GitHubError> {
-        if let Some(body) = self.cached_body(cache_key) {
-            return self.deserialize_json(body.as_slice()).map(Some);
-        }
-
-        Ok(None)
-    }
-
-    pub(super) fn cached_body(&self, cache_key: &str) -> Option<Arc<Vec<u8>>> {
-        self.cache
-            .lock()
-            .ok()
-            .and_then(|guard| guard.get(cache_key).cloned())
-            .map(|entry| entry.body)
-    }
-
-    fn cached_etag(&self, cache_key: &str) -> Option<String> {
-        self.cache
-            .lock()
-            .ok()
-            .and_then(|guard| guard.get(cache_key).map(|entry| entry.etag.clone()))
-    }
-
-    /// Remove a cached response (and its ETag) so the next request bypasses
-    /// conditional GET handling.
-    pub fn clear_cache_entry(&self, cache_key: &str) {
-        if let Ok(mut guard) = self.cache.lock() {
-            guard.remove(cache_key);
         }
     }
 

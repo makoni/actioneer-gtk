@@ -4,7 +4,6 @@ use super::formatting::{
 };
 use crate::api::models::{Job, Repo};
 use crate::api::{GitHubClient, GitHubError};
-use crate::cache::DataCache;
 use crate::ui::job_logs_window::JobLogsWindow;
 use crate::ui::utils::MainContextChannelExt;
 use gtk4::prelude::*;
@@ -12,7 +11,7 @@ use gtk4::{self as gtk, glib};
 use parking_lot::Mutex;
 use std::collections::HashSet;
 use std::sync::Arc;
-use tracing::{error, info};
+use tracing::error;
 
 pub(super) struct LoadJobsParams {
     pub(super) client: Arc<Mutex<GitHubClient>>,
@@ -21,12 +20,10 @@ pub(super) struct LoadJobsParams {
     pub(super) run_id: i64,
     pub(super) jobs_box: gtk::Box,
     pub(super) badges_box: Option<gtk::Box>,
-    pub(super) cache: Arc<DataCache>,
     pub(super) workflow_id: i64,
     pub(super) parent_window: gtk::Window,
     pub(super) repo_model: Repo,
     pub(super) background: bool,
-    pub(super) bypass_cache: bool,
     pub(super) job_contexts: JobContextMap,
     pub(super) run_branch: Option<String>,
     pub(super) run_title: String,
@@ -151,12 +148,10 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
         run_id,
         jobs_box,
         badges_box,
-        cache,
         workflow_id,
         parent_window,
         repo_model,
         background,
-        bypass_cache,
         job_contexts,
         run_branch,
         run_title,
@@ -182,15 +177,10 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
     let client_for_retry = client.clone();
     let owner_for_retry = owner.clone();
     let repo_for_retry = repo.clone();
-    let cache_for_retry = cache.clone();
-
-    let owner_for_store = owner.clone();
-    let repo_for_store = repo.clone();
 
     let client_for_api = client.clone();
     let owner_for_api = owner.clone();
     let repo_for_api = repo.clone();
-    let cache_for_api = cache.clone();
 
     receiver.attach(None, move |result| {
         let should_clear = result.as_ref().is_ok() || !background;
@@ -214,15 +204,6 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
                 }
             }
             Ok(jobs) => {
-                let cache_store = cache_for_retry.clone();
-                let cache_key = format!("{}/{}", owner_for_store, repo_for_store);
-                let jobs_cache = jobs.clone();
-                crate::runtime_handle().spawn(async move {
-                    cache_store
-                        .store_jobs(jobs_cache, &cache_key, workflow_id, run_id)
-                        .await;
-                });
-
                 if let Some(ref badges) = badges_box {
                     update_job_summary_badges(badges, jobs.as_ref());
                 }
@@ -233,7 +214,6 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
                     repo: repo.clone(),
                     workflow_id,
                     run_id,
-                    cache: cache.clone(),
                     jobs_box: jobs_box.clone(),
                     badges_box: badges_box.clone(),
                     parent_window: parent_window.clone(),
@@ -302,7 +282,6 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
                     let owner_retry = owner_for_retry.clone();
                     let repo_retry = repo_for_retry.clone();
                     let jobs_box_retry = jobs_box.clone();
-                    let cache_retry = cache_for_retry.clone();
                     let job_contexts_retry = job_contexts.clone();
 
                     let badges_box_retry = badges_box.clone();
@@ -326,12 +305,10 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
                             run_id,
                             jobs_box: jobs_box_retry.clone(),
                             badges_box: badges_box_retry.clone(),
-                            cache: cache_retry.clone(),
                             workflow_id,
                             parent_window: parent_window_retry.clone(),
                             repo_model: repo_model_retry.clone(),
                             background: false,
-                            bypass_cache: true,
                             job_contexts: job_contexts_retry.clone(),
                             run_branch: run_branch_retry.clone(),
                             run_title: run_title_retry.clone(),
@@ -348,18 +325,6 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
     });
 
     crate::runtime_handle().spawn(async move {
-        let cache_key = format!("{}/{}", owner_for_api, repo_for_api);
-
-        if !bypass_cache {
-            if let Some(cached_jobs) = cache_for_api.jobs(&cache_key, workflow_id, run_id).await {
-                info!("Using cached jobs for run {}", run_id);
-                let _ = sender.send(Ok(cached_jobs));
-                return;
-            }
-        } else {
-            info!("Bypassing job cache for run {}", run_id);
-        }
-
         let client_guard = client_for_api.lock().clone();
         let result = client_guard
             .list_jobs(&owner_for_api, &repo_for_api, run_id)
@@ -390,12 +355,10 @@ pub(crate) fn refresh_jobs_for_workflows(
             run_id: context.run_id(),
             jobs_box: context.jobs_box(),
             badges_box: context.badges_box(),
-            cache: context.cache(),
             workflow_id: context.workflow_id(),
             parent_window: context.parent_window(),
             repo_model: context.repo_model(),
             background: true,
-            bypass_cache: true,
             job_contexts: job_contexts.clone(),
             run_branch: context.branch(),
             run_title: context.run_title(),

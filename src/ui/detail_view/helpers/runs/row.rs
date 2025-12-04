@@ -6,7 +6,6 @@ use super::super::jobs::{LoadJobsParams, load_run_jobs};
 use super::actions::{RunActionContext, create_actions_box};
 use crate::api::GitHubClient;
 use crate::api::models::{Repo, WorkflowRun};
-use crate::cache::DataCache;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib, pango};
 use libadwaita as adw;
@@ -20,7 +19,6 @@ pub(crate) struct RunRowContext {
     pub(super) repo: String,
     pub(super) repo_model: Repo,
     pub(super) parent_window: adw::ApplicationWindow,
-    pub(super) cache: Arc<DataCache>,
     pub(super) workflow_id: i64,
     pub(super) toast_overlay: adw::ToastOverlay,
     pub(super) job_contexts: JobContextMap,
@@ -34,7 +32,6 @@ impl RunRowContext {
         repo: String,
         repo_model: Repo,
         parent_window: adw::ApplicationWindow,
-        cache: Arc<DataCache>,
         workflow_id: i64,
         toast_overlay: adw::ToastOverlay,
         job_contexts: JobContextMap,
@@ -45,7 +42,6 @@ impl RunRowContext {
             repo,
             repo_model,
             parent_window,
-            cache,
             workflow_id,
             toast_overlay,
             job_contexts,
@@ -58,8 +54,6 @@ impl RunRowContext {
             owner: self.owner.clone(),
             repo: self.repo.clone(),
             parent_window: self.parent_window.clone(),
-            cache: self.cache.clone(),
-            workflow_id: self.workflow_id,
             toast_overlay: self.toast_overlay.clone(),
         }
     }
@@ -210,7 +204,6 @@ fn attach_job_loader(
     let owner = context.owner.clone();
     let repo = context.repo.clone();
     let workflow_id = context.workflow_id;
-    let cache = context.cache.clone();
     let job_contexts_for_load = context.job_contexts.clone();
     let job_contexts_for_remove = context.job_contexts.clone();
     let repo_model = context.repo_model.clone();
@@ -234,12 +227,10 @@ fn attach_job_loader(
                 run_id,
                 jobs_box: jobs_box.clone(),
                 badges_box: Some(badges_box_for_load.clone()),
-                cache: cache.clone(),
                 workflow_id,
                 parent_window: parent_window_for_load.clone(),
                 repo_model: repo_model.clone(),
                 background: false,
-                bypass_cache: false,
                 job_contexts: job_contexts_for_load.clone(),
                 run_branch: run_branch.clone(),
                 run_title: run_title_for_load.clone(),

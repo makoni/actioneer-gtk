@@ -1,7 +1,6 @@
 use super::super::formatting::format_run_title;
 use crate::api::GitHubClient;
 use crate::api::models::WorkflowRun;
-use crate::cache::DataCache;
 use crate::ui::utils::MainContextChannelExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
@@ -16,8 +15,6 @@ pub(super) struct RunActionContext {
     pub(super) owner: String,
     pub(super) repo: String,
     pub(super) parent_window: adw::ApplicationWindow,
-    pub(super) cache: Arc<DataCache>,
-    pub(super) workflow_id: i64,
     pub(super) toast_overlay: adw::ToastOverlay,
 }
 
@@ -75,8 +72,6 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
     let parent_window = context.parent_window.clone();
     let toast_overlay = context.toast_overlay.clone();
     let run_title = format_run_title(run);
-    let cache = context.cache.clone();
-    let workflow_id = context.workflow_id;
 
     button.connect_clicked(move |btn| {
         let dialog = gtk::MessageDialog::new(
@@ -94,7 +89,6 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
         let repo = repo.clone();
         let toast_overlay = toast_overlay.clone();
         let run_title = run_title.clone();
-        let cache = cache.clone();
 
         dialog.connect_response(move |dialog, response| {
             dialog.close();
@@ -109,9 +103,6 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
             let repo = repo.clone();
             let toast_overlay = toast_overlay.clone();
             let run_title = run_title.clone();
-            let cache = cache.clone();
-            let owner_for_cache = owner.clone();
-            let repo_for_cache = repo.clone();
 
             let (sender, receiver) =
                 glib::MainContext::default().channel::<bool>(glib::Priority::default());
@@ -131,18 +122,11 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
                 let client_guard = client.lock().clone();
                 let rerun_result = client_guard.rerun_workflow(&owner, &repo, run_id).await;
 
-                match rerun_result {
-                    Ok(_) => {
-                        let cache_key = format!("{}/{}", owner_for_cache, repo_for_cache);
-                        cache
-                            .store_runs(Arc::new(Vec::new()), &cache_key, workflow_id)
-                            .await;
-                        let _ = sender.send(true);
-                    }
-                    Err(err) => {
-                        error!("Failed to re-run workflow: {}", err);
-                        let _ = sender.send(false);
-                    }
+                if rerun_result.is_err() {
+                    error!("Failed to re-run workflow: {}", rerun_result.unwrap_err());
+                    let _ = sender.send(false);
+                } else {
+                    let _ = sender.send(true);
                 }
             });
         });
@@ -167,8 +151,6 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
     let parent_window = context.parent_window.clone();
     let toast_overlay = context.toast_overlay.clone();
     let run_title = format_run_title(run);
-    let cache = context.cache.clone();
-    let workflow_id = context.workflow_id;
 
     button.connect_clicked(move |btn| {
         let dialog = gtk::MessageDialog::new(
@@ -189,7 +171,6 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
         let repo = repo.clone();
         let toast_overlay = toast_overlay.clone();
         let run_title = run_title.clone();
-        let cache = cache.clone();
 
         dialog.connect_response(move |dialog, response| {
             dialog.close();
@@ -204,9 +185,6 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
             let repo = repo.clone();
             let toast_overlay = toast_overlay.clone();
             let run_title = run_title.clone();
-            let cache = cache.clone();
-            let owner_for_cache = owner.clone();
-            let repo_for_cache = repo.clone();
 
             let (sender, receiver) =
                 glib::MainContext::default().channel::<bool>(glib::Priority::default());
@@ -227,18 +205,14 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
                 let client_guard = client.lock().clone();
                 let rerun_result = client_guard.rerun_failed_jobs(&owner, &repo, run_id).await;
 
-                match rerun_result {
-                    Ok(_) => {
-                        let cache_key = format!("{}/{}", owner_for_cache, repo_for_cache);
-                        cache
-                            .store_runs(Arc::new(Vec::new()), &cache_key, workflow_id)
-                            .await;
-                        let _ = sender.send(true);
-                    }
-                    Err(err) => {
-                        error!("Failed to re-run failed jobs: {}", err);
-                        let _ = sender.send(false);
-                    }
+                if rerun_result.is_err() {
+                    error!(
+                        "Failed to re-run failed jobs: {}",
+                        rerun_result.unwrap_err()
+                    );
+                    let _ = sender.send(false);
+                } else {
+                    let _ = sender.send(true);
                 }
             });
         });
@@ -263,8 +237,6 @@ fn create_cancel_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::B
     let parent_window = context.parent_window.clone();
     let toast_overlay = context.toast_overlay.clone();
     let run_title = format_run_title(run);
-    let cache = context.cache.clone();
-    let workflow_id = context.workflow_id;
 
     button.connect_clicked(move |btn| {
         let dialog = gtk::MessageDialog::new(
@@ -285,7 +257,6 @@ fn create_cancel_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::B
         let repo = repo.clone();
         let toast_overlay = toast_overlay.clone();
         let run_title = run_title.clone();
-        let cache = cache.clone();
 
         dialog.connect_response(move |dialog, response| {
             dialog.close();
@@ -300,9 +271,6 @@ fn create_cancel_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::B
             let repo = repo.clone();
             let toast_overlay = toast_overlay.clone();
             let run_title = run_title.clone();
-            let cache = cache.clone();
-            let owner_for_cache = owner.clone();
-            let repo_for_cache = repo.clone();
 
             let (sender, receiver) =
                 glib::MainContext::default().channel::<bool>(glib::Priority::default());
@@ -323,18 +291,11 @@ fn create_cancel_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::B
                 let client_guard = client.lock().clone();
                 let cancel_result = client_guard.cancel_run(&owner, &repo, run_id).await;
 
-                match cancel_result {
-                    Ok(_) => {
-                        let cache_key = format!("{}/{}", owner_for_cache, repo_for_cache);
-                        cache
-                            .store_runs(Arc::new(Vec::new()), &cache_key, workflow_id)
-                            .await;
-                        let _ = sender.send(true);
-                    }
-                    Err(err) => {
-                        error!("Failed to cancel run: {}", err);
-                        let _ = sender.send(false);
-                    }
+                if cancel_result.is_err() {
+                    error!("Failed to cancel run: {}", cancel_result.unwrap_err());
+                    let _ = sender.send(false);
+                } else {
+                    let _ = sender.send(true);
                 }
             });
         });
@@ -377,7 +338,6 @@ mod tests {
 
         let run = run_stub();
         let client = Arc::new(Mutex::new(GitHubClient::new(None).unwrap()));
-        let cache = Arc::new(DataCache::new());
         let parent = adw::ApplicationWindow::builder().build();
         let overlay = adw::ToastOverlay::new();
 
@@ -386,8 +346,6 @@ mod tests {
             owner: "owner".to_string(),
             repo: "repo".to_string(),
             parent_window: parent.clone(),
-            cache: cache.clone(),
-            workflow_id: 1,
             toast_overlay: overlay.clone(),
         };
 

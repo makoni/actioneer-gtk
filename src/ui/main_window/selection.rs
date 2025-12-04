@@ -125,7 +125,6 @@ impl MainWindow {
                 let deps = RepoDetailDeps {
                     favorites_manager: self.favorites_manager.clone(),
                     preferences_manager: self.preferences_manager.clone(),
-                    cache: self.cache.clone(),
                     favorites: self.favorites.clone(),
                     notification_manager: self.notification_manager.clone(),
                 };

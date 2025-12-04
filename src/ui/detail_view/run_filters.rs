@@ -105,7 +105,6 @@ impl RepoDetailPane {
         let repo = context.repo.clone();
         let repo_model = context.repo_model.clone();
         let parent_window = context.parent_window.clone();
-        let cache = context.cache.clone();
         let toast_overlay = context.toast_overlay.clone();
         let workflows_with_active = context.workflows_with_active_runs.clone();
         let job_contexts = context.job_contexts.clone();
@@ -150,9 +149,7 @@ impl RepoDetailPane {
                                 parent_window: parent_window.clone(),
                                 status_badge,
                                 expander: expander.clone(),
-                                cache: cache.clone(),
                                 toast_overlay: toast_overlay.clone(),
-                                bypass_cache: false,
                                 job_contexts: job_contexts.clone(),
                                 expanded_run_ids: preserved_runs,
                                 workflows_with_active: workflows_with_active.clone(),

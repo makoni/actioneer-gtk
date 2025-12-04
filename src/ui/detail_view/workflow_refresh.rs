@@ -33,7 +33,6 @@ impl RepoDetailPane {
         let list_store = context.store.clone();
         let parent_window = context.parent_window.clone();
         let loading_guard = self.loading.clone();
-        let cache = context.cache.clone();
         let toast_overlay = context.toast_overlay.clone();
         let job_contexts = context.job_contexts.clone();
         let workflows_with_active_runs = context.workflows_with_active_runs.clone();
@@ -51,9 +50,6 @@ impl RepoDetailPane {
         let client_for_spawn = client.clone();
         let owner_for_spawn = owner.clone();
         let repo_name_for_spawn = repo_name.clone();
-        let cache_for_spawn = cache.clone();
-        let cache_for_ui = cache.clone();
-
         let run_filters_for_ui = run_filters.clone();
         receiver.attach(None, move |result| {
             callback_refs.show_loading(false);
@@ -68,7 +64,6 @@ impl RepoDetailPane {
                 repo: repo_name.clone(),
                 repo_model: repo_model.clone(),
                 parent_window: parent_window.clone(),
-                cache: cache_for_ui.clone(),
                 toast_overlay: toast_overlay.clone(),
                 job_contexts: job_contexts.clone(),
                 workflows_with_active_runs: workflows_with_active_runs.clone(),
@@ -82,13 +77,6 @@ impl RepoDetailPane {
                 Ok(wf_list) => {
                     info!("Loaded {} workflows", wf_list.len());
                     *workflows.lock() = wf_list.clone();
-
-                    let cache_store = cache.clone();
-                    let cache_key = format!("{}/{}", owner, repo_name);
-                    let wf_list_cache = wf_list.clone();
-                    crate::runtime_handle().spawn(async move {
-                        cache_store.store_workflows(wf_list_cache, &cache_key).await;
-                    });
 
                     super::workflow_list::update_workflows_list(&ui_context, wf_list.as_ref());
                 }
@@ -110,14 +98,6 @@ impl RepoDetailPane {
         });
 
         crate::runtime_handle().spawn(async move {
-            let cache_key = format!("{}/{}", owner_for_spawn, repo_name_for_spawn);
-
-            if let Some(cached_workflows) = cache_for_spawn.workflows(&cache_key).await {
-                info!("Using cached workflows for {}", cache_key);
-                let _ = sender.send(Ok(cached_workflows));
-                return;
-            }
-
             let client_clone = client_for_spawn.lock().clone();
             let result = fetch_workflows(&client_clone, &owner_for_spawn, &repo_name_for_spawn)
                 .await
@@ -145,7 +125,6 @@ impl RepoDetailPane {
         let list_store = context.store.clone();
         let parent_window = context.parent_window.clone();
         let loading_guard = self.loading.clone();
-        let cache = context.cache.clone();
         let toast_overlay = context.toast_overlay.clone();
         let job_contexts = context.job_contexts.clone();
         let workflows_with_active_runs = context.workflows_with_active_runs.clone();
@@ -178,7 +157,6 @@ impl RepoDetailPane {
                 repo: repo_name.clone(),
                 repo_model: repo_model_for_ui.clone(),
                 parent_window: parent_window.clone(),
-                cache: cache.clone(),
                 toast_overlay: toast_overlay.clone(),
                 job_contexts: job_contexts.clone(),
                 workflows_with_active_runs: workflows_with_active_runs.clone(),
@@ -228,7 +206,6 @@ impl RepoDetailPane {
         let callback_refs = self.clone_for_callbacks();
         let parent_window = context.parent_window.clone();
         let loading_guard = self.loading.clone();
-        let cache = context.cache.clone();
         let toast_overlay = context.toast_overlay.clone();
         let job_contexts = context.job_contexts.clone();
         let workflows_with_active_runs = context.workflows_with_active_runs.clone();
@@ -257,7 +234,6 @@ impl RepoDetailPane {
             let callback_refs = callback_refs.clone();
             let parent_window = parent_window.clone();
             let loading_guard = loading_guard.clone();
-            let cache = cache.clone();
             let toast_overlay = toast_overlay.clone();
             let workflows_with_active_runs = workflows_with_active_runs.clone();
             let run_digests = run_digests.clone();
@@ -284,7 +260,6 @@ impl RepoDetailPane {
             let run_digests_for_ui = run_digests.clone();
             let notification_manager_for_ui = notification_manager_handle.clone();
             let preferences_manager_for_ui = preferences_manager_handle.clone();
-            let cache_for_ui = cache.clone();
 
             receiver.attach(None, move |result| {
                 callback_refs_for_ui.show_loading(false);
@@ -302,7 +277,6 @@ impl RepoDetailPane {
                             repo: repo_name_for_ui.clone(),
                             repo_model: repo_model_for_ui.clone(),
                             parent_window: parent_window_for_ui.clone(),
-                            cache: cache_for_ui.clone(),
                             toast_overlay: toast_overlay_for_ui.clone(),
                             job_contexts: job_contexts_for_ui.clone(),
                             workflows_with_active_runs: workflows_with_active_runs_for_ui.clone(),
@@ -325,12 +299,7 @@ impl RepoDetailPane {
             let client_for_spawn = client.clone();
             let owner_for_spawn = owner.clone();
             let repo_name_for_spawn = repo_name.clone();
-            let cache_for_spawn = cache.clone();
-
             crate::runtime_handle().spawn(async move {
-                let cache_key = format!("{}/{}", owner_for_spawn, repo_name_for_spawn);
-                cache_for_spawn.clear_repo(&cache_key).await;
-
                 let client_clone = client_for_spawn.lock().clone();
                 let result = fetch_workflows(&client_clone, &owner_for_spawn, &repo_name_for_spawn)
                     .await
@@ -366,7 +335,6 @@ impl RepoDetailPane {
         let workflows_with_active = list_context.workflows_with_active_runs.clone();
         let auto_refresh_source = self.auto_refresh_source.clone();
         let job_contexts = list_context.job_contexts.clone();
-        let cache = list_context.cache.clone();
         let toast_overlay = list_context.toast_overlay.clone();
         let run_digests = list_context.run_digests.clone();
         let notification_manager = list_context.notification_manager.clone();
@@ -388,7 +356,6 @@ impl RepoDetailPane {
                 repo: repo_name.clone(),
                 repo_model: repo_model.clone(),
                 parent_window: parent_window.clone(),
-                cache: cache.clone(),
                 toast_overlay: toast_overlay.clone(),
                 job_contexts: job_contexts.clone(),
                 workflows_with_active_runs: workflows_with_active.clone(),
@@ -412,7 +379,6 @@ impl RepoDetailPane {
         let repo = context.repo.clone();
         let repo_model = context.repo_model.clone();
         let parent_window = context.parent_window.clone();
-        let cache = context.cache.clone();
         let toast_overlay = context.toast_overlay.clone();
         let workflows_with_active = context.workflows_with_active_runs.clone();
         let job_contexts = context.job_contexts.clone();
@@ -467,9 +433,7 @@ impl RepoDetailPane {
                                 parent_window: parent_window.clone(),
                                 status_badge,
                                 expander: expander.clone(),
-                                cache: cache.clone(),
                                 toast_overlay: toast_overlay.clone(),
-                                bypass_cache: true,
                                 job_contexts: job_contexts.clone(),
                                 expanded_run_ids: preserved_runs,
                                 workflows_with_active: workflows_with_active.clone(),

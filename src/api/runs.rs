@@ -30,10 +30,9 @@ pub async fn list_runs(
     let request = add_auth_header(request, token);
     // Runs are highly dynamic; always fetch fresh data rather than relying on
     // cached ETags.
-    let request = response_handler.apply_cache_headers(request, None);
+    let request = response_handler.apply_cache_headers(request);
     let response = request.send().await?;
-    let runs_response: WorkflowRunsResponse =
-        response_handler.handle_response(response, None).await?;
+    let runs_response: WorkflowRunsResponse = response_handler.handle_response(response).await?;
     Ok(runs_response.workflow_runs)
 }
 

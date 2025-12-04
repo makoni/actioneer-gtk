@@ -4,7 +4,6 @@ use super::runs::{
 };
 use crate::api::GitHubClient;
 use crate::api::models::{Repo, Workflow};
-use crate::cache::DataCache;
 use crate::notifications::NotificationManager;
 use crate::preferences::PreferencesManager;
 use crate::ui::detail_view::RunFilters;
@@ -26,7 +25,6 @@ pub(crate) struct WorkflowRowContext {
     pub repo: String,
     pub repo_model: Repo,
     pub parent_window: adw::ApplicationWindow,
-    pub cache: Arc<DataCache>,
     pub toast_overlay: adw::ToastOverlay,
     pub job_contexts: JobContextMap,
     pub workflows_with_active_runs: Arc<Mutex<HashSet<i64>>>,
@@ -53,7 +51,6 @@ pub(crate) fn create_workflow_expander_row(
     let repo = context.repo.clone();
     let repo_model = context.repo_model.clone();
     let parent_window = context.parent_window.clone();
-    let cache = context.cache.clone();
     let toast_overlay = context.toast_overlay.clone();
     let job_contexts = context.job_contexts.clone();
     let workflows_with_active = context.workflows_with_active_runs.clone();
@@ -112,7 +109,6 @@ pub(crate) fn create_workflow_expander_row(
         repo.clone(),
         repo_model.clone(),
         parent_window.clone(),
-        cache.clone(),
         workflow.id,
         toast_overlay.clone(),
         job_contexts.clone(),
@@ -135,7 +131,6 @@ pub(crate) fn create_workflow_expander_row(
     let workflow_display_for_trigger = workflow_display_name.clone();
     let parent_window_for_trigger = parent_window.clone();
     let toast_overlay_for_trigger = toast_overlay.clone();
-    let cache_for_trigger = cache.clone();
     let expander_for_trigger = expander.clone();
     let job_contexts_for_trigger = job_contexts.clone();
     let run_digests_shared = run_digests.clone();
@@ -154,7 +149,6 @@ pub(crate) fn create_workflow_expander_row(
     let run_list_shared = run_list.clone();
     let parent_window_shared = parent_window.clone();
     let status_badge_shared = status_badge.clone();
-    let cache_shared = cache.clone();
     let toast_overlay_shared = toast_overlay.clone();
     let repo_model_shared = repo_model.clone();
     let repo_model_for_signal = repo_model.clone();
@@ -167,7 +161,6 @@ pub(crate) fn create_workflow_expander_row(
     let run_list_for_signal = run_list_shared.clone();
     let parent_window_for_signal = parent_window_shared.clone();
     let status_badge_for_signal = status_badge_shared.clone();
-    let cache_for_signal = cache_shared.clone();
     let toast_overlay_for_signal = toast_overlay_shared.clone();
     let job_contexts_shared = job_contexts.clone();
     let job_contexts_for_signal = job_contexts_shared.clone();
@@ -222,9 +215,7 @@ pub(crate) fn create_workflow_expander_row(
                 parent_window: parent_window_for_signal.clone(),
                 status_badge: Some(status_badge_for_signal.clone()),
                 expander: exp.clone(),
-                cache: cache_for_signal.clone(),
                 toast_overlay: toast_overlay_for_signal.clone(),
-                bypass_cache: force_refresh,
                 job_contexts: job_contexts_for_signal.clone(),
                 expanded_run_ids: preserved_runs,
                 workflows_with_active: workflows_with_active_for_signal.clone(),
@@ -266,9 +257,7 @@ pub(crate) fn create_workflow_expander_row(
                 parent_window: parent_window_shared.clone(),
                 status_badge: Some(status_badge_shared.clone()),
                 expander: expander.clone(),
-                cache: cache_shared.clone(),
                 toast_overlay: toast_overlay_shared.clone(),
-                bypass_cache: true,
                 job_contexts: job_contexts_shared.clone(),
                 expanded_run_ids: preserved_runs,
                 workflows_with_active: workflows_with_active_shared.clone(),
@@ -286,7 +275,6 @@ pub(crate) fn create_workflow_expander_row(
     trigger_btn.connect_clicked(move |_| {
         let run_filters_for_dialog = run_filters_for_trigger.clone();
         let expander = expander_for_trigger.clone();
-        let cache = cache_for_trigger.clone();
         let client = client_for_trigger.clone();
         let owner = owner_for_trigger.clone();
         let repo = repo_for_trigger.clone();
@@ -371,7 +359,6 @@ pub(crate) fn create_workflow_expander_row(
         let toast_overlay_clone = toast_overlay.clone();
         let workflow_name_clone = workflow_name.clone();
         let workflow_display_rc = Rc::new(workflow_display.clone());
-        let cache_clone = cache.clone();
         let expander_clone = expander.clone();
         let run_list_clone = run_list.clone();
         let parent_window_clone = parent_window.clone();
@@ -406,9 +393,6 @@ pub(crate) fn create_workflow_expander_row(
 
                     match dispatch_result {
                         Ok(_) => {
-                            if let Ok(wf_id) = workflow_id_str.parse::<i64>() {
-                                client_guard.invalidate_runs_cache(&owner, &repo, wf_id);
-                            }
                             let _ = sender.send(Ok(branch));
                         }
                         Err(e) => {
@@ -420,7 +404,6 @@ pub(crate) fn create_workflow_expander_row(
 
                 let toast_overlay = toast_overlay_clone.clone();
                 let workflow_name = workflow_name_clone.clone();
-                let cache = cache_clone.clone();
                 let owner = owner_clone.clone();
                 let repo = repo_clone.clone();
                 let expander = expander_clone.clone();
@@ -445,15 +428,12 @@ pub(crate) fn create_workflow_expander_row(
                         Ok(branch_name) => {
                             info!("Workflow triggered successfully on branch: {}", branch_name);
 
-                            let cache = cache.clone();
-                            let cache_key = format!("{}/{}", owner, repo);
                             let expander = expander.clone();
                             let client_for_reload = client.clone();
                             let owner_for_reload = owner.clone();
                             let repo_for_reload = repo.clone();
                             let parent_window_for_reload = parent_window.clone();
                             let toast_overlay_for_reload = toast_overlay.clone();
-                            let cache_for_reload = cache.clone();
                             let job_contexts_for_reload = job_contexts.clone();
                             let workflows_with_active_for_reload = workflows_with_active.clone();
                             let run_digests_for_refresh = run_digests_for_reload.clone();
@@ -465,19 +445,12 @@ pub(crate) fn create_workflow_expander_row(
                                 preferences_manager_handle.as_ref().clone();
                             let repo_model_for_reload = repo_model_for_closure.clone();
 
-                            crate::runtime_handle().spawn(async move {
-                                cache
-                                    .store_runs(Arc::new(Vec::new()), &cache_key, workflow_id)
-                                    .await;
-                            });
-
                             let client_for_idle = client_for_reload.clone();
                             let owner_for_idle = owner_for_reload.clone();
                             let repo_for_idle = repo_for_reload.clone();
                             let repo_model_for_idle = repo_model_for_reload.clone();
                             let workflow_display_for_idle = workflow_display_for_reload.clone();
                             let parent_window_for_idle = parent_window_for_reload.clone();
-                            let cache_for_idle = cache_for_reload.clone();
                             let toast_overlay_for_idle = toast_overlay_for_reload.clone();
                             let job_contexts_for_idle = job_contexts_for_reload.clone();
                             let workflows_with_active_idle =
@@ -519,9 +492,7 @@ pub(crate) fn create_workflow_expander_row(
                                         parent_window: parent_window_for_idle.clone(),
                                         status_badge: None,
                                         expander: expander_for_idle.clone(),
-                                        cache: cache_for_idle.clone(),
                                         toast_overlay: toast_overlay_for_idle.clone(),
-                                        bypass_cache: true,
                                         job_contexts: job_contexts_for_idle.clone(),
                                         expanded_run_ids: preserved_runs,
                                         workflows_with_active,
@@ -545,7 +516,6 @@ pub(crate) fn create_workflow_expander_row(
                                 parent_window: parent_window_for_reload.clone(),
                                 status_badge: None,
                                 expander: expander.clone(),
-                                cache: cache_for_reload.clone(),
                                 toast_overlay: toast_overlay_for_reload.clone(),
                                 job_contexts: job_contexts_for_reload.clone(),
                                 workflows_with_active: workflows_with_active_for_reload.clone(),
@@ -621,7 +591,6 @@ struct FollowUpRefreshParams {
     parent_window: adw::ApplicationWindow,
     status_badge: Option<gtk::Label>,
     expander: gtk::Expander,
-    cache: Arc<DataCache>,
     toast_overlay: adw::ToastOverlay,
     job_contexts: JobContextMap,
     workflows_with_active: Arc<Mutex<HashSet<i64>>>,
@@ -697,9 +666,7 @@ fn schedule_post_trigger_refresh(params: FollowUpRefreshParams) {
                 parent_window: params.parent_window.clone(),
                 status_badge: params.status_badge.clone(),
                 expander: params.expander.clone(),
-                cache: params.cache.clone(),
                 toast_overlay: params.toast_overlay.clone(),
-                bypass_cache: true,
                 job_contexts: params.job_contexts.clone(),
                 expanded_run_ids: preserved_runs,
                 workflows_with_active: params.workflows_with_active.clone(),

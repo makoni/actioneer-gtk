@@ -5,7 +5,6 @@ use super::filters::run_matches_filters;
 use super::list::WorkflowRunListModel;
 use crate::api::models::{Repo, WorkflowRun};
 use crate::api::{GitHubClient, GitHubError};
-use crate::cache::DataCache;
 use crate::notifications::NotificationManager;
 use crate::preferences::PreferencesManager;
 use crate::ui::detail_view::RunFilters;
@@ -29,7 +28,6 @@ struct RunErrorContext {
     repo: String,
     parent_window: adw::ApplicationWindow,
     expander: gtk::Expander,
-    cache: Arc<DataCache>,
     toast_overlay: adw::ToastOverlay,
     job_contexts: JobContextMap,
     workflows_with_active: Arc<Mutex<HashSet<i64>>>,
@@ -52,9 +50,7 @@ pub(crate) struct LoadRunsParams {
     pub parent_window: adw::ApplicationWindow,
     pub status_badge: Option<gtk::Label>,
     pub expander: gtk::Expander,
-    pub cache: Arc<DataCache>,
     pub toast_overlay: adw::ToastOverlay,
-    pub bypass_cache: bool,
     pub job_contexts: JobContextMap,
     pub expanded_run_ids: Vec<i64>,
     pub workflows_with_active: Arc<Mutex<HashSet<i64>>>,
@@ -77,9 +73,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
         parent_window,
         status_badge,
         expander,
-        cache,
         toast_overlay,
-        bypass_cache,
         job_contexts,
         expanded_run_ids,
         workflows_with_active,
@@ -140,14 +134,6 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
 
                 if changed {
                     prune_stale_job_contexts(&job_contexts, workflow_id, runs.as_ref());
-                    store_runs_async(
-                        cache.clone(),
-                        owner.clone(),
-                        repo.clone(),
-                        workflow_id,
-                        runs.as_ref(),
-                    );
-
                     if let (Some(prev), Some(manager)) =
                         (previous_digest.as_ref(), notification_manager.clone())
                     {
@@ -256,7 +242,6 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                         repo: repo.clone(),
                         parent_window: parent_window_clone.clone(),
                         expander: expander_for_retry.clone(),
-                        cache: cache.clone(),
                         toast_overlay: toast_overlay_for_retry.clone(),
                         job_contexts: job_contexts_for_retry.clone(),
                         workflows_with_active: workflows_with_active.clone(),
@@ -277,14 +262,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
     });
 
     crate::runtime_handle().spawn(async move {
-        if bypass_cache {
-            info!("Bypassing run cache for workflow {}", workflow_id);
-        }
-
         let client_guard = client_for_spawn.lock().clone();
-        if bypass_cache {
-            client_guard.invalidate_runs_cache(&owner_for_spawn, &repo_for_spawn, workflow_id);
-        }
         let result = client_guard
             .list_runs(&owner_for_spawn, &repo_for_spawn, workflow_id)
             .await
@@ -302,20 +280,6 @@ fn prune_stale_job_contexts(job_contexts: &JobContextMap, workflow_id: i64, runs
             return true;
         }
         active_run_ids.contains(&ctx.run_id())
-    });
-}
-
-fn store_runs_async(
-    cache: Arc<DataCache>,
-    owner: String,
-    repo: String,
-    workflow_id: i64,
-    runs: &[WorkflowRun],
-) {
-    let cache_key = format!("{}/{}", owner, repo);
-    let runs_cache = Arc::new(runs.to_vec());
-    crate::runtime_handle().spawn(async move {
-        cache.store_runs(runs_cache, &cache_key, workflow_id).await;
     });
 }
 
@@ -371,7 +335,6 @@ fn show_error_state(error: GitHubError, workflow_id: i64, context: RunErrorConte
         repo,
         parent_window,
         expander,
-        cache,
         toast_overlay,
         job_contexts,
         workflows_with_active,
@@ -397,9 +360,7 @@ fn show_error_state(error: GitHubError, workflow_id: i64, context: RunErrorConte
             parent_window: parent_window.clone(),
             status_badge: None,
             expander: expander.clone(),
-            cache: cache.clone(),
             toast_overlay: toast_overlay.clone(),
-            bypass_cache: true,
             job_contexts: job_contexts.clone(),
             expanded_run_ids: Vec::new(),
             workflows_with_active: workflows_with_active.clone(),

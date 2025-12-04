@@ -1,6 +1,5 @@
 use crate::api::GitHubClient;
 use crate::api::models::{Repo, Workflow};
-use crate::cache::DataCache;
 use crate::favorites::FavoritesManager;
 use crate::notifications::NotificationManager;
 use crate::preferences::{PreferencesManager, RunFilterPreferences};
@@ -33,7 +32,6 @@ pub struct RepoDetailPane {
     workflows: Arc<Mutex<Arc<Vec<Workflow>>>>,
     favorites_manager: Option<Arc<FavoritesManager>>,
     preferences_manager: Option<Arc<PreferencesManager>>,
-    cache: Arc<DataCache>,
     favorites: Arc<Mutex<HashSet<i64>>>,
     favorite_button: gtk::ToggleButton,
     refresh_button: gtk::Button,
@@ -58,7 +56,6 @@ pub struct RepoDetailPane {
 pub struct RepoDetailDeps {
     pub favorites_manager: Option<Arc<FavoritesManager>>,
     pub preferences_manager: Option<Arc<PreferencesManager>>,
-    pub cache: Arc<DataCache>,
     pub favorites: Arc<Mutex<HashSet<i64>>>,
     pub notification_manager: Option<NotificationManager>,
 }
@@ -71,7 +68,6 @@ struct WorkflowListContext {
     repo: String,
     repo_model: Repo,
     parent_window: adw::ApplicationWindow,
-    cache: Arc<DataCache>,
     toast_overlay: adw::ToastOverlay,
     job_contexts: JobContextMap,
     workflows_with_active_runs: Arc<Mutex<HashSet<i64>>>,
@@ -192,7 +188,6 @@ impl RepoDetailPane {
             workflows: workflows.clone(),
             favorites_manager: deps.favorites_manager.clone(),
             preferences_manager: deps.preferences_manager.clone(),
-            cache: deps.cache.clone(),
             favorites: deps.favorites.clone(),
             favorite_button: favorite_button.clone(),
             refresh_button: refresh_button.clone(),

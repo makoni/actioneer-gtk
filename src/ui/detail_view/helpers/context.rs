@@ -1,6 +1,5 @@
 use crate::api::GitHubClient;
 use crate::api::models::Repo;
-use crate::cache::DataCache;
 use gtk4::{self as gtk};
 use parking_lot::Mutex;
 use std::cell::RefCell;
@@ -16,7 +15,6 @@ pub(crate) struct JobRefreshContext {
     repo: String,
     workflow_id: i64,
     run_id: i64,
-    cache: Arc<DataCache>,
     jobs_box: gtk::Box,
     badges_box: Option<gtk::Box>,
     parent_window: gtk::Window,
@@ -31,7 +29,6 @@ pub(crate) struct JobRefreshContextParams {
     pub repo: String,
     pub workflow_id: i64,
     pub run_id: i64,
-    pub cache: Arc<DataCache>,
     pub jobs_box: gtk::Box,
     pub badges_box: Option<gtk::Box>,
     pub parent_window: gtk::Window,
@@ -48,7 +45,6 @@ impl JobRefreshContext {
             repo: params.repo,
             workflow_id: params.workflow_id,
             run_id: params.run_id,
-            cache: params.cache,
             jobs_box: params.jobs_box,
             badges_box: params.badges_box,
             parent_window: params.parent_window,
@@ -76,10 +72,6 @@ impl JobRefreshContext {
 
     pub(crate) fn repo(&self) -> String {
         self.repo.clone()
-    }
-
-    pub(crate) fn cache(&self) -> Arc<DataCache> {
-        self.cache.clone()
     }
 
     pub(crate) fn jobs_box(&self) -> gtk::Box {
@@ -150,7 +142,6 @@ pub(crate) fn current_job_context_run_ids(
 mod tests {
     use super::*;
     use crate::api::models::User;
-    use crate::cache::DataCache;
     use crate::ui::test_helpers::gtk_test_guard;
 
     #[test]
@@ -162,7 +153,6 @@ mod tests {
         };
 
         let client = Arc::new(Mutex::new(GitHubClient::new(None).unwrap()));
-        let cache = Arc::new(DataCache::new());
         let jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
         let parent_window = gtk::Window::builder().build();
         let repo_model = Repo {
@@ -183,7 +173,6 @@ mod tests {
             repo: "repo".to_string(),
             workflow_id: 42,
             run_id: 1,
-            cache: cache.clone(),
             jobs_box: jobs_box.clone(),
             badges_box: None,
             parent_window: parent_window.clone(),
@@ -197,7 +186,6 @@ mod tests {
             repo: "repo".to_string(),
             workflow_id: 42,
             run_id: 2,
-            cache: cache.clone(),
             jobs_box: jobs_box.clone(),
             badges_box: None,
             parent_window: parent_window.clone(),
@@ -211,7 +199,6 @@ mod tests {
             repo: "repo".to_string(),
             workflow_id: 7,
             run_id: 99,
-            cache: cache.clone(),
             jobs_box: jobs_box.clone(),
             badges_box: None,
             parent_window: parent_window.clone(),
