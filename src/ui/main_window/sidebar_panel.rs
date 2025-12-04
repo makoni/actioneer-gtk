@@ -8,7 +8,7 @@ use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct SidebarPanel {
-    clamp: adw::ClampScrollable,
+    clamp: adw::Clamp,
     search_entry: gtk::SearchEntry,
     #[cfg(test)]
     repo_view: gtk::ListView,
@@ -120,7 +120,7 @@ impl SidebarPanel {
         }
     }
 
-    pub fn clamp(&self) -> adw::ClampScrollable {
+    pub fn clamp(&self) -> adw::Clamp {
         self.clamp.clone()
     }
 

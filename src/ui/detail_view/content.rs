@@ -15,12 +15,10 @@ impl RepoDetailPane {
 
         let clamp = build_runs_container(&self.workflow_view);
         self.root.append(&clamp);
-
-        self.toast_overlay.set_child(Some(&self.root));
     }
 }
 
-fn build_runs_container(list_view: &gtk::ListView) -> adw::ClampScrollable {
+fn build_runs_container(list_view: &gtk::ListView) -> adw::Clamp {
     list_view.set_hexpand(true);
     list_view.set_vexpand(true);
     list_view.set_halign(gtk::Align::Fill);

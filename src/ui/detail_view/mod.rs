@@ -169,7 +169,18 @@ impl RepoDetailPane {
         // Create ToastOverlay to wrap the content for showing feedback
         let toast_overlay = adw::ToastOverlay::new();
         let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        root.set_hexpand(true);
         root.set_vexpand(true);
+
+        let scrolled_window = gtk::ScrolledWindow::builder()
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .vscrollbar_policy(gtk::PolicyType::Automatic)
+            .hexpand(true)
+            .vexpand(true)
+            .build();
+        scrolled_window.set_propagate_natural_height(true);
+        scrolled_window.set_child(Some(&root));
+        toast_overlay.set_child(Some(&scrolled_window));
 
         let filter_controls = FilterControls::new();
         let filter_chips = filter_controls.chips.clone();
