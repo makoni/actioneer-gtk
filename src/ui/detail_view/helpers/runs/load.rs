@@ -1,7 +1,7 @@
 use super::super::context::JobContextMap;
 use super::super::formatting::update_workflow_status_badge;
 use super::digest::{RunDigestMap, RunDigestStore, collect_completed_notifications, digest_runs};
-use super::filters::run_matches_filters;
+use super::filters::summarize_visible_runs;
 use super::list::WorkflowRunListModel;
 use crate::api::models::{Repo, WorkflowRun};
 use crate::api::{GitHubClient, GitHubError};
@@ -17,8 +17,6 @@ use std::collections::HashSet;
 use std::rc::Rc;
 use std::sync::Arc;
 use tracing::{debug, error, info, warn};
-
-const MAX_VISIBLE_RUNS: usize = 10;
 
 #[derive(Clone)]
 struct RunErrorContext {
@@ -111,6 +109,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
 
         match result {
             Ok(runs) if runs.is_empty() => {
+                task_run_list.set_runs(runs.clone());
                 {
                     let mut digests = run_digests_for_ui.lock();
                     digests.insert(workflow_id, RunDigestMap::new());
@@ -121,6 +120,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                 }
             }
             Ok(runs) => {
+                task_run_list.set_runs(runs.clone());
                 let digest = digest_runs(runs.as_ref());
                 let (previous_digest, changed) = {
                     let mut digests = run_digests_for_ui.lock();
@@ -364,81 +364,9 @@ fn show_error_state(error: GitHubError, workflow_id: i64, context: RunErrorConte
     });
 }
 
-fn summarize_visible_runs(runs: &[WorkflowRun], filters: &RunFilters) -> RunDisplaySummary {
-    let mut filtered_total = 0;
-    let mut visible_runs = Vec::new();
-
-    for run in runs {
-        if run_matches_filters(run, filters) {
-            filtered_total += 1;
-            if visible_runs.len() < MAX_VISIBLE_RUNS {
-                visible_runs.push(run.clone());
-            }
-        }
-    }
-
-    RunDisplaySummary {
-        filtered_total,
-        visible_runs,
-    }
-}
-
-struct RunDisplaySummary {
-    filtered_total: usize,
-    visible_runs: Vec<WorkflowRun>,
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{should_render_run_list, summarize_visible_runs};
-    use crate::api::models::WorkflowRun;
-    use crate::ui::detail_view::RunFilters;
-
-    fn run_with_status(id: i64, status: &str, conclusion: Option<&str>) -> WorkflowRun {
-        WorkflowRun {
-            id,
-            run_number: Some(id),
-            name: Some(format!("run-{id}")),
-            display_title: Some(format!("Run {id}")),
-            head_branch: Some("main".into()),
-            status: Some(status.into()),
-            conclusion: conclusion.map(|c| c.into()),
-            run_started_at: Some("2024-01-01T00:00:00Z".into()),
-            event: Some("push".into()),
-            created_at: Some("2024-01-01T00:00:00Z".into()),
-            updated_at: Some("2024-01-01T00:10:00Z".into()),
-            html_url: Some("https://example.com".into()),
-        }
-    }
-
-    #[test]
-    fn limits_visible_runs_to_ten() {
-        let runs: Vec<_> = (0..15)
-            .map(|i| run_with_status(i, "completed", Some("success")))
-            .collect();
-        let summary = summarize_visible_runs(&runs, &RunFilters::default());
-        assert_eq!(summary.filtered_total, 15);
-        assert_eq!(summary.visible_runs.len(), 10);
-    }
-
-    #[test]
-    fn respects_filters_when_collecting_runs() {
-        let runs = vec![
-            run_with_status(1, "completed", Some("success")),
-            run_with_status(2, "completed", Some("failure")),
-            run_with_status(3, "in_progress", None),
-        ];
-
-        let filters = RunFilters {
-            include_failed: false,
-            ..RunFilters::default()
-        };
-        let summary = summarize_visible_runs(&runs, &filters);
-        assert_eq!(summary.filtered_total, 2);
-        assert_eq!(summary.visible_runs.len(), 2);
-        assert_eq!(summary.visible_runs[0].id, 1);
-        assert_eq!(summary.visible_runs[1].id, 3);
-    }
+    use super::should_render_run_list;
 
     #[test]
     fn background_refresh_updates_collapsed_rows_when_data_changes() {

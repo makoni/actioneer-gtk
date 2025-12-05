@@ -57,6 +57,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2025-12-06 — Swapped the run-status filter chips for compact icon toggles and reused cached run lists so filter changes immediately hide/show runs without waiting on GitHub responses.
 - [✅] 2025-12-05 — Fixed the debug “Send test notification” action by dispatching through the running GApplication channel and retaining the portal fallback when no default app is registered.
 - [✅] 2025-12-05 — Re-investigated workflow auto-refresh so follow-up polling continues after triggered runs are detected (extra attempts keep the UI updating until the run stabilizes).
 - [✅] 2025-12-05 — Continued notification debugging and added a portal fallback when no desktop entry is installed, so the debug test action and workflow completion alerts appear again.

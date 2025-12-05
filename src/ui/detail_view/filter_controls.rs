@@ -1,5 +1,4 @@
 use gtk4::{self as gtk, prelude::*};
-use libadwaita::ButtonContent;
 
 #[derive(Clone)]
 pub struct FilterChips {
@@ -20,9 +19,10 @@ impl FilterControls {
         container.add_css_class("linked");
         container.set_valign(gtk::Align::Center);
 
-        let success_chip = create_status_chip("Success", "emblem-ok-symbolic");
-        let failed_chip = create_status_chip("Failed", "dialog-error-symbolic");
-        let running_chip = create_status_chip("Running", "media-playback-start-symbolic");
+        let success_chip = create_status_toggle("emblem-ok-symbolic", "Show successful runs");
+        let failed_chip = create_status_toggle("dialog-error-symbolic", "Show failed runs");
+        let running_chip =
+            create_status_toggle("media-playback-start-symbolic", "Show running/queued runs");
 
         container.append(&success_chip);
         container.append(&failed_chip);
@@ -42,21 +42,18 @@ impl FilterControls {
     }
 }
 
-fn create_status_chip(label: &str, icon_name: &str) -> gtk::ToggleButton {
-    let button = gtk::ToggleButton::new();
-    button.add_css_class("pill");
+fn create_status_toggle(icon_name: &str, tooltip: &str) -> gtk::ToggleButton {
+    let button = gtk::ToggleButton::builder()
+        .icon_name(icon_name)
+        .tooltip_text(tooltip)
+        .valign(gtk::Align::Center)
+        .build();
+
     button.add_css_class("flat");
+    button.add_css_class("circular");
     button.add_css_class("compact");
     button.set_focus_on_click(true);
-    button.set_halign(gtk::Align::Center);
-    button.set_valign(gtk::Align::Center);
-    button.set_size_request(-1, 28);
-
-    let content = ButtonContent::new();
-    content.set_icon_name(icon_name);
-    content.set_label(label);
-    content.add_css_class("filter-chip-content");
-    button.set_child(Some(&content));
+    button.set_size_request(32, 32);
     button.set_active(true);
     button
 }

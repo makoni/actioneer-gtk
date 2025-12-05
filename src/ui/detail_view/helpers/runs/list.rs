@@ -1,11 +1,14 @@
+use super::filters::summarize_visible_runs;
 use super::row::{RunRowContext, create_run_expander_row};
 use crate::api::models::WorkflowRun;
+use crate::ui::detail_view::RunFilters;
 use glib::subclass::types::ObjectSubclassIsExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, gio, glib};
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::collections::HashSet;
 use std::rc::Rc;
+use std::sync::Arc;
 
 const STATE_IDLE: &str = "idle";
 const STATE_LOADING: &str = "loading";
@@ -23,6 +26,8 @@ pub(crate) struct WorkflowRunListModel {
     list_store: gio::ListStore,
     error_detail: gtk::Label,
     retry_handler: RetryHandler,
+    last_runs: Rc<RefCell<Arc<Vec<WorkflowRun>>>>,
+    has_loaded: Rc<Cell<bool>>,
 }
 
 impl WorkflowRunListModel {
@@ -119,6 +124,8 @@ impl WorkflowRunListModel {
             list_store,
             error_detail,
             retry_handler,
+            last_runs: Rc::new(RefCell::new(Arc::new(Vec::new()))),
+            has_loaded: Rc::new(Cell::new(false)),
         }
     }
 
@@ -175,6 +182,42 @@ impl WorkflowRunListModel {
 
     pub(crate) fn should_load_runs(&self) -> bool {
         state_requires_load(self.stack.visible_child_name())
+    }
+
+    pub(crate) fn set_runs(&self, runs: Arc<Vec<WorkflowRun>>) {
+        *self.last_runs.borrow_mut() = runs;
+        self.has_loaded.set(true);
+    }
+
+    pub(crate) fn reapply_filters(
+        &self,
+        filters: &RunFilters,
+        expanded_runs: &HashSet<i64>,
+    ) -> bool {
+        if !self.has_loaded.get() {
+            return false;
+        }
+
+        let cached = self.last_runs.borrow().clone();
+        if cached.is_empty() {
+            self.show_empty();
+            return true;
+        }
+
+        let summary = summarize_visible_runs(&cached, filters);
+        if summary.visible_runs.is_empty() {
+            self.show_filtered_placeholder();
+        } else {
+            self.show_runs(
+                summary.visible_runs.len(),
+                summary.filtered_total,
+                cached.len(),
+                &summary.visible_runs,
+                expanded_runs,
+            );
+        }
+
+        true
     }
 
     fn replace_runs(&self, runs: &[WorkflowRun], expanded_runs: &HashSet<i64>) {

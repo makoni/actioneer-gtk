@@ -5,6 +5,7 @@ use crate::preferences::RunFilterPreferences;
 use crate::ui::utils::MainContextChannelExt;
 use gtk4::prelude::{Cast, ListBoxRowExt, ObjectExt, ToggleButtonExt, WidgetExt};
 use gtk4::{self as gtk, glib};
+use std::collections::HashSet;
 use tracing::warn;
 
 #[derive(Copy, Clone)]
@@ -101,6 +102,7 @@ impl RepoDetailPane {
     fn refresh_visible_runs_with_filters(&self) {
         let context = self.workflow_list_context();
         let run_filters_arc = self.run_filters.clone();
+        let filters_snapshot = run_filters_arc.lock().clone();
         let owner = context.owner.clone();
         let repo = context.repo.clone();
         let repo_model = context.repo_model.clone();
@@ -129,6 +131,12 @@ impl RepoDetailPane {
                             let status_badge = Self::status_badge_for_expander(expander);
                             let preserved_runs =
                                 current_job_context_run_ids(&job_contexts, workflow_id);
+                            let preserved_run_ids: HashSet<i64> =
+                                preserved_runs.iter().copied().collect();
+                            if run_list.reapply_filters(&filters_snapshot, &preserved_run_ids) {
+                                inner = next_inner;
+                                continue;
+                            }
                             let workflow_label = unsafe {
                                 expander
                                     .data::<String>("actioneer-workflow-name")
