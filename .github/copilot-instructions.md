@@ -117,6 +117,7 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
     - Keep payloads concise (title + short body) and include the themed icon name (`APP_ICON_NAME`). Respect the user’s notification preference flag.
     - Desktop entry is required for notifications. Before testing or relying on notifications, ensure `data/me.spaceinbox.actioneer.desktop` is installed to `~/.local/share/applications/` (or the relevant XDG data dir). Agents should check for an installed `me.spaceinbox.actioneer.desktop` and install/update it if missing/outdated (copy from `data/`). Do not add runtime installation in code paths.
     - Leave the application-level `focus-main-window` action intact (`src/ui/main_window.rs`). If adding new notification actions, wire them to `app.*` actions.
+  - Run filters (2025-12 fix): run-status chip toggles reuse cached runs instead of reloading. The filter path must recursively visit workflow expanders because they are nested inside boxes; see `visit_expanders` in `src/ui/detail_view/run_filters.rs` and the matching helper in `workflow_refresh.rs`. Keep the recursion if you touch list traversal, otherwise reapply will silently skip run lists. `WorkflowRunListModel::reapply_filters` operates on the cached `last_runs`; ensure `set_runs` is called when data is fetched so chips can immediately re-filter without network.
 
 - Files to reference when making changes
   - `src/main.rs` (runtime + app bootstrap)
