@@ -410,6 +410,7 @@ impl RepoDetailPane {
         let preferences_manager = context.preferences_manager.clone();
         let run_filters_arc = context.run_filters.clone();
 
+        let previous_active = context.workflows_with_active_runs.lock().clone();
         let mut observed_active: HashSet<i64> = HashSet::new();
 
         for row in super::workflow_list::collect_workflow_rows(&context.store) {
@@ -462,7 +463,9 @@ impl RepoDetailPane {
             }
         }
 
-        refresh_jobs_for_workflows(&job_contexts, &observed_active);
+        let job_refresh_targets = union_active_workflows(&observed_active, &previous_active);
+
+        refresh_jobs_for_workflows(&job_contexts, &job_refresh_targets);
 
         *workflows_with_active.lock() = observed_active;
     }
@@ -622,9 +625,19 @@ fn visit_expanders<F: FnMut(&gtk::Expander, i64, bool)>(widget: &gtk::Widget, f:
     }
 }
 
+fn union_active_workflows(
+    observed_active: &HashSet<i64>,
+    previous_active: &HashSet<i64>,
+) -> HashSet<i64> {
+    let mut combined = observed_active.clone();
+    combined.extend(previous_active.iter().copied());
+    combined
+}
+
 #[cfg(test)]
 mod tests {
-    use super::parse_expander_widget_name;
+    use super::{parse_expander_widget_name, union_active_workflows};
+    use std::collections::HashSet;
 
     #[test]
     fn parses_active_expander_names() {
@@ -646,5 +659,27 @@ mod tests {
     #[test]
     fn rejects_non_numeric_ids() {
         assert_eq!(parse_expander_widget_name("workflow_bar"), None);
+    }
+
+    #[test]
+    fn union_active_workflows_preserves_previous_ids() {
+        let observed = HashSet::from([1, 2]);
+        let previous = HashSet::from([2, 3]);
+
+        let combined = union_active_workflows(&observed, &previous);
+
+        let expected = HashSet::from([1, 2, 3]);
+        assert_eq!(combined, expected);
+    }
+
+    #[test]
+    fn union_active_workflows_handles_empty_observed() {
+        let observed = HashSet::new();
+        let previous = HashSet::from([5]);
+
+        let combined = union_active_workflows(&observed, &previous);
+
+        let expected = HashSet::from([5]);
+        assert_eq!(combined, expected);
     }
 }

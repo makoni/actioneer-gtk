@@ -450,7 +450,7 @@ mod tests {
     use super::{STATE_CONTENT, STATE_ERROR, STATE_IDLE, format_runs_header, state_requires_load};
     use crate::api::models::WorkflowRun;
     use crate::ui::detail_view::RunFilters;
-    use gtk4 as gtk;
+    use crate::ui::test_helpers::gtk_test_guard;
     use gtk4::prelude::ListModelExt;
     use std::collections::HashSet;
 
@@ -490,7 +490,9 @@ mod tests {
 
     #[test]
     fn reapply_filters_updates_from_last_runs() {
-        gtk::init().expect("GTK init for run list tests");
+        let Some(_guard) = gtk_test_guard("reapply_filters_updates_from_last_runs") else {
+            return;
+        };
 
         // This test exercises the filter reapplication path without hitting the network.
         let model = test_run_list_model();
