@@ -57,6 +57,11 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2025-12-05 — Fixed the debug “Send test notification” action by dispatching through the running GApplication channel and retaining the portal fallback when no default app is registered.
+- [✅] 2025-12-05 — Re-investigated workflow auto-refresh so follow-up polling continues after triggered runs are detected (extra attempts keep the UI updating until the run stabilizes).
+- [✅] 2025-12-05 — Continued notification debugging and added a portal fallback when no desktop entry is installed, so the debug test action and workflow completion alerts appear again.
+- [✅] 2025-12-05 — Fixed workflow auto-refresh to honor saved preferences (including disabling at 0s) and reschedule timers safely per pane.
+- [✅] 2025-12-05 — Restored GNOME desktop notifications by routing dispatches through the app-owned GLib channel (the debug test action now surfaces notifications again).
 - [✅] 2025-12-04 — Reworked the `DataCache` to return `Arc<Vec<_>>` snapshots so workflow/run/job cache hits share data without cloning entire `Vec`s.
   - [✅] 2025-12-04 — Updated workflow/run/job refresh pipelines to pass `Arc` handles through GTK/Tokio channels and reuse them when persisting caches.
   - [✅] 2025-12-04 — Added unit tests that assert `Arc::ptr_eq` for workflows/runs/jobs to ensure future refactors keep cache snapshots zero-copy.

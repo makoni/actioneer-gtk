@@ -1,12 +1,19 @@
 use crate::APP_ICON_NAME;
+use crate::ui::utils::channel::{MainContextChannelExt, Sender as UiChannelSender};
 use anyhow::anyhow;
-use gtk4::prelude::ApplicationExt;
+use ashpd::desktop::Icon as PortalIcon;
+use ashpd::desktop::notification::{
+    Notification as PortalNotification, NotificationProxy, Priority as PortalPriority,
+};
+use gtk4::prelude::{ApplicationExt, IsA};
 use gtk4::{gio, glib};
+use std::env;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::oneshot;
 use tracing::{debug, error, info, warn};
 
 const DEFAULT_ICON_NAME: &str = APP_ICON_NAME;
+const DEFAULT_NOTIFICATION_ACTION: &str = "app.focus-main-window";
 
 /// Notification manager for Linux using XDG Desktop Notifications
 /// Similar to NotificationManager.swift in macOS version
@@ -14,6 +21,8 @@ const DEFAULT_ICON_NAME: &str = APP_ICON_NAME;
 pub struct NotificationManager {
     app_id: String,
     icon_name: String,
+    dispatcher: NotificationDispatcher,
+    prefer_portal_default: bool,
 }
 
 impl NotificationManager {
@@ -22,10 +31,69 @@ impl NotificationManager {
     }
 
     pub fn with_icon(app_id: impl Into<String>, icon_name: impl Into<String>) -> Self {
+        let icon_name = icon_name.into();
+        let app_id = app_id.into();
+
+        let dispatcher = gio::Application::default()
+            .map(|app| Self::create_application_dispatcher(&app))
+            .unwrap_or(NotificationDispatcher::Fallback);
+        Self::with_icon_internal(app_id, icon_name, dispatcher, false)
+    }
+
+    pub fn for_application<A: IsA<gio::Application>>(app: &A) -> Self {
+        Self::with_icon_for_application(app, DEFAULT_ICON_NAME)
+    }
+
+    pub fn with_icon_for_application<A: IsA<gio::Application>>(
+        app: &A,
+        icon_name: impl Into<String>,
+    ) -> Self {
+        let app_ref: &gio::Application = app.as_ref();
+        let app_id = app_ref
+            .application_id()
+            .map(|id| id.to_string())
+            .unwrap_or_else(|| DEFAULT_ICON_NAME.to_string());
+
+        let dispatcher = Self::create_application_dispatcher(app_ref);
+        let prefer_portal_default = app_ref.flags().contains(gio::ApplicationFlags::NON_UNIQUE);
+
+        Self::with_icon_internal(app_id, icon_name.into(), dispatcher, prefer_portal_default)
+    }
+
+    fn with_icon_internal(
+        app_id: String,
+        icon_name: String,
+        dispatcher: NotificationDispatcher,
+        prefer_portal_default: bool,
+    ) -> Self {
         Self {
-            app_id: app_id.into(),
-            icon_name: icon_name.into(),
+            app_id,
+            icon_name,
+            dispatcher,
+            prefer_portal_default,
         }
+    }
+
+    fn create_application_dispatcher(app: &gio::Application) -> NotificationDispatcher {
+        let (sender, receiver) = MainContextChannelExt::channel(
+            &glib::MainContext::default(),
+            glib::Priority::default(),
+        );
+        let app_clone = app.clone();
+
+        receiver.attach(None, move |command| {
+            let NotificationCommand {
+                payload,
+                completion,
+            } = command;
+            let result = NotificationManager::deliver_notification(&app_clone, payload);
+            if completion.send(result).is_err() {
+                warn!("Notification completion receiver dropped before delivery finished");
+            }
+            glib::ControlFlow::Continue
+        });
+
+        NotificationDispatcher::Channel(sender)
     }
 
     /// Send a notification for completed workflow
@@ -121,43 +189,195 @@ impl NotificationManager {
             icon_name: self.icon_name.clone(),
         };
 
-        Self::dispatch_via_main_context(payload).await
-    }
+        let force_native = env::var_os("ACTIONEER_FORCE_NATIVE_NOTIFICATIONS").is_some();
+        let force_portal = env::var_os("ACTIONEER_FORCE_PORTAL_NOTIFICATIONS").is_some();
+        let sandboxed = is_sandboxed();
+        let prefer_portal = force_portal || sandboxed || self.prefer_portal_default;
 
-    async fn dispatch_via_main_context(payload: NotificationPayload) -> anyhow::Result<()> {
-        let (sender, receiver) = oneshot::channel();
+        info!(
+            app_id = %self.app_id,
+            sandboxed,
+            force_portal,
+            force_native,
+            prefer_portal_default = self.prefer_portal_default,
+            "Notification dispatch decision"
+        );
 
-        glib::MainContext::default().invoke(move || {
-            let result = (|| -> anyhow::Result<()> {
-                let application = gio::Application::default()
-                    .ok_or_else(|| anyhow!("No active GApplication registered"))?;
+        if prefer_portal && !force_native {
+            debug!("Attempting portal notification first");
 
-                Self::deliver_notification(&application, payload)
-            })();
+            match self.dispatch_via_portal(payload.clone()).await {
+                Ok(()) => {
+                    debug!("Portal notification dispatched successfully");
 
-            if sender.send(result).is_err() {
-                warn!("Notification receiver dropped before completion");
-            }
-        });
+                    // If portal was only preferred (not forced), also try native to cover hosts
+                    // where the portal accepts the call but the shell drops the toast because the
+                    // desktop entry is missing during source-tree runs.
+                    if !force_portal {
+                        debug!("Attempting native notification after portal success");
+                        if let Err(native_err) =
+                            self.dispatch_via_main_context(payload.clone()).await
+                        {
+                            warn!(error = %native_err, "Native notification failed after portal success");
+                        }
+                    }
 
-        match receiver.await {
-            Ok(result) => {
-                if let Err(ref err) = result {
-                    error!("Failed to send GNOME notification: {}", err);
+                    return Ok(());
                 }
-                result
-            }
-            Err(_) => {
-                error!("Notification dispatcher dropped before completion");
-                Err(anyhow!("Notification dispatcher dropped before sending"))
+                Err(err) => {
+                    warn!(
+                        error = %err,
+                        "Portal notification dispatch failed, retrying via GApplication"
+                    );
+                }
             }
         }
+
+        // Default path for non-sandboxed hosts or portal fallback
+        match self.dispatch_via_main_context(payload.clone()).await {
+            Ok(()) => {
+                debug!("Notification sent via main context/native path");
+                Ok(())
+            }
+            Err(native_err) => {
+                warn!(error = %native_err, "Native notification failed");
+
+                // If native fails and portal was not already tried (e.g., forced native),
+                // attempt portal as a last resort.
+                if !prefer_portal {
+                    match self.dispatch_via_portal(payload).await {
+                        Ok(()) => {
+                            debug!("Portal notification dispatched after native failure");
+                            Ok(())
+                        }
+                        Err(portal_err) => Err(anyhow!(
+                            "Both native and portal notifications failed: {native_err}; portal error: {portal_err}"
+                        )),
+                    }
+                } else {
+                    Err(native_err)
+                }
+            }
+        }
+    }
+
+    async fn dispatch_via_main_context(&self, payload: NotificationPayload) -> anyhow::Result<()> {
+        match &self.dispatcher {
+            NotificationDispatcher::Channel(sender) => {
+                let (completion_tx, completion_rx) = oneshot::channel();
+                if sender
+                    .send(NotificationCommand {
+                        payload,
+                        completion: completion_tx,
+                    })
+                    .is_err()
+                {
+                    error!("Notification channel closed before dispatch");
+                    return Err(anyhow!("Notification dispatcher unavailable"));
+                }
+
+                match completion_rx.await {
+                    Ok(result) => {
+                        if let Err(ref err) = result {
+                            error!("Failed to send GNOME notification: {}", err);
+                        }
+                        debug!("Notification dispatched via app channel");
+                        result
+                    }
+                    Err(_) => {
+                        error!("Notification dispatcher dropped before completion");
+                        Err(anyhow!(
+                            "Notification dispatcher dropped before sending result"
+                        ))
+                    }
+                }
+            }
+            NotificationDispatcher::Fallback => {
+                let (sender, receiver) = oneshot::channel();
+
+                glib::MainContext::default().invoke(move || {
+                    let result = (|| -> anyhow::Result<()> {
+                        let application = gio::Application::default()
+                            .ok_or_else(|| anyhow!("No active GApplication registered"))?;
+
+                        Self::deliver_notification(&application, payload)
+                    })();
+
+                    if sender.send(result).is_err() {
+                        warn!("Notification receiver dropped before completion");
+                    }
+                });
+
+                match receiver.await {
+                    Ok(result) => {
+                        if let Err(ref err) = result {
+                            error!("Failed to send GNOME notification: {}", err);
+                        }
+                        debug!("Notification dispatched via fallback main context");
+                        result
+                    }
+                    Err(_) => {
+                        error!("Notification dispatcher dropped before completion");
+                        Err(anyhow!("Notification dispatcher dropped before sending"))
+                    }
+                }
+            }
+        }
+    }
+
+    async fn dispatch_via_portal(&self, payload: NotificationPayload) -> anyhow::Result<()> {
+        // When running outside a sandbox, the portal drops notifications unless an app ID
+        // is provided. Set the well-known ID unless the user already overrode it.
+        if env::var_os("XDG_DESKTOP_PORTAL_FORCE_USE_THIS_APP_ID").is_none() {
+            let app_id = resolve_portal_app_id(&self.app_id);
+            // SAFETY: Setting process env var; scoped to current process.
+            unsafe {
+                env::set_var("XDG_DESKTOP_PORTAL_FORCE_USE_THIS_APP_ID", app_id);
+            }
+        }
+
+        let NotificationPayload {
+            identifier,
+            title,
+            body,
+            priority,
+            icon_name,
+        } = payload;
+
+        let proxy = NotificationProxy::new().await?;
+        let mut notification = PortalNotification::new(&title)
+            .priority(Some(Self::portal_priority(priority)))
+            .default_action(Some(DEFAULT_NOTIFICATION_ACTION))
+            .icon(PortalIcon::with_names([icon_name.as_str()]));
+
+        if let Some(body_text) = body.as_deref() {
+            notification = notification.body(Some(body_text));
+        }
+
+        let id = identifier.unwrap_or_else(|| self.make_notification_id("portal", &title));
+
+        debug!(
+            workflow = title.as_str(),
+            "Dispatching notification via portal fallback"
+        );
+
+        proxy.add_notification(&id, notification).await?;
+
+        Ok(())
     }
 
     fn deliver_notification(
         application: &gio::Application,
         payload: NotificationPayload,
     ) -> anyhow::Result<()> {
+        // Drop out early if the GApplication did not register; this allows callers
+        // to fall back to the portal path instead of silently succeeding.
+        if !application.is_registered() {
+            return Err(anyhow!(
+                "GApplication is not registered; cannot send notification"
+            ));
+        }
+
         let NotificationPayload {
             identifier,
             title,
@@ -171,6 +391,7 @@ impl NotificationManager {
             notification.set_body(Some(body_text));
         }
         notification.set_priority(priority);
+        notification.set_default_action(DEFAULT_NOTIFICATION_ACTION);
 
         let icon = gio::ThemedIcon::new(&icon_name);
         notification.set_icon(&icon);
@@ -180,6 +401,8 @@ impl NotificationManager {
         } else {
             application.send_notification(None, &notification);
         }
+
+        info!("Notification delivered via GApplication");
 
         Ok(())
     }
@@ -197,6 +420,15 @@ impl NotificationManager {
             Self::sanitize_key(key),
             timestamp
         )
+    }
+
+    fn portal_priority(priority: gio::NotificationPriority) -> PortalPriority {
+        match priority {
+            gio::NotificationPriority::Urgent => PortalPriority::Urgent,
+            gio::NotificationPriority::High => PortalPriority::High,
+            gio::NotificationPriority::Low => PortalPriority::Low,
+            _ => PortalPriority::Normal,
+        }
     }
 
     fn sanitize_key(value: &str) -> String {
@@ -220,6 +452,34 @@ struct NotificationPayload {
     body: Option<String>,
     priority: gio::NotificationPriority,
     icon_name: String,
+}
+
+#[derive(Clone)]
+enum NotificationDispatcher {
+    Channel(UiChannelSender<NotificationCommand>),
+    Fallback,
+}
+
+struct NotificationCommand {
+    payload: NotificationPayload,
+    completion: oneshot::Sender<anyhow::Result<()>>,
+}
+
+fn is_sandboxed() -> bool {
+    env::var_os("FLATPAK_ID").is_some()
+        || env::var_os("SNAP").is_some()
+        || env::var_os("APPIMAGE").is_some()
+}
+
+fn resolve_portal_app_id(default_app_id: &str) -> String {
+    // If running inside Snap or the Snap desktop entry is present, use its desktop ID so
+    // portal grants notification permission. Otherwise, fall back to the provided app ID.
+    let snap_desktop = "/var/lib/snapd/desktop/applications/actioneer_actioneer.desktop";
+    if env::var_os("SNAP").is_some() || std::path::Path::new(snap_desktop).exists() {
+        return "actioneer_actioneer".to_string();
+    }
+
+    default_app_id.to_string()
 }
 
 #[cfg(test)]

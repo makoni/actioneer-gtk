@@ -86,6 +86,8 @@ impl MainWindow {
         window.set_resizable(true);
         window.set_size_request(MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT);
 
+        Self::ensure_app_focus_action(app, &window);
+
         let client = Arc::new(Mutex::new(None));
         let repos = Arc::new(Mutex::new(Vec::new()));
         let cache = Arc::new(
@@ -155,7 +157,7 @@ impl MainWindow {
         let background_refresh_task = Arc::new(Mutex::new(None));
         let handling_selection = Arc::new(Mutex::new(false));
         let header_spinner = Rc::new(RefCell::new(None));
-        let notification_manager = Some(NotificationManager::new(crate::APP_ID));
+        let notification_manager = Some(NotificationManager::for_application(app));
         let demo_mode = Arc::new(Mutex::new(false));
 
         let main_window = Self {
@@ -399,6 +401,22 @@ impl MainWindow {
         }
     }
 
+    fn ensure_app_focus_action(app: &adw::Application, window: &adw::ApplicationWindow) {
+        if app.lookup_action("focus-main-window").is_some() {
+            return;
+        }
+
+        let window_weak = window.downgrade();
+        let action = gio::SimpleAction::new("focus-main-window", None);
+        action.connect_activate(move |_, _| {
+            if let Some(window) = window_weak.upgrade() {
+                window.present();
+            }
+        });
+
+        app.add_action(&action);
+    }
+
     fn open_preferences_window(&self) {
         if let Some(manager) = &self.preferences_manager {
             let parent = self.window.clone();
@@ -455,17 +473,19 @@ impl MainWindow {
     }
 
     fn dispatch_test_notification(&self) {
+        info!("Debug: dispatching test notification action");
         match self.notification_manager.clone() {
             Some(manager) => {
                 crate::runtime_handle().spawn(async move {
-                    if let Err(err) = manager
+                    match manager
                         .notify_message(
                             "Actioneer notification test",
                             "If you can read this, GNOME notifications are working.",
                         )
                         .await
                     {
-                        warn!("Failed to dispatch test notification: {}", err);
+                        Ok(()) => info!("Debug: test notification dispatched"),
+                        Err(err) => warn!("Failed to dispatch test notification: {}", err),
                     }
                 });
             }

@@ -190,6 +190,11 @@ impl RepoDetailPane {
         let filter_guard = Rc::new(Cell::new(false));
         let notification_manager = deps
             .notification_manager
+            .or_else(|| {
+                parent
+                    .application()
+                    .map(|app| NotificationManager::for_application(&app))
+            })
             .or_else(|| Some(NotificationManager::new(crate::APP_ID)));
 
         let pane = Self {

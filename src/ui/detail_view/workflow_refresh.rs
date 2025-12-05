@@ -13,6 +13,8 @@ use std::collections::HashSet;
 use std::sync::Arc;
 use tracing::{error, info, warn};
 
+const DEFAULT_AUTO_REFRESH_INTERVAL_SECS: u64 = 5;
+
 impl RepoDetailPane {
     pub(super) fn load_workflows(&self) {
         {
@@ -310,18 +312,34 @@ impl RepoDetailPane {
     }
 
     pub(super) fn start_auto_refresh(&self) {
-        let refresh_interval_secs = if let Some(prefs_mgr) = &self.preferences_manager {
-            let handle = crate::runtime_handle().clone();
-            let prefs_mgr = prefs_mgr.clone();
+        if let Some(prefs_mgr) = &self.preferences_manager {
+            let pane = self.clone();
+            let (sender, receiver) =
+                glib::MainContext::default().channel::<u64>(glib::Priority::default());
 
-            handle.spawn(async move { prefs_mgr.get().await.refresh_interval });
-            5u64
+            receiver.attach(None, move |interval| {
+                pane.configure_auto_refresh_timer(interval);
+                glib::ControlFlow::Break
+            });
+
+            let prefs_mgr = prefs_mgr.clone();
+            crate::runtime_handle().spawn(async move {
+                let refresh_interval = prefs_mgr.get().await.refresh_interval;
+                let _ = sender.send(refresh_interval);
+            });
         } else {
-            5u64
-        };
+            self.configure_auto_refresh_timer(DEFAULT_AUTO_REFRESH_INTERVAL_SECS);
+        }
+    }
+
+    fn configure_auto_refresh_timer(&self, refresh_interval_secs: u64) {
+        self.cancel_auto_refresh_timer();
 
         if refresh_interval_secs == 0 {
-            info!("Auto-refresh disabled (interval = 0)");
+            info!(
+                "Auto-refresh disabled for {} (interval = 0)",
+                self.repo.full_name
+            );
             return;
         }
 
@@ -333,7 +351,6 @@ impl RepoDetailPane {
         let parent_window = list_context.parent_window.clone();
         let list_store = list_context.store.clone();
         let workflows_with_active = list_context.workflows_with_active_runs.clone();
-        let auto_refresh_source = self.auto_refresh_source.clone();
         let job_contexts = list_context.job_contexts.clone();
         let toast_overlay = list_context.toast_overlay.clone();
         let run_digests = list_context.run_digests.clone();
@@ -370,7 +387,13 @@ impl RepoDetailPane {
             glib::ControlFlow::Continue
         });
 
-        *auto_refresh_source.lock() = Some(source_id);
+        *self.auto_refresh_source.lock() = Some(source_id);
+    }
+
+    fn cancel_auto_refresh_timer(&self) {
+        if let Some(source_id) = self.auto_refresh_source.lock().take() {
+            source_id.remove();
+        }
     }
 
     fn refresh_runs_background(context: &WorkflowListContext) {

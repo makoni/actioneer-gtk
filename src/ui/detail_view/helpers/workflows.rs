@@ -607,7 +607,8 @@ struct RunDigestMarker {
 }
 
 fn schedule_post_trigger_refresh(params: FollowUpRefreshParams) {
-    const MAX_ATTEMPTS: u8 = 5;
+    const MAX_ATTEMPTS_BEFORE_DETECTION: u8 = 5;
+    const MAX_ATTEMPTS_AFTER_DETECTION: u8 = 8;
     const INTERVAL_SECS: u32 = 4;
     const SOURCE_KEY: &str = "actioneer-follow-up-refresh";
 
@@ -619,31 +620,42 @@ fn schedule_post_trigger_refresh(params: FollowUpRefreshParams) {
     }
 
     let attempts = Rc::new(Cell::new(0));
+    let detected_new_run = Rc::new(Cell::new(false));
     let params_rc = Rc::new(params);
 
     let source_id = glib::timeout_add_seconds_local(INTERVAL_SECS, {
         let params = params_rc.clone();
         let attempts = attempts.clone();
+        let detected_new_run = detected_new_run.clone();
         move || {
             let current_marker = current_run_marker(&params.run_digests, params.workflow_id);
-            if has_marker_advanced(initial_marker, current_marker) {
+            if !detected_new_run.get() && has_marker_advanced(initial_marker, current_marker) {
                 info!(
                     workflow_id = params.workflow_id,
-                    "Detected new run after trigger; stopping follow-up refresh"
+                    "Detected new run after trigger; continuing follow-up refresh"
                 );
-                unsafe {
-                    params
-                        .expander
-                        .steal_data::<glib::SourceId>("actioneer-follow-up-refresh");
-                }
-                return glib::ControlFlow::Break;
+                detected_new_run.set(true);
+                attempts.set(0);
             }
 
-            if attempts.get() >= MAX_ATTEMPTS {
-                info!(
-                    workflow_id = params.workflow_id,
-                    "Follow-up refresh attempts exhausted without new run"
-                );
+            let max_attempts = if detected_new_run.get() {
+                MAX_ATTEMPTS_AFTER_DETECTION
+            } else {
+                MAX_ATTEMPTS_BEFORE_DETECTION
+            };
+
+            if attempts.get() >= max_attempts {
+                if detected_new_run.get() {
+                    info!(
+                        workflow_id = params.workflow_id,
+                        "Follow-up refresh finished after tracking new run"
+                    );
+                } else {
+                    info!(
+                        workflow_id = params.workflow_id,
+                        "Follow-up refresh attempts exhausted without new run"
+                    );
+                }
                 unsafe {
                     params
                         .expander
