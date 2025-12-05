@@ -17,6 +17,7 @@ use parking_lot::Mutex;
 use std::collections::HashSet;
 use std::rc::Rc;
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 use tracing::{debug, error, info, warn};
 
 #[derive(Clone)]
@@ -30,6 +31,8 @@ struct RunErrorContext {
     toast_overlay: adw::ToastOverlay,
     job_contexts: JobContextMap,
     workflows_with_active: Arc<Mutex<HashSet<i64>>>,
+    workflows_last_loaded: Arc<Mutex<std::collections::HashMap<i64, Instant>>>,
+    workflows_loading: Arc<Mutex<HashSet<i64>>>,
     run_digests: Arc<Mutex<RunDigestStore>>,
     workflow_name: String,
     notification_manager: Option<NotificationManager>,
@@ -53,6 +56,7 @@ pub(crate) struct LoadRunsParams {
     pub job_contexts: JobContextMap,
     pub expanded_run_ids: Vec<i64>,
     pub workflows_with_active: Arc<Mutex<HashSet<i64>>>,
+    pub workflows_last_loaded: Arc<Mutex<std::collections::HashMap<i64, Instant>>>,
     pub workflows_loading: Arc<Mutex<HashSet<i64>>>,
     pub background: bool,
     pub run_digests: Arc<Mutex<RunDigestStore>>,
@@ -77,6 +81,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
         job_contexts,
         expanded_run_ids,
         workflows_with_active,
+        workflows_last_loaded,
         workflows_loading,
         background,
         run_digests,
@@ -85,10 +90,26 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
         run_filters,
     } = params;
 
+    let now = Instant::now();
+    {
+        let mut last_loaded = workflows_last_loaded.lock();
+        if background
+            && let Some(previous) = last_loaded.get(&workflow_id)
+            && now.duration_since(*previous) < Duration::from_millis(1200)
+        {
+            debug!(workflow_id, "Background load skipped (debounced)");
+            return;
+        }
+        last_loaded.insert(workflow_id, now);
+    }
+
     {
         let mut in_flight = workflows_loading.lock();
         if !in_flight.insert(workflow_id) {
-            debug!(workflow_id, background, "Run load already in flight; skipping duplicate request");
+            debug!(
+                workflow_id,
+                background, "Run load already in flight; skipping duplicate request"
+            );
             return;
         }
     }
@@ -98,6 +119,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
 
     if !background {
         run_list.show_loading();
+        // in-flight tracking handled above
     }
 
     let (sender, receiver) = glib::MainContext::default()
@@ -113,6 +135,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
     let toast_overlay_for_retry = toast_overlay.clone();
     let run_digests_for_ui = run_digests.clone();
     let background_for_ui = background;
+    let workflows_last_loaded_for_ui = workflows_last_loaded.clone();
     let workflows_loading_for_ui = workflows_loading.clone();
 
     receiver.attach(None, move |result| {
@@ -251,6 +274,8 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                         toast_overlay: toast_overlay_for_retry.clone(),
                         job_contexts: job_contexts_for_retry.clone(),
                         workflows_with_active: workflows_with_active.clone(),
+                        workflows_last_loaded: workflows_last_loaded_for_ui.clone(),
+                        workflows_loading: workflows_loading_for_ui.clone(),
                         run_digests: run_digests_for_ui.clone(),
                         workflow_name: workflow_name.clone(),
                         notification_manager: notification_manager.clone(),
@@ -349,6 +374,8 @@ fn show_error_state(error: GitHubError, workflow_id: i64, context: RunErrorConte
         toast_overlay,
         job_contexts,
         workflows_with_active,
+        workflows_last_loaded,
+        workflows_loading,
         run_digests,
         workflow_name,
         notification_manager,
@@ -375,6 +402,7 @@ fn show_error_state(error: GitHubError, workflow_id: i64, context: RunErrorConte
             job_contexts: job_contexts.clone(),
             expanded_run_ids: Vec::new(),
             workflows_with_active: workflows_with_active.clone(),
+            workflows_last_loaded: workflows_last_loaded.clone(),
             workflows_loading: workflows_loading.clone(),
             background: false,
             run_digests: run_digests.clone(),

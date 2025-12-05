@@ -13,9 +13,10 @@ use gtk4::{self as gtk, glib};
 use libadwaita as adw;
 use parking_lot::Mutex;
 use std::cell::{Cell, RefCell};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 use std::sync::Arc;
+use std::time::Instant;
 use tracing::{error, info};
 
 #[derive(Clone)]
@@ -28,6 +29,7 @@ pub(crate) struct WorkflowRowContext {
     pub toast_overlay: adw::ToastOverlay,
     pub job_contexts: JobContextMap,
     pub workflows_with_active_runs: Arc<Mutex<HashSet<i64>>>,
+    pub workflows_last_loaded: Arc<Mutex<std::collections::HashMap<i64, std::time::Instant>>>,
     pub workflows_loading_runs: Arc<Mutex<HashSet<i64>>>,
     pub run_digests: Arc<Mutex<RunDigestStore>>,
     pub notification_manager: Option<NotificationManager>,
@@ -55,6 +57,7 @@ pub(crate) fn create_workflow_expander_row(
     let toast_overlay = context.toast_overlay.clone();
     let job_contexts = context.job_contexts.clone();
     let workflows_with_active = context.workflows_with_active_runs.clone();
+    let workflows_last_loaded = context.workflows_last_loaded.clone();
     let workflows_loading_runs = context.workflows_loading_runs.clone();
     let run_digests = context.run_digests.clone();
     let notification_manager = context.notification_manager.clone();
@@ -143,6 +146,7 @@ pub(crate) fn create_workflow_expander_row(
     let preferences_manager_for_trigger = preferences_manager_shared.clone();
     let workflows_with_active_shared = workflows_with_active.clone();
     let workflows_loading_shared = workflows_loading_runs.clone();
+    let workflows_last_loaded_shared = workflows_last_loaded.clone();
 
     let workflow_id = workflow.id;
     let owner_string = owner.clone();
@@ -171,6 +175,7 @@ pub(crate) fn create_workflow_expander_row(
     let initial_expanded_runs_for_signal = initial_expanded_runs_shared.clone();
     let workflows_with_active_for_signal = workflows_with_active_shared.clone();
     let workflows_loading_for_signal = workflows_loading_shared.clone();
+    let workflows_last_loaded_for_signal = workflows_last_loaded_shared.clone();
     let run_digests_for_signal = run_digests_shared.clone();
     let notification_manager_for_signal = notification_manager_shared.clone();
     let preferences_manager_for_signal = preferences_manager_shared.clone();
@@ -223,6 +228,7 @@ pub(crate) fn create_workflow_expander_row(
                 job_contexts: job_contexts_for_signal.clone(),
                 expanded_run_ids: preserved_runs,
                 workflows_with_active: workflows_with_active_for_signal.clone(),
+                workflows_last_loaded: workflows_last_loaded_for_signal.clone(),
                 workflows_loading: workflows_loading_for_signal.clone(),
                 background: false,
                 run_digests: run_digests_for_signal.clone(),
@@ -266,6 +272,7 @@ pub(crate) fn create_workflow_expander_row(
                 job_contexts: job_contexts_shared.clone(),
                 expanded_run_ids: preserved_runs,
                 workflows_with_active: workflows_with_active_shared.clone(),
+                workflows_last_loaded: workflows_last_loaded_shared.clone(),
                 workflows_loading: workflows_loading_shared.clone(),
                 background: false,
                 run_digests: run_digests_shared.clone(),
@@ -414,6 +421,7 @@ pub(crate) fn create_workflow_expander_row(
         let run_digests_clone = run_digests.clone();
         let notification_manager_rc = Rc::new(notification_manager.clone());
         let preferences_manager_rc = Rc::new(preferences_manager.clone());
+        let workflows_last_loaded_clone = workflows_last_loaded.clone();
 
         let run_filters_for_response = run_filters_for_dialog.clone();
         dialog.connect_response(move |dialog, response| {
@@ -470,9 +478,17 @@ pub(crate) fn create_workflow_expander_row(
                 let notification_manager_for_closure = notification_manager_rc.clone();
                 let preferences_manager_for_closure = preferences_manager_rc.clone();
                 let repo_model_for_closure = repo_model_for_dialog.clone();
+                let workflows_loading_for_receiver = workflows_loading_for_trigger.clone();
+                let workflows_last_loaded_for_receiver = workflows_last_loaded_clone.clone();
 
                 let run_filters_for_reload = run_filters_for_response.clone();
                 receiver.attach(None, move |result| {
+                    let workflows_loading_for_runs = workflows_loading_for_receiver.clone();
+                    let workflows_loading_for_idle = workflows_loading_for_runs.clone();
+                    let workflows_loading_for_follow_up = workflows_loading_for_runs.clone();
+                    let workflows_last_loaded_for_runs = workflows_last_loaded_for_receiver.clone();
+                    let workflows_last_loaded_for_idle = workflows_last_loaded_for_runs.clone();
+                    let workflows_last_loaded_for_follow_up = workflows_last_loaded_for_runs.clone();
                     let workflows_with_active = workflows_with_active.clone();
                     let workflow_display_handle = workflow_display_for_closure.clone();
                     let notification_manager_handle = notification_manager_for_closure.clone();
@@ -548,7 +564,8 @@ pub(crate) fn create_workflow_expander_row(
                                         job_contexts: job_contexts_for_idle.clone(),
                                         expanded_run_ids: preserved_runs,
                                         workflows_with_active,
-                                        workflows_loading: workflows_loading_for_trigger.clone(),
+                                        workflows_last_loaded: workflows_last_loaded_for_idle.clone(),
+                                        workflows_loading: workflows_loading_for_idle.clone(),
                                         background: true,
                                         run_digests: run_digests_for_idle.clone(),
                                         notification_manager: notification_manager_for_runs,
@@ -572,7 +589,8 @@ pub(crate) fn create_workflow_expander_row(
                                 toast_overlay: toast_overlay_for_reload.clone(),
                                 job_contexts: job_contexts_for_reload.clone(),
                                 workflows_with_active: workflows_with_active_for_reload.clone(),
-                                workflows_loading: workflows_loading_for_trigger.clone(),
+                                workflows_last_loaded: workflows_last_loaded_for_follow_up.clone(),
+                                workflows_loading: workflows_loading_for_follow_up.clone(),
                                 run_digests: run_digests_for_refresh.clone(),
                                 notification_manager: notification_manager_for_reload.clone(),
                                 preferences_manager: preferences_manager_for_reload.clone(),
@@ -648,6 +666,7 @@ struct FollowUpRefreshParams {
     toast_overlay: adw::ToastOverlay,
     job_contexts: JobContextMap,
     workflows_with_active: Arc<Mutex<HashSet<i64>>>,
+    workflows_last_loaded: Arc<Mutex<HashMap<i64, Instant>>>,
     workflows_loading: Arc<Mutex<HashSet<i64>>>,
     run_digests: Arc<Mutex<RunDigestStore>>,
     notification_manager: Option<NotificationManager>,
@@ -705,6 +724,7 @@ fn schedule_follow_up_refresh(params: FollowUpRefreshParams) {
                 job_contexts: params_for_timer.job_contexts.clone(),
                 expanded_run_ids: preserved_runs,
                 workflows_with_active: params_for_timer.workflows_with_active.clone(),
+                workflows_last_loaded: params_for_timer.workflows_last_loaded.clone(),
                 workflows_loading: params_for_timer.workflows_loading.clone(),
                 background: true,
                 run_digests: params_for_timer.run_digests.clone(),

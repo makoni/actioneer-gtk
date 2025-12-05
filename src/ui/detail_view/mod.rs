@@ -47,6 +47,7 @@ pub struct RepoDetailPane {
     loading: Arc<Mutex<bool>>, // Guard against re-entrant loads
     auto_refresh_source: Arc<Mutex<Option<glib::SourceId>>>, // Auto-refresh timer
     workflows_with_active_runs: Arc<Mutex<HashSet<i64>>>, // Track workflows needing refresh
+    workflows_last_loaded: Arc<Mutex<HashMap<i64, std::time::Instant>>>, // Debounce per-workflow loads
     job_contexts: JobContextMap,
     run_digests: Arc<Mutex<RunDigestStore>>,
     notification_manager: Option<NotificationManager>,
@@ -72,6 +73,7 @@ struct WorkflowListContext {
     toast_overlay: adw::ToastOverlay,
     job_contexts: JobContextMap,
     workflows_with_active_runs: Arc<Mutex<HashSet<i64>>>,
+    workflows_last_loaded: Arc<Mutex<HashMap<i64, std::time::Instant>>>,
     run_digests: Arc<Mutex<RunDigestStore>>,
     notification_manager: Option<NotificationManager>,
     preferences_manager: Option<Arc<PreferencesManager>>,
@@ -189,6 +191,7 @@ impl RepoDetailPane {
         let filter_controls_widget = filter_controls.widget();
         let run_digests = Arc::new(Mutex::new(HashMap::new()));
         let run_filters = Arc::new(Mutex::new(RunFilters::default()));
+        let workflows_last_loaded = Arc::new(Mutex::new(HashMap::new()));
         let workflows_loading_runs = Arc::new(Mutex::new(HashSet::new()));
         let filter_guard = Rc::new(Cell::new(false));
         let notification_manager = deps
@@ -223,6 +226,7 @@ impl RepoDetailPane {
             auto_refresh_source: Arc::new(Mutex::new(None)),
             workflows_with_active_runs: Arc::new(Mutex::new(HashSet::new())),
             workflows_loading_runs: workflows_loading_runs.clone(),
+            workflows_last_loaded: workflows_last_loaded.clone(),
             job_contexts: job_contexts.clone(),
             run_digests: run_digests.clone(),
             notification_manager: notification_manager.clone(),

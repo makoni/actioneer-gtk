@@ -176,6 +176,7 @@ impl RepoDetailPane {
                             job_contexts: job_contexts.clone(),
                             expanded_run_ids: preserved_runs,
                             workflows_with_active: workflows_with_active.clone(),
+                            workflows_last_loaded: context.workflows_last_loaded.clone(),
                             workflows_loading: context.workflows_loading_runs.clone(),
                             background: false,
                             run_digests: run_digests.clone(),
