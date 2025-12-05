@@ -5,6 +5,7 @@ use crate::ui::detail_view::RunFilters;
 use glib::subclass::types::ObjectSubclassIsExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, gio, glib};
+use tracing::{debug, info};
 use std::cell::{Cell, RefCell};
 use std::collections::HashSet;
 use std::rc::Rc;
@@ -28,6 +29,35 @@ pub(crate) struct WorkflowRunListModel {
     retry_handler: RetryHandler,
     last_runs: Rc<RefCell<Arc<Vec<WorkflowRun>>>>,
     has_loaded: Rc<Cell<bool>>,
+}
+
+#[cfg(test)]
+pub(crate) fn test_run_list_model() -> WorkflowRunListModel {
+    let stack = gtk::Stack::new();
+    let header_label = gtk::Label::new(None);
+    let list_store = gio::ListStore::new::<RunListEntry>();
+    let error_detail = gtk::Label::new(None);
+    let retry_handler: RetryHandler = Rc::new(RefCell::new(None));
+
+    // Minimal children to satisfy state switches in tests
+    let filtered_dummy = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    stack.add_named(&filtered_dummy, Some(STATE_FILTERED));
+
+    let empty_dummy = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    stack.add_named(&empty_dummy, Some(STATE_EMPTY));
+
+    let content_dummy = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    stack.add_named(&content_dummy, Some(STATE_CONTENT));
+
+    WorkflowRunListModel {
+        stack,
+        header_label,
+        list_store,
+        error_detail,
+        retry_handler,
+        last_runs: Rc::new(RefCell::new(Arc::new(Vec::new()))),
+        has_loaded: Rc::new(Cell::new(false)),
+    }
 }
 
 impl WorkflowRunListModel {
@@ -195,18 +225,25 @@ impl WorkflowRunListModel {
         expanded_runs: &HashSet<i64>,
     ) -> bool {
         if !self.has_loaded.get() {
+            debug!("reapply skipped; no cached runs yet");
             return false;
         }
 
         let cached = self.last_runs.borrow().clone();
+
         if cached.is_empty() {
             self.show_empty();
+            debug!("reapply showed empty state (cached runs empty)");
             return true;
         }
 
         let summary = summarize_visible_runs(&cached, filters);
         if summary.visible_runs.is_empty() {
             self.show_filtered_placeholder();
+            debug!(
+                filtered_total = summary.filtered_total,
+                "reapply showed filtered placeholder (no visible runs)"
+            );
         } else {
             self.show_runs(
                 summary.visible_runs.len(),
@@ -216,6 +253,19 @@ impl WorkflowRunListModel {
                 expanded_runs,
             );
         }
+
+        debug!(
+            visible = summary.visible_runs.len(),
+            filtered_total = summary.filtered_total,
+            overall_total = cached.len(),
+            "reapplied run filters against cached runs"
+        );
+        info!(
+            visible = summary.visible_runs.len(),
+            filtered_total = summary.filtered_total,
+            overall_total = cached.len(),
+            "run list reapply completed"
+        );
 
         true
     }
@@ -397,6 +447,12 @@ mod imp {
 #[cfg(test)]
 mod tests {
     use super::{STATE_CONTENT, STATE_ERROR, STATE_IDLE, format_runs_header, state_requires_load};
+    use super::test_run_list_model;
+    use crate::api::models::WorkflowRun;
+    use crate::ui::detail_view::RunFilters;
+    use gtk4 as gtk;
+    use gtk4::prelude::ListModelExt;
+    use std::collections::HashSet;
 
     #[test]
     fn formats_header_with_partial_visible() {
@@ -430,5 +486,59 @@ mod tests {
     #[test]
     fn treats_missing_state_as_needing_load() {
         assert!(state_requires_load(None));
+    }
+
+    #[test]
+    fn reapply_filters_updates_from_last_runs() {
+        gtk::init().expect("GTK init for run list tests");
+
+        // This test exercises the filter reapplication path without hitting the network.
+        let model = test_run_list_model();
+
+        let runs = vec![
+            WorkflowRun {
+                id: 1,
+                run_number: Some(1),
+                name: Some("Run 1".into()),
+                display_title: Some("Run 1".into()),
+                head_branch: Some("main".into()),
+                status: Some("completed".into()),
+                conclusion: Some("success".into()),
+                run_started_at: None,
+                event: None,
+                created_at: None,
+                updated_at: None,
+                html_url: None,
+            },
+            WorkflowRun {
+                id: 2,
+                run_number: Some(2),
+                name: Some("Run 2".into()),
+                display_title: Some("Run 2".into()),
+                head_branch: Some("main".into()),
+                status: Some("completed".into()),
+                conclusion: Some("failure".into()),
+                run_started_at: None,
+                event: None,
+                created_at: None,
+                updated_at: None,
+                html_url: None,
+            },
+        ];
+
+        model.set_runs(std::sync::Arc::new(runs));
+
+        let mut expanded = HashSet::new();
+        expanded.insert(2);
+
+        let filters = RunFilters {
+            include_success: false,
+            include_failed: true,
+            include_running: false,
+        };
+
+        let updated = model.reapply_filters(&filters, &expanded);
+        assert!(updated, "reapply should run when data was loaded");
+        assert_eq!(model.list_store.n_items(), 1, "only failed run should remain");
     }
 }

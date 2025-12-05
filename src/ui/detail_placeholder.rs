@@ -28,3 +28,13 @@ pub fn schedule_status_page_update(status_page: adw::StatusPage, repo: Option<Re
         }
     });
 }
+
+pub fn schedule_actions_disabled_page(status_page: adw::StatusPage, repo: Repo) {
+    idle_add_local_once(move || {
+        status_page.set_title(&repo.name);
+        status_page.set_description(Some(
+            "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs.",
+        ));
+        status_page.set_icon_name(Some("emblem-unreadable-symbolic"));
+    });
+}

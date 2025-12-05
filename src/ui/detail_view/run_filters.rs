@@ -6,7 +6,7 @@ use crate::ui::utils::MainContextChannelExt;
 use gtk4::prelude::{Cast, ListBoxRowExt, ObjectExt, ToggleButtonExt, WidgetExt};
 use gtk4::{self as gtk, glib};
 use std::collections::HashSet;
-use tracing::warn;
+use tracing::{debug, info, warn};
 
 #[derive(Copy, Clone)]
 enum FilterKind {
@@ -60,6 +60,12 @@ impl RepoDetailPane {
         {
             let mut filters = self.run_filters.lock();
             update_filters(&mut filters, kind, active);
+            debug!(
+                success = filters.include_success,
+                failed = filters.include_failed,
+                running = filters.include_running,
+                "run filters updated via chip toggle"
+            );
         }
 
         self.persist_run_filters();
@@ -115,64 +121,90 @@ impl RepoDetailPane {
         let preferences_manager = context.preferences_manager.clone();
 
         for row in super::workflow_list::collect_workflow_rows(&context.store) {
-            if let Some(row_child) = row.child()
-                && let Some(box_widget) = row_child.downcast_ref::<gtk::Box>()
-            {
-                let mut inner = box_widget.first_child();
-                while let Some(expander_widget) = inner.as_ref() {
-                    let next_inner = expander_widget.next_sibling();
-                    if let Some(expander) = expander_widget.downcast_ref::<gtk::Expander>()
-                        && expander.is_expanded()
-                        && let Some(workflow_id_ptr) =
-                            unsafe { expander.data::<i64>("actioneer-workflow-id") }
-                    {
-                        let workflow_id = unsafe { *workflow_id_ptr.as_ref() };
-                        if let Some(run_list) = run_list_for_expander(expander) {
-                            let status_badge = Self::status_badge_for_expander(expander);
-                            let preserved_runs =
-                                current_job_context_run_ids(&job_contexts, workflow_id);
-                            let preserved_run_ids: HashSet<i64> =
-                                preserved_runs.iter().copied().collect();
-                            if run_list.reapply_filters(&filters_snapshot, &preserved_run_ids) {
-                                inner = next_inner;
-                                continue;
-                            }
-                            let workflow_label = unsafe {
-                                expander
-                                    .data::<String>("actioneer-workflow-name")
-                                    .map(|name_ptr| name_ptr.as_ref().clone())
-                            }
-                            .unwrap_or_else(|| {
-                                format!("{}/{} • Workflow {}", owner, repo, workflow_id)
-                            });
+            if let Some(row_child) = row.child() {
+                visit_expanders(&row_child, &mut |expander, workflow_id| {
+                    if let Some(run_list) = run_list_for_expander(expander) {
+                        let status_badge = Self::status_badge_for_expander(expander);
+                        let preserved_runs = current_job_context_run_ids(&job_contexts, workflow_id);
+                        let preserved_run_ids: HashSet<i64> =
+                            preserved_runs.iter().copied().collect();
+                        let re_applied =
+                            run_list.reapply_filters(&filters_snapshot, &preserved_run_ids);
 
-                            load_workflow_runs(LoadRunsParams {
-                                client: context.client.clone(),
-                                owner: owner.clone(),
-                                repo: repo.clone(),
-                                repo_model: repo_model.clone(),
-                                workflow_id,
-                                workflow_name: workflow_label,
-                                run_list,
-                                parent_window: parent_window.clone(),
-                                status_badge,
-                                expander: expander.clone(),
-                                toast_overlay: toast_overlay.clone(),
-                                job_contexts: job_contexts.clone(),
-                                expanded_run_ids: preserved_runs,
-                                workflows_with_active: workflows_with_active.clone(),
-                                background: false,
-                                run_digests: run_digests.clone(),
-                                notification_manager: notification_manager.clone(),
-                                preferences_manager: preferences_manager.clone(),
-                                run_filters: run_filters_arc.clone(),
-                            });
+                        debug!(
+                            workflow_id,
+                            expanded = expander.is_expanded(),
+                            re_applied,
+                            "reapplied run filters for workflow"
+                        );
+
+                        if re_applied {
+                            info!(workflow_id, "run filters re-applied from cache");
+                        } else {
+                            info!(workflow_id, "run filters skipped (no cached runs)");
                         }
+
+                        if !expander.is_expanded() {
+                            return;
+                        }
+
+                        if re_applied {
+                            return;
+                        }
+                        let workflow_label = unsafe {
+                            expander
+                                .data::<String>("actioneer-workflow-name")
+                                .map(|name_ptr| name_ptr.as_ref().clone())
+                        }
+                        .unwrap_or_else(|| {
+                            format!("{}/{} • Workflow {}", owner, repo, workflow_id)
+                        });
+
+                        load_workflow_runs(LoadRunsParams {
+                            client: context.client.clone(),
+                            owner: owner.clone(),
+                            repo: repo.clone(),
+                            repo_model: repo_model.clone(),
+                            workflow_id,
+                            workflow_name: workflow_label,
+                            run_list,
+                            parent_window: parent_window.clone(),
+                            status_badge,
+                            expander: expander.clone(),
+                            toast_overlay: toast_overlay.clone(),
+                            job_contexts: job_contexts.clone(),
+                            expanded_run_ids: preserved_runs,
+                            workflows_with_active: workflows_with_active.clone(),
+                            background: false,
+                            run_digests: run_digests.clone(),
+                            notification_manager: notification_manager.clone(),
+                            preferences_manager: preferences_manager.clone(),
+                            run_filters: run_filters_arc.clone(),
+                        });
+                    } else {
+                        debug!(
+                            workflow_id,
+                            "no run list attached to expander; skipping reapply"
+                        );
                     }
-                    inner = next_inner;
-                }
+                });
             }
         }
+    }
+}
+
+fn visit_expanders<F: FnMut(&gtk::Expander, i64)>(widget: &gtk::Widget, f: &mut F) {
+    if let Some(expander) = widget.downcast_ref::<gtk::Expander>()
+        && let Some(workflow_id_ptr) = unsafe { expander.data::<i64>("actioneer-workflow-id") }
+    {
+        let workflow_id = unsafe { *workflow_id_ptr.as_ref() };
+        f(expander, workflow_id);
+    }
+
+    let mut child = widget.first_child();
+    while let Some(current) = child {
+        visit_expanders(&current, f);
+        child = current.next_sibling();
     }
 }
 

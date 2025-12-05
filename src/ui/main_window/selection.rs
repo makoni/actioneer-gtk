@@ -1,6 +1,6 @@
 use super::MainWindow;
 use crate::api::models::Repo;
-use crate::ui::detail_placeholder::schedule_status_page_update;
+use crate::ui::detail_placeholder::{schedule_actions_disabled_page, schedule_status_page_update};
 use crate::ui::detail_view::{RepoDetailDeps, RepoDetailPane};
 use gtk4::prelude::WidgetExt;
 use gtk4::{self as gtk, glib};
@@ -80,8 +80,25 @@ impl MainWindow {
                         }
                     });
                 }
-                self.start_background_refresh(repo.clone());
-                self.present_repo_detail(repo);
+                let is_disabled = {
+                    let actions = self.actions_states.lock();
+                    matches!(
+                        actions.get(&repo_id),
+                        Some(crate::ui::state::RepoActionsState::Disabled)
+                    )
+                };
+
+                if is_disabled {
+                    info!(
+                        "Actions disabled for {}, skipping workflow fetch",
+                        repo.full_name
+                    );
+                    self.stop_background_refresh();
+                    self.show_actions_disabled(repo);
+                } else {
+                    self.start_background_refresh(repo.clone());
+                    self.present_repo_detail(repo);
+                }
             }
             None => {
                 info!("Deselecting repo");
@@ -100,6 +117,22 @@ impl MainWindow {
         }
 
         *self.handling_selection.lock() = false;
+    }
+
+    fn show_actions_disabled(&self, repo: Repo) {
+        let stack = self.detail_stack.clone();
+        let active_detail = self.active_detail.clone();
+        let status_page = self.detail_status_page.clone();
+
+        glib::idle_add_local_once(move || {
+            if let Some(detail_child) = stack.child_by_name("detail") {
+                stack.remove(&detail_child);
+            }
+            stack.set_visible_child_name("placeholder");
+            active_detail.borrow_mut().take();
+        });
+
+        schedule_actions_disabled_page(status_page, repo);
     }
 
     pub(super) fn present_repo_detail(&self, repo: Repo) {

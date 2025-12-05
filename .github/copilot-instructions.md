@@ -317,13 +317,7 @@ glib::spawn_future_local(clone!(@weak self as widget => async move {
 - Use the Flatpak Rust extension for easier integration.
 - Publish on Flathub to reach a wide audience.
 
-## 8. Development Tools
-
-- **GNOME Builder:** The official IDE for GNOME development, with excellent integration for Flatpak, GResource, and `.ui` files.
-- **Workbench:** An indispensable tool for prototyping and learning about GTK and libadwaita widgets.
-- **VSCode:** A viable alternative with extensions for Rust and Flatpak.
-
-## 9. Code Quality and Best Practices
+## 8. Code Quality and Best Practices
 
 - **Follow Rust idioms.** Write clean, safe, and idiomatic Rust code.
 - **Handle errors gracefully.** Use `Result` and `Option` to handle potential failures.
