@@ -1,5 +1,5 @@
 use super::RunLoadService;
-use super::context::{JobContextMap, current_job_context_run_ids};
+use super::context::JobContextMap;
 use super::runs::{LoadRunsParams, RunDigestStore, RunRowContext, WorkflowRunListModel};
 use crate::api::GitHubClient;
 use crate::api::models::{Repo, Workflow};
@@ -212,7 +212,7 @@ pub(crate) fn create_workflow_expander_row(
                     vec
                 } else {
                     drop(initial_opt);
-                    current_job_context_run_ids(&job_contexts_for_signal, workflow_id)
+                    run_list_for_signal.expanded_run_ids().into_iter().collect()
                 }
             };
 
@@ -256,7 +256,7 @@ pub(crate) fn create_workflow_expander_row(
                     vec
                 } else {
                     drop(initial_opt);
-                    current_job_context_run_ids(&job_contexts_shared, workflow_id)
+                    run_list_shared.expanded_run_ids().into_iter().collect()
                 }
             };
 
@@ -547,10 +547,10 @@ pub(crate) fn create_workflow_expander_row(
                                 if expander_for_idle.is_expanded() {
                                     info!("Refreshing runs in background after workflow trigger");
 
-                                    let preserved_runs = current_job_context_run_ids(
-                                        &job_contexts_for_idle,
-                                        workflow_id,
-                                    );
+                                    let preserved_runs: Vec<i64> = run_list_handle
+                                        .expanded_run_ids()
+                                        .into_iter()
+                                        .collect();
 
                                     let workflow_display_for_runs =
                                         workflow_display_for_idle.clone();
@@ -716,10 +716,11 @@ fn schedule_follow_up_refresh(params: FollowUpRefreshParams) {
         let params_for_timer = params_for_async.clone();
         let params_for_handle = params_for_async;
         let source_id = glib::timeout_add_seconds_local(interval_secs as u32, move || {
-            let preserved_runs = current_job_context_run_ids(
-                &params_for_timer.job_contexts,
-                params_for_timer.workflow_id,
-            );
+            let preserved_runs: Vec<i64> = params_for_timer
+                .run_list
+                .expanded_run_ids()
+                .into_iter()
+                .collect();
 
             params_for_timer.run_load_service.request(LoadRunsParams {
                 client: params_for_timer.client.clone(),

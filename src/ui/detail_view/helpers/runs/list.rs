@@ -29,6 +29,7 @@ pub(crate) struct WorkflowRunListModel {
     retry_handler: RetryHandler,
     last_runs: Rc<RefCell<Arc<Vec<WorkflowRun>>>>,
     has_loaded: Rc<Cell<bool>>,
+    expanded_runs: Rc<RefCell<HashSet<i64>>>,
 }
 
 #[cfg(test)]
@@ -57,6 +58,7 @@ pub(crate) fn test_run_list_model() -> WorkflowRunListModel {
         retry_handler,
         last_runs: Rc::new(RefCell::new(Arc::new(Vec::new()))),
         has_loaded: Rc::new(Cell::new(false)),
+        expanded_runs: Rc::new(RefCell::new(HashSet::new())),
     }
 }
 
@@ -72,6 +74,8 @@ impl WorkflowRunListModel {
         });
 
         let bind_context = context.clone();
+        let expanded_runs = Rc::new(RefCell::new(HashSet::new()));
+        let expanded_runs_for_bind = expanded_runs.clone();
         factory.connect_bind(move |_, list_item| {
             let context = bind_context.clone();
             let Some(container) = list_item
@@ -95,6 +99,23 @@ impl WorkflowRunListModel {
             let widget =
                 create_run_expander_row(&entry_obj.run(), &context, entry_obj.expand_jobs());
             container.append(&widget);
+
+            if let Some(expander) = find_run_expander(widget.upcast_ref()) {
+                let run_id = entry_obj.run().id;
+                if expander.is_expanded() {
+                    expanded_runs_for_bind.borrow_mut().insert(run_id);
+                }
+
+                let expanded_runs = expanded_runs_for_bind.clone();
+                expander.connect_expanded_notify(move |exp| {
+                    let mut set = expanded_runs.borrow_mut();
+                    if exp.is_expanded() {
+                        set.insert(run_id);
+                    } else {
+                        set.remove(&run_id);
+                    }
+                });
+            }
         });
 
         factory.connect_unbind(|_, list_item| {
@@ -156,6 +177,7 @@ impl WorkflowRunListModel {
             retry_handler,
             last_runs: Rc::new(RefCell::new(Arc::new(Vec::new()))),
             has_loaded: Rc::new(Cell::new(false)),
+            expanded_runs,
         }
     }
 
@@ -270,7 +292,18 @@ impl WorkflowRunListModel {
         true
     }
 
+    pub(crate) fn expanded_run_ids(&self) -> HashSet<i64> {
+        self.expanded_runs.borrow().clone()
+    }
+
+    fn update_expanded_runs(&self, expanded: &HashSet<i64>) {
+        let mut current = self.expanded_runs.borrow_mut();
+        current.clear();
+        current.extend(expanded.iter().copied());
+    }
+
     fn replace_runs(&self, runs: &[WorkflowRun], expanded_runs: &HashSet<i64>) {
+        self.update_expanded_runs(expanded_runs);
         self.list_store.remove_all();
         for run in runs {
             let entry = RunListEntry::new(run.clone(), expanded_runs.contains(&run.id));
@@ -392,6 +425,24 @@ fn state_requires_load(state: Option<glib::GString>) -> bool {
         state.as_deref(),
         Some(STATE_IDLE) | Some(STATE_ERROR) | None
     )
+}
+
+fn find_run_expander(widget: &gtk::Widget) -> Option<gtk::Expander> {
+    if let Some(expander) = widget.downcast_ref::<gtk::Expander>()
+        && expander.widget_name().as_str().starts_with("run_")
+    {
+        return Some(expander.clone());
+    }
+
+    let mut child = widget.first_child();
+    while let Some(current) = child {
+        if let Some(found) = find_run_expander(&current) {
+            return Some(found);
+        }
+        child = current.next_sibling();
+    }
+
+    None
 }
 
 glib::wrapper! {
