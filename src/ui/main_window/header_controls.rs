@@ -50,11 +50,14 @@ impl HeaderControls {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ui::test_helpers::gtk_test_guard;
 
     #[test]
     #[ignore = "requires GTK display"]
     fn header_controls_create_expected_widgets() {
-        gtk::init().expect("GTK init failed");
+        let Some(_guard) = gtk_test_guard("header_controls_create_expected_widgets") else {
+            return;
+        };
         let controls = HeaderControls::new();
         assert_eq!(
             controls

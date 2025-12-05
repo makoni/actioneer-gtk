@@ -61,11 +61,14 @@ fn create_status_toggle(icon_name: &str, tooltip: &str) -> gtk::ToggleButton {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ui::test_helpers::gtk_test_guard;
 
     #[test]
     #[ignore = "requires GTK display"]
     fn filter_controls_build_expected_chips() {
-        gtk::init().expect("GTK init failed");
+        let Some(_guard) = gtk_test_guard("filter_controls_build_expected_chips") else {
+            return;
+        };
         let controls = FilterControls::new();
         let toolbar = controls.widget();
 

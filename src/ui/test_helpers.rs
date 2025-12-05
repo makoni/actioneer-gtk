@@ -16,6 +16,7 @@ impl GtkTestGuard {
 
         static GTK_TEST_MUTEX: OnceLock<Mutex<()>> = OnceLock::new();
         static GTK_THREAD_ID: OnceLock<ThreadId> = OnceLock::new();
+        static GTK_INIT: OnceLock<Result<(), String>> = OnceLock::new();
 
         let mutex = GTK_TEST_MUTEX.get_or_init(|| Mutex::new(()));
         let guard = match mutex.lock() {
@@ -34,16 +35,18 @@ impl GtkTestGuard {
             return None;
         }
 
-        if !gtk::is_initialized()
-            && let Err(err) = gtk::init()
-        {
-            eprintln!("Skipping {test_name}: failed to init GTK ({err})");
-            drop(guard);
-            return None;
-        }
+        let init_result = GTK_INIT.get_or_init(|| {
+            if gtk::is_initialized() {
+                return Ok(());
+            }
 
-        if let Err(err) = adw::init() {
-            eprintln!("Skipping {test_name}: failed to init Adwaita ({err})");
+            gtk::init()
+                .map_err(|err| format!("failed to init GTK ({err})"))
+                .and_then(|_| adw::init().map_err(|err| format!("failed to init Adwaita ({err})")))
+        });
+
+        if let Err(err) = init_result {
+            eprintln!("Skipping {test_name}: {err}");
             drop(guard);
             return None;
         }

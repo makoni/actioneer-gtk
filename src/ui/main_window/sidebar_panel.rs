@@ -154,11 +154,14 @@ impl SidebarPanel {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ui::test_helpers::gtk_test_guard;
 
     #[test]
     #[ignore = "requires GTK display"]
     fn sidebar_panel_initializes_widgets() {
-        gtk::init().expect("GTK init failed");
+        let Some(_guard) = gtk_test_guard("sidebar_panel_initializes_widgets") else {
+            return;
+        };
         let panel = SidebarPanel::new();
         assert_eq!(
             panel
