@@ -524,7 +524,7 @@ pub(crate) fn create_workflow_expander_row(
                                 preferences_manager: preferences_manager_for_reload.clone(),
                                 run_filters: run_filters_for_reload.clone(),
                             };
-                            schedule_post_trigger_refresh(follow_up_params);
+                            schedule_follow_up_refresh(follow_up_params);
 
                             let toast_overlay = toast_overlay.clone();
                             let workflow_name = workflow_name.clone();
@@ -600,128 +600,68 @@ struct FollowUpRefreshParams {
     run_filters: Arc<Mutex<RunFilters>>,
 }
 
-#[derive(Clone, Copy)]
-struct RunDigestMarker {
-    count: usize,
-    max_id: Option<i64>,
-}
-
-fn schedule_post_trigger_refresh(params: FollowUpRefreshParams) {
-    const MAX_ATTEMPTS_BEFORE_DETECTION: u8 = 5;
-    const MAX_ATTEMPTS_AFTER_DETECTION: u8 = 8;
-    const INTERVAL_SECS: u32 = 4;
+fn schedule_follow_up_refresh(params: FollowUpRefreshParams) {
     const SOURCE_KEY: &str = "actioneer-follow-up-refresh";
 
-    let initial_marker = current_run_marker(&params.run_digests, params.workflow_id);
-    let expander = params.expander.clone();
+    let params_rc = Rc::new(params);
+    let expander = params_rc.expander.clone();
 
     if let Some(existing) = unsafe { expander.steal_data::<glib::SourceId>(SOURCE_KEY) } {
         existing.remove();
     }
 
-    let attempts = Rc::new(Cell::new(0));
-    let detected_new_run = Rc::new(Cell::new(false));
-    let params_rc = Rc::new(params);
+    // Resolve refresh interval from preferences; fall back to the default auto-refresh interval.
+    let prefs_mgr = params_rc.preferences_manager.clone();
+    let params_for_async = params_rc.clone();
 
-    let source_id = glib::timeout_add_seconds_local(INTERVAL_SECS, {
-        let params = params_rc.clone();
-        let attempts = attempts.clone();
-        let detected_new_run = detected_new_run.clone();
-        move || {
-            let current_marker = current_run_marker(&params.run_digests, params.workflow_id);
-            if !detected_new_run.get() && has_marker_advanced(initial_marker, current_marker) {
-                info!(
-                    workflow_id = params.workflow_id,
-                    "Detected new run after trigger; continuing follow-up refresh"
-                );
-                detected_new_run.set(true);
-                attempts.set(0);
-            }
+    glib::MainContext::default().spawn_local(async move {
+        let interval_secs = match prefs_mgr {
+            Some(manager) => manager.get().await.refresh_interval,
+            None => crate::preferences::Preferences::default().refresh_interval,
+        };
 
-            let max_attempts = if detected_new_run.get() {
-                MAX_ATTEMPTS_AFTER_DETECTION
-            } else {
-                MAX_ATTEMPTS_BEFORE_DETECTION
-            };
+        // If the user disabled auto-refresh, skip scheduling.
+        if interval_secs == 0 {
+            info!("Auto-refresh disabled; skipping follow-up refresh timer");
+            return;
+        }
 
-            if attempts.get() >= max_attempts {
-                if detected_new_run.get() {
-                    info!(
-                        workflow_id = params.workflow_id,
-                        "Follow-up refresh finished after tracking new run"
-                    );
-                } else {
-                    info!(
-                        workflow_id = params.workflow_id,
-                        "Follow-up refresh attempts exhausted without new run"
-                    );
-                }
-                unsafe {
-                    params
-                        .expander
-                        .steal_data::<glib::SourceId>("actioneer-follow-up-refresh");
-                }
-                return glib::ControlFlow::Break;
-            }
-
-            attempts.set(attempts.get() + 1);
-            let preserved_runs = take_job_context_run_ids(&params.job_contexts, params.workflow_id);
+        let interval_secs = interval_secs.max(1);
+        let params_for_timer = params_for_async.clone();
+        let params_for_handle = params_for_async;
+        let source_id = glib::timeout_add_seconds_local(interval_secs as u32, move || {
+            let preserved_runs = take_job_context_run_ids(
+                &params_for_timer.job_contexts,
+                params_for_timer.workflow_id,
+            );
 
             load_workflow_runs(LoadRunsParams {
-                client: params.client.clone(),
-                owner: params.owner.clone(),
-                repo: params.repo.clone(),
-                repo_model: params.repo_model.clone(),
-                workflow_id: params.workflow_id,
-                workflow_name: params.workflow_name.clone(),
-                run_list: params.run_list.clone(),
-                parent_window: params.parent_window.clone(),
-                status_badge: params.status_badge.clone(),
-                expander: params.expander.clone(),
-                toast_overlay: params.toast_overlay.clone(),
-                job_contexts: params.job_contexts.clone(),
+                client: params_for_timer.client.clone(),
+                owner: params_for_timer.owner.clone(),
+                repo: params_for_timer.repo.clone(),
+                repo_model: params_for_timer.repo_model.clone(),
+                workflow_id: params_for_timer.workflow_id,
+                workflow_name: params_for_timer.workflow_name.clone(),
+                run_list: params_for_timer.run_list.clone(),
+                parent_window: params_for_timer.parent_window.clone(),
+                status_badge: params_for_timer.status_badge.clone(),
+                expander: params_for_timer.expander.clone(),
+                toast_overlay: params_for_timer.toast_overlay.clone(),
+                job_contexts: params_for_timer.job_contexts.clone(),
                 expanded_run_ids: preserved_runs,
-                workflows_with_active: params.workflows_with_active.clone(),
+                workflows_with_active: params_for_timer.workflows_with_active.clone(),
                 background: true,
-                run_digests: params.run_digests.clone(),
-                notification_manager: params.notification_manager.clone(),
-                preferences_manager: params.preferences_manager.clone(),
-                run_filters: params.run_filters.clone(),
+                run_digests: params_for_timer.run_digests.clone(),
+                notification_manager: params_for_timer.notification_manager.clone(),
+                preferences_manager: params_for_timer.preferences_manager.clone(),
+                run_filters: params_for_timer.run_filters.clone(),
             });
 
             glib::ControlFlow::Continue
+        });
+
+        unsafe {
+            params_for_handle.expander.set_data(SOURCE_KEY, source_id);
         }
     });
-
-    unsafe {
-        expander.set_data(SOURCE_KEY, source_id);
-    }
-}
-
-fn current_run_marker(store: &Arc<Mutex<RunDigestStore>>, workflow_id: i64) -> RunDigestMarker {
-    let guard = store.lock();
-    if let Some(digest) = guard.get(&workflow_id) {
-        let max_id = digest.keys().max().copied();
-        RunDigestMarker {
-            count: digest.len(),
-            max_id,
-        }
-    } else {
-        RunDigestMarker {
-            count: 0,
-            max_id: None,
-        }
-    }
-}
-
-fn has_marker_advanced(previous: RunDigestMarker, current: RunDigestMarker) -> bool {
-    if current.count > previous.count {
-        return true;
-    }
-
-    match (previous.max_id, current.max_id) {
-        (Some(prev), Some(cur)) => cur > prev,
-        (None, Some(_)) => true,
-        _ => false,
-    }
 }
