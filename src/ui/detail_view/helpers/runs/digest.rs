@@ -7,6 +7,7 @@ pub(crate) struct RunDigest {
     pub(crate) status: Option<String>,
     pub(crate) conclusion: Option<String>,
     pub(crate) updated_at: Option<String>,
+    pub(crate) notified_conclusion: Option<String>,
 }
 
 pub(crate) type RunDigestMap = HashMap<i64, RunDigest>;
@@ -22,6 +23,7 @@ pub(super) fn digest_runs(runs: &[WorkflowRun]) -> RunDigestMap {
                     status: run.status.clone(),
                     conclusion: run.conclusion.clone(),
                     updated_at: run.updated_at.clone(),
+                    notified_conclusion: None,
                 },
             )
         })
@@ -39,6 +41,13 @@ pub(super) fn collect_completed_notifications(
 
             let prev_completed = is_completed_status(prior.status.as_ref());
             let conclusion_changed = prior.conclusion != run.conclusion;
+
+            if prev_completed
+                && prior.notified_conclusion.is_some()
+                && prior.notified_conclusion == run.conclusion
+            {
+                return None;
+            }
 
             if !prev_completed || conclusion_changed {
                 let title = build_run_notification_title(run);

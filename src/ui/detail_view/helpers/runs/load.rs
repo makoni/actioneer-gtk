@@ -121,16 +121,27 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
             }
             Ok(runs) => {
                 task_run_list.set_runs(runs.clone());
-                let digest = digest_runs(runs.as_ref());
-                let (previous_digest, changed) = {
-                    let mut digests = run_digests_for_ui.lock();
-                    let previous = digests.insert(workflow_id, digest.clone());
-                    let changed = match &previous {
-                        Some(prev) => prev != &digest,
-                        None => true,
-                    };
-                    (previous, changed)
+
+                let mut digest = digest_runs(runs.as_ref());
+                let previous_digest = {
+                    let digests = run_digests_for_ui.lock();
+                    digests.get(&workflow_id).cloned()
                 };
+
+                if let Some(prev_map) = previous_digest.as_ref() {
+                    for (run_id, entry) in digest.iter_mut() {
+                        if let Some(prev) = prev_map.get(run_id) {
+                            entry.notified_conclusion = prev.notified_conclusion.clone();
+                        }
+                    }
+                }
+
+                let changed = previous_digest.as_ref() != Some(&digest);
+
+                {
+                    let mut digests = run_digests_for_ui.lock();
+                    digests.insert(workflow_id, digest.clone());
+                }
 
                 if changed {
                     prune_stale_job_contexts(&job_contexts, workflow_id, runs.as_ref());
@@ -141,6 +152,26 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                         if !notification_requests.is_empty() {
                             let workflow_label = workflow_name.clone();
                             let preferences_manager = preferences_manager.clone();
+
+                            // Mark runs we will notify for to avoid duplicates on subsequent refreshes.
+                            {
+                                let mut digests = run_digests_for_ui.lock();
+                                if let Some(entry) = digests.get_mut(&workflow_id) {
+                                    for run in runs.iter() {
+                                        if let Some(digest_entry) = entry.get_mut(&run.id)
+                                            && run
+                                                .status
+                                                .as_deref()
+                                                .map(|s| s.eq_ignore_ascii_case("completed"))
+                                                .unwrap_or(false)
+                                        {
+                                            digest_entry.notified_conclusion =
+                                                run.conclusion.clone();
+                                        }
+                                    }
+                                }
+                            }
+
                             crate::runtime_handle().spawn(async move {
                                 let notifications_enabled = match preferences_manager {
                                     Some(manager) => manager.get().await.enable_notifications,

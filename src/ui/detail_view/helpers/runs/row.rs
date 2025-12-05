@@ -99,10 +99,8 @@ pub(crate) fn create_run_expander_row(
     );
 
     if expand_jobs {
-        let expander_for_expand = expander.clone();
-        glib::idle_add_local_once(move || {
-            expander_for_expand.set_expanded(true);
-        });
+        // Keep expanded rows expanded immediately to avoid collapse/expand flicker on refresh.
+        expander.set_expanded(true);
     }
 
     run_box
