@@ -512,8 +512,7 @@ pub(crate) fn create_workflow_expander_row(
                             glib::idle_add_local_once(move || {
                                 let workflows_with_active = workflows_with_active_idle.clone();
                                 if expander_for_idle.is_expanded() {
-                                    info!("Reloading runs after workflow trigger");
-                                    run_list_handle.show_loading();
+                                    info!("Refreshing runs in background after workflow trigger");
 
                                     let preserved_runs = current_job_context_run_ids(
                                         &job_contexts_for_idle,
@@ -542,7 +541,7 @@ pub(crate) fn create_workflow_expander_row(
                                         job_contexts: job_contexts_for_idle.clone(),
                                         expanded_run_ids: preserved_runs,
                                         workflows_with_active,
-                                        background: false,
+                                        background: true,
                                         run_digests: run_digests_for_idle.clone(),
                                         notification_manager: notification_manager_for_runs,
                                         preferences_manager: preferences_manager_for_runs,
@@ -577,7 +576,7 @@ pub(crate) fn create_workflow_expander_row(
                             let branch = branch_name.clone();
                             glib::MainContext::default().spawn_local(async move {
                                 let toast = adw::Toast::new(&format!(
-                                    "✓ Workflow '{}' triggered on branch '{}'",
+                                    "✓ Workflow '{}' triggered on branch '{}'. The run will appear once GitHub reports it.",
                                     workflow_name, branch
                                 ));
                                 toast.set_timeout(3);
