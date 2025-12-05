@@ -1,7 +1,6 @@
+use super::RunLoadService;
 use super::context::{JobContextMap, current_job_context_run_ids};
-use super::runs::{
-    LoadRunsParams, RunDigestStore, RunRowContext, WorkflowRunListModel, load_workflow_runs,
-};
+use super::runs::{LoadRunsParams, RunDigestStore, RunRowContext, WorkflowRunListModel};
 use crate::api::GitHubClient;
 use crate::api::models::{Repo, Workflow};
 use crate::notifications::NotificationManager;
@@ -35,6 +34,7 @@ pub(crate) struct WorkflowRowContext {
     pub notification_manager: Option<NotificationManager>,
     pub preferences_manager: Option<Arc<PreferencesManager>>,
     pub run_filters: Arc<Mutex<RunFilters>>,
+    pub run_load_service: RunLoadService,
 }
 
 pub(crate) struct WorkflowRowSettings {
@@ -64,6 +64,8 @@ pub(crate) fn create_workflow_expander_row(
     let preferences_manager = context.preferences_manager.clone();
     let run_filters = context.run_filters.clone();
     let run_filters_for_signal = run_filters.clone();
+    let run_load_service = context.run_load_service.clone();
+    let run_load_service_for_signal = run_load_service.clone();
 
     let row = gtk::ListBoxRow::new();
     row.set_activatable(false);
@@ -179,6 +181,7 @@ pub(crate) fn create_workflow_expander_row(
     let run_digests_for_signal = run_digests_shared.clone();
     let notification_manager_for_signal = notification_manager_shared.clone();
     let preferences_manager_for_signal = preferences_manager_shared.clone();
+    let run_load_service_for_initial = run_load_service.clone();
 
     let is_programmatic_expand = Rc::new(Cell::new(false));
     let is_programmatic_for_signal = is_programmatic_expand.clone();
@@ -213,7 +216,7 @@ pub(crate) fn create_workflow_expander_row(
                 }
             };
 
-            load_workflow_runs(LoadRunsParams {
+            run_load_service_for_signal.request(LoadRunsParams {
                 client: client_for_signal.clone(),
                 owner: owner_for_signal.clone(),
                 repo: repo_for_signal.clone(),
@@ -257,7 +260,7 @@ pub(crate) fn create_workflow_expander_row(
                 }
             };
 
-            load_workflow_runs(LoadRunsParams {
+            run_load_service_for_initial.request(LoadRunsParams {
                 client: client_shared.clone(),
                 owner: owner_string.clone(),
                 repo: repo_string.clone(),
@@ -284,6 +287,7 @@ pub(crate) fn create_workflow_expander_row(
     }
 
     let run_filters_for_trigger = run_filters.clone();
+    let run_load_service_for_trigger = run_load_service.clone();
 
     trigger_btn.connect_clicked(move |_| {
         let run_filters_for_dialog = run_filters_for_trigger.clone();
@@ -303,6 +307,7 @@ pub(crate) fn create_workflow_expander_row(
         let notification_manager = notification_manager_for_trigger.clone();
         let preferences_manager = preferences_manager_for_trigger.clone();
         let repo_model_for_dialog = repo_model_for_trigger.clone();
+        let run_load_service_for_dialog = run_load_service_for_trigger.clone();
 
         let dialog = gtk::Dialog::with_buttons(
             Some("Trigger Workflow"),
@@ -422,8 +427,10 @@ pub(crate) fn create_workflow_expander_row(
         let notification_manager_rc = Rc::new(notification_manager.clone());
         let preferences_manager_rc = Rc::new(preferences_manager.clone());
         let workflows_last_loaded_clone = workflows_last_loaded.clone();
+        let run_load_service_for_response = run_load_service_for_dialog.clone();
 
         let run_filters_for_response = run_filters_for_dialog.clone();
+        let run_load_service_handle = run_load_service_for_response.clone();
         dialog.connect_response(move |dialog, response| {
             if response == gtk::ResponseType::Accept {
                 let selected_branch = branch_dropdown
@@ -482,6 +489,7 @@ pub(crate) fn create_workflow_expander_row(
                 let workflows_last_loaded_for_receiver = workflows_last_loaded_clone.clone();
 
                 let run_filters_for_reload = run_filters_for_response.clone();
+                let run_load_service_for_closure = run_load_service_handle.clone();
                 receiver.attach(None, move |result| {
                     let workflows_loading_for_runs = workflows_loading_for_receiver.clone();
                     let workflows_loading_for_idle = workflows_loading_for_runs.clone();
@@ -493,6 +501,8 @@ pub(crate) fn create_workflow_expander_row(
                     let workflow_display_handle = workflow_display_for_closure.clone();
                     let notification_manager_handle = notification_manager_for_closure.clone();
                     let preferences_manager_handle = preferences_manager_for_closure.clone();
+                    let run_load_service_for_idle = run_load_service_for_closure.clone();
+                    let run_load_service_for_follow_up = run_load_service_for_closure.clone();
                     match result {
                         Ok(branch_name) => {
                             info!("Workflow triggered successfully on branch: {}", branch_name);
@@ -549,7 +559,7 @@ pub(crate) fn create_workflow_expander_row(
                                     let preferences_manager_for_runs =
                                         preferences_manager_idle.clone();
 
-                                    load_workflow_runs(LoadRunsParams {
+                                    run_load_service_for_idle.request(LoadRunsParams {
                                         client: client_for_idle.clone(),
                                         owner: owner_for_idle.clone(),
                                         repo: repo_for_idle.clone(),
@@ -595,6 +605,7 @@ pub(crate) fn create_workflow_expander_row(
                                 notification_manager: notification_manager_for_reload.clone(),
                                 preferences_manager: preferences_manager_for_reload.clone(),
                                 run_filters: run_filters_for_reload.clone(),
+                                run_load_service: run_load_service_for_follow_up.clone(),
                             };
                             schedule_follow_up_refresh(follow_up_params);
 
@@ -672,6 +683,7 @@ struct FollowUpRefreshParams {
     notification_manager: Option<NotificationManager>,
     preferences_manager: Option<Arc<PreferencesManager>>,
     run_filters: Arc<Mutex<RunFilters>>,
+    run_load_service: RunLoadService,
 }
 
 fn schedule_follow_up_refresh(params: FollowUpRefreshParams) {
@@ -709,7 +721,7 @@ fn schedule_follow_up_refresh(params: FollowUpRefreshParams) {
                 params_for_timer.workflow_id,
             );
 
-            load_workflow_runs(LoadRunsParams {
+            params_for_timer.run_load_service.request(LoadRunsParams {
                 client: params_for_timer.client.clone(),
                 owner: params_for_timer.owner.clone(),
                 repo: params_for_timer.repo.clone(),

@@ -140,6 +140,7 @@ impl MainWindow {
         let workflow_state = self.workflow_counts.clone();
         let checked_state = self.actions_checked_at.clone();
         let this = self.clone();
+        let selected_repo = *self.selected_repo_id.lock();
 
         repo_status::spawn_repo_status_tasks(
             due_repos,
@@ -147,6 +148,7 @@ impl MainWindow {
             actions_state,
             workflow_state,
             checked_state,
+            selected_repo,
             move || this.schedule_repo_list_refresh(),
         );
     }

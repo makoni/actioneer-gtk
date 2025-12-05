@@ -28,6 +28,7 @@ impl RepoDetailPane {
             notification_manager: self.notification_manager.clone(),
             preferences_manager: self.preferences_manager.clone(),
             run_filters: self.run_filters.clone(),
+            run_load_service: self.run_load_service.clone(),
         }
     }
 }
@@ -100,6 +101,7 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
         notification_manager: context.notification_manager.clone(),
         preferences_manager: context.preferences_manager.clone(),
         run_filters: context.run_filters.clone(),
+        run_load_service: context.run_load_service.clone(),
     };
 
     for workflow in workflows {

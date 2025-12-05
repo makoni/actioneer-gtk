@@ -21,6 +21,7 @@ pub fn spawn_repo_status_tasks<F>(
     actions_state: Arc<Mutex<HashMap<i64, RepoActionsState>>>,
     workflow_state: Arc<Mutex<HashMap<i64, WorkflowStatusCounts>>>,
     checked_state: Arc<Mutex<HashMap<i64, Instant>>>,
+    skip_repo_id: Option<i64>,
     on_complete: F,
 ) where
     F: FnOnce() + 'static,
@@ -41,21 +42,29 @@ pub fn spawn_repo_status_tasks<F>(
     });
 
     let repos: Vec<Repo> = repos.into_iter().take(MAX_REPOS_FOR_STATUS).collect();
+    let skip_repo_id = skip_repo_id;
 
     crate::runtime_handle().spawn(async move {
         use futures::stream::{self, StreamExt};
 
         stream::iter(repos)
-            .for_each_concurrent(5, |repo| {
+            .for_each_concurrent(5, move |repo| {
                 let client = client.clone();
                 let actions_state = actions_state.clone();
                 let workflow_state = workflow_state.clone();
                 let checked_state = checked_state.clone();
+                let skip_repo_id = skip_repo_id;
 
                 async move {
                     let owner = repo.owner.login.clone();
                     let repo_name = repo.name.clone();
                     let repo_id = repo.id;
+
+                    if skip_repo_id == Some(repo_id) {
+                        let mut checked = checked_state.lock();
+                        checked.insert(repo_id, Instant::now());
+                        return;
+                    }
 
                     // Check actions enabled
                     match client.is_actions_enabled(&owner, &repo_name).await {

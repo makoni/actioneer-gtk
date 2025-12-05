@@ -1,4 +1,4 @@
-use super::helpers::{LoadRunsParams, current_job_context_run_ids, load_workflow_runs};
+use super::helpers::{LoadRunsParams, current_job_context_run_ids};
 use super::workflow_refresh::run_list_for_expander;
 use super::{RepoDetailPane, RunFilters};
 use crate::preferences::RunFilterPreferences;
@@ -161,7 +161,7 @@ impl RepoDetailPane {
                             format!("{}/{} • Workflow {}", owner, repo, workflow_id)
                         });
 
-                        load_workflow_runs(LoadRunsParams {
+                        context.run_load_service.request(LoadRunsParams {
                             client: context.client.clone(),
                             owner: owner.clone(),
                             repo: repo.clone(),

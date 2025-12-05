@@ -22,7 +22,7 @@ mod workflow_list;
 mod workflow_refresh;
 use favorite_controls::{observe_favorites, setup_favorite_button};
 use filter_controls::{FilterChips, FilterControls};
-use helpers::{JobContextMap, RunDigestStore};
+use helpers::{JobContextMap, RunDigestStore, RunLoadService};
 
 #[derive(Clone)]
 pub struct RepoDetailPane {
@@ -52,6 +52,7 @@ pub struct RepoDetailPane {
     run_digests: Arc<Mutex<RunDigestStore>>,
     notification_manager: Option<NotificationManager>,
     workflows_loading_runs: Arc<Mutex<HashSet<i64>>>, // Track in-flight run loads
+    run_load_service: RunLoadService,
 }
 
 #[derive(Clone)]
@@ -79,6 +80,7 @@ struct WorkflowListContext {
     preferences_manager: Option<Arc<PreferencesManager>>,
     workflows_loading_runs: Arc<Mutex<HashSet<i64>>>,
     run_filters: Arc<Mutex<RunFilters>>,
+    run_load_service: RunLoadService,
 }
 
 #[derive(Debug, Clone)]
@@ -202,6 +204,10 @@ impl RepoDetailPane {
                     .map(|app| NotificationManager::for_application(&app))
             })
             .or_else(|| Some(NotificationManager::new(crate::APP_ID)));
+        let run_load_service = RunLoadService::new(
+            workflows_last_loaded.clone(),
+            workflows_loading_runs.clone(),
+        );
 
         let pane = Self {
             parent: parent.clone(),
@@ -229,6 +235,7 @@ impl RepoDetailPane {
             workflows_last_loaded: workflows_last_loaded.clone(),
             job_contexts: job_contexts.clone(),
             run_digests: run_digests.clone(),
+            run_load_service: run_load_service.clone(),
             notification_manager: notification_manager.clone(),
         };
 

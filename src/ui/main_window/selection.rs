@@ -171,6 +171,12 @@ impl MainWindow {
                 let stack = self.detail_stack.clone();
                 let active_detail = self.active_detail.clone();
 
+                {
+                    // Mark the active pane immediately so concurrent selections skip
+                    let mut active = active_detail.borrow_mut();
+                    active.replace(pane.clone());
+                }
+
                 glib::idle_add_local_once(move || {
                     if let Some(existing_child) = stack.child_by_name("detail") {
                         stack.remove(&existing_child);

@@ -1,6 +1,5 @@
 use super::helpers::{
-    LoadRunsParams, WorkflowRunListModel, current_job_context_run_ids, load_workflow_runs,
-    refresh_jobs_for_workflows,
+    LoadRunsParams, WorkflowRunListModel, current_job_context_run_ids, refresh_jobs_for_workflows,
 };
 use super::{RepoDetailPane, WorkflowListContext};
 use crate::api::models::Workflow;
@@ -77,6 +76,7 @@ impl RepoDetailPane {
                 notification_manager: notification_manager_for_ui.clone(),
                 preferences_manager: preferences_manager_for_ui.clone(),
                 run_filters: run_filters_for_ui.clone(),
+                run_load_service: context.run_load_service.clone(),
             };
 
             match result {
@@ -174,6 +174,7 @@ impl RepoDetailPane {
                 notification_manager: notification_manager_for_ui.clone(),
                 preferences_manager: preferences_manager_for_ui.clone(),
                 run_filters: run_filters_for_ui.clone(),
+                run_load_service: context.run_load_service.clone(),
             };
 
             match result {
@@ -274,6 +275,7 @@ impl RepoDetailPane {
             let run_digests_for_ui = run_digests.clone();
             let notification_manager_for_ui = notification_manager_handle.clone();
             let preferences_manager_for_ui = preferences_manager_handle.clone();
+            let run_load_service_for_ui = context.run_load_service.clone();
 
             receiver.attach(None, move |result| {
                 callback_refs_for_ui.show_loading(false);
@@ -300,6 +302,7 @@ impl RepoDetailPane {
                             notification_manager: notification_manager_for_ui.clone(),
                             preferences_manager: preferences_manager_for_ui.clone(),
                             run_filters: run_filters_for_ui.clone(),
+                            run_load_service: run_load_service_for_ui.clone(),
                         };
 
                         super::workflow_list::update_workflows_list(&ui_context, wf_list.as_ref());
@@ -373,6 +376,7 @@ impl RepoDetailPane {
         let workflows_loading_runs = list_context.workflows_loading_runs.clone();
         let workflows_last_loaded = list_context.workflows_last_loaded.clone();
         let run_filters = list_context.run_filters.clone();
+        let run_load_service = list_context.run_load_service.clone();
 
         info!(
             "Starting auto-refresh timer with interval: {} seconds",
@@ -398,6 +402,7 @@ impl RepoDetailPane {
                 notification_manager: notification_manager.clone(),
                 preferences_manager: preferences_manager.clone(),
                 run_filters: run_filters.clone(),
+                run_load_service: run_load_service.clone(),
             };
 
             Self::refresh_runs_background(&background_context);
@@ -428,6 +433,7 @@ impl RepoDetailPane {
         let notification_manager = context.notification_manager.clone();
         let preferences_manager = context.preferences_manager.clone();
         let workflows_last_loaded = context.workflows_last_loaded.clone();
+        let run_load_service = context.run_load_service.clone();
         let run_filters_arc = context.run_filters.clone();
 
         let previous_active = context.workflows_with_active_runs.lock().clone();
@@ -457,7 +463,7 @@ impl RepoDetailPane {
                         let preferences_manager_clone = preferences_manager.clone();
                         let repo_model_clone = repo_model.clone();
 
-                        load_workflow_runs(LoadRunsParams {
+                        run_load_service.request(LoadRunsParams {
                             client: client.clone(),
                             owner: owner.to_string(),
                             repo: repo.to_string(),
