@@ -57,6 +57,11 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2025-12-05 — Added a "Public" label to sidebar repo rows (alongside the existing private label) to keep visibility explicit without relying on section grouping.
+- [✅] 2025-12-05 — Hardened workflow completion notifications by atomically updating digests and marking notified conclusions before dispatch, with tests to ensure a single notification per run and clippy clean.
+- [✅] 2025-12-05 — Removed the redundant sidebar "Workflows enabled/disabled" label on repo rows since sections already group by status, keeping rows cleaner.
+- [✅] 2025-12-05 — Stabilized GTK UI tests by initializing GTK/Adwaita once per process via `gtk_test_guard`, guarding ignored tests with the helper, and relaxing a favorite button opacity assertion to avoid runner-specific rounding.
+- [✅] 2025-12-05 — Resolved the CI fmt failure by reordering the run loader imports and rerunning `cargo fmt` so the lint job passes again.
 - [✅] 2025-12-06 — Swapped the run-status filter chips for compact icon toggles and reused cached run lists so filter changes immediately hide/show runs without waiting on GitHub responses.
 - [✅] 2025-12-05 — Fixed the debug “Send test notification” action by dispatching through the running GApplication channel and retaining the portal fallback when no default app is registered.
 - [✅] 2025-12-05 — Re-investigated workflow auto-refresh so follow-up polling continues after triggered runs are detected (extra attempts keep the UI updating until the run stabilizes).

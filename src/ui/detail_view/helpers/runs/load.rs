@@ -1,6 +1,6 @@
 use super::super::context::JobContextMap;
 use super::super::formatting::update_workflow_status_badge;
-use super::digest::{RunDigestMap, RunDigestStore, collect_completed_notifications, digest_runs};
+use super::digest::{RunDigestMap, RunDigestStore, update_digest_and_collect_notifications};
 use super::filters::summarize_visible_runs;
 use super::list::WorkflowRunListModel;
 use crate::api::models::{Repo, WorkflowRun};
@@ -123,95 +123,61 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
             Ok(runs) => {
                 task_run_list.set_runs(runs.clone());
 
-                let mut digest = digest_runs(runs.as_ref());
-                let previous_digest = {
-                    let digests = run_digests_for_ui.lock();
-                    digests.get(&workflow_id).cloned()
-                };
-
-                if let Some(prev_map) = previous_digest.as_ref() {
-                    for (run_id, entry) in digest.iter_mut() {
-                        if let Some(prev) = prev_map.get(run_id) {
-                            entry.notified_conclusion = prev.notified_conclusion.clone();
-                        }
-                    }
-                }
-
-                let changed = previous_digest.as_ref() != Some(&digest);
-
-                {
+                let (changed, notification_requests) = {
                     let mut digests = run_digests_for_ui.lock();
-                    digests.insert(workflow_id, digest.clone());
-                }
+                    update_digest_and_collect_notifications(
+                        &mut digests,
+                        workflow_id,
+                        runs.as_ref(),
+                    )
+                };
 
                 if changed {
                     prune_stale_job_contexts(&job_contexts, workflow_id, runs.as_ref());
-                    if let (Some(prev), Some(manager)) =
-                        (previous_digest.as_ref(), notification_manager.clone())
+                    if let (Some(manager), Some(notification_requests)) =
+                        (notification_manager.clone(), notification_requests)
                     {
-                        let notification_requests = collect_completed_notifications(prev, &runs);
-                        if !notification_requests.is_empty() {
-                            let workflow_label = workflow_name.clone();
-                            let preferences_manager = preferences_manager.clone();
+                        let workflow_label = workflow_name.clone();
+                        let preferences_manager = preferences_manager.clone();
 
-                            // Mark runs we will notify for to avoid duplicates on subsequent refreshes.
-                            {
-                                let mut digests = run_digests_for_ui.lock();
-                                if let Some(entry) = digests.get_mut(&workflow_id) {
-                                    for run in runs.iter() {
-                                        if let Some(digest_entry) = entry.get_mut(&run.id)
-                                            && run
-                                                .status
-                                                .as_deref()
-                                                .map(|s| s.eq_ignore_ascii_case("completed"))
-                                                .unwrap_or(false)
-                                        {
-                                            digest_entry.notified_conclusion =
-                                                run.conclusion.clone();
-                                        }
-                                    }
-                                }
-                            }
+                        crate::runtime_handle().spawn(async move {
+                            let notifications_enabled = match preferences_manager {
+                                Some(manager) => manager.get().await.enable_notifications,
+                                None => true,
+                            };
 
-                            crate::runtime_handle().spawn(async move {
-                                let notifications_enabled = match preferences_manager {
-                                    Some(manager) => manager.get().await.enable_notifications,
-                                    None => true,
-                                };
-
-                                if !notifications_enabled {
-                                    debug!(
-                                        workflow = workflow_label.as_str(),
-                                        "Notifications disabled in preferences"
-                                    );
-                                    return;
-                                }
-
-                                let total = notification_requests.len();
+                            if !notifications_enabled {
                                 debug!(
                                     workflow = workflow_label.as_str(),
-                                    count = total,
-                                    "Sending workflow completion notification(s)"
+                                    "Notifications disabled in preferences"
                                 );
-                                for (run_title, status, conclusion) in notification_requests {
-                                    let notify_result = manager
-                                        .notify_workflow_completed(
-                                            &workflow_label,
-                                            &run_title,
-                                            &status,
-                                            conclusion.as_deref(),
-                                        )
-                                        .await;
+                                return;
+                            }
 
-                                    if let Err(err) = notify_result {
-                                        warn!(
-                                            "Failed to send workflow completion notification: {}",
-                                            err
-                                        );
-                                    }
+                            let total = notification_requests.len();
+                            debug!(
+                                workflow = workflow_label.as_str(),
+                                count = total,
+                                "Sending workflow completion notification(s)"
+                            );
+                            for (run_title, status, conclusion) in notification_requests {
+                                let notify_result = manager
+                                    .notify_workflow_completed(
+                                        &workflow_label,
+                                        &run_title,
+                                        &status,
+                                        conclusion.as_deref(),
+                                    )
+                                    .await;
+
+                                if let Err(err) = notify_result {
+                                    warn!(
+                                        "Failed to send workflow completion notification: {}",
+                                        err
+                                    );
                                 }
-                            });
-                        }
+                            }
+                        });
                     }
                 }
 

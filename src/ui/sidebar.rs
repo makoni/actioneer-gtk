@@ -164,7 +164,7 @@ pub fn find_label_by_name(widget: &gtk::Widget, name: &str) -> Option<gtk::Label
 fn build_repo_row(
     repo: Repo,
     is_favorite: bool,
-    actions_state: RepoActionsState,
+    _actions_state: RepoActionsState,
     workflow_counts: WorkflowStatusCounts,
     favorites_arc: Arc<Mutex<HashSet<i64>>>,
     favorites_manager: Option<Arc<FavoritesManager>>,
@@ -291,17 +291,13 @@ fn build_repo_row(
     if repo.is_private {
         let private_label = create_meta_label("Private".to_string());
         content_box.append(&private_label);
+    } else {
+        let public_label = create_meta_label("Public".to_string());
+        content_box.append(&public_label);
     }
 
     let meta_box = gtk::Box::new(gtk::Orientation::Horizontal, 12);
     meta_box.set_halign(gtk::Align::Start);
-
-    let actions_text = match actions_state {
-        RepoActionsState::Enabled => "Workflows enabled",
-        RepoActionsState::Disabled => "Workflows disabled",
-        RepoActionsState::Unknown => "Workflows status pending",
-    };
-    meta_box.append(&create_meta_label(actions_text.to_string()));
 
     if workflow_counts.active > 0 {
         meta_box.append(&create_meta_label(format!(
@@ -316,7 +312,9 @@ fn build_repo_row(
         meta_box.append(&failed_label);
     }
 
-    content_box.append(&meta_box);
+    if meta_box.first_child().is_some() {
+        content_box.append(&meta_box);
+    }
 
     wrapper.append(&content_box);
 

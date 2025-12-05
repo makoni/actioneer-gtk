@@ -12,6 +12,56 @@ pub(crate) struct RunDigest {
 
 pub(crate) type RunDigestMap = HashMap<i64, RunDigest>;
 pub(crate) type RunDigestStore = HashMap<i64, RunDigestMap>;
+pub(crate) type NotificationRequest = (String, String, Option<String>);
+
+pub(crate) fn update_digest_and_collect_notifications(
+    store: &mut RunDigestStore,
+    workflow_id: i64,
+    runs: &[WorkflowRun],
+) -> (bool, Option<Vec<NotificationRequest>>) {
+    let previous = store.get(&workflow_id).cloned();
+
+    let mut digest = digest_runs(runs);
+    if let Some(prev_map) = previous.as_ref() {
+        for (run_id, entry) in digest.iter_mut() {
+            if let Some(prev) = prev_map.get(run_id) {
+                entry.notified_conclusion = prev.notified_conclusion.clone();
+            }
+        }
+    }
+
+    let changed = previous.as_ref() != Some(&digest);
+
+    let mut notification_requests = None;
+    if changed {
+        if let Some(prev) = previous.as_ref() {
+            let requests = collect_completed_notifications(prev, runs);
+
+            if !requests.is_empty() {
+                for run in runs.iter() {
+                    if let Some(entry) = digest.get_mut(&run.id)
+                        && run
+                            .status
+                            .as_deref()
+                            .map(|s| s.eq_ignore_ascii_case("completed"))
+                            .unwrap_or(false)
+                    {
+                        entry.notified_conclusion = run.conclusion.clone();
+                    }
+                }
+
+                notification_requests = Some(requests);
+            }
+        }
+
+        store.insert(workflow_id, digest);
+    } else {
+        // Ensure we store the initial digest even when unchanged (empty previous store).
+        store.entry(workflow_id).or_insert(digest);
+    }
+
+    (changed, notification_requests)
+}
 
 pub(super) fn digest_runs(runs: &[WorkflowRun]) -> RunDigestMap {
     runs.iter()
@@ -130,5 +180,34 @@ mod tests {
         assert_eq!(notifications[0].0, "Run 1 (main)");
         assert_eq!(notifications[0].1, "completed");
         assert_eq!(notifications[0].2, Some("success".to_string()));
+    }
+
+    #[test]
+    fn update_digest_marks_notifications_once() {
+        let mut store = RunDigestStore::new();
+
+        // initial in-progress snapshot
+        let initial_runs = vec![build_run(1, "in_progress", None)];
+        let (changed_initial, notifications_initial) =
+            update_digest_and_collect_notifications(&mut store, 1, &initial_runs);
+
+        assert!(changed_initial);
+        assert!(notifications_initial.is_none());
+
+        // run completes — should notify once and mark notified
+        let completed_runs = vec![build_run(1, "completed", Some("success"))];
+        let (changed_completed, notifications_completed) =
+            update_digest_and_collect_notifications(&mut store, 1, &completed_runs);
+
+        assert!(changed_completed);
+        let notes = notifications_completed.expect("expected notifications");
+        assert_eq!(notes.len(), 1);
+
+        // same data again — should not notify twice
+        let (changed_repeat, notifications_repeat) =
+            update_digest_and_collect_notifications(&mut store, 1, &completed_runs);
+
+        assert!(!changed_repeat);
+        assert!(notifications_repeat.is_none());
     }
 }
