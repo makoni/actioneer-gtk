@@ -111,6 +111,12 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
   - Workflow/run lists now also sit inside an `adw::ClampScrollable` + `gtk::ScrolledWindow` combo (`src/ui/detail_view/mod.rs`) so long job lists are visible at fullscreen sizes. Preserve that structure when touching detail panes to avoid clipped content or scroll jumping.
   - Background refreshes skip redundant non-ETag endpoints: `spawn_repo_status_tasks` now tracks last-checked timestamps and avoids querying the actions-permissions endpoint more often than a TTL. If you need to force-refresh, clear the timestamps in `actions_checked_at`.
   - Flatpak packaging pins Cargo dependencies via `flatpak/me.spaceinbox.actioneer.cargo-sources.json`, generated with `flatpak-cargo-generator`. When you change Rust dependencies (including `cargo update`), regenerate this file with `~/.local/bin/flatpak-cargo-generator -d Cargo.lock -o flatpak/me.spaceinbox.actioneer.cargo-sources.json` and commit the result. Verify the manifest by running `flatpak-builder --force-clean --ccache builddir flatpak/me.spaceinbox.actioneer.yaml` so Flathub keeps an offline-complete build. Clean up any temporary `vendor/` directory after regenerating the manifest to avoid accidentally committing it.
+  - Notifications (new, 2025-12):
+    - Use the existing dispatcher in `src/notifications.rs`. Keep GTK work on GLib and network/background work on Tokio. Set a default action (`app.focus-main-window`) so shell clicks focus the window. Do not touch GTK objects from Tokio tasks.
+    - Preserve portal/native routing: prefer portal when sandboxed/forced, otherwise portal then native is acceptable; do not create new runtimes or bypass the dispatcher channel.
+    - Keep payloads concise (title + short body) and include the themed icon name (`APP_ICON_NAME`). Respect the user’s notification preference flag.
+    - Desktop entry is required for notifications. Before testing or relying on notifications, ensure `data/me.spaceinbox.actioneer.desktop` is installed to `~/.local/share/applications/` (or the relevant XDG data dir). Agents should check for an installed `me.spaceinbox.actioneer.desktop` and install/update it if missing/outdated (copy from `data/`). Do not add runtime installation in code paths.
+    - Leave the application-level `focus-main-window` action intact (`src/ui/main_window.rs`). If adding new notification actions, wire them to `app.*` actions.
 
 - Files to reference when making changes
   - `src/main.rs` (runtime + app bootstrap)
