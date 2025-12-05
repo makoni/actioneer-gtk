@@ -489,6 +489,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires GTK display"]
     fn reapply_filters_updates_from_last_runs() {
         let Some(_guard) = gtk_test_guard("reapply_filters_updates_from_last_runs") else {
             return;

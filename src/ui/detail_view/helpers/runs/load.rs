@@ -3,6 +3,7 @@ use super::super::formatting::update_workflow_status_badge;
 use super::digest::{RunDigestMap, RunDigestStore, collect_completed_notifications, digest_runs};
 use super::filters::summarize_visible_runs;
 use super::list::WorkflowRunListModel;
+use crate::ui::detail_view::helpers::jobs::refresh_jobs_for_workflows;
 use crate::api::models::{Repo, WorkflowRun};
 use crate::api::{GitHubClient, GitHubError};
 use crate::notifications::NotificationManager;
@@ -231,6 +232,12 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                     } else {
                         active.remove(&workflow_id);
                     }
+                }
+
+                if changed && !has_active_runs {
+                    let mut targets = HashSet::new();
+                    targets.insert(workflow_id);
+                    refresh_jobs_for_workflows(&job_contexts, &targets);
                 }
 
                 if should_render_run_list(background_for_ui, expander_expanded, changed) {
