@@ -42,7 +42,6 @@ pub fn spawn_repo_status_tasks<F>(
     });
 
     let repos: Vec<Repo> = repos.into_iter().take(MAX_REPOS_FOR_STATUS).collect();
-    let skip_repo_id = skip_repo_id;
 
     crate::runtime_handle().spawn(async move {
         use futures::stream::{self, StreamExt};
