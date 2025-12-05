@@ -209,19 +209,6 @@ impl NotificationManager {
             match self.dispatch_via_portal(payload.clone()).await {
                 Ok(()) => {
                     debug!("Portal notification dispatched successfully");
-
-                    // If portal was only preferred (not forced), also try native to cover hosts
-                    // where the portal accepts the call but the shell drops the toast because the
-                    // desktop entry is missing during source-tree runs.
-                    if !force_portal {
-                        debug!("Attempting native notification after portal success");
-                        if let Err(native_err) =
-                            self.dispatch_via_main_context(payload.clone()).await
-                        {
-                            warn!(error = %native_err, "Native notification failed after portal success");
-                        }
-                    }
-
                     return Ok(());
                 }
                 Err(err) => {
