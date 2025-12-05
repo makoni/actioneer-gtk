@@ -38,6 +38,7 @@ impl RepoDetailPane {
         let toast_overlay = context.toast_overlay.clone();
         let job_contexts = context.job_contexts.clone();
         let workflows_with_active_runs = context.workflows_with_active_runs.clone();
+        let workflows_loading_runs = context.workflows_loading_runs.clone();
         let run_digests = context.run_digests.clone();
         let notification_manager = context.notification_manager.clone();
         let preferences_manager = context.preferences_manager.clone();
@@ -69,6 +70,7 @@ impl RepoDetailPane {
                 toast_overlay: toast_overlay.clone(),
                 job_contexts: job_contexts.clone(),
                 workflows_with_active_runs: workflows_with_active_runs.clone(),
+                workflows_loading_runs: workflows_loading_runs.clone(),
                 run_digests: run_digests.clone(),
                 notification_manager: notification_manager_for_ui.clone(),
                 preferences_manager: preferences_manager_for_ui.clone(),
@@ -130,6 +132,7 @@ impl RepoDetailPane {
         let toast_overlay = context.toast_overlay.clone();
         let job_contexts = context.job_contexts.clone();
         let workflows_with_active_runs = context.workflows_with_active_runs.clone();
+        let workflows_loading_runs = context.workflows_loading_runs.clone();
         let run_digests = context.run_digests.clone();
         let notification_manager = context.notification_manager.clone();
         let preferences_manager = context.preferences_manager.clone();
@@ -162,6 +165,7 @@ impl RepoDetailPane {
                 toast_overlay: toast_overlay.clone(),
                 job_contexts: job_contexts.clone(),
                 workflows_with_active_runs: workflows_with_active_runs.clone(),
+                workflows_loading_runs: workflows_loading_runs.clone(),
                 run_digests: run_digests.clone(),
                 notification_manager: notification_manager_for_ui.clone(),
                 preferences_manager: preferences_manager_for_ui.clone(),
@@ -211,6 +215,7 @@ impl RepoDetailPane {
         let toast_overlay = context.toast_overlay.clone();
         let job_contexts = context.job_contexts.clone();
         let workflows_with_active_runs = context.workflows_with_active_runs.clone();
+        let workflows_loading_runs = context.workflows_loading_runs.clone();
         let run_digests = context.run_digests.clone();
         let notification_manager = context.notification_manager.clone();
         let preferences_manager = context.preferences_manager.clone();
@@ -238,6 +243,7 @@ impl RepoDetailPane {
             let loading_guard = loading_guard.clone();
             let toast_overlay = toast_overlay.clone();
             let workflows_with_active_runs = workflows_with_active_runs.clone();
+            let workflows_loading_runs = workflows_loading_runs.clone();
             let run_digests = run_digests.clone();
             let notification_manager_handle = notification_manager.clone();
             let preferences_manager_handle = preferences_manager.clone();
@@ -282,6 +288,7 @@ impl RepoDetailPane {
                             toast_overlay: toast_overlay_for_ui.clone(),
                             job_contexts: job_contexts_for_ui.clone(),
                             workflows_with_active_runs: workflows_with_active_runs_for_ui.clone(),
+                            workflows_loading_runs: workflows_loading_runs.clone(),
                             run_digests: run_digests_for_ui.clone(),
                             notification_manager: notification_manager_for_ui.clone(),
                             preferences_manager: preferences_manager_for_ui.clone(),
@@ -356,6 +363,7 @@ impl RepoDetailPane {
         let run_digests = list_context.run_digests.clone();
         let notification_manager = list_context.notification_manager.clone();
         let preferences_manager = list_context.preferences_manager.clone();
+        let workflows_loading_runs = list_context.workflows_loading_runs.clone();
         let run_filters = list_context.run_filters.clone();
 
         info!(
@@ -376,6 +384,7 @@ impl RepoDetailPane {
                 toast_overlay: toast_overlay.clone(),
                 job_contexts: job_contexts.clone(),
                 workflows_with_active_runs: workflows_with_active.clone(),
+                workflows_loading_runs: workflows_loading_runs.clone(),
                 run_digests: run_digests.clone(),
                 notification_manager: notification_manager.clone(),
                 preferences_manager: preferences_manager.clone(),
@@ -404,6 +413,7 @@ impl RepoDetailPane {
         let parent_window = context.parent_window.clone();
         let toast_overlay = context.toast_overlay.clone();
         let workflows_with_active = context.workflows_with_active_runs.clone();
+        let workflows_loading = context.workflows_loading_runs.clone();
         let job_contexts = context.job_contexts.clone();
         let run_digests = context.run_digests.clone();
         let notification_manager = context.notification_manager.clone();
@@ -452,6 +462,7 @@ impl RepoDetailPane {
                             job_contexts: job_contexts.clone(),
                             expanded_run_ids: preserved_runs,
                             workflows_with_active: workflows_with_active.clone(),
+                            workflows_loading: workflows_loading.clone(),
                             background: true,
                             run_digests: run_digests.clone(),
                             notification_manager: notification_manager_clone,

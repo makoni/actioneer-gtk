@@ -50,6 +50,7 @@ pub struct RepoDetailPane {
     job_contexts: JobContextMap,
     run_digests: Arc<Mutex<RunDigestStore>>,
     notification_manager: Option<NotificationManager>,
+    workflows_loading_runs: Arc<Mutex<HashSet<i64>>>, // Track in-flight run loads
 }
 
 #[derive(Clone)]
@@ -74,6 +75,7 @@ struct WorkflowListContext {
     run_digests: Arc<Mutex<RunDigestStore>>,
     notification_manager: Option<NotificationManager>,
     preferences_manager: Option<Arc<PreferencesManager>>,
+    workflows_loading_runs: Arc<Mutex<HashSet<i64>>>,
     run_filters: Arc<Mutex<RunFilters>>,
 }
 
@@ -187,6 +189,7 @@ impl RepoDetailPane {
         let filter_controls_widget = filter_controls.widget();
         let run_digests = Arc::new(Mutex::new(HashMap::new()));
         let run_filters = Arc::new(Mutex::new(RunFilters::default()));
+        let workflows_loading_runs = Arc::new(Mutex::new(HashSet::new()));
         let filter_guard = Rc::new(Cell::new(false));
         let notification_manager = deps
             .notification_manager
@@ -219,6 +222,7 @@ impl RepoDetailPane {
             loading: Arc::new(Mutex::new(false)),
             auto_refresh_source: Arc::new(Mutex::new(None)),
             workflows_with_active_runs: Arc::new(Mutex::new(HashSet::new())),
+            workflows_loading_runs: workflows_loading_runs.clone(),
             job_contexts: job_contexts.clone(),
             run_digests: run_digests.clone(),
             notification_manager: notification_manager.clone(),

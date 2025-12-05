@@ -57,6 +57,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2025-12-05 — Prevented duplicate workflow run fetches by coalescing in-flight loads and restored native-first notification fallback when portal delivery is unavailable.
 - [✅] 2025-12-05 — Added a "Public" label to sidebar repo rows (alongside the existing private label) to keep visibility explicit without relying on section grouping.
 - [✅] 2025-12-05 — Hardened workflow completion notifications by atomically updating digests and marking notified conclusions before dispatch, with tests to ensure a single notification per run and clippy clean.
 - [✅] 2025-12-05 — Removed the redundant sidebar "Workflows enabled/disabled" label on repo rows since sections already group by status, keeping rows cleaner.

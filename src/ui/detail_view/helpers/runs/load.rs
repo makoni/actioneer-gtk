@@ -53,6 +53,7 @@ pub(crate) struct LoadRunsParams {
     pub job_contexts: JobContextMap,
     pub expanded_run_ids: Vec<i64>,
     pub workflows_with_active: Arc<Mutex<HashSet<i64>>>,
+    pub workflows_loading: Arc<Mutex<HashSet<i64>>>,
     pub background: bool,
     pub run_digests: Arc<Mutex<RunDigestStore>>,
     pub notification_manager: Option<NotificationManager>,
@@ -76,12 +77,21 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
         job_contexts,
         expanded_run_ids,
         workflows_with_active,
+        workflows_loading,
         background,
         run_digests,
         notification_manager,
         preferences_manager,
         run_filters,
     } = params;
+
+    {
+        let mut in_flight = workflows_loading.lock();
+        if !in_flight.insert(workflow_id) {
+            debug!(workflow_id, background, "Run load already in flight; skipping duplicate request");
+            return;
+        }
+    }
 
     let expanded_run_ids: HashSet<i64> = expanded_run_ids.into_iter().collect();
     let expanded_run_ids = Rc::new(expanded_run_ids);
@@ -103,6 +113,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
     let toast_overlay_for_retry = toast_overlay.clone();
     let run_digests_for_ui = run_digests.clone();
     let background_for_ui = background;
+    let workflows_loading_for_ui = workflows_loading.clone();
 
     receiver.attach(None, move |result| {
         let expanded_run_ids_for_ui = expanded_run_ids.clone();
@@ -253,6 +264,11 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
             }
         }
 
+        {
+            let mut in_flight = workflows_loading_for_ui.lock();
+            in_flight.remove(&workflow_id);
+        }
+
         glib::ControlFlow::Break
     });
 
@@ -359,6 +375,7 @@ fn show_error_state(error: GitHubError, workflow_id: i64, context: RunErrorConte
             job_contexts: job_contexts.clone(),
             expanded_run_ids: Vec::new(),
             workflows_with_active: workflows_with_active.clone(),
+            workflows_loading: workflows_loading.clone(),
             background: false,
             run_digests: run_digests.clone(),
             notification_manager: notification_manager.clone(),

@@ -192,7 +192,8 @@ impl NotificationManager {
         let force_native = env::var_os("ACTIONEER_FORCE_NATIVE_NOTIFICATIONS").is_some();
         let force_portal = env::var_os("ACTIONEER_FORCE_PORTAL_NOTIFICATIONS").is_some();
         let sandboxed = is_sandboxed();
-        let prefer_portal = force_portal || sandboxed || self.prefer_portal_default;
+        let portal_first = force_portal || sandboxed;
+        let portal_allowed = portal_first || self.prefer_portal_default;
 
         info!(
             app_id = %self.app_id,
@@ -200,10 +201,12 @@ impl NotificationManager {
             force_portal,
             force_native,
             prefer_portal_default = self.prefer_portal_default,
+            portal_first,
+            portal_allowed,
             "Notification dispatch decision"
         );
 
-        if prefer_portal && !force_native {
+        if portal_first && !force_native {
             debug!("Attempting portal notification first");
 
             match self.dispatch_via_portal(payload.clone()).await {
@@ -229,9 +232,8 @@ impl NotificationManager {
             Err(native_err) => {
                 warn!(error = %native_err, "Native notification failed");
 
-                // If native fails and portal was not already tried (e.g., forced native),
-                // attempt portal as a last resort.
-                if !prefer_portal {
+                // If native fails and portal is allowed (not forced-native), try portal.
+                if !force_native && portal_allowed {
                     match self.dispatch_via_portal(payload).await {
                         Ok(()) => {
                             debug!("Portal notification dispatched after native failure");
