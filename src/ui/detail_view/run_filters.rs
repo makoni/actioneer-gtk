@@ -125,7 +125,8 @@ impl RepoDetailPane {
                 visit_expanders(&row_child, &mut |expander, workflow_id| {
                     if let Some(run_list) = run_list_for_expander(expander) {
                         let status_badge = Self::status_badge_for_expander(expander);
-                        let preserved_runs = current_job_context_run_ids(&job_contexts, workflow_id);
+                        let preserved_runs =
+                            current_job_context_run_ids(&job_contexts, workflow_id);
                         let preserved_run_ids: HashSet<i64> =
                             preserved_runs.iter().copied().collect();
                         let re_applied =

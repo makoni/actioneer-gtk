@@ -421,7 +421,8 @@ impl RepoDetailPane {
 
                     if let Some(run_list) = run_list_for_expander(expander) {
                         let status_badge = Self::status_badge_for_expander(expander);
-                        let preserved_runs = current_job_context_run_ids(&job_contexts, workflow_id);
+                        let preserved_runs =
+                            current_job_context_run_ids(&job_contexts, workflow_id);
                         let workflow_label = unsafe {
                             expander
                                 .data::<String>("actioneer-workflow-name")
@@ -606,12 +607,10 @@ pub(super) fn run_list_for_expander(expander: &gtk::Expander) -> Option<Workflow
     }
 }
 
-fn visit_expanders<F: FnMut(&gtk::Expander, i64, bool)>(
-    widget: &gtk::Widget,
-    f: &mut F,
-) {
+fn visit_expanders<F: FnMut(&gtk::Expander, i64, bool)>(widget: &gtk::Widget, f: &mut F) {
     if let Some(expander) = widget.downcast_ref::<gtk::Expander>()
-        && let Some((workflow_id, is_active)) = parse_expander_widget_name(expander.widget_name().as_str())
+        && let Some((workflow_id, is_active)) =
+            parse_expander_widget_name(expander.widget_name().as_str())
     {
         f(expander, workflow_id, is_active);
     }

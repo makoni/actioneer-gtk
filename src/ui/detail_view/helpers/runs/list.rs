@@ -5,11 +5,11 @@ use crate::ui::detail_view::RunFilters;
 use glib::subclass::types::ObjectSubclassIsExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, gio, glib};
-use tracing::{debug, info};
 use std::cell::{Cell, RefCell};
 use std::collections::HashSet;
 use std::rc::Rc;
 use std::sync::Arc;
+use tracing::{debug, info};
 
 const STATE_IDLE: &str = "idle";
 const STATE_LOADING: &str = "loading";
@@ -446,8 +446,8 @@ mod imp {
 
 #[cfg(test)]
 mod tests {
-    use super::{STATE_CONTENT, STATE_ERROR, STATE_IDLE, format_runs_header, state_requires_load};
     use super::test_run_list_model;
+    use super::{STATE_CONTENT, STATE_ERROR, STATE_IDLE, format_runs_header, state_requires_load};
     use crate::api::models::WorkflowRun;
     use crate::ui::detail_view::RunFilters;
     use gtk4 as gtk;
@@ -539,6 +539,10 @@ mod tests {
 
         let updated = model.reapply_filters(&filters, &expanded);
         assert!(updated, "reapply should run when data was loaded");
-        assert_eq!(model.list_store.n_items(), 1, "only failed run should remain");
+        assert_eq!(
+            model.list_store.n_items(),
+            1,
+            "only failed run should remain"
+        );
     }
 }
