@@ -1,6 +1,6 @@
 use super::helpers::{
     WorkflowRowContext, WorkflowRowSettings, create_workflow_expander_row,
-    take_job_context_run_ids, workflow_row_card,
+    current_job_context_run_ids, workflow_row_card,
 };
 use super::{RepoDetailPane, WorkflowListContext};
 use crate::api::models::Workflow;
@@ -100,7 +100,7 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
 
     for workflow in workflows {
         let should_expand = expanded_ids.contains(&workflow.id);
-        let preserved_run_ids = take_job_context_run_ids(&context.job_contexts, workflow.id);
+        let preserved_run_ids = current_job_context_run_ids(&context.job_contexts, workflow.id);
 
         let row_context = base_row_context.clone();
         let settings = WorkflowRowSettings {

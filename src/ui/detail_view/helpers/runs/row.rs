@@ -68,6 +68,10 @@ pub(crate) fn create_run_expander_row(
     let row_container = create_row_container();
 
     let run_title = format_run_title(run);
+    let existing_jobs_box = {
+        let guard = context.job_contexts.borrow();
+        guard.get(&run.id).map(|ctx| ctx.jobs_box())
+    };
     let (expander, badges_box) = build_expander(run, &run_title);
     let actions_box = create_actions_box(run, &context.actions_context());
 
@@ -75,7 +79,12 @@ pub(crate) fn create_run_expander_row(
     row_container.append(&actions_box);
     run_box.append(&row_container);
 
-    let jobs_box = build_jobs_placeholder();
+    let jobs_box = if let Some(existing) = existing_jobs_box {
+        existing.unparent();
+        existing
+    } else {
+        build_jobs_placeholder()
+    };
     expander.set_child(Some(&jobs_box));
 
     let parent_window_for_jobs: gtk::Window = context.parent_window.clone().upcast();

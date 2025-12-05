@@ -1,4 +1,4 @@
-use super::context::{JobContextMap, take_job_context_run_ids};
+use super::context::{JobContextMap, current_job_context_run_ids};
 use super::runs::{
     LoadRunsParams, RunDigestStore, RunRowContext, WorkflowRunListModel, load_workflow_runs,
 };
@@ -200,7 +200,7 @@ pub(crate) fn create_workflow_expander_row(
                     vec
                 } else {
                     drop(initial_opt);
-                    take_job_context_run_ids(&job_contexts_for_signal, workflow_id)
+                    current_job_context_run_ids(&job_contexts_for_signal, workflow_id)
                 }
             };
 
@@ -242,7 +242,7 @@ pub(crate) fn create_workflow_expander_row(
                     vec
                 } else {
                     drop(initial_opt);
-                    take_job_context_run_ids(&job_contexts_shared, workflow_id)
+                    current_job_context_run_ids(&job_contexts_shared, workflow_id)
                 }
             };
 
@@ -319,21 +319,46 @@ pub(crate) fn create_workflow_expander_row(
         branch_label.set_xalign(0.0);
         branch_box.append(&branch_label);
 
-        let branch_dropdown = gtk::DropDown::from_strings(&["main", "master"]);
+        let branch_model = gtk::StringList::new(&["Loading branches..."]);
+        let branch_dropdown = gtk::DropDown::new(Some(branch_model.clone()), None::<&gtk::Expression>);
         branch_dropdown.set_selected(0);
+        branch_dropdown.set_sensitive(false);
         branch_box.append(&branch_dropdown);
+
+        if let Some(trigger_button) = dialog
+            .widget_for_response(gtk::ResponseType::Accept)
+            .and_then(|w| w.downcast::<gtk::Button>().ok())
+        {
+            trigger_button.set_sensitive(false);
+        }
 
         let client_for_branches = client.clone();
         let owner_for_branches = owner.clone();
         let repo_for_branches = repo.clone();
         let dropdown_for_branches = branch_dropdown.clone();
+        let repo_model_for_branches = repo_model_for_dialog.clone();
 
         let (branch_sender, branch_receiver) = glib::MainContext::default()
             .channel::<Vec<String>>(glib::Priority::default());
 
+        let trigger_button_for_branches = dialog
+            .widget_for_response(gtk::ResponseType::Accept)
+            .and_then(|w| w.downcast::<gtk::Button>().ok());
+
         branch_receiver.attach(None, move |branch_names| {
             let str_refs: Vec<&str> = branch_names.iter().map(|s| s.as_str()).collect();
-            dropdown_for_branches.set_model(Some(&gtk::StringList::new(&str_refs)));
+            let model = gtk::StringList::new(&str_refs);
+
+            dropdown_for_branches.set_model(Some(&model));
+            dropdown_for_branches.set_sensitive(!str_refs.is_empty());
+
+            if !str_refs.is_empty() {
+                dropdown_for_branches.set_selected(0);
+            }
+
+            if let Some(btn) = trigger_button_for_branches.as_ref() {
+                btn.set_sensitive(!str_refs.is_empty());
+            }
             glib::ControlFlow::Break
         });
 
@@ -343,11 +368,27 @@ pub(crate) fn create_workflow_expander_row(
                 .list_branches(&owner_for_branches, &repo_for_branches)
                 .await;
 
-            if let Ok(branches) = branch_result {
-                let branch_names: Vec<String> =
-                    branches.iter().map(|b| b.name.clone()).collect();
-                let _ = branch_sender.send(branch_names);
-            }
+            let branch_names: Vec<String> = match branch_result {
+                Ok(branches) if !branches.is_empty() => {
+                    branches.iter().map(|b| b.name.clone()).collect()
+                }
+                Ok(_) => {
+                    let fallback = repo_model_for_branches
+                        .default_branch
+                        .clone()
+                        .unwrap_or_else(|| "main".to_string());
+                    vec![fallback]
+                }
+                Err(_) => {
+                    let fallback = repo_model_for_branches
+                        .default_branch
+                        .clone()
+                        .unwrap_or_else(|| "main".to_string());
+                    vec![fallback]
+                }
+            };
+
+            let _ = branch_sender.send(branch_names);
         });
 
         vbox.append(&branch_box);
@@ -374,7 +415,12 @@ pub(crate) fn create_workflow_expander_row(
                     .selected_item()
                     .and_then(|obj| obj.downcast::<gtk::StringObject>().ok())
                     .map(|so| so.string().to_string())
-                    .unwrap_or_else(|| "main".to_string());
+                    .unwrap_or_else(|| {
+                        repo_model_for_dialog
+                            .default_branch
+                            .clone()
+                            .unwrap_or_else(|| "main".to_string())
+                    });
 
                 let client = client_clone.clone();
                 let owner = owner_clone.clone();
@@ -469,7 +515,7 @@ pub(crate) fn create_workflow_expander_row(
                                     info!("Reloading runs after workflow trigger");
                                     run_list_handle.show_loading();
 
-                                    let preserved_runs = take_job_context_run_ids(
+                                    let preserved_runs = current_job_context_run_ids(
                                         &job_contexts_for_idle,
                                         workflow_id,
                                     );
@@ -630,7 +676,7 @@ fn schedule_follow_up_refresh(params: FollowUpRefreshParams) {
         let params_for_timer = params_for_async.clone();
         let params_for_handle = params_for_async;
         let source_id = glib::timeout_add_seconds_local(interval_secs as u32, move || {
-            let preserved_runs = take_job_context_run_ids(
+            let preserved_runs = current_job_context_run_ids(
                 &params_for_timer.job_contexts,
                 params_for_timer.workflow_id,
             );
