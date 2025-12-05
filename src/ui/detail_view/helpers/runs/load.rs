@@ -139,18 +139,9 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                     {
                         let notification_requests = collect_completed_notifications(prev, &runs);
                         if !notification_requests.is_empty() {
-                            let window_is_active = parent_window_clone.is_active();
                             let workflow_label = workflow_name.clone();
                             let preferences_manager = preferences_manager.clone();
                             crate::runtime_handle().spawn(async move {
-                                if window_is_active {
-                                    debug!(
-                                        workflow = workflow_label.as_str(),
-                                        "Skipping notification because window is active"
-                                    );
-                                    return;
-                                }
-
                                 let notifications_enabled = match preferences_manager {
                                     Some(manager) => manager.get().await.enable_notifications,
                                     None => true,
