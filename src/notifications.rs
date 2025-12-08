@@ -503,13 +503,6 @@ fn is_sandboxed() -> bool {
 }
 
 fn resolve_portal_app_id(default_app_id: &str) -> String {
-    // If running inside Snap or the Snap desktop entry is present, use its desktop ID so
-    // portal grants notification permission. Otherwise, fall back to the provided app ID.
-    let snap_desktop = "/var/lib/snapd/desktop/applications/actioneer_actioneer.desktop";
-    if env::var_os("SNAP").is_some() || std::path::Path::new(snap_desktop).exists() {
-        return "actioneer_actioneer".to_string();
-    }
-
     default_app_id.to_string()
 }
 
