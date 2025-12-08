@@ -38,6 +38,9 @@ impl MainWindow {
                     }
                     Err(e) => {
                         error!("Failed to load repositories: {}", e);
+                        if matches!(e, GitHubError::AuthenticationFailed) {
+                            this.handle_auth_failure();
+                        }
                         if let Some(info) = rate_info {
                             this.update_rate_limit_display(Some(info));
                         }
