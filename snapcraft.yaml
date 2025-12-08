@@ -35,6 +35,7 @@ apps:
       - gsettings
       - desktop
       - desktop-legacy
+      - desktop-notifications
       - wayland
       - x11
       - pulseaudio
