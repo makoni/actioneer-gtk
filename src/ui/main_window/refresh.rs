@@ -5,7 +5,7 @@ use gtk4::glib;
 use tokio::time::{Duration, sleep};
 
 impl MainWindow {
-    pub(super) fn start_background_refresh(&self, _repo: Repo) {
+    pub(super) fn start_background_refresh(&self, repo: Repo) {
         self.stop_background_refresh();
 
         let preferences_manager = match &self.preferences_manager {
@@ -15,13 +15,16 @@ impl MainWindow {
 
         let client_arc = self.client.clone();
         let active_detail = self.active_detail.clone();
+        let selected_repo_id = repo.id;
         let rate_limit_label = self.rate_limit_label.clone();
 
         let (sender, receiver) =
             glib::MainContext::default().channel::<()>(glib::Priority::default());
 
         receiver.attach(None, move |_| {
-            if let Some(pane) = active_detail.borrow().as_ref() {
+            if let Some(pane) = active_detail.borrow().as_ref()
+                && pane.repo().id == selected_repo_id
+            {
                 pane.refresh_workflows_silent();
             }
             glib::ControlFlow::Continue
