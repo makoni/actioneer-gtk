@@ -6,11 +6,11 @@ use crate::demo;
 use crate::favorites::FavoritesManager;
 use crate::notifications::NotificationManager;
 use crate::preferences::{Preferences, PreferencesManager};
+use crate::storage::TokenStorage;
 use crate::ui::auth_window::AuthWindow;
 use crate::ui::detail_view::RepoDetailPane;
 use crate::ui::preferences_window::PreferencesWindow;
 use crate::ui::utils::{MainContextChannelExt, create_detail_clamp};
-use crate::storage::TokenStorage;
 use gio::Menu;
 use gio::prelude::*;
 use gtk4::prelude::*;
@@ -552,7 +552,10 @@ impl MainWindow {
                     warn!("Failed to delete token after auth failure: {}", err);
                 }
             }
-            Err(err) => warn!("Token storage unavailable during auth failure handling: {}", err),
+            Err(err) => warn!(
+                "Token storage unavailable during auth failure handling: {}",
+                err
+            ),
         }
 
         self.enter_signed_out_state();

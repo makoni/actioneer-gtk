@@ -8,7 +8,8 @@ use ashpd::desktop::notification::{
 use gtk4::prelude::{ApplicationExt, IsA};
 use gtk4::{gio, glib};
 use std::env;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::{Arc, Mutex as StdMutex};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tokio::sync::oneshot;
 use tracing::{debug, error, info, warn};
 
@@ -23,6 +24,7 @@ pub struct NotificationManager {
     icon_name: String,
     dispatcher: NotificationDispatcher,
     prefer_portal_default: bool,
+    recent_notifications: Arc<StdMutex<std::collections::HashMap<String, Instant>>>,
 }
 
 impl NotificationManager {
@@ -71,6 +73,7 @@ impl NotificationManager {
             icon_name,
             dispatcher,
             prefer_portal_default,
+            recent_notifications: Arc::new(StdMutex::new(std::collections::HashMap::new())),
         }
     }
 
@@ -104,6 +107,15 @@ impl NotificationManager {
         status: &str,
         conclusion: Option<&str>,
     ) -> anyhow::Result<()> {
+        if self.should_suppress_duplicate(workflow_name, run_title, conclusion) {
+            debug!(
+                workflow = workflow_name,
+                run = run_title,
+                "Suppressing duplicate workflow notification (recently sent)"
+            );
+            return Ok(());
+        }
+
         let summary = format!("Workflow Completed: {}", workflow_name);
         let body = format!("{} - {}", run_title, self.conclusion_text(conclusion));
 
@@ -134,6 +146,36 @@ impl NotificationManager {
         debug!("Notification sent successfully");
 
         Ok(())
+    }
+
+    fn should_suppress_duplicate(
+        &self,
+        workflow_name: &str,
+        run_title: &str,
+        conclusion: Option<&str>,
+    ) -> bool {
+        const DEDUP_TTL: Duration = Duration::from_secs(120);
+
+        let key = format!(
+            "{}|{}|{}",
+            workflow_name,
+            run_title,
+            conclusion.unwrap_or("unknown")
+        );
+
+        let now = Instant::now();
+
+        if let Ok(mut guard) = self.recent_notifications.lock() {
+            guard.retain(|_, ts| now.duration_since(*ts) <= DEDUP_TTL);
+
+            if guard.contains_key(&key) {
+                return true;
+            }
+
+            guard.insert(key, now);
+        }
+
+        false
     }
 
     /// Send a generic notification for manual testing or informational messages
