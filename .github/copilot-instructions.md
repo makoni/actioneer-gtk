@@ -65,6 +65,9 @@ handle.spawn(async move {
 
 These specifics are drawn from Tokio and gtk-rs patterns — follow them when adding async logic or refactoring existing code.
 
+- snapcraft.yaml API reference
+  - Use docs: https://documentation.ubuntu.com/snapcraft/stable/reference/project-file/snapcraft-yaml/
+
 - Authentication & token handling
   - Token lifecycle lives in `TokenStorage`. `TokenStorage::new()` performs a keyring test and may return `KeyringUnavailable`. Handle that explicitly — the UI currently falls back to showing the auth window.
   - Sandboxed builds (Flatpak, Snap) now default to `PortalTokenStore`, which talks to `org.freedesktop.portal.Secret`. Keep this path intact and avoid reintroducing the `password-manager-service` snap plug; fix portal detection if you see "Using system keyring storage" inside a sandbox.

@@ -14,7 +14,7 @@ contact: https://github.com/makoni/actioneer-gtk/issues
 issues: https://github.com/makoni/actioneer-gtk/issues
 source-code: https://github.com/makoni/actioneer-gtk
 website: https://github.com/makoni/actioneer-gtk
-icon: icons/icons/hicolor/256x256/apps/me.spaceinbox.actioneer.png
+icon: icons/icons/hicolor/scalable/apps/me.spaceinbox.actioneer.svg
 
 platforms:
   amd64:
@@ -64,7 +64,6 @@ parts:
       install -Dm644 "$CRAFT_PART_SRC/icons/icons/hicolor/scalable/apps/me.spaceinbox.actioneer.svg" "$SNAPCRAFT_PART_INSTALL/meta/gui/me.spaceinbox.actioneer.svg"
       install -Dm644 "$CRAFT_PART_SRC/icons/icons/hicolor/scalable/apps/actioneer.svg" "$SNAPCRAFT_PART_INSTALL/meta/gui/actioneer.svg"
       install -Dm644 "$CRAFT_PART_SRC/icons/icons/hicolor/scalable/apps/me.spaceinbox.actioneer.svg" "$SNAPCRAFT_PART_INSTALL/usr/share/icons/hicolor/scalable/apps/me.spaceinbox.actioneer.svg"
-      install -Dm644 "$CRAFT_PART_SRC/icons/icons/hicolor/256x256/apps/me.spaceinbox.actioneer.png" "$SNAPCRAFT_PART_INSTALL/usr/share/icons/hicolor/256x256/apps/me.spaceinbox.actioneer.png"
     prime:
       # Drop development-only ICU helpers that trigger snap lint warnings but aren't needed at runtime
       - -usr/lib/aarch64-linux-gnu/libicutest.so.74.2

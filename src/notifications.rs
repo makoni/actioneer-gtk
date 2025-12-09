@@ -358,20 +358,24 @@ impl NotificationManager {
 
     async fn dispatch_via_portal(&self, payload: NotificationPayload) -> anyhow::Result<()> {
         // Ensure portal sees the right app/desktop IDs. Respect user overrides if already set.
+        let resolved_app_id = resolve_portal_app_id(&self.app_id);
+
         if env::var_os("XDG_DESKTOP_PORTAL_FORCE_USE_THIS_APP_ID").is_none() {
-            let app_id = resolve_portal_app_id(&self.app_id);
             // SAFETY: process-local env var
             unsafe {
-                env::set_var("XDG_DESKTOP_PORTAL_FORCE_USE_THIS_APP_ID", &app_id);
+                env::set_var("XDG_DESKTOP_PORTAL_FORCE_USE_THIS_APP_ID", &resolved_app_id);
             }
         }
 
-        // For snaps, also provide the desktop file hint expected by portals (snap.<name>.desktop).
+        // For snaps, also provide the desktop file hint expected by portals. snapd exports
+        // desktop files as <snap>_<desktop-id>.desktop, so mirror that to avoid app-id lookup
+        // failures when the desktop file name differs from the snap name.
         if env::var_os("SNAP").is_some()
             && env::var_os("XDG_DESKTOP_PORTAL_USE_THIS_DESKTOP_ID").is_none()
         {
+            let desktop_id = format!("{}.desktop", resolved_app_id);
             unsafe {
-                env::set_var("XDG_DESKTOP_PORTAL_USE_THIS_DESKTOP_ID", "snap.actioneer.desktop");
+                env::set_var("XDG_DESKTOP_PORTAL_USE_THIS_DESKTOP_ID", desktop_id);
             }
         }
 
@@ -512,11 +516,15 @@ fn is_sandboxed() -> bool {
 
 fn resolve_portal_app_id(default_app_id: &str) -> String {
     if env::var_os("SNAP").is_some() {
-        // Portal derives app id as snap.<name>; match that so the desktop file lookup succeeds.
-        "snap.actioneer".to_string()
-    } else {
-        default_app_id.to_string()
+        // Snapd exports desktop files as <snap_name>_<desktop_id>.desktop. Align the portal
+        // app-id with that basename so the portal can match the installed desktop file.
+        let snap_name = env::var("SNAP_INSTANCE_NAME")
+            .or_else(|_| env::var("SNAP_NAME"))
+            .unwrap_or_else(|_| "snap".to_string());
+        return format!("{}_{}", snap_name, default_app_id);
     }
+
+    default_app_id.to_string()
 }
 
 #[cfg(test)]

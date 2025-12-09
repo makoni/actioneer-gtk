@@ -1,0 +1,19 @@
+name: Lockfile Sync
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lock-sync:
+    name: Lockfile sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5.0.0
+        with:
+          fetch-depth: 0
+      - name: Ensure Cargo.lock and Flatpak manifest match
+        run: scripts/check-flatpak-lock-sync.sh
