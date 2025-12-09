@@ -357,13 +357,21 @@ impl NotificationManager {
     }
 
     async fn dispatch_via_portal(&self, payload: NotificationPayload) -> anyhow::Result<()> {
-        // When running outside a sandbox, the portal drops notifications unless an app ID
-        // is provided. Set the well-known ID unless the user already overrode it.
+        // Ensure portal sees the right app/desktop IDs. Respect user overrides if already set.
         if env::var_os("XDG_DESKTOP_PORTAL_FORCE_USE_THIS_APP_ID").is_none() {
             let app_id = resolve_portal_app_id(&self.app_id);
-            // SAFETY: Setting process env var; scoped to current process.
+            // SAFETY: process-local env var
             unsafe {
-                env::set_var("XDG_DESKTOP_PORTAL_FORCE_USE_THIS_APP_ID", app_id);
+                env::set_var("XDG_DESKTOP_PORTAL_FORCE_USE_THIS_APP_ID", &app_id);
+            }
+        }
+
+        // For snaps, also provide the desktop file hint expected by portals (snap.<name>.desktop).
+        if env::var_os("SNAP").is_some()
+            && env::var_os("XDG_DESKTOP_PORTAL_USE_THIS_DESKTOP_ID").is_none()
+        {
+            unsafe {
+                env::set_var("XDG_DESKTOP_PORTAL_USE_THIS_DESKTOP_ID", "snap.actioneer.desktop");
             }
         }
 
@@ -503,7 +511,12 @@ fn is_sandboxed() -> bool {
 }
 
 fn resolve_portal_app_id(default_app_id: &str) -> String {
-    default_app_id.to_string()
+    if env::var_os("SNAP").is_some() {
+        // Portal derives app id as snap.<name>; match that so the desktop file lookup succeeds.
+        "snap.actioneer".to_string()
+    } else {
+        default_app_id.to_string()
+    }
 }
 
 #[cfg(test)]
