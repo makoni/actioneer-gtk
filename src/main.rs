@@ -133,7 +133,7 @@ fn install_snap_desktop_entry() {
         .or_else(|_| std::env::var("HOME"))
         .unwrap_or_default();
     let dest_dir = Path::new(&home_dir).join(".local/share/applications");
-    let dest = dest_dir.join("me.spaceinbox.actioneer.desktop");
+    let dest = dest_dir.join("actioneer_me.spaceinbox.actioneer.desktop");
 
     let Ok(raw) = fs::read_to_string(&source) else {
         warn!("Failed to read snap desktop file {}", source.display());
@@ -164,7 +164,7 @@ fn install_snap_desktop_entry() {
             return;
         }
 
-        if let Err(err) = fs::write(&dest, rewritten) {
+        if let Err(err) = fs::write(&dest, &rewritten) {
             warn!(error = %err, "Failed to write desktop file {}", dest.display());
         } else {
             info!("Installed desktop entry at {}", dest.display());

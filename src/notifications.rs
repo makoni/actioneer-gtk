@@ -235,7 +235,9 @@ impl NotificationManager {
         let force_native = env::var_os("ACTIONEER_FORCE_NATIVE_NOTIFICATIONS").is_some();
         let force_portal = env::var_os("ACTIONEER_FORCE_PORTAL_NOTIFICATIONS").is_some();
         let sandboxed = is_sandboxed();
-        let portal_first = force_portal || sandboxed;
+        let snap = env::var_os("SNAP").is_some();
+        // Snap native path is known to work; prefer native there unless explicitly forced portal.
+        let portal_first = force_portal || (sandboxed && !snap);
         let portal_allowed = portal_first || self.prefer_portal_default;
 
         info!(
