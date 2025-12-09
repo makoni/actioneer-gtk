@@ -61,11 +61,6 @@ parts:
       install -Dm644 "$CRAFT_PART_SRC/data/me.spaceinbox.actioneer.desktop" "$SNAPCRAFT_PART_INSTALL/meta/gui/me.spaceinbox.actioneer.desktop"
       sed -i 's|^Icon=me\.spaceinbox\.actioneer$|Icon=${SNAP}/meta/gui/me.spaceinbox.actioneer.svg|' "$SNAPCRAFT_PART_INSTALL/meta/gui/me.spaceinbox.actioneer.desktop"
       install -Dm644 "$SNAPCRAFT_PART_INSTALL/meta/gui/me.spaceinbox.actioneer.desktop" "$SNAPCRAFT_PART_INSTALL/snap/gui/me.spaceinbox.actioneer.desktop"
-
-      # Portal on snaps expects snap.<name>.desktop. Provide an alias desktop entry for portal resolution.
-      cp "$SNAPCRAFT_PART_INSTALL/meta/gui/me.spaceinbox.actioneer.desktop" "$SNAPCRAFT_PART_INSTALL/meta/gui/snap.actioneer.desktop"
-      sed -i 's/^Icon=.*/Icon=${SNAP}\/meta\/gui\/me.spaceinbox.actioneer.svg/' "$SNAPCRAFT_PART_INSTALL/meta/gui/snap.actioneer.desktop"
-      install -Dm644 "$SNAPCRAFT_PART_INSTALL/meta/gui/snap.actioneer.desktop" "$SNAPCRAFT_PART_INSTALL/snap/gui/snap.actioneer.desktop"
       install -Dm644 "$CRAFT_PART_SRC/icons/icons/hicolor/scalable/apps/me.spaceinbox.actioneer.svg" "$SNAPCRAFT_PART_INSTALL/meta/gui/me.spaceinbox.actioneer.svg"
       install -Dm644 "$CRAFT_PART_SRC/icons/icons/hicolor/scalable/apps/actioneer.svg" "$SNAPCRAFT_PART_INSTALL/meta/gui/actioneer.svg"
       install -Dm644 "$CRAFT_PART_SRC/icons/icons/hicolor/scalable/apps/me.spaceinbox.actioneer.svg" "$SNAPCRAFT_PART_INSTALL/usr/share/icons/hicolor/scalable/apps/me.spaceinbox.actioneer.svg"
