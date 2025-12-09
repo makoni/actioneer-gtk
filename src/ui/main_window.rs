@@ -785,6 +785,25 @@ impl MainWindow {
         });
     }
 
+    pub fn trigger_test_notification(&self) {
+        if let Some(manager) = &self.notification_manager {
+            let manager = manager.clone();
+            glib::MainContext::default().spawn_local(async move {
+                if let Err(err) = manager
+                    .notify_message(
+                        "Actioneer notification test",
+                        "If you see this, notifications are working.",
+                    )
+                    .await
+                {
+                    error!(error = %err, "Failed to dispatch test notification");
+                }
+            });
+        } else {
+            warn!("Notification manager unavailable; cannot send test notification");
+        }
+    }
+
     pub fn present(&self) {
         self.window.present();
     }

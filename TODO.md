@@ -57,6 +57,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2025-12-09 — Added a launch-time `--test-notification` flag and routed portal delivery through the Tokio runtime so snap builds can emit notifications without panicking on startup.
 - [✅] 2025-12-06 — Wired workflow refresh contexts (manual + auto) to pass `workflows_last_loaded` so the run-load debounce covers all paths and further reduces duplicate background fetches.
 - [✅] 2025-12-05 — Prevented duplicate workflow run fetches by coalescing in-flight loads and restored native-first notification fallback when portal delivery is unavailable.
 - [✅] 2025-12-05 — Added a "Public" label to sidebar repo rows (alongside the existing private label) to keep visibility explicit without relying on section grouping.

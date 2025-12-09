@@ -1,4 +1,5 @@
 use crate::APP_ICON_NAME;
+use crate::runtime_handle;
 use crate::ui::utils::channel::{MainContextChannelExt, Sender as UiChannelSender};
 use anyhow::anyhow;
 use ashpd::desktop::Icon as PortalIcon;
@@ -357,28 +358,28 @@ impl NotificationManager {
     }
 
     async fn dispatch_via_portal(&self, payload: NotificationPayload) -> anyhow::Result<()> {
-        // Ensure portal sees the right app/desktop IDs. Respect user overrides if already set.
         let resolved_app_id = resolve_portal_app_id(&self.app_id);
+        prepare_portal_env(&resolved_app_id);
 
-        if env::var_os("XDG_DESKTOP_PORTAL_FORCE_USE_THIS_APP_ID").is_none() {
-            // SAFETY: process-local env var
-            unsafe {
-                env::set_var("XDG_DESKTOP_PORTAL_FORCE_USE_THIS_APP_ID", &resolved_app_id);
-            }
-        }
+        let payload = NotificationPayload {
+            identifier: Some(
+                payload
+                    .identifier
+                    .unwrap_or_else(|| self.make_notification_id("portal", &payload.title)),
+            ),
+            ..payload
+        };
 
-        // For snaps, also provide the desktop file hint expected by portals. snapd exports
-        // desktop files as <snap>_<desktop-id>.desktop, so mirror that to avoid app-id lookup
-        // failures when the desktop file name differs from the snap name.
-        if env::var_os("SNAP").is_some()
-            && env::var_os("XDG_DESKTOP_PORTAL_USE_THIS_DESKTOP_ID").is_none()
-        {
-            let desktop_id = format!("{}.desktop", resolved_app_id);
-            unsafe {
-                env::set_var("XDG_DESKTOP_PORTAL_USE_THIS_DESKTOP_ID", desktop_id);
-            }
-        }
+        runtime_handle()
+            .spawn(async move { Self::send_portal_notification(resolved_app_id, payload).await })
+            .await
+            .map_err(|err| anyhow!("Portal dispatch task failed: {err}"))?
+    }
 
+    async fn send_portal_notification(
+        resolved_app_id: String,
+        payload: NotificationPayload,
+    ) -> anyhow::Result<()> {
         let NotificationPayload {
             identifier,
             title,
@@ -397,7 +398,7 @@ impl NotificationManager {
             notification = notification.body(Some(body_text));
         }
 
-        let id = identifier.unwrap_or_else(|| self.make_notification_id("portal", &title));
+        let id = identifier.unwrap_or_else(|| format!("{}.portal", resolved_app_id));
 
         debug!(
             workflow = title.as_str(),
@@ -512,6 +513,36 @@ fn is_sandboxed() -> bool {
     env::var_os("FLATPAK_ID").is_some()
         || env::var_os("SNAP").is_some()
         || env::var_os("APPIMAGE").is_some()
+}
+
+fn prepare_portal_env(resolved_app_id: &str) {
+    let force_key = "XDG_DESKTOP_PORTAL_FORCE_USE_THIS_APP_ID";
+    if env::var_os(force_key).is_none() {
+        // SAFETY: process-local env var
+        unsafe {
+            env::set_var(force_key, resolved_app_id);
+        }
+    }
+
+    let app_id_key = "XDG_DESKTOP_PORTAL_APP_ID";
+    if env::var_os(app_id_key).is_none() {
+        // SAFETY: process-local env var
+        unsafe {
+            env::set_var(app_id_key, resolved_app_id);
+        }
+    }
+
+    // For snaps, also provide the desktop file hint expected by portals. snapd exports
+    // desktop files as <snap>_<desktop-id>.desktop, so mirror that to avoid app-id lookup
+    // failures when the desktop file name differs from the snap name.
+    if env::var_os("SNAP").is_some()
+        && env::var_os("XDG_DESKTOP_PORTAL_USE_THIS_DESKTOP_ID").is_none()
+    {
+        let desktop_id = format!("{}.desktop", resolved_app_id);
+        unsafe {
+            env::set_var("XDG_DESKTOP_PORTAL_USE_THIS_DESKTOP_ID", desktop_id);
+        }
+    }
 }
 
 fn resolve_portal_app_id(default_app_id: &str) -> String {
