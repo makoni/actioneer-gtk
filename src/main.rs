@@ -13,12 +13,13 @@ use gio::ApplicationFlags;
 use gtk4::prelude::*;
 use gtk4::{IconTheme, gdk, glib};
 use libadwaita as adw;
+use std::borrow::Cow;
 use std::ops::ControlFlow;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, OnceLock};
 use tokio::runtime::{Builder, Handle};
-use tracing::{info};
+use tracing::info;
 use ui::{MainWindow, style};
 
 pub const APP_ID: &str = "me.spaceinbox.actioneer";
@@ -31,6 +32,16 @@ static RUNTIME_HANDLE: OnceLock<Handle> = OnceLock::new();
 
 pub fn runtime_handle() -> &'static Handle {
     RUNTIME_HANDLE.get().expect("Runtime not initialized")
+}
+
+pub fn resolved_app_id() -> Cow<'static, str> {
+    if let Ok(snap_name) =
+        std::env::var("SNAP_INSTANCE_NAME").or_else(|_| std::env::var("SNAP_NAME"))
+    {
+        Cow::Owned(format!("{}_{}", snap_name, APP_ID))
+    } else {
+        Cow::Borrowed(APP_ID)
+    }
 }
 
 fn main() -> anyhow::Result<()> {
@@ -71,8 +82,10 @@ fn main() -> anyhow::Result<()> {
     info!("Tokio runtime initialized");
 
     // Create GTK application
+    let runtime_app_id = resolved_app_id();
+
     let app = adw::Application::builder()
-        .application_id(APP_ID)
+        .application_id(runtime_app_id.as_ref())
         .flags(ApplicationFlags::NON_UNIQUE)
         .build();
 
@@ -135,6 +148,16 @@ fn register_icon_theme_paths() {
         let share_icons = prefix.join("share/icons");
         if share_icons.exists() {
             theme.add_search_path(&share_icons);
+        }
+
+        let usr_share_icons = prefix.join("usr/share/icons");
+        if usr_share_icons.exists() {
+            theme.add_search_path(&usr_share_icons);
+        }
+
+        let meta_gui_icons = prefix.join("meta/gui");
+        if meta_gui_icons.exists() {
+            theme.add_search_path(&meta_gui_icons);
         }
     }
 }

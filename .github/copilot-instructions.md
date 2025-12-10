@@ -68,6 +68,10 @@ These specifics are drawn from Tokio and gtk-rs patterns — follow them when ad
 - snapcraft.yaml API reference
   - Use docs: https://documentation.ubuntu.com/snapcraft/stable/reference/project-file/snapcraft-yaml/
 
+- Snap icon/app-id mapping (2025-12)
+  - snapd rewrites desktop files to `<snap_name>_<desktop-id>.desktop`; `main.rs` resolves the runtime app id to that prefixed form so the shell/portal can match the running window. Do not revert to the bare `APP_ID` for snaps.
+  - Icons are bundled under `meta/gui/` and `usr/share/icons/` in the snap; `main.rs` adds those search paths at startup. Notifications also fall back to a file icon at `$SNAP/meta/gui/me.spaceinbox.actioneer.svg` to avoid missing icons in toasts. Keep the icon name `APP_ICON_NAME` and ensure any packaging changes continue to install the SVG in `meta/gui`.
+
 - Authentication & token handling
   - Token lifecycle lives in `TokenStorage`. `TokenStorage::new()` performs a keyring test and may return `KeyringUnavailable`. Handle that explicitly — the UI currently falls back to showing the auth window.
   - Sandboxed builds (Flatpak, Snap) now default to `PortalTokenStore`, which talks to `org.freedesktop.portal.Secret`. Keep this path intact and avoid reintroducing the `password-manager-service` snap plug; fix portal detection if you see "Using system keyring storage" inside a sandbox.

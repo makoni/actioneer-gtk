@@ -203,7 +203,11 @@ impl RepoDetailPane {
                     .application()
                     .map(|app| NotificationManager::for_application(&app))
             })
-            .or_else(|| Some(NotificationManager::new(crate::APP_ID)));
+            .or_else(|| {
+                Some(NotificationManager::new(
+                    crate::resolved_app_id().into_owned(),
+                ))
+            });
         let run_load_service = RunLoadService::new(
             workflows_last_loaded.clone(),
             workflows_loading_runs.clone(),

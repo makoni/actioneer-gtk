@@ -6,9 +6,10 @@ use ashpd::desktop::Icon as PortalIcon;
 use ashpd::desktop::notification::{
     Notification as PortalNotification, NotificationProxy, Priority as PortalPriority,
 };
-use gtk4::prelude::{ApplicationExt, IsA};
+use gtk4::prelude::{ApplicationExt, Cast, IsA};
 use gtk4::{gio, glib};
 use std::env;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex as StdMutex};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tokio::sync::oneshot;
@@ -439,7 +440,7 @@ impl NotificationManager {
         notification.set_priority(priority);
         notification.set_default_action(DEFAULT_NOTIFICATION_ACTION);
 
-        let icon = gio::ThemedIcon::new(&icon_name);
+        let icon = resolve_notification_icon(&icon_name);
         notification.set_icon(&icon);
 
         if let Some(ref identifier) = identifier {
@@ -554,10 +555,43 @@ fn resolve_portal_app_id(default_app_id: &str) -> String {
         let snap_name = env::var("SNAP_INSTANCE_NAME")
             .or_else(|_| env::var("SNAP_NAME"))
             .unwrap_or_else(|_| "snap".to_string());
-        return format!("{}_{}", snap_name, default_app_id);
+
+        let prefixed = format!("{}_", snap_name);
+        if default_app_id.starts_with(&prefixed) {
+            return default_app_id.to_string();
+        }
+
+        return format!("{}{}", prefixed, default_app_id);
     }
 
     default_app_id.to_string()
+}
+
+fn resolve_notification_icon(icon_name: &str) -> gio::Icon {
+    if let Some(icon) = snap_icon(icon_name) {
+        return icon;
+    }
+
+    gio::ThemedIcon::new(icon_name).upcast()
+}
+
+fn snap_icon(icon_name: &str) -> Option<gio::Icon> {
+    let icon_path = snap_icon_path(icon_name)?;
+    let file_icon = gio::FileIcon::new(&gio::File::for_path(icon_path));
+    Some(file_icon.upcast())
+}
+
+fn snap_icon_path(icon_name: &str) -> Option<PathBuf> {
+    let snap_root = env::var_os("SNAP")?;
+    let snap_root = Path::new(&snap_root);
+
+    let candidates = ["svg", "png"].into_iter().map(|ext| {
+        snap_root
+            .join("meta/gui")
+            .join(format!("{}.{}", icon_name, ext))
+    });
+
+    candidates.into_iter().find(|path| path.exists())
 }
 
 #[cfg(test)]
