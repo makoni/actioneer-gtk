@@ -89,7 +89,7 @@ impl PreferencesWindow {
                 5 => 1,
                 10 => 2,
                 30 => 3,
-                _ => 1, // Default to 5 seconds
+                _ => 2, // Default to 10 seconds
             };
             combo_clone.set_selected(index);
             notify_clone.set_active(prefs.enable_notifications);
@@ -105,7 +105,7 @@ impl PreferencesWindow {
                 1 => 5,
                 2 => 10,
                 3 => 30,
-                _ => 5, // Default fallback
+                _ => 10, // Default fallback
             };
             let manager = manager_for_combo.clone();
             runtime_handle().spawn(async move {

@@ -12,7 +12,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 use tracing::{error, info, warn};
 
-const DEFAULT_AUTO_REFRESH_INTERVAL_SECS: u64 = 5;
+const DEFAULT_AUTO_REFRESH_INTERVAL_SECS: u64 = 10;
 
 impl RepoDetailPane {
     pub(super) fn load_workflows(&self) {
@@ -447,7 +447,11 @@ impl RepoDetailPane {
 
                 if let Some(run_list) = run_list_for_expander(expander) {
                     let status_badge = Self::status_badge_for_expander(expander);
-                    let preserved_runs = current_job_context_run_ids(&job_contexts, workflow_id);
+                    let mut preserved_runs: Vec<i64> =
+                        run_list.expanded_run_ids().into_iter().collect();
+                    if preserved_runs.is_empty() {
+                        preserved_runs = current_job_context_run_ids(&job_contexts, workflow_id);
+                    }
                     let workflow_label = unsafe {
                         expander
                             .data::<String>("actioneer-workflow-name")
@@ -613,7 +617,7 @@ async fn fetch_workflows(
     client.list_workflows(owner, repo).await
 }
 
-fn parse_expander_widget_name(name: &str) -> Option<(i64, bool)> {
+pub(super) fn parse_expander_widget_name(name: &str) -> Option<(i64, bool)> {
     let (base, is_active) = if let Some(stripped) = name.strip_suffix("_ACTIVE") {
         (stripped, true)
     } else {

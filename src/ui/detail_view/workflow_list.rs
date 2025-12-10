@@ -6,7 +6,7 @@ use super::{RepoDetailPane, WorkflowListContext};
 use crate::api::models::Workflow;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, gio};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 use tracing::{debug, info};
 
@@ -40,6 +40,11 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
     let mut expanded_ids = HashSet::new();
     for row in collect_workflow_rows(&store) {
         capture_expanded_workflows(&row, &mut expanded_ids);
+    }
+
+    let mut expanded_runs_by_workflow: HashMap<i64, HashSet<i64>> = HashMap::new();
+    for row in collect_workflow_rows(&store) {
+        collect_expanded_runs(&row, &mut expanded_runs_by_workflow);
     }
 
     info!("💾 Preserved {} expanded workflow(s)", expanded_ids.len());
@@ -97,7 +102,10 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
 
     for workflow in workflows {
         let should_expand = expanded_ids.contains(&workflow.id);
-        let preserved_run_ids = current_job_context_run_ids(&context.job_contexts, workflow.id);
+        let preserved_run_ids = expanded_runs_by_workflow
+            .get(&workflow.id)
+            .map(|set| set.iter().copied().collect())
+            .unwrap_or_else(|| current_job_context_run_ids(&context.job_contexts, workflow.id));
 
         let row_context = base_row_context.clone();
         let settings = WorkflowRowSettings {
@@ -155,6 +163,29 @@ fn capture_expanded_workflows(widget: &gtk::Widget, expanded_ids: &mut HashSet<i
     let mut child = widget.first_child();
     while let Some(current) = child {
         capture_expanded_workflows(&current, expanded_ids);
+        child = current.next_sibling();
+    }
+}
+
+fn collect_expanded_runs(widget: &gtk::Widget, expanded_runs: &mut HashMap<i64, HashSet<i64>>) {
+    if let Some(expander) = widget.downcast_ref::<gtk::Expander>()
+        && let Some((workflow_id, _)) =
+            super::workflow_refresh::parse_expander_widget_name(expander.widget_name().as_str())
+    {
+        if let Some(run_list) = super::workflow_refresh::run_list_for_expander(expander) {
+            let expanded = run_list.expanded_run_ids();
+            if !expanded.is_empty() {
+                expanded_runs
+                    .entry(workflow_id)
+                    .or_default()
+                    .extend(expanded.into_iter());
+            }
+        }
+    }
+
+    let mut child = widget.first_child();
+    while let Some(current) = child {
+        collect_expanded_runs(&current, expanded_runs);
         child = current.next_sibling();
     }
 }

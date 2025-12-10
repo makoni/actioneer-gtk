@@ -48,7 +48,7 @@ impl Default for RunFilterPreferences {
 impl Default for Preferences {
     fn default() -> Self {
         Self {
-            refresh_interval: 5, // Default 5 seconds (matching macOS)
+            refresh_interval: 10, // Default 10 seconds
             last_selected_repo_id: None,
             window_width: 1000,
             window_height: 700,
@@ -154,7 +154,7 @@ mod tests {
     #[tokio::test]
     async fn test_preferences_default() {
         let prefs = Preferences::default();
-        assert_eq!(prefs.refresh_interval, 5); // Default 5 seconds to match macOS
+        assert_eq!(prefs.refresh_interval, 10); // Default 10 seconds
         assert_eq!(prefs.window_width, 1000);
         assert!(prefs.enable_notifications);
         assert!(prefs.run_filters.show_success);
