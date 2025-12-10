@@ -46,7 +46,7 @@ pub(crate) fn create_workflow_expander_row(
     workflow: &Workflow,
     context: &WorkflowRowContext,
     settings: WorkflowRowSettings,
-) -> gtk::ListBoxRow {
+) -> gtk::Box {
     let should_expand = settings.should_expand;
     let initial_expanded_run_ids = Rc::new(RefCell::new(Some(settings.initial_expanded_run_ids)));
     let client = context.client.clone();
@@ -66,13 +66,6 @@ pub(crate) fn create_workflow_expander_row(
     let run_filters_for_signal = run_filters.clone();
     let run_load_service = context.run_load_service.clone();
     let run_load_service_for_signal = run_load_service.clone();
-
-    let row = gtk::ListBoxRow::new();
-    row.set_activatable(false);
-    row.set_selectable(false);
-    row.set_can_focus(false);
-    row.add_css_class("hoverless-row");
-    row.add_css_class("workflow-row");
 
     let main_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
     let workflow_display_name = format!("{}/{} • {}", owner, repo, workflow.name);
@@ -128,7 +121,7 @@ pub(crate) fn create_workflow_expander_row(
     main_box.append(&expander);
 
     let card = workflow_row_card(&main_box);
-    row.set_child(Some(&card));
+    card.add_css_class("workflow-row");
 
     let client_for_trigger = client.clone();
     let owner_for_trigger = owner.clone();
@@ -643,7 +636,7 @@ pub(crate) fn create_workflow_expander_row(
         dialog.present();
     });
 
-    row
+    card
 }
 
 pub(crate) fn workflow_row_card<W: IsA<gtk::Widget>>(child: &W) -> gtk::Box {

@@ -38,7 +38,7 @@ mod tests {
             return;
         };
 
-        let store = gio::ListStore::new::<gtk::ListBoxRow>();
+        let store = gio::ListStore::new::<gtk::Widget>();
         let selection = gtk::NoSelection::new(Some(store.clone()));
         let factory = gtk::SignalListItemFactory::new();
         let list_view = gtk::ListView::new(Some(selection), Some(factory));

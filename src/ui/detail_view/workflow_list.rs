@@ -39,9 +39,7 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
 
     let mut expanded_ids = HashSet::new();
     for row in collect_workflow_rows(&store) {
-        if let Some(row_child) = row.child() {
-            capture_expanded_workflows(&row_child, &mut expanded_ids);
-        }
+        capture_expanded_workflows(&row, &mut expanded_ids);
     }
 
     info!("💾 Preserved {} expanded workflow(s)", expanded_ids.len());
@@ -63,13 +61,6 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
     store.remove_all();
 
     if workflows.is_empty() {
-        let row = gtk::ListBoxRow::new();
-        row.set_selectable(false);
-        row.set_activatable(false);
-        row.set_can_focus(false);
-        row.add_css_class("hoverless-row");
-        row.add_css_class("workflow-row");
-
         let placeholder = gtk::Label::new(Some("No workflows found."));
         placeholder.add_css_class("dim-label");
         placeholder.set_margin_top(24);
@@ -78,11 +69,11 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
         placeholder.set_margin_end(12);
 
         let placeholder_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        placeholder_box.add_css_class("workflow-row");
         placeholder_box.append(&placeholder);
 
         let card = workflow_row_card(&placeholder_box);
-        row.set_child(Some(&card));
-        store.append(&row);
+        store.append(&card);
         return;
     }
 
@@ -139,10 +130,10 @@ pub(super) fn workflows_differ(a: &[Workflow], b: &[Workflow]) -> bool {
     a_ids != b_ids
 }
 
-pub(super) fn collect_workflow_rows(store: &gio::ListStore) -> Vec<gtk::ListBoxRow> {
+pub(super) fn collect_workflow_rows(store: &gio::ListStore) -> Vec<gtk::Widget> {
     (0..store.n_items())
         .filter_map(|idx| store.item(idx))
-        .filter_map(|obj| obj.downcast::<gtk::ListBoxRow>().ok())
+        .filter_map(|obj| obj.downcast::<gtk::Widget>().ok())
         .collect()
 }
 

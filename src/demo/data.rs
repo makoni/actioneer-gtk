@@ -202,6 +202,68 @@ impl DemoData {
             runs_release.clone(),
         );
 
+        jobs_map.insert(
+            30_101,
+            vec![
+                Job {
+                    id: 43_001,
+                    run_id: 30_101,
+                    status: Some("completed".to_string()),
+                    conclusion: Some("success".to_string()),
+                    started_at: Some("2025-10-28T07:20:05Z".to_string()),
+                    completed_at: Some("2025-10-28T07:22:40Z".to_string()),
+                    name: Some("Build".to_string()),
+                    html_url: Some(
+                        "https://github.com/demo-org/actioneer-demo-app/runs/43001".to_string(),
+                    ),
+                },
+                Job {
+                    id: 43_002,
+                    run_id: 30_101,
+                    status: Some("completed".to_string()),
+                    conclusion: Some("success".to_string()),
+                    started_at: Some("2025-10-28T07:22:45Z".to_string()),
+                    completed_at: Some("2025-10-28T07:25:00Z".to_string()),
+                    name: Some("Tests".to_string()),
+                    html_url: Some(
+                        "https://github.com/demo-org/actioneer-demo-app/runs/43002".to_string(),
+                    ),
+                },
+            ],
+        );
+
+        jobs_map.insert(
+            30_102,
+            vec![Job {
+                id: 43_011,
+                run_id: 30_102,
+                status: Some("completed".to_string()),
+                conclusion: Some("failure".to_string()),
+                started_at: Some("2025-10-27T18:12:10Z".to_string()),
+                completed_at: Some("2025-10-27T18:18:00Z".to_string()),
+                name: Some("Lint & unit tests".to_string()),
+                html_url: Some(
+                    "https://github.com/demo-org/actioneer-demo-app/runs/43011".to_string(),
+                ),
+            }],
+        );
+
+        jobs_map.insert(
+            30_201,
+            vec![Job {
+                id: 43_021,
+                run_id: 30_201,
+                status: Some("queued".to_string()),
+                conclusion: None,
+                started_at: None,
+                completed_at: None,
+                name: Some("Publish artifacts".to_string()),
+                html_url: Some(
+                    "https://github.com/demo-org/actioneer-demo-app/runs/43021".to_string(),
+                ),
+            }],
+        );
+
         let key_two = RepoKey::new(&repo_two.owner.login, &repo_two.name);
         let workflow_infra = Workflow {
             id: 22_001,
@@ -230,6 +292,20 @@ impl DemoData {
         runs_map.insert(
             WorkflowKey::new(&repo_two.owner.login, &repo_two.name, workflow_infra.id),
             runs_infra.clone(),
+        );
+
+        jobs_map.insert(
+            31_001,
+            vec![Job {
+                id: 44_001,
+                run_id: 31_001,
+                status: Some("completed".to_string()),
+                conclusion: Some("failure".to_string()),
+                started_at: Some("2025-10-26T15:00:10Z".to_string()),
+                completed_at: Some("2025-10-26T15:04:00Z".to_string()),
+                name: Some("Terraform plan".to_string()),
+                html_url: Some("https://github.com/demo-labs/workflow-lab/runs/44001".to_string()),
+            }],
         );
 
         let key_three = RepoKey::new(&repo_three.owner.login, &repo_three.name);
@@ -299,6 +375,28 @@ impl DemoData {
         logs_map.insert(
             42_002,
             "Aggregating diagnostics into report...\nLoading metric baselines from cache...\nDetecting anomalies (threshold 2.5 sigma)... none found.\nRendering PDF summary with 4 charts...\nUploading report artifact edge-report.zip to workflow run.".to_string(),
+        );
+
+        logs_map.insert(
+            43_001,
+            "[01/24] Checkout main@8d3c1f4\n[02/24] Restore Rust toolchain from cache\n[03/24] rustup override set stable\n[04/24] cargo fmt --check\n[05/24] cargo clippy --all-targets --all-features\n[06/24] clippy warnings: 0\n[07/24] cargo build --workspace\n[08/24] build artifacts: target/debug (18 crates)\n[09/24] Running unit tests (fast)\n[10/24] tests passed: 82\n[11/24] Compressing artifacts (xz)\n[12/24] Uploading artifacts: debug binaries\n[13/24] Uploading artifacts: coverage/lcov.info\n[14/24] Archiving build logs\n[15/24] Recording checksums for cache reuse\n[16/24] Validating license headers\n[17/24] Creating SBOM manifest (cyclonedx)\n[18/24] Signing manifest (test key)\n[19/24] Publishing summary markdown\n[20/24] Marking run as successful\n[21/24] Cleaning workspace tmp files\n[22/24] Reclaiming cargo target cache\n[23/24] Notifying webhook listener\n[24/24] Pipeline complete".to_string(),
+        );
+        logs_map.insert(
+            43_002,
+            "[01/24] Preparing test environment\n[02/24] Restoring cargo target cache\n[03/24] cargo test --workspace\n[04/24] Running auth tests (12)\n[05/24] Running cache tests (18)\n[06/24] Running UI helpers tests (20)\n[07/24] Running notification tests (10)\n[08/24] Running storage tests (8)\n[09/24] Running integration smoke tests (4)\n[10/24] Collecting coverage data\n[11/24] Coverage: lines 86%, branches 79%\n[12/24] Capturing test logs\n[13/24] Uploading junit.xml artifact\n[14/24] Uploading coverage/lcov.info artifact\n[15/24] Publishing summary with pass/fail counts\n[16/24] Marking flaky tests: none\n[17/24] Reclaiming disk space (rm -rf target/tmp)\n[18/24] Archiving cargo diagnostics\n[19/24] Updating cache manifest\n[20/24] Setting status check to success\n[21/24] Notifying webhook listener\n[22/24] Recording runtime metrics\n[23/24] Cleaning temporary test artifacts\n[24/24] Test phase complete".to_string(),
+        );
+        logs_map.insert(
+            43_011,
+            "[01/24] Checkout feature/login@5e2a7b1\n[02/24] Restore clippy cache\n[03/24] cargo fmt --check\n[04/24] cargo clippy --all-targets --all-features\n[05/24] Warning: src/auth/device.rs: unused import\n[06/24] Error: clippy lint failure\n[07/24] Skipping build due to lint error\n[08/24] Running minimal unit tests for context\n[09/24] Tests executed: auth (12)\n[10/24] Tests executed: storage (4)\n[11/24] Tests executed: cache (4)\n[12/24] Collecting diagnostics for PR comment\n[13/24] Attaching clippy log to artifact\n[14/24] Creating issue summary\n[15/24] Suggesting fix: remove unused import\n[16/24] Uploading junit.xml (partial)\n[17/24] Marking run conclusion: failure\n[18/24] Posting summary markdown to checks API\n[19/24] Exiting early after lint failure\n[20/24] Cleaning workspace cache\n[21/24] Preserving clippy cache for next run\n[22/24] Recording lint failure metrics\n[23/24] Notifying reviewers\n[24/24] Lint job complete (failed)".to_string(),
+        );
+        logs_map.insert(
+            43_021,
+            "Waiting for runner to pick up publish job...\nBuild artifacts ready for release."
+                .to_string(),
+        );
+        logs_map.insert(
+            44_001,
+            "Planning infrastructure changes...\nterraform plan -out=tfplan\nError: IAM policy drift detected; requires manual approval.".to_string(),
         );
 
         let rate_limit = RateLimitInfo {
@@ -411,9 +509,8 @@ impl DemoData {
         self.jobs.insert(run_id, vec![job]);
         self.logs.insert(
             job_id,
-            "This job was created by demo mode to simulate workflow dispatch.".to_string(),
+            "[01/06] Manual dispatch queued\n[02/06] Waiting for runner\n[03/06] Preparing workspace and dependencies\n[04/06] Scheduling jobs for workflow dispatch\n[05/06] Recording branch in demo state\n[06/06] Run will appear once started".to_string(),
         );
-
         self.branches
             .entry(Self::repo_key(owner, name))
             .or_default()

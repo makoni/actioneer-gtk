@@ -144,13 +144,13 @@ impl RepoDetailPane {
         let buttons_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         buttons_box.set_valign(gtk::Align::Center);
 
-        let workflow_store = gio::ListStore::new::<gtk::ListBoxRow>();
+        let workflow_store = gio::ListStore::new::<gtk::Widget>();
         let workflow_selection = gtk::NoSelection::new(Some(workflow_store.clone()));
         let workflow_factory = gtk::SignalListItemFactory::new();
         workflow_factory.connect_bind(|_, list_item| {
             let Some(row) = list_item
                 .item()
-                .and_then(|obj| obj.downcast::<gtk::ListBoxRow>().ok())
+                .and_then(|obj| obj.downcast::<gtk::Widget>().ok())
             else {
                 return;
             };
