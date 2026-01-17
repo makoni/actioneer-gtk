@@ -171,15 +171,11 @@ fn collect_expanded_runs(widget: &gtk::Widget, expanded_runs: &mut HashMap<i64, 
     if let Some(expander) = widget.downcast_ref::<gtk::Expander>()
         && let Some((workflow_id, _)) =
             super::workflow_refresh::parse_expander_widget_name(expander.widget_name().as_str())
+        && let Some(run_list) = super::workflow_refresh::run_list_for_expander(expander)
     {
-        if let Some(run_list) = super::workflow_refresh::run_list_for_expander(expander) {
-            let expanded = run_list.expanded_run_ids();
-            if !expanded.is_empty() {
-                expanded_runs
-                    .entry(workflow_id)
-                    .or_default()
-                    .extend(expanded.into_iter());
-            }
+        let expanded = run_list.expanded_run_ids();
+        if !expanded.is_empty() {
+            expanded_runs.entry(workflow_id).or_default().extend(expanded);
         }
     }
 
