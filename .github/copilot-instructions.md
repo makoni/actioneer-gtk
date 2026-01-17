@@ -94,6 +94,7 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
   - Tests: `cargo test` (there are unit tests such as token storage lifecycle).
   - UI tests: UI test harness has been added. Run `cargo test -- --ignored` to run the UI integration tests locally when a display is available. See the `tests/ui/README.md` for details on running in CI or headless.
   - Formatting & linting: `cargo fmt` and `cargo clippy --all-targets --all-features -- -D warnings`. The project aims for zero warnings; a PR should not introduce warnings.
+  - After finishing code edits, run the same checks as `.github/workflows/ci.yml` (only fmt, clippy, build, and ignored UI tests when feasible) to ensure the project is buildable and clippy is clean.
 
   - Rust toolchain: prefer using `rustup` and pinning a toolchain for reproducible development (for example by adding a `rust-toolchain.toml` file in the repo). If a pinned toolchain is not available, use the latest `stable` channel. After switching toolchains run `cargo clean` then `cargo build` to ensure dependencies are rebuilt for the active toolchain.
 
