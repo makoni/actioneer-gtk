@@ -1,10 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_REF="${1:-origin/main}"
+DEFAULT_REMOTE_REF="$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)"
+if [[ -n "${DEFAULT_REMOTE_REF}" ]]; then
+  DEFAULT_REMOTE_REF="origin/${DEFAULT_REMOTE_REF#origin/}"
+fi
+
+BASE_REF="${1:-${DEFAULT_REMOTE_REF:-origin/develop}}"
 
 if ! git rev-parse --verify "${BASE_REF}" >/dev/null 2>&1; then
-  if git show-ref --verify --quiet refs/heads/main; then
+  if git rev-parse --verify origin/develop >/dev/null 2>&1; then
+    BASE_REF="origin/develop"
+  elif git show-ref --verify --quiet refs/heads/develop; then
+    BASE_REF="develop"
+  elif git show-ref --verify --quiet refs/heads/main; then
     BASE_REF="main"
   elif git rev-parse HEAD^ >/dev/null 2>&1; then
     BASE_REF="HEAD^"

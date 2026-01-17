@@ -57,6 +57,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-01-17 — Updated the lockfile sync script to use the repo default branch (origin/HEAD) and fall back to develop instead of main.
 - [✅] 2025-12-10 — Matched the snap runtime app ID to snapd’s prefixed desktop file and added a packaged-icon fallback for notifications so the shell and toasts keep the Actioneer icon when installed as a snap.
 - [✅] 2025-12-09 — Added a launch-time `--test-notification` flag and routed portal delivery through the Tokio runtime so snap builds can emit notifications without panicking on startup.
 - [✅] 2025-12-06 — Wired workflow refresh contexts (manual + auto) to pass `workflows_last_loaded` so the run-load debounce covers all paths and further reduces duplicate background fetches.
