@@ -57,6 +57,10 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-01-17 — Wrapped detail pane content in a viewport with scroll-to-focus disabled to stop click-to-row scroll jumps.
+- [✅] 2026-01-17 — Disabled single-click activation on workflow/run list views to stop click-to-scroll jumps in the detail pane.
+- [✅] 2026-01-17 — Disabled focus-on-click for detail-view action buttons to prevent scroll jumps on click.
+- [✅] 2026-01-17 — Attached job logs/jobs windows to the GTK application to prevent immediate teardown after clicks.
 - [✅] 2026-01-17 — Updated the lockfile sync script to use the repo default branch (origin/HEAD) and fall back to develop instead of main.
 - [✅] 2025-12-10 — Matched the snap runtime app ID to snapd’s prefixed desktop file and added a packaged-icon fallback for notifications so the shell and toasts keep the Actioneer icon when installed as a snap.
 - [✅] 2025-12-09 — Added a launch-time `--test-notification` flag and routed portal delivery through the Tokio runtime so snap builds can emit notifications without panicking on startup.

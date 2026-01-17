@@ -46,6 +46,9 @@ impl JobLogsWindow {
             .default_height(700)
             .transient_for(parent)
             .build();
+        if let Some(app) = parent.application() {
+            window.set_application(Some(&app));
+        }
         let text_view = gtk::TextView::builder()
             .editable(false)
             .monospace(true)

@@ -166,6 +166,7 @@ impl RepoDetailPane {
         let workflow_view = gtk::ListView::new(Some(workflow_selection), Some(workflow_factory));
         workflow_view.add_css_class("boxed-list");
         workflow_view.add_css_class("hoverless-list");
+        workflow_view.set_single_click_activate(false);
         workflow_view.set_margin_top(12);
         workflow_view.set_margin_bottom(12);
         workflow_view.set_margin_start(12);
@@ -185,7 +186,14 @@ impl RepoDetailPane {
             .vexpand(true)
             .build();
         scrolled_window.set_propagate_natural_height(true);
-        scrolled_window.set_child(Some(&root));
+
+        let viewport = gtk::Viewport::builder()
+            .scroll_to_focus(false)
+            .hexpand(true)
+            .vexpand(true)
+            .build();
+        viewport.set_child(Some(&root));
+        scrolled_window.set_child(Some(&viewport));
         toast_overlay.set_child(Some(&scrolled_window));
 
         let filter_controls = FilterControls::new();

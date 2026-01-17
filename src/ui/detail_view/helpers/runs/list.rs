@@ -132,6 +132,7 @@ impl WorkflowRunListModel {
         let list_view = gtk::ListView::new(Some(selection.clone()), Some(factory.clone()));
         list_view.add_css_class("boxed-list");
         list_view.add_css_class("hoverless-list");
+        list_view.set_single_click_activate(false);
         list_view.set_valign(gtk::Align::Start);
         list_view.set_vexpand(false);
         list_view.set_margin_top(12);

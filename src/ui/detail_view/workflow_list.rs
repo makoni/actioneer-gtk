@@ -175,7 +175,10 @@ fn collect_expanded_runs(widget: &gtk::Widget, expanded_runs: &mut HashMap<i64, 
     {
         let expanded = run_list.expanded_run_ids();
         if !expanded.is_empty() {
-            expanded_runs.entry(workflow_id).or_default().extend(expanded);
+            expanded_runs
+                .entry(workflow_id)
+                .or_default()
+                .extend(expanded);
         }
     }
 

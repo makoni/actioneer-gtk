@@ -98,6 +98,7 @@ pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -
         logs_button.add_css_class("flat");
         logs_button.add_css_class("circular");
         logs_button.set_valign(gtk::Align::Center);
+        logs_button.set_focus_on_click(false);
 
         let parent_window = ctx.parent_window.clone();
         let repo_model = ctx.repo.clone();
@@ -124,6 +125,7 @@ pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -
         open_btn.add_css_class("flat");
         open_btn.add_css_class("circular");
         open_btn.set_valign(gtk::Align::Center);
+        open_btn.set_focus_on_click(false);
 
         let url_clone = url.clone();
         open_btn.connect_clicked(move |_| {

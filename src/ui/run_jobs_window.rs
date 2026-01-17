@@ -47,6 +47,9 @@ impl RunJobsWindow {
             .default_height(700)
             .transient_for(parent)
             .build();
+        if let Some(app) = parent.application() {
+            window.set_application(Some(&app));
+        }
 
         let jobs = Arc::new(Mutex::new(Vec::new()));
 

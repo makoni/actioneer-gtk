@@ -86,6 +86,7 @@ pub(crate) fn create_workflow_expander_row(
     trigger_btn.add_css_class("flat");
     trigger_btn.add_css_class("circular");
     trigger_btn.set_valign(gtk::Align::Center);
+    trigger_btn.set_focus_on_click(false);
     header_box.append(&trigger_btn);
 
     let status_badge = gtk::Label::new(None);

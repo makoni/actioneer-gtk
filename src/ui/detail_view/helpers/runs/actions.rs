@@ -47,6 +47,7 @@ fn create_open_button(url: &str) -> gtk::Button {
     button.set_tooltip_text(Some("Open in GitHub"));
     button.add_css_class("flat");
     button.add_css_class("circular");
+    button.set_focus_on_click(false);
 
     let url = url.to_string();
     button.connect_clicked(move |_| {
@@ -64,6 +65,7 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
     button.add_css_class("flat");
     button.add_css_class("circular");
     button.add_css_class("warning");
+    button.set_focus_on_click(false);
 
     let client = context.client.clone();
     let owner = context.owner.clone();
@@ -143,6 +145,7 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
     button.add_css_class("flat");
     button.add_css_class("circular");
     button.add_css_class("error");
+    button.set_focus_on_click(false);
 
     let client = context.client.clone();
     let owner = context.owner.clone();
@@ -229,6 +232,7 @@ fn create_cancel_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::B
     button.add_css_class("flat");
     button.add_css_class("circular");
     button.add_css_class("destructive-action");
+    button.set_focus_on_click(false);
 
     let client = context.client.clone();
     let owner = context.owner.clone();
