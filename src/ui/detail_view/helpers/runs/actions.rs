@@ -123,9 +123,8 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
             crate::runtime_handle().spawn(async move {
                 let client_guard = client.lock().clone();
                 let rerun_result = client_guard.rerun_workflow(&owner, &repo, run_id).await;
-
-                if rerun_result.is_err() {
-                    error!("Failed to re-run workflow: {}", rerun_result.unwrap_err());
+                if let Err(err) = rerun_result {
+                    error!("Failed to re-run workflow: {}", err);
                     let _ = sender.send(false);
                 } else {
                     let _ = sender.send(true);
@@ -207,12 +206,8 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
             crate::runtime_handle().spawn(async move {
                 let client_guard = client.lock().clone();
                 let rerun_result = client_guard.rerun_failed_jobs(&owner, &repo, run_id).await;
-
-                if rerun_result.is_err() {
-                    error!(
-                        "Failed to re-run failed jobs: {}",
-                        rerun_result.unwrap_err()
-                    );
+                if let Err(err) = rerun_result {
+                    error!("Failed to re-run failed jobs: {}", err);
                     let _ = sender.send(false);
                 } else {
                     let _ = sender.send(true);
@@ -294,9 +289,8 @@ fn create_cancel_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::B
             crate::runtime_handle().spawn(async move {
                 let client_guard = client.lock().clone();
                 let cancel_result = client_guard.cancel_run(&owner, &repo, run_id).await;
-
-                if cancel_result.is_err() {
-                    error!("Failed to cancel run: {}", cancel_result.unwrap_err());
+                if let Err(err) = cancel_result {
+                    error!("Failed to cancel run: {}", err);
                     let _ = sender.send(false);
                 } else {
                     let _ = sender.send(true);
