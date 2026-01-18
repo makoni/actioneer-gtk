@@ -24,8 +24,8 @@ fi
 
 MERGE_BASE=$(git merge-base "${BASE_REF}" HEAD 2>/dev/null || echo "${BASE_REF}")
 
-lock_changed=$(git diff --name-only "${MERGE_BASE}"..HEAD -- Cargo.lock | wc -l | tr -d ' ')
-flatpak_changed=$(git diff --name-only "${MERGE_BASE}"..HEAD -- flatpak/me.spaceinbox.actioneer.cargo-sources.json | wc -l | tr -d ' ')
+lock_changed=$(git diff --name-only "${MERGE_BASE}" -- Cargo.lock | wc -l | tr -d ' ')
+flatpak_changed=$(git diff --name-only "${MERGE_BASE}" -- flatpak/me.spaceinbox.actioneer.cargo-sources.json | wc -l | tr -d ' ')
 
 if [[ "${lock_changed}" -gt 0 && "${flatpak_changed}" -eq 0 ]]; then
   echo "error: Cargo.lock changed without regenerating flatpak/me.spaceinbox.actioneer.cargo-sources.json" >&2

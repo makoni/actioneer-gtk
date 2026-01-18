@@ -57,6 +57,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-01-19 — Updated the lockfile/Flatpak sync script to compare against the working tree so uncommitted Cargo.lock changes are detected.
 - [✅] 2026-01-17 — Fixed clippy warnings in run action handlers by replacing `is_err` + `unwrap_err` with `if let Err(err)`.
 - [✅] 2026-01-17 — Wrapped detail pane content in a viewport with scroll-to-focus disabled to stop click-to-row scroll jumps.
 - [✅] 2026-01-17 — Disabled single-click activation on workflow/run list views to stop click-to-scroll jumps in the detail pane.
