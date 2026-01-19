@@ -4,21 +4,22 @@
   <id>me.spaceinbox.actioneer</id>
   <metadata_license>MIT</metadata_license>
   <name>Actioneer</name>
-  <summary>Native GTK4/libadwaita desktop client for GitHub Actions (Rust)</summary>
+  <summary>Track GitHub Actions runs</summary>
   <description>
-    <p>Actioneer is a native GTK4/libadwaita application that lets you browse GitHub
-    repositories, inspect workflow runs, check job logs, and trigger background
-    refreshes without leaving your desktop and integrates with GNOME notifications.</p>
+    <p>Actioneer lets you browse GitHub repositories, inspect workflow runs, check job
+    logs, and refresh status without leaving your desktop.</p>
 
     <p>Key features</p>
     <ul>
       <li>Browse your GitHub repositories and view Actions workflows and recent runs quickly.</li>
       <li>Inspect run status (success, failure, queued, in progress) with clear badges and counts.</li>
+      <li>Filter runs and focus on what matters most.</li>
       <li>View job logs: download and preview run logs for quick troubleshooting.</li>
       <li>Dispatch workflows, cancel running workflows, and re-run failed runs directly from the app.</li>
       <li>Favorites and quick search let you focus on the repositories and workflows that matter most.</li>
       <li>Desktop notifications for run completions and failures so you never miss important results.</li>
-      <li>In-memory caching and efficient refresh make the app responsive while respecting GitHub rate limits.</li>
+      <li>Keep recent workflow data available offline.</li>
+      <li>Fast refreshes that keep the interface responsive.</li>
     </ul>
 
   <p>This package contains the desktop application, icons and AppStream metadata required for

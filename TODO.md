@@ -57,6 +57,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-01-19 — Updated AppStream summary/description to meet Flathub quality guidelines and mention 1.0.1 highlights.
 - [✅] 2026-01-19 — Added the 1.0.1 changelog entries to AppStream metadata for store release notes.
 - [✅] 2026-01-19 — Updated the lockfile/Flatpak sync script to compare against the working tree so uncommitted Cargo.lock changes are detected.
 - [✅] 2026-01-17 — Fixed clippy warnings in run action handlers by replacing `is_err` + `unwrap_err` with `if let Err(err)`.
