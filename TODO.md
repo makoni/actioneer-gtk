@@ -57,6 +57,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-01-19 — Bumped app version to 1.0.2 in Cargo.toml, snapcraft.yaml, and Flatpak docs.
 - [✅] 2026-01-19 — Added AppStream release entry for 1.0.2 using the 1.0.1 notes.
 - [✅] 2026-01-19 — Removed org.freedesktop.secrets access from the Flatpak manifest to avoid non-portal service warnings.
 - [✅] 2026-01-19 — Updated AppStream summary/description to meet Flathub quality guidelines and mention 1.0.1 highlights.
