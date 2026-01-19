@@ -65,7 +65,20 @@
   </screenshots>
 
   <releases>
-    <release version="1.0.1" date="2025-12-05" />
+    <release version="1.0.1" date="2025-12-05">
+      <description>
+        <ul>
+          <li>Faster and smoother UI with refreshed repo/workflow lists and improved scrolling behavior.</li>
+          <li>New run filtering controls with better caching, so switching filters is instant and doesn’t reload data.</li>
+          <li>Better workflow auto-refresh and run status updates, including fewer duplicate fetches.</li>
+          <li>Notifications are more reliable across Snap/Flatpak, with improved icon handling and fallbacks.</li>
+          <li>Improved sandboxed credential storage using the secret portal for Snap/Flatpak.</li>
+          <li>Offline-friendly cache persistence for workflows, runs, and jobs.</li>
+          <li>Packaging and CI updates across Snap, Flatpak, and AppImage for better compatibility.</li>
+          <li>Dependency updates and stability fixes.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.0" date="2025-11-06" />
   </releases>
 </component>
