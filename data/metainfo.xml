@@ -29,6 +29,8 @@
 
   <project_license>MIT</project_license>
   <url type="homepage">https://github.com/makoni/actioneer-gtk</url>
+  <url type="bugtracker">https://github.com/makoni/actioneer-gtk/issues</url>
+  <url type="vcs-browser">https://github.com/makoni/actioneer-gtk</url>
   <developer id="com.spaceinbox">
     <name>Sergey Armodin</name>
     <url>https://spaceinbox.com</url>
