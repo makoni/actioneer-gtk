@@ -6,4 +6,4 @@ Purpose
 Practical tips
 - Set `title` and `tag` for accessibility and navigation actions. Use `can-pop` to disable back navigation on certain pages.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/class.NavigationPage.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/class.NavigationPage.html

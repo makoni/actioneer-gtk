@@ -11,4 +11,4 @@ Practical tips
 - Use `AdwNavigationPage` for both sidebar and content children. `AdwHeaderBar` will handle back button automatically.
 - For triple-pane layouts, nest split views or use `AdwMultiLayoutView`.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/class.NavigationSplitView.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/class.NavigationSplitView.html

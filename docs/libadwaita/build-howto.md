@@ -10,4 +10,4 @@ Practical notes for this repo (Rust/gtk4):
 - On Linux use system libadwaita or package via distribution packages. For Flatpak builds add libadwaita to the runtime.
 - For CI, ensure pkg-config and GTK4 development packages are available.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/build-howto.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/build-howto.html

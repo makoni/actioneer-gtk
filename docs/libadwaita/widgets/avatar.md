@@ -6,4 +6,4 @@ Usage notes:
 - Use `adw::Avatar::new()` and set content with `set_icon()` or set a `gdk::Pixbuf`/`gtk::Image`.
 - Supports size variants and fallbacks for initials or placeholder icons.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/widgets/avatar.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/widgets/avatar.html

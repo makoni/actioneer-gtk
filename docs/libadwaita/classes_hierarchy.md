@@ -10,4 +10,4 @@ Examples (selected):
 
 For detailed APIs and methods consult upstream class pages.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/classes_hierarchy.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/classes_hierarchy.html

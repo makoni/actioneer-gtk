@@ -6,4 +6,4 @@ Summary
 
 Practical: when updating UI to be adaptive, introduce breakpoints and convert header/toolbars into AdwToolbarView for automatic style handling.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/migrating-to-breakpoints.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/migrating-to-breakpoints.html

@@ -13,4 +13,4 @@ Common patterns
 
 Practical: prefer AdwNavigationSplitView for this app's sidebar pattern; AdwToolbarView + AdwHeaderBar handle title/buttons correctly.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/adaptive-layouts.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/adaptive-layouts.html

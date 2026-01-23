@@ -11,4 +11,4 @@ Custom styles
 Practical tips
 - Use CSS variables instead of hardcoded colors when possible. Prefer AdwStyleManager for system-preference queries.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/styles-and-appearance.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/styles-and-appearance.html

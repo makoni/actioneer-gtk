@@ -10,4 +10,4 @@ Practical tips
 - Bind `show-sidebar` to a toggle button `active` property for easy wiring to a header button.
 - Use `pin-sidebar` to make the sidebar stay pinned on desktop.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/class.OverlaySplitView.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/class.OverlaySplitView.html

@@ -11,4 +11,4 @@ Key API notes (Rust/gtk4):
 
 Accessibility: Mark role as alert where appropriate and ensure actions are reachable by keyboard.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/widgets/banner.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/widgets/banner.html

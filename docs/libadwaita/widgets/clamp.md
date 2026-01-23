@@ -6,4 +6,4 @@ Purpose
 Practical tips
 - Often used to add padded content areas that still shrink on narrow widths. Use `AdwClampLayout` / `AdwClampScrollable` variants as appropriate.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/class.Clamp.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/class.Clamp.html

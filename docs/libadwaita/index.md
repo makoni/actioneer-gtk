@@ -1,6 +1,6 @@
-# Libadwaita 1.8 — Overview
+# Libadwaita 1.x (latest) — Overview
 
-Version: 1.8 (source: upstream Libadwaita docs)
+Version: 1.x (latest; via upstream Libadwaita docs)
 
 Summary
 - Libadwaita (Adw) provides building blocks for modern GNOME apps on GTK4. It offers adaptive widgets, style helpers, dialog primitives and recommended patterns for sidebars, boxed lists, and responsive layouts.

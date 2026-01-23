@@ -6,4 +6,4 @@ Usage notes:
 - Use `adw::NavigationView::new()` and push/pop `AdwNavigationPage` items for navigation.
 - Pair with `AdwHeaderBar` and `AdwWindowTitle` to show back actions and titles.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/widgets/navigation-view.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/widgets/navigation-view.html

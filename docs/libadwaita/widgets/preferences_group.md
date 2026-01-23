@@ -6,4 +6,4 @@ Usage:
 - Use inside `AdwPreferencesWindow` or dialogs to group `AdwActionRow`, `AdwEntryRow`, `AdwSwitchRow`, etc.
 - Create with `adw::PreferencesGroup::new()` and set a title with `set_title()`.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/widgets/preferences-group.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/widgets/preferences-group.html

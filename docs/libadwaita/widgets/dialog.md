@@ -7,4 +7,4 @@ Practical tips
 - Parent must be an `AdwWindow` or `AdwApplicationWindow` for correct adaptive behaviour.
 - Use `adw_dialog_present()` to present the dialog; dialogs are modal and have `content-width` / `content-height` properties.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/class.Dialog.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/class.Dialog.html

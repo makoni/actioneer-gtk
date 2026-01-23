@@ -8,4 +8,4 @@ Rust notes
 - When using gtk4-rs and libadwaita bindings, ensure `adw::init()` (or equivalent) is invoked before creating AdwWindow/AdwApplicationWindow objects.
 - Prefer using AdwApplication equivalent for cleaner lifecycle and style-manager integration.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/initialization.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/initialization.html

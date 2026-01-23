@@ -8,4 +8,4 @@ Implementation tips
 - For settings/preferences use AdwPreferencesGroup and AdwPreferencesPage to group boxed-list rows.
 - For clickable rows prefer AdwActionRow or AdwButtonRow (activatable/clicked signals).
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/boxed-lists.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/boxed-lists.html

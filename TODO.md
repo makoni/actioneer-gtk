@@ -57,6 +57,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-01-23 — Updated local Libadwaita docs to track the latest 1.x documentation URLs (1-latest) and refreshed headers.
 - [✅] 2026-01-19 — Bumped app version to 1.0.2 in Cargo.toml, snapcraft.yaml, and Flatpak docs.
 - [✅] 2026-01-19 — Added AppStream release entry for 1.0.2 using the 1.0.1 notes.
 - [✅] 2026-01-19 — Removed org.freedesktop.secrets access from the Flatpak manifest to avoid non-portal service warnings.

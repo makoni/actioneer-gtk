@@ -11,4 +11,4 @@ Examples
 Notes
 - Many variables have light+dark variants; AdwApplication loads the right ones according to style and high-contrast.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/css-variables.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/css-variables.html

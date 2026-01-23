@@ -8,4 +8,4 @@ Useful widgets (quick reference)
 
 Practical: consult specific class docs for full API; this file is a short index for implementers.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/widget-gallery.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/widget-gallery.html

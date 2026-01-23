@@ -6,4 +6,4 @@ Purpose
 Practical tips
 - Prefer the default spring animations for fluid transitions; tune parameters with `*Params` properties when exposed.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/class.Animation.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/class.Animation.html

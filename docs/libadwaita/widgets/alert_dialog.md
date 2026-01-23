@@ -5,4 +5,4 @@ Short summary: Modal alert dialog used to show important messages with actions. 
 Usage:
 - Construct with `adw::AlertDialog::new()` and set title/body. Add response buttons and connect to `response` signal to react.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/class.AlertDialog.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/class.AlertDialog.html

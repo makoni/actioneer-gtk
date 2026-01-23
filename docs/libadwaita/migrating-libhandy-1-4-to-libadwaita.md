@@ -7,4 +7,4 @@ Key migration notes
 
 Practical: consult this guide when porting older UI code (especially preference windows and leaflets) to Adw. Prefer AdwNavigation* widgets where leaflets were used.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/migrating-libhandy-1-4-to-libadwaita.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/migrating-libhandy-1-4-to-libadwaita.html

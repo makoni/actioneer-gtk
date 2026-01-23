@@ -5,4 +5,4 @@ Short summary: Application windows that integrate with Adw styles and window tit
 Usage notes:
 - Use `adw::ApplicationWindow` variants for application windows and call `set_title()`/`set_app()` as usual. Combine with `AdwHeaderBar` and `AdwWindowTitle`.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/widgets/window.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/widgets/window.html

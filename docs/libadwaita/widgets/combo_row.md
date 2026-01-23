@@ -6,4 +6,4 @@ Purpose
 Practical tips
 - Mirror GtkDropDown semantics; bind model to available options and observe selection changes.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/class.ComboRow.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/class.ComboRow.html

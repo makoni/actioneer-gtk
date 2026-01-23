@@ -7,4 +7,4 @@ Highlights
 
 Practical: migrate preference windows and about dialogs to dialog variants where appropriate; adapt event handling (closed/close-attempt signals) instead of older close-request patterns.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/migrating-to-adaptive-dialogs.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/migrating-to-adaptive-dialogs.html

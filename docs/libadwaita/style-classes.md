@@ -11,4 +11,4 @@ Deprecated
 
 Practical: prefer style classes over hard-coded CSS rules for widget appearance and semantics.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/style-classes.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/style-classes.html

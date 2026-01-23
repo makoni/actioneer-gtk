@@ -6,4 +6,4 @@ Purpose
 Practical tips
 - Use breakpoints to toggle between visible tab bars and overview buttons on narrow screens.
 
-Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1.8/class.TabView.html
+Upstream: https://gnome.pages.gitlab.gnome.org/libadwaita/doc/1-latest/class.TabView.html
