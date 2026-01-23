@@ -1,13 +1,16 @@
 use crate::api::models::{Job, Repo};
 use crate::api::{GitHubClient, GitHubError};
+use crate::ui::ansi::{AnsiSpan, AnsiStyle, parse_ansi};
 use crate::ui::utils::MainContextChannelExt;
 use gtk4::gdk;
 use gtk4::prelude::*;
-use gtk4::{self as gtk, glib};
+use gtk4::{self as gtk, glib, pango};
+use gtk4::glib::translate::IntoGlib;
 use libadwaita as adw;
 use libadwaita::prelude::*;
 use parking_lot::Mutex;
 use std::sync::Arc;
+use std::collections::HashMap;
 use tracing::{error, info, warn};
 
 pub struct JobLogsWindow {
@@ -175,7 +178,7 @@ impl JobLogsWindow {
                 Ok(logs) => {
                     info!("Loaded logs ({} bytes)", logs.len());
                     text_view.set_sensitive(true);
-                    text_view.buffer().set_text(&logs);
+                    render_ansi_logs(&text_view, &logs);
                     copy_button.set_sensitive(true);
                     save_button.set_sensitive(true);
                 }
@@ -237,7 +240,7 @@ impl JobLogsWindow {
                     Ok(logs) => {
                         info!("Refreshed logs ({} bytes)", logs.len());
                         tv_for_ui.set_sensitive(true);
-                        tv_for_ui.buffer().set_text(&logs);
+                        render_ansi_logs(&tv_for_ui, &logs);
                         copy_for_result.set_sensitive(true);
                         save_for_result.set_sensitive(true);
                     }
@@ -433,5 +436,51 @@ impl JobLogsWindow {
 
     pub fn present(&self) {
         self.window.present();
+    }
+}
+
+fn render_ansi_logs(text_view: &gtk::TextView, logs: &str) {
+    let spans = parse_ansi(logs);
+    apply_ansi_spans(text_view, &spans);
+}
+
+fn apply_ansi_spans(text_view: &gtk::TextView, spans: &[AnsiSpan]) {
+    let buffer = text_view.buffer();
+    buffer.set_text("");
+
+    let mut iter = buffer.end_iter();
+    let tag_table = buffer.tag_table();
+    let mut tags: HashMap<AnsiStyle, gtk::TextTag> = HashMap::new();
+
+    for span in spans {
+        if span.text.is_empty() {
+            continue;
+        }
+
+        if span.style.is_default() {
+            buffer.insert(&mut iter, &span.text);
+            continue;
+        }
+
+        let tag = tags.entry(span.style.clone()).or_insert_with(|| {
+            let tag = gtk::TextTag::new(None);
+            if span.style.bold {
+                let weight: i32 = pango::Weight::Bold.into_glib();
+                tag.set_property("weight", &weight);
+            }
+            if span.style.underline {
+                tag.set_property("underline", &pango::Underline::Single);
+            }
+            if let Some(fg) = span.style.fg {
+                tag.set_property("foreground", &fg.to_css());
+            }
+            if let Some(bg) = span.style.bg {
+                tag.set_property("background", &bg.to_css());
+            }
+            tag_table.add(&tag);
+            tag
+        });
+
+        buffer.insert_with_tags(&mut iter, &span.text, &[tag]);
     }
 }

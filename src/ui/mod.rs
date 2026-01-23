@@ -1,5 +1,6 @@
 mod detail_placeholder;
 mod detail_view;
+mod ansi;
 mod sidebar;
 mod welcome_screen;
 
