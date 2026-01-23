@@ -1,0 +1,4 @@
+2026-01-24T11:28:01Z ##[group]Lint
+2026-01-24T11:28:02Z [command] cargo clippy --all-targets
+2026-01-24T11:28:03Z [33mwarning:[0m unused variable `retry`
+2026-01-24T11:28:04Z ##[endgroup]

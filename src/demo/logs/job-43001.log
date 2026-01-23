@@ -1,0 +1,24 @@
+2026-01-24T10:02:01Z ##[group]Checkout
+2026-01-24T10:02:02Z [command] git fetch --depth=1 origin main
+2026-01-24T10:02:03Z [command] git checkout 8d3c1f4
+2026-01-24T10:02:04Z ##[endgroup]
+2026-01-24T10:02:05Z ##[group]Toolchain
+2026-01-24T10:02:06Z [command] rustup override set stable
+2026-01-24T10:02:07Z [command] cargo fmt --check
+2026-01-24T10:02:08Z [command] cargo clippy --all-targets --all-features
+2026-01-24T10:02:09Z [32m✓[0m clippy warnings: 0
+2026-01-24T10:02:10Z ##[endgroup]
+2026-01-24T10:02:11Z ##[group]Build & test
+2026-01-24T10:02:12Z [command] cargo build --workspace
+2026-01-24T10:02:13Z build artifacts: target/debug (18 crates)
+2026-01-24T10:02:14Z [command] cargo test --workspace --tests
+2026-01-24T10:02:15Z tests passed: 82
+2026-01-24T10:02:16Z ##[endgroup]
+2026-01-24T10:02:17Z ##[group]Artifacts
+2026-01-24T10:02:18Z Compressing artifacts (xz)
+2026-01-24T10:02:19Z Uploading artifacts: debug binaries
+2026-01-24T10:02:20Z Uploading artifacts: coverage/lcov.info
+2026-01-24T10:02:21Z Signing manifest (test key)
+2026-01-24T10:02:22Z Token: ***
+2026-01-24T10:02:23Z ##[endgroup]
+2026-01-24T10:02:24Z ::notice::Pipeline complete

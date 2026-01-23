@@ -1,0 +1,9 @@
+2026-01-24T09:15:01Z ##[group]Aggregate report
+2026-01-24T09:15:02Z [command] python tools/aggregate.py --input s3://demo-edge-diagnostics/tmp/42101.log --output report.pdf
+2026-01-24T09:15:03Z [36mℹ[0m Loading metric baselines from cache
+2026-01-24T09:15:04Z ::debug::Cache hit: baseline-2024-11-05
+2026-01-24T09:15:05Z ::warning file=tools/aggregate.py,line=214,title=Outlier::Jitter spike beyond 2.5σ (ignored)
+2026-01-24T09:15:06Z Rendering PDF summary with 4 charts
+2026-01-24T09:15:07Z Uploading artifact edge-report.zip
+2026-01-24T09:15:08Z ##[endgroup]
+2026-01-24T09:15:09Z ::notice::Report uploaded to workflow artifacts

@@ -1,0 +1,5 @@
+2026-01-24T10:41:10Z ##[group]Test
+2026-01-24T10:41:11Z [command] cargo test --workspace
+2026-01-24T10:41:12Z [31mError:[0m test failures in ui::detail_view
+2026-01-24T10:41:13Z ::error file=src/ui/detail_view/mod.rs,line=212,title=Test::Snapshot mismatch
+2026-01-24T10:41:14Z ##[endgroup]

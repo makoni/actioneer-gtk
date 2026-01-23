@@ -1,0 +1,15 @@
+2026-01-24T10:05:31Z ##[group]Test matrix
+2026-01-24T10:05:32Z [command] cargo test --workspace
+2026-01-24T10:05:33Z Running auth tests (12)
+2026-01-24T10:05:34Z Running cache tests (18)
+2026-01-24T10:05:35Z Running UI helpers tests (20)
+2026-01-24T10:05:36Z ::debug::Shard 2/4 finished in 12s
+2026-01-24T10:05:37Z [32m✓[0m integration smoke tests (4)
+2026-01-24T10:05:38Z ##[endgroup]
+2026-01-24T10:05:39Z ##[group]Coverage
+2026-01-24T10:05:40Z Collecting coverage data
+2026-01-24T10:05:41Z Coverage: lines 86%, branches 79%
+2026-01-24T10:05:42Z Uploading junit.xml artifact
+2026-01-24T10:05:43Z Uploading coverage/lcov.info artifact
+2026-01-24T10:05:44Z ##[endgroup]
+2026-01-24T10:05:45Z ::notice title=Summary::Test phase complete

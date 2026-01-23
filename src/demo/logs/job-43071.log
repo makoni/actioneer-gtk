@@ -1,0 +1,5 @@
+2026-01-24T11:20:01Z ##[group]Setup
+2026-01-24T11:20:02Z [command] ./scripts/bootstrap.sh
+2026-01-24T11:20:03Z Token: ***
+2026-01-24T11:20:04Z ##[endgroup]
+2026-01-24T11:20:05Z Running tests...

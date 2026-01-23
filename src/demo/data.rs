@@ -143,6 +143,102 @@ impl DemoData {
         );
         let runs_ci = vec![
             WorkflowRun {
+                id: 30_108,
+                run_number: Some(134),
+                name: Some("CI".to_string()),
+                display_title: Some("CI • main".to_string()),
+                head_branch: Some("main".to_string()),
+                status: Some("in_progress".to_string()),
+                conclusion: None,
+                run_started_at: Some("2026-01-24T12:10:00Z".to_string()),
+                event: Some("push".to_string()),
+                created_at: Some("2026-01-24T12:09:30Z".to_string()),
+                updated_at: Some("2026-01-24T12:12:20Z".to_string()),
+                html_url: Some(
+                    "https://github.com/demo-org/actioneer-demo-app/actions/runs/30108".to_string(),
+                ),
+            },
+            WorkflowRun {
+                id: 30_107,
+                run_number: Some(133),
+                name: Some("CI".to_string()),
+                display_title: Some("CI • feature/refactor".to_string()),
+                head_branch: Some("feature/refactor".to_string()),
+                status: Some("in_progress".to_string()),
+                conclusion: None,
+                run_started_at: Some("2026-01-24T11:20:00Z".to_string()),
+                event: Some("pull_request".to_string()),
+                created_at: Some("2026-01-24T11:19:20Z".to_string()),
+                updated_at: Some("2026-01-24T11:28:10Z".to_string()),
+                html_url: Some(
+                    "https://github.com/demo-org/actioneer-demo-app/actions/runs/30107".to_string(),
+                ),
+            },
+            WorkflowRun {
+                id: 30_106,
+                run_number: Some(132),
+                name: Some("CI".to_string()),
+                display_title: Some("CI • main".to_string()),
+                head_branch: Some("main".to_string()),
+                status: Some("queued".to_string()),
+                conclusion: None,
+                run_started_at: None,
+                event: Some("push".to_string()),
+                created_at: Some("2026-01-24T11:12:00Z".to_string()),
+                updated_at: Some("2026-01-24T11:12:20Z".to_string()),
+                html_url: Some(
+                    "https://github.com/demo-org/actioneer-demo-app/actions/runs/30106".to_string(),
+                ),
+            },
+            WorkflowRun {
+                id: 30_105,
+                run_number: Some(131),
+                name: Some("CI".to_string()),
+                display_title: Some("CI • release/hotfix".to_string()),
+                head_branch: Some("release/hotfix".to_string()),
+                status: Some("queued".to_string()),
+                conclusion: None,
+                run_started_at: None,
+                event: Some("workflow_dispatch".to_string()),
+                created_at: Some("2026-01-24T11:05:00Z".to_string()),
+                updated_at: Some("2026-01-24T11:05:15Z".to_string()),
+                html_url: Some(
+                    "https://github.com/demo-org/actioneer-demo-app/actions/runs/30105".to_string(),
+                ),
+            },
+            WorkflowRun {
+                id: 30_103,
+                run_number: Some(130),
+                name: Some("CI".to_string()),
+                display_title: Some("CI • main".to_string()),
+                head_branch: Some("main".to_string()),
+                status: Some("completed".to_string()),
+                conclusion: Some("success".to_string()),
+                run_started_at: Some("2026-01-24T10:30:00Z".to_string()),
+                event: Some("push".to_string()),
+                created_at: Some("2026-01-24T10:30:00Z".to_string()),
+                updated_at: Some("2026-01-24T10:33:40Z".to_string()),
+                html_url: Some(
+                    "https://github.com/demo-org/actioneer-demo-app/actions/runs/30103".to_string(),
+                ),
+            },
+            WorkflowRun {
+                id: 30_104,
+                run_number: Some(129),
+                name: Some("CI".to_string()),
+                display_title: Some("CI • feature/login".to_string()),
+                head_branch: Some("feature/login".to_string()),
+                status: Some("completed".to_string()),
+                conclusion: Some("cancelled".to_string()),
+                run_started_at: Some("2026-01-24T10:41:00Z".to_string()),
+                event: Some("pull_request".to_string()),
+                created_at: Some("2026-01-24T10:41:00Z".to_string()),
+                updated_at: Some("2026-01-24T10:42:10Z".to_string()),
+                html_url: Some(
+                    "https://github.com/demo-org/actioneer-demo-app/actions/runs/30104".to_string(),
+                ),
+            },
+            WorkflowRun {
                 id: 30_101,
                 run_number: Some(128),
                 name: Some("CI".to_string()),
@@ -244,6 +340,102 @@ impl DemoData {
                 name: Some("Lint & unit tests".to_string()),
                 html_url: Some(
                     "https://github.com/demo-org/actioneer-demo-app/runs/43011".to_string(),
+                ),
+            }],
+        );
+
+        jobs_map.insert(
+            30_103,
+            vec![Job {
+                id: 43_031,
+                run_id: 30_103,
+                status: Some("completed".to_string()),
+                conclusion: Some("success".to_string()),
+                started_at: Some("2026-01-24T10:30:05Z".to_string()),
+                completed_at: Some("2026-01-24T10:33:40Z".to_string()),
+                name: Some("Build & package".to_string()),
+                html_url: Some(
+                    "https://github.com/demo-org/actioneer-demo-app/runs/43031".to_string(),
+                ),
+            }],
+        );
+
+        jobs_map.insert(
+            30_104,
+            vec![Job {
+                id: 43_041,
+                run_id: 30_104,
+                status: Some("completed".to_string()),
+                conclusion: Some("cancelled".to_string()),
+                started_at: Some("2026-01-24T10:41:10Z".to_string()),
+                completed_at: Some("2026-01-24T10:42:10Z".to_string()),
+                name: Some("Test suite".to_string()),
+                html_url: Some(
+                    "https://github.com/demo-org/actioneer-demo-app/runs/43041".to_string(),
+                ),
+            }],
+        );
+
+        jobs_map.insert(
+            30_105,
+            vec![Job {
+                id: 43_051,
+                run_id: 30_105,
+                status: Some("queued".to_string()),
+                conclusion: None,
+                started_at: None,
+                completed_at: None,
+                name: Some("Queue build".to_string()),
+                html_url: Some(
+                    "https://github.com/demo-org/actioneer-demo-app/runs/43051".to_string(),
+                ),
+            }],
+        );
+
+        jobs_map.insert(
+            30_106,
+            vec![Job {
+                id: 43_061,
+                run_id: 30_106,
+                status: Some("queued".to_string()),
+                conclusion: None,
+                started_at: None,
+                completed_at: None,
+                name: Some("Queue tests".to_string()),
+                html_url: Some(
+                    "https://github.com/demo-org/actioneer-demo-app/runs/43061".to_string(),
+                ),
+            }],
+        );
+
+        jobs_map.insert(
+            30_107,
+            vec![Job {
+                id: 43_071,
+                run_id: 30_107,
+                status: Some("in_progress".to_string()),
+                conclusion: None,
+                started_at: Some("2026-01-24T11:20:05Z".to_string()),
+                completed_at: None,
+                name: Some("Integration tests".to_string()),
+                html_url: Some(
+                    "https://github.com/demo-org/actioneer-demo-app/runs/43071".to_string(),
+                ),
+            }],
+        );
+
+        jobs_map.insert(
+            30_108,
+            vec![Job {
+                id: 43_081,
+                run_id: 30_108,
+                status: Some("in_progress".to_string()),
+                conclusion: None,
+                started_at: Some("2026-01-24T12:10:05Z".to_string()),
+                completed_at: None,
+                name: Some("Lint".to_string()),
+                html_url: Some(
+                    "https://github.com/demo-org/actioneer-demo-app/runs/43081".to_string(),
                 ),
             }],
         );
@@ -370,33 +562,56 @@ impl DemoData {
 
         logs_map.insert(
             42_001,
-            "2026-01-24T09:14:03Z ##[group]Bootstrap runner\n2026-01-24T09:14:04Z [command] sudo sysctl -w net.core.somaxconn=1024\n2026-01-24T09:14:05Z ##[endgroup]\n2026-01-24T09:14:06Z ##[group]Gather telemetry\n2026-01-24T09:14:07Z Probing 12 devices for CPU, memory, and network stats...\n2026-01-24T09:14:08Z \u{1b}[32m✓\u{1b}[0m CPU OK, \u{1b}[33mWARN\u{1b}[0m jitter spikes detected\n2026-01-24T09:14:09Z Streaming telemetry to s3://demo-edge-diagnostics/tmp/42101.log\n2026-01-24T09:14:10Z Token: ***\n2026-01-24T09:14:11Z ##[endgroup]\n2026-01-24T09:14:12Z ::notice file=src/agents.rs,line=88,title=Telemetry::Collected 12/12 device snapshots".to_string(),
+            include_str!("logs/job-42001.log").to_string(),
         );
         logs_map.insert(
             42_002,
-            "2026-01-24T09:15:01Z ##[group]Aggregate report\n2026-01-24T09:15:02Z [command] python tools/aggregate.py --input s3://demo-edge-diagnostics/tmp/42101.log --output report.pdf\n2026-01-24T09:15:03Z \u{1b}[36mℹ\u{1b}[0m Loading metric baselines from cache\n2026-01-24T09:15:04Z ::debug::Cache hit: baseline-2024-11-05\n2026-01-24T09:15:05Z ::warning file=tools/aggregate.py,line=214,title=Outlier::Jitter spike beyond 2.5σ (ignored)\n2026-01-24T09:15:06Z Rendering PDF summary with 4 charts\n2026-01-24T09:15:07Z Uploading artifact edge-report.zip\n2026-01-24T09:15:08Z ##[endgroup]\n2026-01-24T09:15:09Z ::notice::Report uploaded to workflow artifacts".to_string(),
+            include_str!("logs/job-42002.log").to_string(),
         );
 
         logs_map.insert(
             43_001,
-            "2026-01-24T10:02:01Z ##[group]Checkout\n2026-01-24T10:02:02Z [command] git fetch --depth=1 origin main\n2026-01-24T10:02:03Z [command] git checkout 8d3c1f4\n2026-01-24T10:02:04Z ##[endgroup]\n2026-01-24T10:02:05Z ##[group]Toolchain\n2026-01-24T10:02:06Z [command] rustup override set stable\n2026-01-24T10:02:07Z [command] cargo fmt --check\n2026-01-24T10:02:08Z [command] cargo clippy --all-targets --all-features\n2026-01-24T10:02:09Z \u{1b}[32m✓\u{1b}[0m clippy warnings: 0\n2026-01-24T10:02:10Z ##[endgroup]\n2026-01-24T10:02:11Z ##[group]Build & test\n2026-01-24T10:02:12Z [command] cargo build --workspace\n2026-01-24T10:02:13Z build artifacts: target/debug (18 crates)\n2026-01-24T10:02:14Z [command] cargo test --workspace --tests\n2026-01-24T10:02:15Z tests passed: 82\n2026-01-24T10:02:16Z ##[endgroup]\n2026-01-24T10:02:17Z ##[group]Artifacts\n2026-01-24T10:02:18Z Compressing artifacts (xz)\n2026-01-24T10:02:19Z Uploading artifacts: debug binaries\n2026-01-24T10:02:20Z Uploading artifacts: coverage/lcov.info\n2026-01-24T10:02:21Z Signing manifest (test key)\n2026-01-24T10:02:22Z Token: ***\n2026-01-24T10:02:23Z ##[endgroup]\n2026-01-24T10:02:24Z ::notice::Pipeline complete".to_string(),
+            include_str!("logs/job-43001.log").to_string(),
         );
         logs_map.insert(
             43_002,
-            "2026-01-24T10:05:31Z ##[group]Test matrix\n2026-01-24T10:05:32Z [command] cargo test --workspace\n2026-01-24T10:05:33Z Running auth tests (12)\n2026-01-24T10:05:34Z Running cache tests (18)\n2026-01-24T10:05:35Z Running UI helpers tests (20)\n2026-01-24T10:05:36Z ::debug::Shard 2/4 finished in 12s\n2026-01-24T10:05:37Z \u{1b}[32m✓\u{1b}[0m integration smoke tests (4)\n2026-01-24T10:05:38Z ##[endgroup]\n2026-01-24T10:05:39Z ##[group]Coverage\n2026-01-24T10:05:40Z Collecting coverage data\n2026-01-24T10:05:41Z Coverage: lines 86%, branches 79%\n2026-01-24T10:05:42Z Uploading junit.xml artifact\n2026-01-24T10:05:43Z Uploading coverage/lcov.info artifact\n2026-01-24T10:05:44Z ##[endgroup]\n2026-01-24T10:05:45Z ::notice title=Summary::Test phase complete".to_string(),
+            include_str!("logs/job-43002.log").to_string(),
         );
         logs_map.insert(
             43_011,
-            "2026-01-24T10:11:01Z ##[group]Lint\n2026-01-24T10:11:02Z [command] cargo fmt --check\n2026-01-24T10:11:03Z [command] cargo clippy --all-targets --all-features\n2026-01-24T10:11:04Z ::warning file=src/auth/device.rs,line=12,title=Clippy::unused import: std::time::Instant\n2026-01-24T10:11:05Z ::error file=src/auth/device.rs,line=12,title=Clippy::lint failure\n2026-01-24T10:11:06Z ##[endgroup]\n2026-01-24T10:11:07Z \u{1b}[31mError:\u{1b}[0m clippy failed, skipping build\n2026-01-24T10:11:08Z Running minimal unit tests for context\n2026-01-24T10:11:09Z Tests executed: auth (12), storage (4), cache (4)\n2026-01-24T10:11:10Z Uploading junit.xml (partial)\n2026-01-24T10:11:11Z ::notice title=Summary::Lint job complete (failed)".to_string(),
+            include_str!("logs/job-43011.log").to_string(),
+        );
+        logs_map.insert(
+            43_031,
+            include_str!("logs/job-43031.log").to_string(),
+        );
+        logs_map.insert(
+            43_041,
+            include_str!("logs/job-43041.log").to_string(),
+        );
+        logs_map.insert(
+            43_051,
+            include_str!("logs/job-43051.log").to_string(),
+        );
+        logs_map.insert(
+            43_061,
+            include_str!("logs/job-43061.log").to_string(),
+        );
+        logs_map.insert(
+            43_071,
+            include_str!("logs/job-43071.log").to_string(),
+        );
+        logs_map.insert(
+            43_081,
+            include_str!("logs/job-43081.log").to_string(),
         );
         logs_map.insert(
             43_021,
-            "2026-01-24T10:18:01Z Waiting for runner to pick up publish job...\n2026-01-24T10:18:08Z [command] gh release create v1.0.2 ./dist/*.zip --notes-file RELEASE.md\n2026-01-24T10:18:12Z Build artifacts ready for release."
-                .to_string(),
+            include_str!("logs/job-43021.log").to_string(),
         );
         logs_map.insert(
             44_001,
-            "2026-01-24T11:02:45Z ##[group]Terraform plan\n2026-01-24T11:02:46Z [command] terraform plan -out=tfplan\n2026-01-24T11:02:47Z \u{1b}[33mWarning:\u{1b}[0m drift detected in IAM policy attachments\n2026-01-24T11:02:48Z \u{1b}[31mError:\u{1b}[0m requires manual approval in prod account\n2026-01-24T11:02:49Z ##[endgroup]\n2026-01-24T11:02:50Z ::error title=Infra::Terraform plan failed".to_string(),
+            include_str!("logs/job-44001.log").to_string(),
         );
 
         let rate_limit = RateLimitInfo {
@@ -509,7 +724,7 @@ impl DemoData {
         self.jobs.insert(run_id, vec![job]);
         self.logs.insert(
             job_id,
-            "2026-01-24T12:01:01Z ##[group]Manual dispatch\n2026-01-24T12:01:02Z [command] gh workflow run --ref demo-branch\n2026-01-24T12:01:03Z Recording branch in demo state\n2026-01-24T12:01:04Z Token: ***\n2026-01-24T12:01:05Z ##[endgroup]\n2026-01-24T12:01:06Z ::notice title=Dispatch::Run will appear once started".to_string(),
+            include_str!("logs/manual-dispatch.log").to_string(),
         );
         self.branches
             .entry(Self::repo_key(owner, name))

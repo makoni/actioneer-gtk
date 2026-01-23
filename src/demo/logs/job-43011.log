@@ -1,0 +1,11 @@
+2026-01-24T10:11:01Z ##[group]Lint
+2026-01-24T10:11:02Z [command] cargo fmt --check
+2026-01-24T10:11:03Z [command] cargo clippy --all-targets --all-features
+2026-01-24T10:11:04Z ::warning file=src/auth/device.rs,line=12,title=Clippy::unused import: std::time::Instant
+2026-01-24T10:11:05Z ::error file=src/auth/device.rs,line=12,title=Clippy::lint failure
+2026-01-24T10:11:06Z ##[endgroup]
+2026-01-24T10:11:07Z [31mError:[0m clippy failed, skipping build
+2026-01-24T10:11:08Z Running minimal unit tests for context
+2026-01-24T10:11:09Z Tests executed: auth (12), storage (4), cache (4)
+2026-01-24T10:11:10Z Uploading junit.xml (partial)
+2026-01-24T10:11:11Z ::notice title=Summary::Lint job complete (failed)

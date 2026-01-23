@@ -1,0 +1,5 @@
+2026-01-24T10:30:01Z ##[group]Build release
+2026-01-24T10:30:02Z [command] cargo build --release
+2026-01-24T10:30:03Z [32m✓[0m build finished in 42s
+2026-01-24T10:30:04Z ##[endgroup]
+2026-01-24T10:30:05Z ::notice::Artifacts ready for upload

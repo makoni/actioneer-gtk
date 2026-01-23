@@ -1,0 +1,10 @@
+2026-01-24T09:14:03Z ##[group]Bootstrap runner
+2026-01-24T09:14:04Z [command] sudo sysctl -w net.core.somaxconn=1024
+2026-01-24T09:14:05Z ##[endgroup]
+2026-01-24T09:14:06Z ##[group]Gather telemetry
+2026-01-24T09:14:07Z Probing 12 devices for CPU, memory, and network stats...
+2026-01-24T09:14:08Z [32m✓[0m CPU OK, [33mWARN[0m jitter spikes detected
+2026-01-24T09:14:09Z Streaming telemetry to s3://demo-edge-diagnostics/tmp/42101.log
+2026-01-24T09:14:10Z Token: ***
+2026-01-24T09:14:11Z ##[endgroup]
+2026-01-24T09:14:12Z ::notice file=src/agents.rs,line=88,title=Telemetry::Collected 12/12 device snapshots

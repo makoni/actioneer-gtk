@@ -1,0 +1,6 @@
+2026-01-24T11:02:45Z ##[group]Terraform plan
+2026-01-24T11:02:46Z [command] terraform plan -out=tfplan
+2026-01-24T11:02:47Z [33mWarning:[0m drift detected in IAM policy attachments
+2026-01-24T11:02:48Z [31mError:[0m requires manual approval in prod account
+2026-01-24T11:02:49Z ##[endgroup]
+2026-01-24T11:02:50Z ::error title=Infra::Terraform plan failed

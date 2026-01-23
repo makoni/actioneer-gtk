@@ -1,0 +1,6 @@
+2026-01-24T12:01:01Z ##[group]Manual dispatch
+2026-01-24T12:01:02Z [command] gh workflow run --ref demo-branch
+2026-01-24T12:01:03Z Recording branch in demo state
+2026-01-24T12:01:04Z Token: ***
+2026-01-24T12:01:05Z ##[endgroup]
+2026-01-24T12:01:06Z ::notice title=Dispatch::Run will appear once started
