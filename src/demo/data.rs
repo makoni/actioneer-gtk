@@ -370,33 +370,33 @@ impl DemoData {
 
         logs_map.insert(
             42_001,
-            "Gathering CPU metrics from remote agents...\nCollecting network stats from 12 devices (latency, jitter, packet loss)...\nStreaming telemetry to s3://demo-edge-diagnostics/tmp/42101.log...\nDiagnostics captured; archiving raw samples.".to_string(),
+            "2026-01-24T09:14:03Z ##[group]Bootstrap runner\n2026-01-24T09:14:04Z [command] sudo sysctl -w net.core.somaxconn=1024\n2026-01-24T09:14:05Z ##[endgroup]\n2026-01-24T09:14:06Z ##[group]Gather telemetry\n2026-01-24T09:14:07Z Probing 12 devices for CPU, memory, and network stats...\n2026-01-24T09:14:08Z \u{1b}[32m✓\u{1b}[0m CPU OK, \u{1b}[33mWARN\u{1b}[0m jitter spikes detected\n2026-01-24T09:14:09Z Streaming telemetry to s3://demo-edge-diagnostics/tmp/42101.log\n2026-01-24T09:14:10Z Token: ***\n2026-01-24T09:14:11Z ##[endgroup]\n2026-01-24T09:14:12Z ::notice file=src/agents.rs,line=88,title=Telemetry::Collected 12/12 device snapshots".to_string(),
         );
         logs_map.insert(
             42_002,
-            "Aggregating diagnostics into report...\nLoading metric baselines from cache...\nDetecting anomalies (threshold 2.5 sigma)... none found.\nRendering PDF summary with 4 charts...\nUploading report artifact edge-report.zip to workflow run.".to_string(),
+            "2026-01-24T09:15:01Z ##[group]Aggregate report\n2026-01-24T09:15:02Z [command] python tools/aggregate.py --input s3://demo-edge-diagnostics/tmp/42101.log --output report.pdf\n2026-01-24T09:15:03Z \u{1b}[36mℹ\u{1b}[0m Loading metric baselines from cache\n2026-01-24T09:15:04Z ::debug::Cache hit: baseline-2024-11-05\n2026-01-24T09:15:05Z ::warning file=tools/aggregate.py,line=214,title=Outlier::Jitter spike beyond 2.5σ (ignored)\n2026-01-24T09:15:06Z Rendering PDF summary with 4 charts\n2026-01-24T09:15:07Z Uploading artifact edge-report.zip\n2026-01-24T09:15:08Z ##[endgroup]\n2026-01-24T09:15:09Z ::notice::Report uploaded to workflow artifacts".to_string(),
         );
 
         logs_map.insert(
             43_001,
-            "[01/24] Checkout main@8d3c1f4\n[02/24] Restore Rust toolchain from cache\n[03/24] rustup override set stable\n[04/24] cargo fmt --check\n[05/24] cargo clippy --all-targets --all-features\n[06/24] clippy warnings: 0\n[07/24] cargo build --workspace\n[08/24] build artifacts: target/debug (18 crates)\n[09/24] Running unit tests (fast)\n[10/24] tests passed: 82\n[11/24] Compressing artifacts (xz)\n[12/24] Uploading artifacts: debug binaries\n[13/24] Uploading artifacts: coverage/lcov.info\n[14/24] Archiving build logs\n[15/24] Recording checksums for cache reuse\n[16/24] Validating license headers\n[17/24] Creating SBOM manifest (cyclonedx)\n[18/24] Signing manifest (test key)\n[19/24] Publishing summary markdown\n[20/24] Marking run as successful\n[21/24] Cleaning workspace tmp files\n[22/24] Reclaiming cargo target cache\n[23/24] Notifying webhook listener\n[24/24] Pipeline complete".to_string(),
+            "2026-01-24T10:02:01Z ##[group]Checkout\n2026-01-24T10:02:02Z [command] git fetch --depth=1 origin main\n2026-01-24T10:02:03Z [command] git checkout 8d3c1f4\n2026-01-24T10:02:04Z ##[endgroup]\n2026-01-24T10:02:05Z ##[group]Toolchain\n2026-01-24T10:02:06Z [command] rustup override set stable\n2026-01-24T10:02:07Z [command] cargo fmt --check\n2026-01-24T10:02:08Z [command] cargo clippy --all-targets --all-features\n2026-01-24T10:02:09Z \u{1b}[32m✓\u{1b}[0m clippy warnings: 0\n2026-01-24T10:02:10Z ##[endgroup]\n2026-01-24T10:02:11Z ##[group]Build & test\n2026-01-24T10:02:12Z [command] cargo build --workspace\n2026-01-24T10:02:13Z build artifacts: target/debug (18 crates)\n2026-01-24T10:02:14Z [command] cargo test --workspace --tests\n2026-01-24T10:02:15Z tests passed: 82\n2026-01-24T10:02:16Z ##[endgroup]\n2026-01-24T10:02:17Z ##[group]Artifacts\n2026-01-24T10:02:18Z Compressing artifacts (xz)\n2026-01-24T10:02:19Z Uploading artifacts: debug binaries\n2026-01-24T10:02:20Z Uploading artifacts: coverage/lcov.info\n2026-01-24T10:02:21Z Signing manifest (test key)\n2026-01-24T10:02:22Z Token: ***\n2026-01-24T10:02:23Z ##[endgroup]\n2026-01-24T10:02:24Z ::notice::Pipeline complete".to_string(),
         );
         logs_map.insert(
             43_002,
-            "[01/24] Preparing test environment\n[02/24] Restoring cargo target cache\n[03/24] cargo test --workspace\n[04/24] Running auth tests (12)\n[05/24] Running cache tests (18)\n[06/24] Running UI helpers tests (20)\n[07/24] Running notification tests (10)\n[08/24] Running storage tests (8)\n[09/24] Running integration smoke tests (4)\n[10/24] Collecting coverage data\n[11/24] Coverage: lines 86%, branches 79%\n[12/24] Capturing test logs\n[13/24] Uploading junit.xml artifact\n[14/24] Uploading coverage/lcov.info artifact\n[15/24] Publishing summary with pass/fail counts\n[16/24] Marking flaky tests: none\n[17/24] Reclaiming disk space (rm -rf target/tmp)\n[18/24] Archiving cargo diagnostics\n[19/24] Updating cache manifest\n[20/24] Setting status check to success\n[21/24] Notifying webhook listener\n[22/24] Recording runtime metrics\n[23/24] Cleaning temporary test artifacts\n[24/24] Test phase complete".to_string(),
+            "2026-01-24T10:05:31Z ##[group]Test matrix\n2026-01-24T10:05:32Z [command] cargo test --workspace\n2026-01-24T10:05:33Z Running auth tests (12)\n2026-01-24T10:05:34Z Running cache tests (18)\n2026-01-24T10:05:35Z Running UI helpers tests (20)\n2026-01-24T10:05:36Z ::debug::Shard 2/4 finished in 12s\n2026-01-24T10:05:37Z \u{1b}[32m✓\u{1b}[0m integration smoke tests (4)\n2026-01-24T10:05:38Z ##[endgroup]\n2026-01-24T10:05:39Z ##[group]Coverage\n2026-01-24T10:05:40Z Collecting coverage data\n2026-01-24T10:05:41Z Coverage: lines 86%, branches 79%\n2026-01-24T10:05:42Z Uploading junit.xml artifact\n2026-01-24T10:05:43Z Uploading coverage/lcov.info artifact\n2026-01-24T10:05:44Z ##[endgroup]\n2026-01-24T10:05:45Z ::notice title=Summary::Test phase complete".to_string(),
         );
         logs_map.insert(
             43_011,
-            "[01/24] Checkout feature/login@5e2a7b1\n[02/24] Restore clippy cache\n[03/24] cargo fmt --check\n[04/24] cargo clippy --all-targets --all-features\n[05/24] Warning: src/auth/device.rs: unused import\n[06/24] Error: clippy lint failure\n[07/24] Skipping build due to lint error\n[08/24] Running minimal unit tests for context\n[09/24] Tests executed: auth (12)\n[10/24] Tests executed: storage (4)\n[11/24] Tests executed: cache (4)\n[12/24] Collecting diagnostics for PR comment\n[13/24] Attaching clippy log to artifact\n[14/24] Creating issue summary\n[15/24] Suggesting fix: remove unused import\n[16/24] Uploading junit.xml (partial)\n[17/24] Marking run conclusion: failure\n[18/24] Posting summary markdown to checks API\n[19/24] Exiting early after lint failure\n[20/24] Cleaning workspace cache\n[21/24] Preserving clippy cache for next run\n[22/24] Recording lint failure metrics\n[23/24] Notifying reviewers\n[24/24] Lint job complete (failed)".to_string(),
+            "2026-01-24T10:11:01Z ##[group]Lint\n2026-01-24T10:11:02Z [command] cargo fmt --check\n2026-01-24T10:11:03Z [command] cargo clippy --all-targets --all-features\n2026-01-24T10:11:04Z ::warning file=src/auth/device.rs,line=12,title=Clippy::unused import: std::time::Instant\n2026-01-24T10:11:05Z ::error file=src/auth/device.rs,line=12,title=Clippy::lint failure\n2026-01-24T10:11:06Z ##[endgroup]\n2026-01-24T10:11:07Z \u{1b}[31mError:\u{1b}[0m clippy failed, skipping build\n2026-01-24T10:11:08Z Running minimal unit tests for context\n2026-01-24T10:11:09Z Tests executed: auth (12), storage (4), cache (4)\n2026-01-24T10:11:10Z Uploading junit.xml (partial)\n2026-01-24T10:11:11Z ::notice title=Summary::Lint job complete (failed)".to_string(),
         );
         logs_map.insert(
             43_021,
-            "Waiting for runner to pick up publish job...\nBuild artifacts ready for release."
+            "2026-01-24T10:18:01Z Waiting for runner to pick up publish job...\n2026-01-24T10:18:08Z [command] gh release create v1.0.2 ./dist/*.zip --notes-file RELEASE.md\n2026-01-24T10:18:12Z Build artifacts ready for release."
                 .to_string(),
         );
         logs_map.insert(
             44_001,
-            "Planning infrastructure changes...\nterraform plan -out=tfplan\nError: IAM policy drift detected; requires manual approval.".to_string(),
+            "2026-01-24T11:02:45Z ##[group]Terraform plan\n2026-01-24T11:02:46Z [command] terraform plan -out=tfplan\n2026-01-24T11:02:47Z \u{1b}[33mWarning:\u{1b}[0m drift detected in IAM policy attachments\n2026-01-24T11:02:48Z \u{1b}[31mError:\u{1b}[0m requires manual approval in prod account\n2026-01-24T11:02:49Z ##[endgroup]\n2026-01-24T11:02:50Z ::error title=Infra::Terraform plan failed".to_string(),
         );
 
         let rate_limit = RateLimitInfo {
@@ -509,7 +509,7 @@ impl DemoData {
         self.jobs.insert(run_id, vec![job]);
         self.logs.insert(
             job_id,
-            "[01/06] Manual dispatch queued\n[02/06] Waiting for runner\n[03/06] Preparing workspace and dependencies\n[04/06] Scheduling jobs for workflow dispatch\n[05/06] Recording branch in demo state\n[06/06] Run will appear once started".to_string(),
+            "2026-01-24T12:01:01Z ##[group]Manual dispatch\n2026-01-24T12:01:02Z [command] gh workflow run --ref demo-branch\n2026-01-24T12:01:03Z Recording branch in demo state\n2026-01-24T12:01:04Z Token: ***\n2026-01-24T12:01:05Z ##[endgroup]\n2026-01-24T12:01:06Z ::notice title=Dispatch::Run will appear once started".to_string(),
         );
         self.branches
             .entry(Self::repo_key(owner, name))
