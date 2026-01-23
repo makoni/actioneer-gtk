@@ -57,6 +57,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-01-24 — Removed `[command]` background highlight to improve dark theme readability.
 - [✅] 2026-01-23 — Added ANSI parsing and tests for job logs, with styled rendering in the log viewer.
 - [✅] 2026-01-23 — Aligned .github/copilot-instructions.md with current codebase (Libadwaita 1.x latest docs, UI layout notes, test locations, dependency versions).
 - [✅] 2026-01-23 — Updated local Libadwaita docs to track the latest 1.x documentation URLs (1-latest) and refreshed headers.
