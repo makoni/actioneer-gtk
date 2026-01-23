@@ -4,7 +4,7 @@
 This repository is a native GTK4/libadwaita desktop client for GitHub Actions written in Rust. The notes below focus on the patterns and files an AI coding agent should know to make safe, useful changes quickly.
 
 Important local docs
-- The repository contains a curated, local copy of Libadwaita 1.8 reference documentation under `docs/libadwaita/`. Automated agents MUST consult `docs/libadwaita/` for widget and helper guidance when making UI changes. These local docs are the canonical reference for UI implementation in this repo and are preferred over remote fetches to avoid network variability and version skew.
+- The repository contains a curated, local copy of Libadwaita 1.x (latest stable) reference documentation under `docs/libadwaita/`. Automated agents MUST consult `docs/libadwaita/` for widget and helper guidance when making UI changes. These local docs are the canonical reference for UI implementation in this repo and are preferred over remote fetches to avoid network variability and version skew.
 - General project documentation is in `docs/`; use `docs/` first for any implementation or styling questions before consulting upstream web pages.
 
 - Repo entry & runtime
@@ -12,7 +12,7 @@ Important local docs
   - UI run-loop: GTK / libadwaita run on the GLib main loop. Never touch GTK widgets from Tokio threads.
 
 - Key modules (big picture)
-  - `src/ui/` — all UI components and glue. `src/ui/main_window.rs` shows most interaction patterns (loading repos, refreshing UI, connecting buttons).
+  - `src/ui/` — all UI components and glue. `src/ui/main_window.rs` plus `src/ui/main_window/` submodules show most interaction patterns (loading repos, refreshing UI, connecting buttons).
   - `src/api/` — GitHub client, endpoints and models. See `src/api/client.rs` and `src/api/models.rs` for API surface.
   - `src/auth/` — OAuth Device Flow implementation (`device` module). Changes to auth must ensure TokenStorage interaction remains compatible.
   - `src/storage/token_storage.rs` — secure token handling via system keyring. This file contains a live test of the keyring; edits can affect developer machines.
@@ -92,7 +92,7 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
   - System deps (Ubuntu/Debian): `sudo apt install libgtk-4-dev libadwaita-1-dev pkg-config` (see `README.md`).
   - Build: `cargo build`; Run: `cargo run` (reads `.env` when provided).
   - Tests: `cargo test` (there are unit tests such as token storage lifecycle).
-  - UI tests: UI test harness has been added. Run `cargo test -- --ignored` to run the UI integration tests locally when a display is available. See the `tests/ui/README.md` for details on running in CI or headless.
+  - UI tests: UI widget tests live under `src/ui/**` and use `ui::test_helpers::gtk_test_guard`. Run `cargo test -- --ignored` to execute GTK-dependent tests when a display is available.
   - Formatting & linting: `cargo fmt` and `cargo clippy --all-targets --all-features -- -D warnings`. The project aims for zero warnings; a PR should not introduce warnings.
   - After finishing code edits, run the same checks as `.github/workflows/ci.yml` (only fmt, clippy, build, and ignored UI tests when feasible) to ensure the project is buildable and clippy is clean.
 
@@ -104,7 +104,7 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
     xvfb-run -s "-screen 0 1280x1024x24" cargo test -- --ignored
     ```
 
-    In CI prefer to either run tests in a container/image that includes an X server or use the above `xvfb-run` wrapper. See `tests/ui/README.md` for project-specific CI examples.
+    In CI prefer to either run tests in a container/image that includes an X server or use the above `xvfb-run` wrapper.
 
   - Token/keyring safety: `src/storage/token_storage.rs` contains a live keyring test and some operations that may write to or delete entries in the system keyring. Do NOT run or modify those destructive tests on developer machines unless you understand and accept the side-effects. Prefer using mocks or a dedicated test keyring account when adding or changing tests that interact with the system keyring.
 
@@ -115,13 +115,13 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
   - UI changes must use `glib::idle_add_local_once` or `spawn_local` to ensure GTK safety.
   - Token/keyring interactions are tested at runtime in `token_storage.rs` — avoid destructive cleanup in tests that run on developer machines.
   - New notes (2025-10): Recent changes added ETag caching for GET endpoints in `src/api/http.rs`. Agents should use the `ResponseHandler` for conditional requests by calling `apply_cache_headers` when building requests and passing the same cache key to `handle_response`. See `src/api/*` modules for examples.
-  - The sidebar width issue was fixed by wrapping the sidebar in an `adw::ClampScrollable` in `src/ui/main_window.rs` and configuring the `gtk::Paned` to keep the start child at its natural size. If you change the sidebar layout, keep `ClampScrollable` constraints in mind.
-  - Workflow/run lists now also sit inside an `adw::ClampScrollable` + `gtk::ScrolledWindow` combo (`src/ui/detail_view/mod.rs`) so long job lists are visible at fullscreen sizes. Preserve that structure when touching detail panes to avoid clipped content or scroll jumping.
+  - The sidebar width issue was fixed by wrapping the sidebar content in `create_sidebar_clamp` (`adw::Clamp`) inside `src/ui/main_window/sidebar_panel.rs` and configuring the `gtk::Paned` in `src/ui/main_window.rs` to keep the start child at its natural size. If you change the sidebar layout, keep the clamp + viewport constraints in mind.
+  - The detail pane uses a `gtk::ScrolledWindow` + `gtk::Viewport` (with `scroll_to_focus` disabled) in `src/ui/detail_view/mod.rs`, and the run list is wrapped via `create_detail_clamp` in `src/ui/detail_view/content.rs`. Preserve that structure when touching detail panes to avoid clipped content or scroll jumping.
   - Background refreshes skip redundant non-ETag endpoints: `spawn_repo_status_tasks` now tracks last-checked timestamps and avoids querying the actions-permissions endpoint more often than a TTL. If you need to force-refresh, clear the timestamps in `actions_checked_at`.
   - Flatpak packaging pins Cargo dependencies via `flatpak/me.spaceinbox.actioneer.cargo-sources.json`, generated with `flatpak-cargo-generator`. When you change Rust dependencies (including `cargo update`), regenerate this file with `~/.local/bin/flatpak-cargo-generator -d Cargo.lock -o flatpak/me.spaceinbox.actioneer.cargo-sources.json` and commit the result. Verify the manifest by running `flatpak-builder --force-clean --ccache builddir flatpak/me.spaceinbox.actioneer.yaml` so Flathub keeps an offline-complete build. Clean up any temporary `vendor/` directory after regenerating the manifest to avoid accidentally committing it.
   - Notifications (new, 2025-12):
     - Use the existing dispatcher in `src/notifications.rs`. Keep GTK work on GLib and network/background work on Tokio. Set a default action (`app.focus-main-window`) so shell clicks focus the window. Do not touch GTK objects from Tokio tasks.
-    - Preserve portal/native routing: prefer portal when sandboxed/forced, otherwise portal then native is acceptable; do not create new runtimes or bypass the dispatcher channel.
+    - Preserve portal/native routing: prefer portal when sandboxed and not on Snap, and when explicitly forced. Snap defaults to native unless `ACTIONEER_FORCE_PORTAL_NOTIFICATIONS` is set; do not create new runtimes or bypass the dispatcher channel.
     - Keep payloads concise (title + short body) and include the themed icon name (`APP_ICON_NAME`). Respect the user’s notification preference flag.
     - Desktop entry is required for notifications. Before testing or relying on notifications, ensure `data/me.spaceinbox.actioneer.desktop` is installed to `~/.local/share/applications/` (or the relevant XDG data dir). Agents should check for an installed `me.spaceinbox.actioneer.desktop` and install/update it if missing/outdated (copy from `data/`). Do not add runtime installation in code paths.
     - Leave the application-level `focus-main-window` action intact (`src/ui/main_window.rs`). If adding new notification actions, wire them to `app.*` actions.
@@ -130,7 +130,7 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
 - Files to reference when making changes
   - `src/main.rs` (runtime + app bootstrap)
   - `src/ui/main_window.rs` (primary UI patterns)
-  - `tests/ui/` (UI integration test harness)
+  - `src/ui/` (UI widget tests via `gtk_test_guard`)
   - `src/storage/token_storage.rs` (keyring usage)
   - `src/api/client.rs` and `src/api/models.rs` (API surface)
   - `README.md` (dev setup and system deps)
@@ -147,7 +147,7 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
 If touching API/caching code, follow the ETag/ResponseHandler pattern in `src/api/http.rs` and respect rate-limit handling.
 
 UI testing guidance
-- UI tests live under `tests/ui/` and are marked ignored by default (they use the Rust test ignore attribute). This avoids running UI integration tests headless on CI without a display. They require an X11/Wayland display or a headless Xvfb/virtual framebuffer in CI.
+- UI tests live under `src/ui/**` and are marked ignored by default (they use the Rust test ignore attribute and the `gtk_test_guard` helper). This avoids running UI tests headless on CI without a display. They require an X11/Wayland display or a headless Xvfb/virtual framebuffer in CI.
 - To run locally with a display (Linux):
 
 ```bash
@@ -158,7 +158,7 @@ cargo test
 cargo test -- --ignored
 ```
 
-- In CI, prefer launching a headless X server or use a Docker container with a virtual framebuffer. See the `tests/ui/` directory or your CI workflow for example steps.
+- In CI, prefer launching a headless X server or use a Docker container with a virtual framebuffer.
 
 Audit notes for agents
 - If you modify API code, ensure `ResponseHandler` rate limit updates and caching logic remain consistent. The handler stores ETags and cached bodies in-memory; persistence is intentionally not implemented to keep code simple.
@@ -182,11 +182,12 @@ This guide provides a comprehensive set of best practices for an AI agent to dev
   cd my-gnome-app
   ```
 
-- **Add necessary dependencies to `Cargo.toml`:**
+- **Add necessary dependencies to `Cargo.toml` (match this repo's versions when editing Actioneer):**
   ```toml
   [dependencies]
-  gtk = { version = "0.8.0", package = "gtk4" }
-  adw = { version = "0.6.0", package = "libadwaita", features = ["v1_5"] }
+  gtk4 = { version = "0.10", package = "gtk4" }
+  libadwaita = { version = "0.8", package = "libadwaita", features = ["v1_5"] }
+  gio = "0.21"
 
   [build-dependencies]
   glib-build-utils = "0.18.0"
@@ -211,7 +212,7 @@ This guide provides a comprehensive set of best practices for an AI agent to dev
 ```rust
 use adw::prelude::*;
 use adw::Application;
-use gtk::{ApplicationWindow, Builder};
+use gtk4::{ApplicationWindow, Builder};
 
 fn main() {
     let application = Application::builder()
@@ -235,8 +236,7 @@ fn main() {
 
 ### 2.2. UI Definition with Composite Templates
 
-- **Separate UI from logic.** Use `.ui` files (XML format) to define the user interface.
-- **Use composite templates** to link UI definitions to Rust widget code.
+- **Optional:** This repo currently builds UI directly in Rust (no `.ui` templates). If you introduce `.ui` files, keep logic separate and wire them with composite templates.
 
 **Example `main.ui`:**
 ```xml
@@ -255,7 +255,7 @@ fn main() {
 
 ### 2.3. Resource Management
 
-- **Embed resources** like `.ui` files, icons, and stylesheets directly into the binary using GResource.
+- **Optional:** If you add `.ui` files or additional assets, embed resources into the binary using GResource.
 - Create a `gresource.xml` file:
   ```xml
   <?xml version="1.0" encoding="UTF-8"?>
@@ -296,7 +296,7 @@ fn main() {
 ## 4. Asynchronous Operations
 
 - For long-running tasks (e.g., network requests, file I/O), use asynchronous operations to avoid blocking the UI thread.
-- Use `glib::spawn_future_local` for this.
+- In this repo, prefer `glib::MainContext::default().spawn_local(...)` or `glib::idle_add_local_once(...)` on the GTK thread.
 
 **Example:**
 ```rust
@@ -315,9 +315,10 @@ glib::spawn_future_local(clone!(@weak self as widget => async move {
 
 ## 6. Internationalization (i18n)
 
-- Use `gettext` for translations.
+- Use `gettext` for translations when adding i18n.
 - Mark translatable strings in your code using the `gettext()` macro.
 - Extract strings into `.pot` files and create `.po` files for each language.
+- Note: this repo does not currently ship translations.
 
 ## 7. Packaging and Distribution
 
