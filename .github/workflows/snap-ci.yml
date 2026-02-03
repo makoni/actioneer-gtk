@@ -22,8 +22,8 @@ jobs:
         include:
           - platform: amd64
             runner: ubuntu-latest
-          #- platform: arm64
-          #  runner: ubuntu-24.04-arm64
+          - platform: arm64
+            runner: ubuntu-24.04-arm
     outputs:
       run-id: ${{ steps.expose-run-id.outputs.run_id }}
 
