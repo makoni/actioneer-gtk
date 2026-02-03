@@ -21,9 +21,9 @@ jobs:
         include:
           - arch: x86_64
             runner: ubuntu-latest
-          # Temporarily disable the arm64 build until dedicated runners are available again.
-          # - arch: aarch64
-          #   runner: ubuntu-24.04-arm64
+          Temporarily disable the arm64 build until dedicated runners are available again.
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
     outputs:
       run-id: ${{ steps.expose-run-id.outputs.run_id }}
     container:
