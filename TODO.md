@@ -59,6 +59,7 @@ Notes
 -Recent Updates
 - [✅] 2026-02-04 — Polished job log formatting (timestamp padding, command prefix normalization, error highlighting).
 - [✅] 2026-02-04 — Bumped app version to 1.0.3 across configs and refreshed Flatpak lock sync tooling.
+- [✅] 2026-02-04 — Fixed Flatpak CI to pass the correct architecture to flatpak-builder for arm64 runs.
 - [✅] 2026-01-24 — Expanded CI demo runs to cover success/failed/running states and moved demo job logs into dedicated files.
 - [✅] 2026-01-24 — Refreshed demo job logs to showcase timestamps, groups, workflow commands, ANSI colors, and secret masking.
 - [✅] 2026-01-24 — Removed `[command]` background highlight to improve dark theme readability.

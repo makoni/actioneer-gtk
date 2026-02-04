@@ -92,6 +92,7 @@ jobs:
           bundle: actioneer-${{ matrix.arch }}.flatpak
           upload-artifact: false
           run-tests: true
+          arch: ${{ matrix.arch }}
 
       - name: Collect Flatpak bundle
         id: collect-bundle
