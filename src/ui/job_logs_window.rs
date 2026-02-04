@@ -3,14 +3,14 @@ use crate::api::{GitHubClient, GitHubError};
 use crate::ui::ansi::{AnsiStyle, parse_ansi};
 use crate::ui::utils::channel::MainContextChannelExt;
 use gtk4::gdk;
+use gtk4::glib::translate::IntoGlib;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib, pango};
-use gtk4::glib::translate::IntoGlib;
 use libadwaita as adw;
 use libadwaita::prelude::*;
 use parking_lot::Mutex;
-use std::sync::Arc;
 use std::collections::HashMap;
+use std::sync::Arc;
 use tracing::{error, info, warn};
 
 pub struct JobLogsWindow {
@@ -464,15 +464,14 @@ fn render_structured_logs(text_view: &gtk::TextView, logs: &str) {
             let tag = get_timestamp_tag(&tag_table, &mut tags);
             buffer.insert_with_tags(&mut iter, ts, &[&tag]);
             if !rest.is_empty() {
-                buffer.insert(&mut iter, " ");
+                let padding = timestamp_padding(ts);
+                buffer.insert_with_tags(&mut iter, &" ".repeat(padding), &[&tag]);
             }
         }
 
         let rest_trim = rest.trim_start();
         if is_group_end(rest_trim) {
-            if group_depth > 0 {
-                group_depth -= 1;
-            }
+            group_depth = group_depth.saturating_sub(1);
             continue;
         }
 
@@ -486,6 +485,35 @@ fn render_structured_logs(text_view: &gtk::TextView, logs: &str) {
         }
 
         insert_indent(&buffer, &mut iter, group_depth);
+
+        if let Some(message) = split_error_prefix(rest_trim) {
+            let tag = get_error_line_tag(&tag_table, &mut tags);
+            buffer.insert_with_tags(&mut iter, "⛔ ", &[&tag]);
+            insert_ansi_text(
+                &buffer,
+                &mut iter,
+                message,
+                &tag_table,
+                &mut ansi_tags,
+                Some(get_secret_tag(&tag_table, &mut tags)),
+                Some(tag),
+            );
+            continue;
+        }
+
+        if is_plain_error_line(rest_trim) {
+            let tag = get_error_line_tag(&tag_table, &mut tags);
+            insert_ansi_text(
+                &buffer,
+                &mut iter,
+                rest_trim,
+                &tag_table,
+                &mut ansi_tags,
+                Some(get_secret_tag(&tag_table, &mut tags)),
+                Some(tag),
+            );
+            continue;
+        }
 
         if let Some(command) = parse_workflow_command(rest_trim) {
             let (icon, tag) = get_annotation_tag(&tag_table, &mut tags, command.kind);
@@ -550,23 +578,30 @@ fn split_timestamp(line: &str) -> (Option<&str>, &str) {
         return (None, line);
     }
 
-    if !line
-        .chars()
-        .take(4)
-        .all(|ch| ch.is_ascii_digit())
-    {
+    if !line.chars().take(4).all(|ch| ch.is_ascii_digit()) {
         return (None, line);
     }
 
-    if let Some(pos) = line.find("Z ") {
-        if pos <= 30 {
-            let (ts, rest) = line.split_at(pos + 1);
-            let rest = rest.trim_start_matches(' ');
-            return (Some(ts), rest);
-        }
+    if let Some(pos) = line.find("Z ")
+        && pos <= 30
+    {
+        let (ts, rest) = line.split_at(pos + 1);
+        let rest = rest.trim_start_matches(' ');
+        return (Some(ts), rest);
     }
 
     (None, line)
+}
+
+const TIMESTAMP_PAD_WIDTH: usize = 30;
+
+fn timestamp_padding(timestamp: &str) -> usize {
+    let length = timestamp.len();
+    if length >= TIMESTAMP_PAD_WIDTH {
+        1
+    } else {
+        TIMESTAMP_PAD_WIDTH.saturating_sub(length) + 1
+    }
 }
 
 fn is_group_end(text: &str) -> bool {
@@ -586,9 +621,11 @@ fn split_command_prefix(text: &str) -> Option<(&str, &str)> {
         .map(|ch| ch.len_utf8())
         .sum::<usize>();
     let (leading, remainder) = text.split_at(leading_len);
-    remainder
-        .strip_prefix("[command]")
-        .map(|tail| (leading, tail))
+    let tail = remainder
+        .strip_prefix("##[command]")
+        .or_else(|| remainder.strip_prefix("[command]"))
+        .or_else(|| remainder.strip_prefix("▶ [command]"))?;
+    Some((leading, tail.trim_start()))
 }
 
 fn parse_workflow_command(text: &str) -> Option<WorkflowCommand<'_>> {
@@ -679,6 +716,17 @@ fn insert_indent(buffer: &gtk::TextBuffer, iter: &mut gtk::TextIter, depth: usiz
     buffer.insert(iter, &indent);
 }
 
+fn split_error_prefix(text: &str) -> Option<&str> {
+    text.strip_prefix("##[error]")
+        .map(|tail| tail.trim_start())
+        .filter(|tail| !tail.is_empty())
+}
+
+fn is_plain_error_line(text: &str) -> bool {
+    let trimmed = text.trim_start();
+    trimmed.starts_with("Error:") || trimmed.starts_with("error:") || trimmed.starts_with("ERROR:")
+}
+
 fn insert_ansi_text(
     buffer: &gtk::TextBuffer,
     iter: &mut gtk::TextIter,
@@ -739,13 +787,7 @@ fn insert_text_with_optional_secret(
     }
 
     if start < text.len() {
-        insert_with_tags(
-            buffer,
-            iter,
-            &text[start..],
-            ansi_tag,
-            extra_tag,
-        );
+        insert_with_tags(buffer, iter, &text[start..], ansi_tag, extra_tag);
     }
 }
 
@@ -778,16 +820,16 @@ fn get_ansi_tag(
             let tag = gtk::TextTag::new(None);
             if style.bold {
                 let weight: i32 = pango::Weight::Bold.into_glib();
-                tag.set_property("weight", &weight);
+                tag.set_property("weight", weight);
             }
             if style.underline {
-                tag.set_property("underline", &pango::Underline::Single);
+                tag.set_property("underline", pango::Underline::Single);
             }
             if let Some(fg) = style.fg {
-                tag.set_property("foreground", &fg.to_css());
+                tag.set_property("foreground", fg.to_css());
             }
             if let Some(bg) = style.bg {
-                tag.set_property("background", &bg.to_css());
+                tag.set_property("background", bg.to_css());
             }
             tag_table.add(&tag);
             tag
@@ -802,7 +844,7 @@ fn get_timestamp_tag(
     tags.entry("timestamp")
         .or_insert_with(|| {
             let tag = gtk::TextTag::new(None);
-            tag.set_property("foreground", &"#8a8a8a");
+            tag.set_property("foreground", "#8a8a8a");
             tag_table.add(&tag);
             tag
         })
@@ -817,8 +859,8 @@ fn get_group_tag(
         .or_insert_with(|| {
             let tag = gtk::TextTag::new(None);
             let weight: i32 = pango::Weight::Bold.into_glib();
-            tag.set_property("weight", &weight);
-            tag.set_property("foreground", &"#3465a4");
+            tag.set_property("weight", weight);
+            tag.set_property("foreground", "#3465a4");
             tag_table.add(&tag);
             tag
         })
@@ -833,9 +875,25 @@ fn get_command_tag(
         .or_insert_with(|| {
             let tag = gtk::TextTag::new(None);
             let weight: i32 = pango::Weight::Bold.into_glib();
-            tag.set_property("weight", &weight);
-            tag.set_property("foreground", &"#1a73e8");
-            tag.set_property("family", &"monospace");
+            tag.set_property("weight", weight);
+            tag.set_property("foreground", "#1a73e8");
+            tag.set_property("family", "monospace");
+            tag_table.add(&tag);
+            tag
+        })
+        .clone()
+}
+
+fn get_error_line_tag(
+    tag_table: &gtk::TextTagTable,
+    tags: &mut HashMap<&'static str, gtk::TextTag>,
+) -> gtk::TextTag {
+    tags.entry("error-line")
+        .or_insert_with(|| {
+            let tag = gtk::TextTag::new(None);
+            let weight: i32 = pango::Weight::Bold.into_glib();
+            tag.set_property("weight", weight);
+            tag.set_property("foreground", "#b3261e");
             tag_table.add(&tag);
             tag
         })
@@ -849,8 +907,8 @@ fn get_secret_tag(
     tags.entry("secret")
         .or_insert_with(|| {
             let tag = gtk::TextTag::new(None);
-            tag.set_property("foreground", &"#9aa0a6");
-            tag.set_property("background", &"#2b2b2b");
+            tag.set_property("foreground", "#9aa0a6");
+            tag.set_property("background", "#2b2b2b");
             tag_table.add(&tag);
             tag
         })
@@ -869,8 +927,8 @@ fn get_annotation_tag(
                 .or_insert_with(|| {
                     let tag = gtk::TextTag::new(None);
                     let weight: i32 = pango::Weight::Bold.into_glib();
-                    tag.set_property("weight", &weight);
-                    tag.set_property("foreground", &"#0b57d0");
+                    tag.set_property("weight", weight);
+                    tag.set_property("foreground", "#0b57d0");
                     tag_table.add(&tag);
                     tag
                 })
@@ -882,8 +940,8 @@ fn get_annotation_tag(
                 .or_insert_with(|| {
                     let tag = gtk::TextTag::new(None);
                     let weight: i32 = pango::Weight::Bold.into_glib();
-                    tag.set_property("weight", &weight);
-                    tag.set_property("foreground", &"#b26a00");
+                    tag.set_property("weight", weight);
+                    tag.set_property("foreground", "#b26a00");
                     tag_table.add(&tag);
                     tag
                 })
@@ -895,8 +953,8 @@ fn get_annotation_tag(
                 .or_insert_with(|| {
                     let tag = gtk::TextTag::new(None);
                     let weight: i32 = pango::Weight::Bold.into_glib();
-                    tag.set_property("weight", &weight);
-                    tag.set_property("foreground", &"#b3261e");
+                    tag.set_property("weight", weight);
+                    tag.set_property("foreground", "#b3261e");
                     tag_table.add(&tag);
                     tag
                 })
@@ -907,7 +965,7 @@ fn get_annotation_tag(
             tags.entry("debug")
                 .or_insert_with(|| {
                     let tag = gtk::TextTag::new(None);
-                    tag.set_property("foreground", &"#6a6a6a");
+                    tag.set_property("foreground", "#6a6a6a");
                     tag_table.add(&tag);
                     tag
                 })
@@ -923,7 +981,7 @@ fn get_annotation_meta_tag(
     tags.entry("annotation-meta")
         .or_insert_with(|| {
             let tag = gtk::TextTag::new(None);
-            tag.set_property("foreground", &"#8a8a8a");
+            tag.set_property("foreground", "#8a8a8a");
             tag_table.add(&tag);
             tag
         })

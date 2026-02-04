@@ -560,59 +560,20 @@ impl DemoData {
             ],
         );
 
-        logs_map.insert(
-            42_001,
-            include_str!("logs/job-42001.log").to_string(),
-        );
-        logs_map.insert(
-            42_002,
-            include_str!("logs/job-42002.log").to_string(),
-        );
+        logs_map.insert(42_001, include_str!("logs/job-42001.log").to_string());
+        logs_map.insert(42_002, include_str!("logs/job-42002.log").to_string());
 
-        logs_map.insert(
-            43_001,
-            include_str!("logs/job-43001.log").to_string(),
-        );
-        logs_map.insert(
-            43_002,
-            include_str!("logs/job-43002.log").to_string(),
-        );
-        logs_map.insert(
-            43_011,
-            include_str!("logs/job-43011.log").to_string(),
-        );
-        logs_map.insert(
-            43_031,
-            include_str!("logs/job-43031.log").to_string(),
-        );
-        logs_map.insert(
-            43_041,
-            include_str!("logs/job-43041.log").to_string(),
-        );
-        logs_map.insert(
-            43_051,
-            include_str!("logs/job-43051.log").to_string(),
-        );
-        logs_map.insert(
-            43_061,
-            include_str!("logs/job-43061.log").to_string(),
-        );
-        logs_map.insert(
-            43_071,
-            include_str!("logs/job-43071.log").to_string(),
-        );
-        logs_map.insert(
-            43_081,
-            include_str!("logs/job-43081.log").to_string(),
-        );
-        logs_map.insert(
-            43_021,
-            include_str!("logs/job-43021.log").to_string(),
-        );
-        logs_map.insert(
-            44_001,
-            include_str!("logs/job-44001.log").to_string(),
-        );
+        logs_map.insert(43_001, include_str!("logs/job-43001.log").to_string());
+        logs_map.insert(43_002, include_str!("logs/job-43002.log").to_string());
+        logs_map.insert(43_011, include_str!("logs/job-43011.log").to_string());
+        logs_map.insert(43_031, include_str!("logs/job-43031.log").to_string());
+        logs_map.insert(43_041, include_str!("logs/job-43041.log").to_string());
+        logs_map.insert(43_051, include_str!("logs/job-43051.log").to_string());
+        logs_map.insert(43_061, include_str!("logs/job-43061.log").to_string());
+        logs_map.insert(43_071, include_str!("logs/job-43071.log").to_string());
+        logs_map.insert(43_081, include_str!("logs/job-43081.log").to_string());
+        logs_map.insert(43_021, include_str!("logs/job-43021.log").to_string());
+        logs_map.insert(44_001, include_str!("logs/job-44001.log").to_string());
 
         let rate_limit = RateLimitInfo {
             limit: 5000,
@@ -722,10 +683,8 @@ impl DemoData {
             html_url: None,
         };
         self.jobs.insert(run_id, vec![job]);
-        self.logs.insert(
-            job_id,
-            include_str!("logs/manual-dispatch.log").to_string(),
-        );
+        self.logs
+            .insert(job_id, include_str!("logs/manual-dispatch.log").to_string());
         self.branches
             .entry(Self::repo_key(owner, name))
             .or_default()

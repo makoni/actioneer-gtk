@@ -57,21 +57,23 @@ pub fn parse_ansi(input: &str) -> Vec<AnsiSpan> {
     let mut i = 0;
 
     while i < bytes.len() {
-        if bytes[i] == 0x1b && i + 1 < bytes.len() && bytes[i + 1] == b'[' {
-            if let Some(offset) = bytes[i + 2..].iter().position(|&b| b == b'm') {
-                if !current.is_empty() {
-                    spans.push(AnsiSpan {
-                        text: std::mem::take(&mut current),
-                        style: style.clone(),
-                    });
-                }
-
-                let seq = &input[i + 2..i + 2 + offset];
-                apply_sgr_sequence(seq, &mut style);
-
-                i = i + 2 + offset + 1;
-                continue;
+        if bytes[i] == 0x1b
+            && i + 1 < bytes.len()
+            && bytes[i + 1] == b'['
+            && let Some(offset) = bytes[i + 2..].iter().position(|&b| b == b'm')
+        {
+            if !current.is_empty() {
+                spans.push(AnsiSpan {
+                    text: std::mem::take(&mut current),
+                    style: style.clone(),
+                });
             }
+
+            let seq = &input[i + 2..i + 2 + offset];
+            apply_sgr_sequence(seq, &mut style);
+
+            i = i + 2 + offset + 1;
+            continue;
         }
 
         let ch = input[i..].chars().next().unwrap();
@@ -169,6 +171,4 @@ mod tests {
         assert_eq!(spans[2].text, "C");
         assert!(spans[2].style.is_default());
     }
-
-    
 }
