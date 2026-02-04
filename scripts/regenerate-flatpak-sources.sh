@@ -8,7 +8,11 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOCK_FILE="$ROOT/Cargo.lock"
 OUTPUT_JSON="$ROOT/flatpak/me.spaceinbox.actioneer.cargo-sources.json"
-GENERATOR="${FLATPAK_CARGO_GENERATOR:-$HOME/.local/bin/flatpak-cargo-generator}"
+DEFAULT_GENERATOR="$HOME/.local/bin/flatpak-cargo-generator"
+GENERATOR="${FLATPAK_CARGO_GENERATOR:-$(command -v flatpak-cargo-generator 2>/dev/null || true)}"
+if [[ -z "${GENERATOR}" ]]; then
+  GENERATOR="$DEFAULT_GENERATOR"
+fi
 
 if [[ ! -x "$GENERATOR" ]]; then
   echo "flatpak-cargo-generator not found at '$GENERATOR'." >&2

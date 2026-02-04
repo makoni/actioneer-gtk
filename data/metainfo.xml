@@ -68,6 +68,16 @@
   </screenshots>
 
   <releases>
+    <release version="1.0.3" date="2026-02-04">
+      <description>
+        <ul>
+          <li>Job logs now render ANSI colors, grouped workflow sections, and clearer command/output formatting.</li>
+          <li>Aligned timestamps and command prefixes improve scanability, with stronger error highlighting.</li>
+          <li>Packaging CI refreshed with multi-arch updates for AppImage/Snap/Flatpak builds.</li>
+          <li>Dependency updates and demo log refreshes for improved accuracy.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.2" date="2026-01-19">
       <description>
         <ul>

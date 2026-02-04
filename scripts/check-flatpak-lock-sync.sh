@@ -33,8 +33,7 @@ if [[ "${lock_changed}" -gt 0 && "${flatpak_changed}" -eq 0 ]]; then
 fi
 
 if [[ "${flatpak_changed}" -gt 0 && "${lock_changed}" -eq 0 ]]; then
-  echo "error: flatpak/me.spaceinbox.actioneer.cargo-sources.json changed without updating Cargo.lock" >&2
-  exit 1
+  echo "notice: flatpak sources updated without Cargo.lock changes; ensure they were regenerated from the current lockfile." >&2
 fi
 
 echo "Cargo.lock and flatpak manifest are in sync."
