@@ -574,6 +574,7 @@ struct WorkflowCommand<'a> {
 }
 
 fn split_timestamp(line: &str) -> (Option<&str>, &str) {
+    let line = line.strip_prefix("\u{FEFF}").unwrap_or(line);
     if line.len() < 10 {
         return (None, line);
     }
