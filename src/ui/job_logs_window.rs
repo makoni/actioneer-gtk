@@ -191,6 +191,15 @@ impl JobLogsWindow {
                     copy_button.set_sensitive(false);
                     save_button.set_sensitive(false);
                 }
+                Err(GitHubError::Gone) => {
+                    warn!("Job logs expired (410 Gone)");
+                    text_view.set_sensitive(false);
+                    text_view.buffer().set_text(
+                        "The logs for this run have expired and are no longer available.",
+                    );
+                    copy_button.set_sensitive(false);
+                    save_button.set_sensitive(false);
+                }
                 Err(e) => {
                     error!("Failed to load logs: {}", e);
                     text_view.set_sensitive(false);
@@ -249,6 +258,15 @@ impl JobLogsWindow {
                         tv_for_ui.set_sensitive(false);
                         tv_for_ui.buffer().set_text(
                             "Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments.",
+                        );
+                        copy_for_result.set_sensitive(false);
+                        save_for_result.set_sensitive(false);
+                    }
+                    Err(GitHubError::Gone) => {
+                        warn!("Job logs expired during refresh (410 Gone)");
+                        tv_for_ui.set_sensitive(false);
+                        tv_for_ui.buffer().set_text(
+                            "The logs for this run have expired and are no longer available.",
                         );
                         copy_for_result.set_sensitive(false);
                         save_for_result.set_sensitive(false);
