@@ -68,6 +68,14 @@
   </screenshots>
 
   <releases>
+    <release version="1.0.4" date="2026-02-06">
+      <description>
+        <ul>
+          <li>Handle expired job logs (HTTP 410) with clearer messaging instead of a broken view.</li>
+          <li>Strip BOM markers in job logs so first-line timestamps render correctly.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.3" date="2026-02-04">
       <description>
         <ul>

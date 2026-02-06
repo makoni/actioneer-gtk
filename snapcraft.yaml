@@ -1,6 +1,6 @@
 name: actioneer
 base: core24
-version: '1.0.3'
+version: '1.0.4'
 title: Actioneer
 summary: GitHub Actions desktop client for GNOME
 description: |
@@ -70,4 +70,3 @@ parts:
       - -usr/lib/aarch64-linux-gnu/libicuio.so.74.2
       - -usr/lib/x86_64-linux-gnu/libicutest.so.*
       - -usr/lib/x86_64-linux-gnu/libicuio.so.*
-
