@@ -16,4 +16,7 @@ pub enum GitHubError {
 
     #[error("Not found")]
     NotFound,
+
+    #[error("Resource no longer available")]
+    Gone,
 }
