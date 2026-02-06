@@ -57,6 +57,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-02-06 — Added test coverage for job log timestamp parsing (BOM + edge cases).
 - [✅] 2026-02-04 — Polished job log formatting (timestamp padding, command prefix normalization, error highlighting).
 - [✅] 2026-02-04 — Bumped app version to 1.0.3 across configs and refreshed Flatpak lock sync tooling.
 - [✅] 2026-02-04 — Fixed Flatpak CI to pass the correct architecture to flatpak-builder for arm64 runs.
