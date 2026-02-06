@@ -1006,3 +1006,49 @@ fn get_annotation_meta_tag(
         })
         .clone()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::split_timestamp;
+
+    #[test]
+    fn split_timestamp_strips_bom_prefix() {
+        let line = "\u{FEFF}2026-02-06T07:28:18Z first line";
+        let (timestamp, rest) = split_timestamp(line);
+        assert_eq!(timestamp, Some("2026-02-06T07:28:18Z"));
+        assert_eq!(rest, "first line");
+    }
+
+    #[test]
+    fn split_timestamp_parses_without_bom() {
+        let line = "2026-02-06T07:28:18Z   message";
+        let (timestamp, rest) = split_timestamp(line);
+        assert_eq!(timestamp, Some("2026-02-06T07:28:18Z"));
+        assert_eq!(rest, "message");
+    }
+
+    #[test]
+    fn split_timestamp_rejects_non_timestamp_lines() {
+        let (timestamp, rest) = split_timestamp("2026-02");
+        assert_eq!(timestamp, None);
+        assert_eq!(rest, "2026-02");
+
+        let line = "INFO 2026-02-06T07:28:18Z message";
+        let (timestamp, rest) = split_timestamp(line);
+        assert_eq!(timestamp, None);
+        assert_eq!(rest, line);
+    }
+
+    #[test]
+    fn split_timestamp_rejects_missing_or_long_timestamps() {
+        let line = "2026-02-06T07:28:18Zmessage";
+        let (timestamp, rest) = split_timestamp(line);
+        assert_eq!(timestamp, None);
+        assert_eq!(rest, line);
+
+        let line = "2026-02-06T07:28:18.123456789012Z message";
+        let (timestamp, rest) = split_timestamp(line);
+        assert_eq!(timestamp, None);
+        assert_eq!(rest, line);
+    }
+}
