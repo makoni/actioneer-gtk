@@ -68,6 +68,14 @@
   </screenshots>
 
   <releases>
+    <release version="1.0.5" date="2026-02-09">
+      <description>
+        <ul>
+          <li>Manual workflow triggers now support workflow_dispatch inputs with dynamic parameter fields.</li>
+          <li>Dependency updates for ryu, unicode-ident, and zmij.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.4" date="2026-02-06">
       <description>
         <ul>

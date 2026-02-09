@@ -57,6 +57,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-02-09 — Bumped app version to 1.0.5 across configs and AppStream metadata.
 - [✅] 2026-02-08 — Added workflow_dispatch input support for manual workflow triggers.
 - [✅] 2026-02-06 — Bumped app version to 1.0.4 across configs and AppStream metadata.
 - [✅] 2026-02-06 — Added Copilot version bump checklist under .github/instructions/.

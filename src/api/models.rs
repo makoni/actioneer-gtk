@@ -521,7 +521,7 @@ mod tests {
         let mut values = HashMap::new();
         values.insert(
             "tag".to_string(),
-            WorkflowDispatchInputValue::String("v1.0.4".to_string()),
+            WorkflowDispatchInputValue::String("v1.0.5".to_string()),
         );
         values.insert(
             "dry_run".to_string(),
@@ -536,7 +536,7 @@ mod tests {
             .unwrap()
             .unwrap();
 
-        assert_eq!(payload["tag"], "v1.0.4");
+        assert_eq!(payload["tag"], "v1.0.5");
         assert!(payload.get("dry_run").is_none());
         assert!(payload.get("channel").is_none());
     }
