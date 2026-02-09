@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Repo {
@@ -44,6 +45,83 @@ pub struct Workflow {
     pub path: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum WorkflowDispatchInputType {
+    String,
+    Choice,
+    Boolean,
+    Environment,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum WorkflowDispatchInputValue {
+    String(String),
+    Boolean(bool),
+}
+
+impl WorkflowDispatchInputValue {
+    pub fn as_string(&self) -> String {
+        match self {
+            Self::String(value) => value.clone(),
+            Self::Boolean(value) => value.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct WorkflowDispatchInput {
+    pub name: String,
+    pub description: Option<String>,
+    pub required: bool,
+    pub input_type: WorkflowDispatchInputType,
+    pub default_value: Option<WorkflowDispatchInputValue>,
+    pub options: Vec<String>,
+}
+
+impl WorkflowDispatchInput {
+    pub fn default_as_string(&self) -> Option<String> {
+        self.default_value.as_ref().map(|value| value.as_string())
+    }
+}
+
+pub fn build_dispatch_inputs_payload(
+    inputs: &[WorkflowDispatchInput],
+    values: &HashMap<String, WorkflowDispatchInputValue>,
+) -> Result<Option<serde_json::Value>, String> {
+    let mut payload = serde_json::Map::new();
+
+    for input in inputs {
+        let Some(value) = values.get(&input.name) else {
+            if input.required {
+                return Err(format!("Input \"{}\" is required.", input.name));
+            }
+            continue;
+        };
+
+        let value_string = value.as_string();
+        if value_string.trim().is_empty() {
+            if input.required {
+                return Err(format!("Input \"{}\" is required.", input.name));
+            }
+            continue;
+        }
+
+        if !input.required
+            && let Some(default_value) = input.default_as_string()
+            && default_value == value_string
+        {
+            continue;
+        }
+
+        payload.insert(input.name.clone(), serde_json::Value::String(value_string));
+    }
+
+    if payload.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(serde_json::Value::Object(payload)))
+    }
+}
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowsResponse {
     pub total_count: i64,
@@ -409,5 +487,78 @@ mod tests {
             reset: 1234567890,
         };
         assert!(low.is_low());
+    }
+
+    #[test]
+    fn test_build_dispatch_inputs_payload() {
+        let inputs = vec![
+            WorkflowDispatchInput {
+                name: "tag".to_string(),
+                description: None,
+                required: true,
+                input_type: WorkflowDispatchInputType::String,
+                default_value: None,
+                options: Vec::new(),
+            },
+            WorkflowDispatchInput {
+                name: "dry_run".to_string(),
+                description: None,
+                required: false,
+                input_type: WorkflowDispatchInputType::Boolean,
+                default_value: Some(WorkflowDispatchInputValue::Boolean(false)),
+                options: Vec::new(),
+            },
+            WorkflowDispatchInput {
+                name: "channel".to_string(),
+                description: None,
+                required: false,
+                input_type: WorkflowDispatchInputType::Choice,
+                default_value: Some(WorkflowDispatchInputValue::String("stable".to_string())),
+                options: vec!["stable".to_string(), "beta".to_string()],
+            },
+        ];
+
+        let mut values = HashMap::new();
+        values.insert(
+            "tag".to_string(),
+            WorkflowDispatchInputValue::String("v1.0.4".to_string()),
+        );
+        values.insert(
+            "dry_run".to_string(),
+            WorkflowDispatchInputValue::Boolean(false),
+        );
+        values.insert(
+            "channel".to_string(),
+            WorkflowDispatchInputValue::String("stable".to_string()),
+        );
+
+        let payload = build_dispatch_inputs_payload(&inputs, &values)
+            .unwrap()
+            .unwrap();
+
+        assert_eq!(payload["tag"], "v1.0.4");
+        assert!(payload.get("dry_run").is_none());
+        assert!(payload.get("channel").is_none());
+    }
+
+    #[test]
+    fn test_build_dispatch_inputs_payload_requires_value() {
+        let inputs = vec![WorkflowDispatchInput {
+            name: "tag".to_string(),
+            description: None,
+            required: true,
+            input_type: WorkflowDispatchInputType::String,
+            default_value: None,
+            options: Vec::new(),
+        }];
+
+        let mut values = HashMap::new();
+        values.insert(
+            "tag".to_string(),
+            WorkflowDispatchInputValue::String("".to_string()),
+        );
+
+        let result = build_dispatch_inputs_payload(&inputs, &values);
+        assert!(result.is_err());
     }
 }

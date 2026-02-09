@@ -125,6 +125,29 @@ impl GitHubClient {
         .await
     }
 
+    pub async fn get_workflow_dispatch_inputs(
+        &self,
+        owner: &str,
+        repo: &str,
+        workflow_path: &str,
+        reference: Option<&str>,
+    ) -> Result<Vec<WorkflowDispatchInput>, GitHubError> {
+        if demo::is_active() {
+            return Ok(demo::workflow_dispatch_inputs());
+        }
+
+        workflows::get_workflow_dispatch_inputs(
+            &self.client,
+            &self.token,
+            &self.response_handler,
+            owner,
+            repo,
+            workflow_path,
+            reference,
+        )
+        .await
+    }
+
     // Run operations
     pub async fn list_runs(
         &self,

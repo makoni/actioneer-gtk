@@ -1861,14 +1861,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/memchr/memchr-2.7.6.crate",
-        "sha256": "f52b00d39961fc5b2736ea853c9cc86238e165017a493d1d5c8eac6bdc4cc273",
-        "dest": "cargo/vendor/memchr-2.7.6"
+        "url": "https://static.crates.io/crates/memchr/memchr-2.8.0.crate",
+        "sha256": "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79",
+        "dest": "cargo/vendor/memchr-2.8.0"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"f52b00d39961fc5b2736ea853c9cc86238e165017a493d1d5c8eac6bdc4cc273\", \"files\": {}}",
-        "dest": "cargo/vendor/memchr-2.7.6",
+        "contents": "{\"package\": \"f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79\", \"files\": {}}",
+        "dest": "cargo/vendor/memchr-2.8.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -2862,6 +2862,19 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/serde_yaml/serde_yaml-0.9.34+deprecated.crate",
+        "sha256": "6a8b1a1a2ebf674015cc02edccce75287f1a0130d394307b36743c2f5d504b47",
+        "dest": "cargo/vendor/serde_yaml-0.9.34+deprecated"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"6a8b1a1a2ebf674015cc02edccce75287f1a0130d394307b36743c2f5d504b47\", \"files\": {}}",
+        "dest": "cargo/vendor/serde_yaml-0.9.34+deprecated",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/sha1/sha1-0.10.6.crate",
         "sha256": "e3bf829a2d51ab4a5ddf1352d8470c140cadc8301b2ae1789db023f01cedd6ba",
         "dest": "cargo/vendor/sha1-0.10.6"
@@ -3494,6 +3507,19 @@
         "type": "inline",
         "contents": "{\"package\": \"fc1de2c688dc15305988b563c3854064043356019f97a4b46276fe734c4f07ea\", \"files\": {}}",
         "dest": "cargo/vendor/universal-hash-0.5.1",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/unsafe-libyaml/unsafe-libyaml-0.2.11.crate",
+        "sha256": "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861",
+        "dest": "cargo/vendor/unsafe-libyaml-0.2.11"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861\", \"files\": {}}",
+        "dest": "cargo/vendor/unsafe-libyaml-0.2.11",
         "dest-filename": ".cargo-checksum.json"
     },
     {

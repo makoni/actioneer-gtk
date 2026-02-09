@@ -1,6 +1,9 @@
 use super::data::{DemoData, GitHubErrorResult};
 use crate::api::GitHubError;
-use crate::api::models::{Branch, Job, RateLimitInfo, Repo, Workflow, WorkflowRun};
+use crate::api::models::{
+    Branch, Job, RateLimitInfo, Repo, Workflow, WorkflowDispatchInput, WorkflowDispatchInputType,
+    WorkflowDispatchInputValue, WorkflowRun,
+};
 use parking_lot::Mutex;
 use std::sync::OnceLock;
 
@@ -83,6 +86,27 @@ pub(crate) fn dispatch_workflow(
 ) -> GitHubErrorResult<()> {
     with_data_mut(|data| data.add_manual_run(owner, repo, workflow_id, reference))
         .unwrap_or(Err(GitHubError::NotFound))
+}
+
+pub(crate) fn workflow_dispatch_inputs() -> Vec<WorkflowDispatchInput> {
+    vec![
+        WorkflowDispatchInput {
+            name: "environment".to_string(),
+            description: Some("Target environment for the demo run".to_string()),
+            required: true,
+            input_type: WorkflowDispatchInputType::Choice,
+            default_value: Some(WorkflowDispatchInputValue::String("staging".to_string())),
+            options: vec!["staging".to_string(), "production".to_string()],
+        },
+        WorkflowDispatchInput {
+            name: "dry_run".to_string(),
+            description: Some("Run in simulation mode".to_string()),
+            required: false,
+            input_type: WorkflowDispatchInputType::Boolean,
+            default_value: Some(WorkflowDispatchInputValue::Boolean(true)),
+            options: Vec::new(),
+        },
+    ]
 }
 
 pub(crate) fn rerun_workflow(owner: &str, repo: &str, run_id: i64) -> GitHubErrorResult<()> {

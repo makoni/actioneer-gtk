@@ -2,7 +2,10 @@ use super::RunLoadService;
 use super::context::JobContextMap;
 use super::runs::{LoadRunsParams, RunDigestStore, RunRowContext, WorkflowRunListModel};
 use crate::api::GitHubClient;
-use crate::api::models::{Repo, Workflow};
+use crate::api::models::{
+    Repo, Workflow, WorkflowDispatchInput, WorkflowDispatchInputType, WorkflowDispatchInputValue,
+    build_dispatch_inputs_payload,
+};
 use crate::notifications::NotificationManager;
 use crate::preferences::PreferencesManager;
 use crate::ui::detail_view::RunFilters;
@@ -10,6 +13,7 @@ use crate::ui::utils::MainContextChannelExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
+use libadwaita::prelude::*;
 use parking_lot::Mutex;
 use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
@@ -42,6 +46,52 @@ pub(crate) struct WorkflowRowSettings {
     pub initial_expanded_run_ids: Vec<i64>,
 }
 
+enum DispatchInputWidget {
+    Text(adw::EntryRow),
+    Choice(adw::ComboRow, Vec<String>),
+    Boolean(adw::SwitchRow),
+}
+
+struct DispatchInputField {
+    input: WorkflowDispatchInput,
+    widget: DispatchInputWidget,
+}
+
+impl DispatchInputField {
+    fn current_value(&self) -> WorkflowDispatchInputValue {
+        match &self.widget {
+            DispatchInputWidget::Text(row) => {
+                WorkflowDispatchInputValue::String(row.text().to_string())
+            }
+            DispatchInputWidget::Choice(row, options) => {
+                let index = row.selected() as usize;
+                let value = options.get(index).cloned().unwrap_or_else(String::new);
+                WorkflowDispatchInputValue::String(value)
+            }
+            DispatchInputWidget::Boolean(row) => {
+                WorkflowDispatchInputValue::Boolean(row.is_active())
+            }
+        }
+    }
+}
+
+fn dispatch_input_title(input: &WorkflowDispatchInput) -> String {
+    if input.required {
+        format!("{} *", input.name)
+    } else {
+        input.name.clone()
+    }
+}
+
+fn dispatch_input_subtitle(input: &WorkflowDispatchInput) -> Option<String> {
+    match (input.description.as_ref(), input.required) {
+        (Some(description), true) => Some(format!("{} (required)", description)),
+        (Some(description), false) => Some(description.clone()),
+        (None, true) => Some("Required".to_string()),
+        (None, false) => None,
+    }
+}
+
 pub(crate) fn create_workflow_expander_row(
     workflow: &Workflow,
     context: &WorkflowRowContext,
@@ -69,6 +119,7 @@ pub(crate) fn create_workflow_expander_row(
 
     let main_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
     let workflow_display_name = format!("{}/{} • {}", owner, repo, workflow.name);
+    let workflow_path = workflow.path.clone();
 
     let header_box = gtk::Box::new(gtk::Orientation::Horizontal, 8);
     header_box.set_margin_top(8);
@@ -338,12 +389,24 @@ pub(crate) fn create_workflow_expander_row(
         branch_dropdown.set_sensitive(false);
         branch_box.append(&branch_dropdown);
 
+        let inputs_placeholder = gtk::Label::new(Some("Loading workflow inputs..."));
+        inputs_placeholder.set_wrap(true);
+        inputs_placeholder.set_xalign(0.0);
+
+        let inputs_group = adw::PreferencesGroup::builder().title("Inputs").build();
+        inputs_group.set_visible(false);
+
         if let Some(trigger_button) = dialog
             .widget_for_response(gtk::ResponseType::Accept)
             .and_then(|w| w.downcast::<gtk::Button>().ok())
         {
             trigger_button.set_sensitive(false);
         }
+
+        let input_fields: Rc<RefCell<Vec<DispatchInputField>>> = Rc::new(RefCell::new(Vec::new()));
+        let branches_loaded = Rc::new(Cell::new(false));
+        let branches_available = Rc::new(Cell::new(false));
+        let inputs_loaded = Rc::new(Cell::new(false));
 
         let client_for_branches = client.clone();
         let owner_for_branches = owner.clone();
@@ -357,6 +420,9 @@ pub(crate) fn create_workflow_expander_row(
         let trigger_button_for_branches = dialog
             .widget_for_response(gtk::ResponseType::Accept)
             .and_then(|w| w.downcast::<gtk::Button>().ok());
+        let branches_loaded_for_branches = branches_loaded.clone();
+        let branches_available_for_branches = branches_available.clone();
+        let inputs_loaded_for_branches = inputs_loaded.clone();
 
         branch_receiver.attach(None, move |branch_names| {
             let str_refs: Vec<&str> = branch_names.iter().map(|s| s.as_str()).collect();
@@ -369,8 +435,14 @@ pub(crate) fn create_workflow_expander_row(
                 dropdown_for_branches.set_selected(0);
             }
 
+            branches_loaded_for_branches.set(true);
+            branches_available_for_branches.set(!str_refs.is_empty());
+
             if let Some(btn) = trigger_button_for_branches.as_ref() {
-                btn.set_sensitive(!str_refs.is_empty());
+                let should_enable = branches_loaded_for_branches.get()
+                    && inputs_loaded_for_branches.get()
+                    && branches_available_for_branches.get();
+                btn.set_sensitive(should_enable);
             }
             glib::ControlFlow::Break
         });
@@ -404,7 +476,150 @@ pub(crate) fn create_workflow_expander_row(
             let _ = branch_sender.send(branch_names);
         });
 
+        let client_for_inputs = client.clone();
+        let owner_for_inputs = owner.clone();
+        let repo_for_inputs = repo.clone();
+        let workflow_path_for_inputs = workflow_path.clone();
+        let default_ref_for_inputs = repo_model_for_dialog
+            .default_branch
+            .clone()
+            .unwrap_or_else(|| "main".to_string());
+        let inputs_group_for_loader = inputs_group.clone();
+        let inputs_placeholder_for_loader = inputs_placeholder.clone();
+        let input_fields_for_loader = input_fields.clone();
+        let trigger_button_for_inputs = dialog
+            .widget_for_response(gtk::ResponseType::Accept)
+            .and_then(|w| w.downcast::<gtk::Button>().ok());
+        let branches_loaded_for_inputs = branches_loaded.clone();
+        let branches_available_for_inputs = branches_available.clone();
+        let inputs_loaded_for_inputs = inputs_loaded.clone();
+        let toast_overlay_for_inputs = toast_overlay.clone();
+
+        let (inputs_sender, inputs_receiver) = glib::MainContext::default()
+            .channel::<Result<Vec<WorkflowDispatchInput>, String>>(glib::Priority::default());
+
+        inputs_receiver.attach(None, move |result| {
+            input_fields_for_loader.borrow_mut().clear();
+            match result {
+                Ok(inputs) if inputs.is_empty() => {
+                    inputs_placeholder_for_loader.set_text("No inputs defined for this workflow.");
+                    inputs_placeholder_for_loader.set_visible(true);
+                    inputs_group_for_loader.set_visible(false);
+                }
+                Ok(inputs) => {
+                    inputs_placeholder_for_loader.set_visible(false);
+                    inputs_group_for_loader.set_visible(true);
+
+                    for input in inputs {
+                        let title = dispatch_input_title(&input);
+                        let subtitle = dispatch_input_subtitle(&input);
+
+                        match input.input_type {
+                            WorkflowDispatchInputType::Choice if !input.options.is_empty() => {
+                                let options = input.options.clone();
+                                let str_refs: Vec<&str> =
+                                    options.iter().map(|s| s.as_str()).collect();
+                                let model = gtk::StringList::new(&str_refs);
+                                let row = adw::ComboRow::builder()
+                                    .title(title)
+                                    .model(&model)
+                                    .build();
+                                if let Some(subtitle) = subtitle {
+                                    row.set_subtitle(&subtitle);
+                                }
+                                let selected = input
+                                    .default_as_string()
+                                    .and_then(|value| options.iter().position(|opt| opt == &value))
+                                    .unwrap_or(0);
+                                row.set_selected(selected as u32);
+                                inputs_group_for_loader.add(&row);
+                                input_fields_for_loader.borrow_mut().push(DispatchInputField {
+                                    input,
+                                    widget: DispatchInputWidget::Choice(row, options),
+                                });
+                            }
+                            WorkflowDispatchInputType::Boolean => {
+                                let row = adw::SwitchRow::builder().title(title).build();
+                                if let Some(subtitle) = subtitle {
+                                    row.set_subtitle(&subtitle);
+                                }
+                                if let Some(WorkflowDispatchInputValue::Boolean(default_value)) =
+                                    input.default_value.as_ref()
+                                {
+                                    row.set_active(*default_value);
+                                }
+                                inputs_group_for_loader.add(&row);
+                                input_fields_for_loader.borrow_mut().push(DispatchInputField {
+                                    input,
+                                    widget: DispatchInputWidget::Boolean(row),
+                                });
+                            }
+                            _ => {
+                                let row = adw::EntryRow::builder().title(title).build();
+                                if let Some(subtitle) = subtitle {
+                                    row.set_tooltip_text(Some(&subtitle));
+                                }
+                                if let Some(default_value) = input.default_as_string() {
+                                    row.set_text(&default_value);
+                                }
+                                inputs_group_for_loader.add(&row);
+                                input_fields_for_loader.borrow_mut().push(DispatchInputField {
+                                    input,
+                                    widget: DispatchInputWidget::Text(row),
+                                });
+                            }
+                        }
+                    }
+                }
+                Err(error) => {
+                    inputs_placeholder_for_loader
+                        .set_text("Workflow inputs could not be loaded.");
+                    inputs_placeholder_for_loader.set_visible(true);
+                    inputs_group_for_loader.set_visible(false);
+
+                    let toast_overlay = toast_overlay_for_inputs.clone();
+                    glib::MainContext::default().spawn_local(async move {
+                        let toast = adw::Toast::new(&format!(
+                            "✗ Failed to load workflow inputs: {}",
+                            error
+                        ));
+                        toast.set_timeout(5);
+                        toast_overlay.add_toast(toast);
+                    });
+                }
+            }
+
+            inputs_loaded_for_inputs.set(true);
+            if let Some(btn) = trigger_button_for_inputs.as_ref() {
+                let should_enable = branches_loaded_for_inputs.get()
+                    && inputs_loaded_for_inputs.get()
+                    && branches_available_for_inputs.get();
+                btn.set_sensitive(should_enable);
+            }
+
+            glib::ControlFlow::Break
+        });
+
+        crate::runtime_handle().spawn(async move {
+            let client_guard = client_for_inputs.lock().clone();
+            let inputs_result = client_guard
+                .get_workflow_dispatch_inputs(
+                    &owner_for_inputs,
+                    &repo_for_inputs,
+                    &workflow_path_for_inputs,
+                    Some(&default_ref_for_inputs),
+                )
+                .await;
+
+            let _ = inputs_sender.send(
+                inputs_result.map_err(|error| format!("Failed to load workflow inputs: {}", error)),
+            );
+        });
+
         vbox.append(&branch_box);
+        vbox.append(&inputs_placeholder);
+        vbox.append(&inputs_group);
+
         content_area.append(&vbox);
 
         let client_clone = client.clone();
@@ -425,6 +640,7 @@ pub(crate) fn create_workflow_expander_row(
 
         let run_filters_for_response = run_filters_for_dialog.clone();
         let run_load_service_handle = run_load_service_for_response.clone();
+        let input_fields_for_dialog = input_fields.clone();
         dialog.connect_response(move |dialog, response| {
             if response == gtk::ResponseType::Accept {
                 let selected_branch = branch_dropdown
@@ -444,13 +660,41 @@ pub(crate) fn create_workflow_expander_row(
                 let branch = selected_branch.clone();
                 let workflow_id_str = workflow_id.to_string();
 
+                let input_fields = input_fields_for_dialog.borrow();
+                let mut inputs = Vec::new();
+                let mut input_values = HashMap::new();
+                for field in input_fields.iter() {
+                    inputs.push(field.input.clone());
+                    input_values.insert(field.input.name.clone(), field.current_value());
+                }
+                drop(input_fields);
+
+                let inputs_payload = match build_dispatch_inputs_payload(&inputs, &input_values) {
+                    Ok(payload) => payload,
+                    Err(error) => {
+                        let toast_overlay = toast_overlay_clone.clone();
+                        glib::MainContext::default().spawn_local(async move {
+                            let toast = adw::Toast::new(&format!("✗ {}", error));
+                            toast.set_timeout(5);
+                            toast_overlay.add_toast(toast);
+                        });
+                        return;
+                    }
+                };
+
                 let (sender, receiver) = glib::MainContext::default()
                     .channel::<Result<String, String>>(glib::Priority::default());
 
                 crate::runtime_handle().spawn(async move {
                     let client_guard = client.lock().clone();
                     let dispatch_result = client_guard
-                        .dispatch_workflow(&owner, &repo, &workflow_id_str, &branch, None)
+                        .dispatch_workflow(
+                            &owner,
+                            &repo,
+                            &workflow_id_str,
+                            &branch,
+                            inputs_payload,
+                        )
                         .await;
 
                     match dispatch_result {
