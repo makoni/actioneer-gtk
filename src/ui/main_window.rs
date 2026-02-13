@@ -41,6 +41,22 @@ use crate::ui::state::{RepoActionsState, WorkflowStatusCounts};
 const REPO_STATUS_TTL: Duration = Duration::from_secs(300);
 const MIN_WINDOW_WIDTH: i32 = 860;
 const MIN_WINDOW_HEIGHT: i32 = 520;
+const HOMEPAGE_URL: &str = "https://github.com/makoni/actioneer-gtk";
+const ISSUE_URL: &str = "https://github.com/makoni/actioneer-gtk/issues";
+const HELP_TEXT: &str = "Actioneer Help\n\n\
+Getting started\n\
+1. Sign in with your GitHub account on the welcome screen.\n\
+2. Pick a repository in the left sidebar.\n\
+3. Expand a workflow to inspect recent runs.\n\n\
+Useful actions\n\
+- Refresh repository/workflow status with F5.\n\
+- Trigger manual workflow runs from the play button.\n\
+- Open Preferences with Ctrl+, to adjust refresh/notifications.\n\
+- Open Keyboard Shortcuts with Ctrl+? for quick references.\n\n\
+Troubleshooting\n\
+- If no repos appear, verify your token and network access.\n\
+- For expired logs, retry from the latest run or trigger a new run.\n\
+- Use Report Issue from the menu to send diagnostics and steps.";
 
 #[derive(Clone)]
 pub struct MainWindow {
@@ -192,6 +208,8 @@ impl MainWindow {
             demo_mode: demo_mode.clone(),
         };
 
+        main_window.ensure_app_actions(app);
+        main_window.ensure_app_accels(app);
         main_window.build_ui();
         main_window.restore_preferences();
         main_window.prime_favorites();
@@ -357,7 +375,9 @@ impl MainWindow {
         menu_button.add_css_class("flat");
 
         let menu = Menu::new();
-        menu.append(Some("Preferences"), Some("win.open_preferences"));
+        menu.append(Some("Preferences"), Some("app.preferences"));
+        menu.append(Some("Keyboard Shortcuts"), Some("app.shortcuts"));
+        menu.append(Some("Help"), Some("app.help"));
         if cfg!(debug_assertions) {
             menu.append(
                 Some("Send test notification"),
@@ -365,6 +385,9 @@ impl MainWindow {
             );
         }
         menu.append(Some("Sign out"), Some("win.sign_out"));
+        menu.append(Some("Report Issue"), Some("app.report_issue"));
+        menu.append(Some("About Actioneer"), Some("app.about"));
+        menu.append(Some("Quit"), Some("app.quit"));
 
         menu_button.set_menu_model(Some(&menu));
         header.pack_end(&menu_button);
@@ -401,6 +424,83 @@ impl MainWindow {
         }
     }
 
+    fn ensure_app_actions(&self, app: &adw::Application) {
+        if app.lookup_action("preferences").is_none() {
+            let this = self.clone();
+            let action = gio::SimpleAction::new("preferences", None);
+            action.connect_activate(move |_, _| {
+                this.open_preferences_window();
+            });
+            app.add_action(&action);
+        }
+
+        if app.lookup_action("about").is_none() {
+            let this = self.clone();
+            let action = gio::SimpleAction::new("about", None);
+            action.connect_activate(move |_, _| {
+                this.open_about_window();
+            });
+            app.add_action(&action);
+        }
+
+        if app.lookup_action("shortcuts").is_none() {
+            let this = self.clone();
+            let action = gio::SimpleAction::new("shortcuts", None);
+            action.connect_activate(move |_, _| {
+                this.open_shortcuts_window();
+            });
+            app.add_action(&action);
+        }
+
+        if app.lookup_action("help").is_none() {
+            let this = self.clone();
+            let action = gio::SimpleAction::new("help", None);
+            action.connect_activate(move |_, _| {
+                this.open_help_window();
+            });
+            app.add_action(&action);
+        }
+
+        if app.lookup_action("report_issue").is_none() {
+            let this = self.clone();
+            let action = gio::SimpleAction::new("report_issue", None);
+            action.connect_activate(move |_, _| {
+                this.open_report_issue();
+            });
+            app.add_action(&action);
+        }
+
+        if app.lookup_action("refresh").is_none() {
+            let this = self.clone();
+            let action = gio::SimpleAction::new("refresh", None);
+            action.connect_activate(move |_, _| {
+                if this.client.lock().is_some() {
+                    this.load_repositories();
+                } else {
+                    warn!("Cannot refresh: GitHub client not initialized");
+                }
+            });
+            app.add_action(&action);
+        }
+
+        if app.lookup_action("quit").is_none() {
+            let app_clone = app.clone();
+            let action = gio::SimpleAction::new("quit", None);
+            action.connect_activate(move |_, _| {
+                app_clone.quit();
+            });
+            app.add_action(&action);
+        }
+    }
+
+    fn ensure_app_accels(&self, app: &adw::Application) {
+        app.set_accels_for_action("app.refresh", &["F5"]);
+        app.set_accels_for_action("app.quit", &["<Primary>q"]);
+        app.set_accels_for_action("app.preferences", &["<Primary>comma"]);
+        app.set_accels_for_action("app.shortcuts", &["<Primary>question", "<Primary>slash"]);
+        app.set_accels_for_action("app.help", &["F1"]);
+    }
+
     fn ensure_app_focus_action(app: &adw::Application, window: &adw::ApplicationWindow) {
         if app.lookup_action("focus-main-window").is_some() {
             return;
@@ -430,6 +530,131 @@ impl MainWindow {
                 gtk::MessageType::Info,
                 gtk::ButtonsType::Ok,
                 "Preferences are currently unavailable.",
+            );
+            dialog.connect_response(|dialog, _| dialog.close());
+            dialog.present();
+        }
+    }
+
+    fn open_about_window(&self) {
+        let about = adw::AboutWindow::builder()
+            .transient_for(&self.window)
+            .application_name("Actioneer")
+            .application_icon(crate::APP_ICON_NAME)
+            .developer_name("Sergey Armodin")
+            .version(env!("CARGO_PKG_VERSION"))
+            .website(HOMEPAGE_URL)
+            .issue_url(ISSUE_URL)
+            .license_type(gtk::License::MitX11)
+            .build();
+        about.present();
+    }
+
+    fn open_shortcuts_window(&self) {
+        let window = gtk::ShortcutsWindow::builder()
+            .transient_for(&self.window)
+            .modal(true)
+            .default_width(460)
+            .default_height(340)
+            .build();
+        let section = gtk::ShortcutsSection::builder().title("General").build();
+        let group = gtk::ShortcutsGroup::builder().title("Application").build();
+
+        group.append(&Self::shortcut_item("Refresh repositories", "F5"));
+        group.append(&Self::shortcut_item("Open preferences", "<Primary>comma"));
+        group.append(&Self::shortcut_item(
+            "Show keyboard shortcuts",
+            "<Primary>question",
+        ));
+        group.append(&Self::shortcut_item("Open help", "F1"));
+        group.append(&Self::shortcut_item("Quit application", "<Primary>q"));
+
+        section.append(&group);
+        window.set_child(Some(&section));
+        window.present();
+    }
+
+    fn shortcut_item(title: &str, accelerator: &str) -> gtk::ShortcutsShortcut {
+        gtk::ShortcutsShortcut::builder()
+            .title(title)
+            .accelerator(accelerator)
+            .build()
+    }
+
+    fn open_help_window(&self) {
+        let window = adw::Window::builder()
+            .title("Actioneer Help")
+            .transient_for(&self.window)
+            .modal(true)
+            .default_width(620)
+            .default_height(520)
+            .build();
+
+        let scrolled = gtk::ScrolledWindow::builder()
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .vexpand(true)
+            .hexpand(true)
+            .build();
+        let content = gtk::Box::new(gtk::Orientation::Vertical, 12);
+        content.set_margin_top(18);
+        content.set_margin_bottom(18);
+        content.set_margin_start(18);
+        content.set_margin_end(18);
+
+        let label = gtk::Label::new(Some(HELP_TEXT));
+        label.set_wrap(true);
+        label.set_selectable(false);
+        label.set_xalign(0.0);
+        content.append(&label);
+
+        let issue_hint = gtk::Label::new(Some(&format!(
+            "Need more help? Use “Report Issue” in the app menu or visit:\n{}",
+            ISSUE_URL
+        )));
+        issue_hint.set_wrap(true);
+        issue_hint.set_xalign(0.0);
+        issue_hint.add_css_class("dim-label");
+        content.append(&issue_hint);
+
+        scrolled.set_child(Some(&content));
+
+        let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        container.set_vexpand(true);
+        container.set_hexpand(true);
+        container.append(&scrolled);
+
+        let button_row = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        button_row.set_margin_top(12);
+        button_row.set_margin_bottom(18);
+        button_row.set_margin_start(18);
+        button_row.set_margin_end(18);
+
+        let spacer = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        spacer.set_hexpand(true);
+        button_row.append(&spacer);
+
+        let close_button = gtk::Button::with_label("Close");
+        close_button.add_css_class("suggested-action");
+        let window_for_close = window.clone();
+        close_button.connect_clicked(move |_| {
+            window_for_close.close();
+        });
+        button_row.append(&close_button);
+
+        container.append(&button_row);
+        window.set_content(Some(&container));
+        window.present();
+    }
+
+    fn open_report_issue(&self) {
+        if let Err(err) = open::that(ISSUE_URL) {
+            error!("Failed to open issue tracker URL: {}", err);
+            let dialog = gtk::MessageDialog::new(
+                Some(&self.window),
+                gtk::DialogFlags::MODAL,
+                gtk::MessageType::Error,
+                gtk::ButtonsType::Ok,
+                "Failed to open issue tracker in the browser.",
             );
             dialog.connect_response(|dialog, _| dialog.close());
             dialog.present();

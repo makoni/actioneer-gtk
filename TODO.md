@@ -57,6 +57,10 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-02-13 — Fixed Help UX: removed preselected text and pinned the Close button to the bottom-right corner.
+- [✅] 2026-02-13 — Added Help menu/action with embedded in-app help text and aligned shortcuts to best-practice bindings (F1 Help, Ctrl+? Shortcuts).
+- [✅] 2026-02-13 — Added keyboard shortcuts window and “Report Issue” menu action linking to https://github.com/makoni/actioneer-gtk/issues.
+- [✅] 2026-02-13 — Added standard GNOME app actions/accelerators and About window.
 - [✅] 2026-02-09 — Bumped app version to 1.0.5 across configs and AppStream metadata.
 - [✅] 2026-02-08 — Added workflow_dispatch input support for manual workflow triggers.
 - [✅] 2026-02-06 — Bumped app version to 1.0.4 across configs and AppStream metadata.
