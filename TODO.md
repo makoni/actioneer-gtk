@@ -59,6 +59,9 @@ Notes
 -Recent Updates
 - [✅] 2026-02-14 — Fixed live language switching end-to-end and translated additional UI surfaces (sidebar section headers/meta labels, welcome screen, auth/status dialogs, run/workflow placeholders/tooltips); synchronized new msgids across all locale catalogs.
 - [✅] 2026-02-14 — Stabilized localization test isolation by restoring the previous effective language in i18n tests; `cargo test` no longer depends on execution order.
+- [✅] 2026-02-14 — Localized `data/metainfo.xml` (AppStream summary/description/captions) for supported locales and renamed screenshot assets to `en-*.png` for shared use across all languages.
+- [✅] 2026-02-14 — Localized the AppStream feature list (`description > ul`) in `data/metainfo.xml` for all supported locales.
+- [✅] 2026-02-14 — Localized all AppStream release notes (`data/metainfo.xml` `<releases>`) for supported locales.
 - [✅] 2026-02-14 — Ran ignored GTK UI tests with `xvfb-run`; all ignored UI tests passed after localization updates.
 - [✅] 2026-02-14 — Fixed language-switching bug: app now loads `po/*.po` catalogs at runtime in dev mode, so selected locale applies on-the-fly and after restart.
 - [✅] 2026-02-14 — Localized workflow completion notification text/status labels and added Preferences controls for theme + language (system fallback to English, runtime window reload on language switch).

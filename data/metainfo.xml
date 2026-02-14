@@ -5,11 +5,38 @@
   <metadata_license>MIT</metadata_license>
   <name>Actioneer</name>
   <summary>Track GitHub Actions runs</summary>
+  <summary xml:lang="zh-Hans">跟踪 GitHub Actions 运行</summary>
+  <summary xml:lang="hi">GitHub Actions रन ट्रैक करें</summary>
+  <summary xml:lang="es">Sigue las ejecuciones de GitHub Actions</summary>
+  <summary xml:lang="fr">Suivez les exécutions GitHub Actions</summary>
+  <summary xml:lang="ar">تتبّع عمليات تشغيل GitHub Actions</summary>
+  <summary xml:lang="bn">GitHub Actions রান ট্র্যাক করুন</summary>
+  <summary xml:lang="pt-BR">Acompanhe execuções do GitHub Actions</summary>
+  <summary xml:lang="ru">Отслеживайте запуски GitHub Actions</summary>
+  <summary xml:lang="ur">GitHub Actions رنز کو ٹریک کریں</summary>
   <description>
     <p>Actioneer lets you browse GitHub repositories, inspect workflow runs, check job
     logs, and refresh status without leaving your desktop.</p>
+    <p xml:lang="zh-Hans">Actioneer 让你浏览 GitHub 仓库、检查工作流运行、查看作业日志，并在不离开桌面的情况下刷新状态。</p>
+    <p xml:lang="hi">Actioneer आपको GitHub रिपॉज़िटरी ब्राउज़ करने, वर्कफ़्लो रन देखने, जॉब लॉग जांचने और डेस्कटॉप छोड़े बिना स्थिति रीफ़्रेश करने देता है।</p>
+    <p xml:lang="es">Actioneer te permite explorar repositorios de GitHub, revisar ejecuciones de workflows, consultar logs de jobs y actualizar el estado sin salir del escritorio.</p>
+    <p xml:lang="fr">Actioneer vous permet de parcourir des dépôts GitHub, d’inspecter les exécutions de workflows, de consulter les journaux de jobs et d’actualiser l’état sans quitter votre bureau.</p>
+    <p xml:lang="ar">يتيح لك Actioneer تصفح مستودعات GitHub وفحص عمليات تشغيل سير العمل ومراجعة سجلات المهام وتحديث الحالة دون مغادرة سطح المكتب.</p>
+    <p xml:lang="bn">Actioneer আপনাকে GitHub রিপোজিটরি ব্রাউজ করতে, ওয়ার্কফ্লো রান দেখতে, জব লগ পরীক্ষা করতে এবং ডেস্কটপ না ছাড়াই স্ট্যাটাস রিফ্রেশ করতে দেয়।</p>
+    <p xml:lang="pt-BR">O Actioneer permite navegar por repositórios do GitHub, inspecionar execuções de workflow, conferir logs de jobs e atualizar o status sem sair da área de trabalho.</p>
+    <p xml:lang="ru">Actioneer позволяет просматривать репозитории GitHub, проверять запуски workflow, смотреть логи заданий и обновлять статус, не выходя из рабочего стола.</p>
+    <p xml:lang="ur">Actioneer آپ کو GitHub ریپازٹریز براؤز کرنے، ورک فلو رنز دیکھنے، جاب لاگز چیک کرنے اور ڈیسک ٹاپ چھوڑے بغیر اسٹیٹس ریفریش کرنے دیتا ہے۔</p>
 
     <p>Key features</p>
+    <p xml:lang="zh-Hans">主要功能</p>
+    <p xml:lang="hi">मुख्य विशेषताएँ</p>
+    <p xml:lang="es">Funciones principales</p>
+    <p xml:lang="fr">Fonctionnalités principales</p>
+    <p xml:lang="ar">الميزات الرئيسية</p>
+    <p xml:lang="bn">প্রধান বৈশিষ্ট্য</p>
+    <p xml:lang="pt-BR">Principais recursos</p>
+    <p xml:lang="ru">Ключевые возможности</p>
+    <p xml:lang="ur">اہم خصوصیات</p>
     <ul>
       <li>Browse your GitHub repositories and view Actions workflows and recent runs quickly.</li>
       <li>Inspect run status (success, failure, queued, in progress) with clear badges and counts.</li>
@@ -21,10 +48,118 @@
       <li>Keep recent workflow data available offline.</li>
       <li>Fast refreshes that keep the interface responsive.</li>
     </ul>
+    <ul xml:lang="zh-Hans">
+      <li>快速浏览你的 GitHub 仓库，查看 Actions 工作流和最近运行。</li>
+      <li>通过清晰的徽章和计数查看运行状态（成功、失败、排队、进行中）。</li>
+      <li>筛选运行记录，专注最重要的内容。</li>
+      <li>查看作业日志：下载并预览运行日志，快速排查问题。</li>
+      <li>可直接在应用中触发工作流、取消进行中的工作流，并重新运行失败的运行。</li>
+      <li>收藏与快速搜索可帮助你聚焦最重要的仓库和工作流。</li>
+      <li>提供运行完成与失败的桌面通知，不错过关键结果。</li>
+      <li>最近的工作流数据可离线访问。</li>
+      <li>快速刷新，保持界面响应。</li>
+    </ul>
+    <ul xml:lang="hi">
+      <li>अपने GitHub रिपॉज़िटरी जल्दी ब्राउज़ करें और Actions वर्कफ़्लो व हाल के रन देखें।</li>
+      <li>स्पष्ट बैज और गिनती के साथ रन स्थिति (सफल, विफल, कतार में, प्रगति में) जांचें।</li>
+      <li>रन फ़िल्टर करें और सबसे महत्वपूर्ण चीज़ों पर ध्यान दें।</li>
+      <li>जॉब लॉग देखें: तेज़ ट्रबलशूटिंग के लिए रन लॉग डाउनलोड और प्रीव्यू करें।</li>
+      <li>ऐप से सीधे वर्कफ़्लो ट्रिगर करें, चल रहे वर्कफ़्लो रद्द करें और विफल रन फिर से चलाएँ।</li>
+      <li>फ़ेवरिट्स और क्विक सर्च आपको सबसे ज़रूरी रिपॉज़िटरी और वर्कफ़्लो पर ध्यान देने देते हैं।</li>
+      <li>रन पूरा होने और विफल होने पर डेस्कटॉप सूचनाएँ मिलती हैं ताकि महत्वपूर्ण परिणाम न छूटें।</li>
+      <li>हाल का वर्कफ़्लो डेटा ऑफ़लाइन उपलब्ध रहता है।</li>
+      <li>तेज़ रिफ्रेश इंटरफ़ेस को उत्तरदायी बनाए रखते हैं।</li>
+    </ul>
+    <ul xml:lang="es">
+      <li>Explora rápidamente tus repositorios de GitHub y consulta workflows de Actions y ejecuciones recientes.</li>
+      <li>Revisa el estado de las ejecuciones (éxito, fallo, en cola, en progreso) con insignias y conteos claros.</li>
+      <li>Filtra ejecuciones y céntrate en lo más importante.</li>
+      <li>Consulta logs de jobs: descarga y previsualiza logs para resolver problemas rápidamente.</li>
+      <li>Lanza workflows, cancela workflows en ejecución y vuelve a ejecutar fallos directamente desde la app.</li>
+      <li>Favoritos y búsqueda rápida te ayudan a enfocarte en los repositorios y workflows que más importan.</li>
+      <li>Notificaciones de escritorio para ejecuciones completadas y fallidas para no perder resultados importantes.</li>
+      <li>Mantén disponibles sin conexión los datos recientes de workflows.</li>
+      <li>Actualizaciones rápidas que mantienen la interfaz fluida.</li>
+    </ul>
+    <ul xml:lang="fr">
+      <li>Parcourez rapidement vos dépôts GitHub et consultez les workflows Actions et les exécutions récentes.</li>
+      <li>Inspectez l’état des exécutions (succès, échec, en file, en cours) avec des badges et compteurs clairs.</li>
+      <li>Filtrez les exécutions et concentrez-vous sur l’essentiel.</li>
+      <li>Consultez les journaux des jobs : téléchargez et prévisualisez les logs pour dépanner rapidement.</li>
+      <li>Déclenchez des workflows, annulez ceux en cours et relancez les exécutions en échec depuis l’application.</li>
+      <li>Les favoris et la recherche rapide vous aident à cibler les dépôts et workflows qui comptent le plus.</li>
+      <li>Notifications de bureau pour les exécutions terminées et en échec afin de ne rien manquer d’important.</li>
+      <li>Conservez les données récentes des workflows disponibles hors ligne.</li>
+      <li>Des rafraîchissements rapides gardent l’interface réactive.</li>
+    </ul>
+    <ul xml:lang="ar">
+      <li>تصفّح مستودعات GitHub بسرعة واطّلع على سير عمل Actions وأحدث عمليات التشغيل.</li>
+      <li>افحص حالة التشغيل (نجاح، فشل، في قائمة الانتظار، قيد التنفيذ) عبر شارات وعدّادات واضحة.</li>
+      <li>صفِّ عمليات التشغيل وركّز على ما يهم أكثر.</li>
+      <li>اعرض سجلات المهام: نزّل السجلات وعاينها لحلّ المشاكل بسرعة.</li>
+      <li>شغّل سير العمل، وألغِ السير قيد التنفيذ، وأعد تشغيل الحالات الفاشلة مباشرة من التطبيق.</li>
+      <li>تساعدك المفضلة والبحث السريع على التركيز على المستودعات وسير العمل الأكثر أهمية.</li>
+      <li>إشعارات سطح المكتب لعمليات التشغيل المكتملة والفاشلة حتى لا تفوّت النتائج المهمة.</li>
+      <li>إتاحة بيانات سير العمل الحديثة دون اتصال.</li>
+      <li>تحديثات سريعة تُبقي الواجهة سريعة الاستجابة.</li>
+    </ul>
+    <ul xml:lang="bn">
+      <li>দ্রুত আপনার GitHub রিপোজিটরি ব্রাউজ করুন এবং Actions ওয়ার্কফ্লো ও সাম্প্রতিক রান দেখুন।</li>
+      <li>পরিষ্কার ব্যাজ ও কাউন্টসহ রান স্ট্যাটাস (সফল, ব্যর্থ, কিউড, চলমান) দেখুন।</li>
+      <li>রান ফিল্টার করুন এবং সবচেয়ে গুরুত্বপূর্ণ বিষয়ে ফোকাস করুন।</li>
+      <li>জব লগ দেখুন: দ্রুত সমস্যা সমাধানের জন্য রান লগ ডাউনলোড ও প্রিভিউ করুন।</li>
+      <li>অ্যাপ থেকেই ওয়ার্কফ্লো চালু করুন, চলমান ওয়ার্কফ্লো বাতিল করুন, এবং ব্যর্থ রান পুনরায় চালান।</li>
+      <li>ফেভারিটস ও কুইক সার্চ আপনাকে সবচেয়ে গুরুত্বপূর্ণ রিপোজিটরি ও ওয়ার্কফ্লোতে ফোকাস করতে দেয়।</li>
+      <li>রান সম্পন্ন/ব্যর্থ হলে ডেস্কটপ নোটিফিকেশন পান, যাতে গুরুত্বপূর্ণ ফল মিস না হয়।</li>
+      <li>সাম্প্রতিক ওয়ার্কফ্লো ডেটা অফলাইনে উপলব্ধ থাকে।</li>
+      <li>দ্রুত রিফ্রেশ ইন্টারফেসকে রেসপন্সিভ রাখে।</li>
+    </ul>
+    <ul xml:lang="pt-BR">
+      <li>Navegue rapidamente pelos seus repositórios do GitHub e veja workflows do Actions e execuções recentes.</li>
+      <li>Inspecione o status das execuções (sucesso, falha, em fila, em andamento) com badges e contagens claras.</li>
+      <li>Filtre execuções e foque no que mais importa.</li>
+      <li>Veja logs de jobs: baixe e visualize logs de execução para troubleshooting rápido.</li>
+      <li>Dispare workflows, cancele workflows em execução e reexecute falhas diretamente no app.</li>
+      <li>Favoritos e busca rápida ajudam você a focar nos repositórios e workflows mais importantes.</li>
+      <li>Notificações de desktop para conclusões e falhas de execução para você não perder resultados importantes.</li>
+      <li>Mantenha dados recentes de workflow disponíveis offline.</li>
+      <li>Atualizações rápidas mantêm a interface responsiva.</li>
+    </ul>
+    <ul xml:lang="ru">
+      <li>Быстро просматривайте свои репозитории GitHub и последние запуски в Actions.</li>
+      <li>Проверяйте статус запусков (успех, ошибка, в очереди, выполняется) с наглядными метками и счётчиками.</li>
+      <li>Фильтруйте запуски и фокусируйтесь на самом важном.</li>
+      <li>Просматривайте логи заданий: скачивайте и предварительно смотрите логи для быстрой диагностики.</li>
+      <li>Запускайте workflow, отменяйте выполняющиеся и перезапускайте неудачные запуски прямо из приложения.</li>
+      <li>Избранное и быстрый поиск помогают сосредоточиться на самых важных репозиториях и workflow.</li>
+      <li>Получайте уведомления о завершённых и неудачных запусках, чтобы не пропустить важные результаты.</li>
+      <li>Последние данные workflow доступны офлайн.</li>
+      <li>Быстрые обновления сохраняют отзывчивость интерфейса.</li>
+    </ul>
+    <ul xml:lang="ur">
+      <li>اپنی GitHub ریپازٹریز تیزی سے براؤز کریں اور Actions ورک فلوز اور حالیہ رنز دیکھیں۔</li>
+      <li>واضح بیجز اور گنتی کے ساتھ رن اسٹیٹس (کامیاب، ناکام، قطار میں، جاری) دیکھیں۔</li>
+      <li>رنز فلٹر کریں اور اہم ترین چیزوں پر توجہ دیں۔</li>
+      <li>جاب لاگز دیکھیں: تیز ٹربل شوٹنگ کے لیے رن لاگز ڈاؤن لوڈ اور پری ویو کریں۔</li>
+      <li>ایپ سے براہ راست ورک فلوز چلائیں، جاری ورک فلوز منسوخ کریں، اور ناکام رنز دوبارہ چلائیں۔</li>
+      <li>فیورٹس اور فوری تلاش آپ کو سب سے اہم ریپازٹریز اور ورک فلوز پر توجہ دینے میں مدد دیتے ہیں۔</li>
+      <li>رن مکمل یا ناکام ہونے پر ڈیسک ٹاپ نوٹیفکیشنز ملیں تاکہ اہم نتائج آپ سے رہ نہ جائیں۔</li>
+      <li>حالیہ ورک فلو ڈیٹا آف لائن دستیاب رہتا ہے۔</li>
+      <li>تیز ریفریش انٹرفیس کو جواب دہ رکھتی ہیں۔</li>
+    </ul>
 
-  <p>This package contains the desktop application, icons and AppStream metadata required for
-  distribution via Flatpak/Flathub. See the project repository for source code, contribution
-  guidelines, and additional documentation.</p>
+    <p>This package contains the desktop application, icons and AppStream metadata required for
+    distribution via Flatpak/Flathub. See the project repository for source code, contribution
+    guidelines, and additional documentation.</p>
+    <p xml:lang="zh-Hans">此软件包包含通过 Flatpak/Flathub 分发所需的桌面应用、图标和 AppStream 元数据。源代码、贡献指南和更多文档请见项目仓库。</p>
+    <p xml:lang="hi">इस पैकेज में Flatpak/Flathub के माध्यम से वितरण के लिए आवश्यक डेस्कटॉप ऐप, आइकन और AppStream मेटाडेटा शामिल हैं। सोर्स कोड, योगदान दिशानिर्देश और अतिरिक्त दस्तावेज़ के लिए प्रोजेक्ट रिपॉज़िटरी देखें।</p>
+    <p xml:lang="es">Este paquete incluye la aplicación de escritorio, los iconos y los metadatos de AppStream necesarios para distribuir mediante Flatpak/Flathub. Consulta el repositorio del proyecto para el código fuente, las guías de contribución y documentación adicional.</p>
+    <p xml:lang="fr">Ce paquet contient l’application de bureau, les icônes et les métadonnées AppStream nécessaires à la distribution via Flatpak/Flathub. Consultez le dépôt du projet pour le code source, les consignes de contribution et la documentation complémentaire.</p>
+    <p xml:lang="ar">تتضمن هذه الحزمة تطبيق سطح المكتب والأيقونات وبيانات AppStream الوصفية المطلوبة للتوزيع عبر Flatpak/Flathub. راجع مستودع المشروع للحصول على الشيفرة المصدرية وإرشادات المساهمة ووثائق إضافية.</p>
+    <p xml:lang="bn">এই প্যাকেজে Flatpak/Flathub এর মাধ্যমে বিতরণের জন্য প্রয়োজনীয় ডেস্কটপ অ্যাপ, আইকন এবং AppStream মেটাডেটা রয়েছে। সোর্স কোড, অবদান নির্দেশিকা এবং অতিরিক্ত ডকুমেন্টেশনের জন্য প্রকল্পের রিপোজিটরি দেখুন।</p>
+    <p xml:lang="pt-BR">Este pacote contém o aplicativo de desktop, ícones e metadados AppStream necessários para distribuição via Flatpak/Flathub. Veja o repositório do projeto para código-fonte, diretrizes de contribuição e documentação adicional.</p>
+    <p xml:lang="ru">Этот пакет содержит настольное приложение, иконки и метаданные AppStream, необходимые для распространения через Flatpak/Flathub. Исходный код, правила участия и дополнительная документация доступны в репозитории проекта.</p>
+    <p xml:lang="ur">اس پیکیج میں Flatpak/Flathub کے ذریعے تقسیم کے لیے درکار ڈیسک ٹاپ ایپ، آئیکنز اور AppStream میٹاڈیٹا شامل ہیں۔ سورس کوڈ، شراکت کے رہنما اصول اور اضافی دستاویزات کے لیے پروجیکٹ ریپازٹری دیکھیں۔</p>
   </description>
 
   <project_license>MIT</project_license>
@@ -51,19 +186,55 @@
     <!-- Referencing screenshots added under data/screenshots/ -->
     <screenshot type="default">
       <caption>Browse Actions workflows.</caption>
-      <image type="source">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/1.png</image>
+      <caption xml:lang="zh-Hans">浏览 Actions 工作流。</caption>
+      <caption xml:lang="hi">Actions वर्कफ़्लो ब्राउज़ करें।</caption>
+      <caption xml:lang="es">Explora workflows de Actions.</caption>
+      <caption xml:lang="fr">Parcourez les workflows Actions.</caption>
+      <caption xml:lang="ar">تصفّح سير عمل Actions.</caption>
+      <caption xml:lang="bn">Actions ওয়ার্কফ্লো ব্রাউজ করুন।</caption>
+      <caption xml:lang="pt-BR">Navegue pelos workflows do Actions.</caption>
+      <caption xml:lang="ru">Просматривайте workflows в Actions.</caption>
+      <caption xml:lang="ur">Actions ورک فلوز براؤز کریں۔</caption>
+      <image type="source">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-1.png</image>
     </screenshot>
     <screenshot type="detail">
       <caption>Inspect workflow runs and drill into job details quickly.</caption>
-      <image type="source">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/2.png</image>
+      <caption xml:lang="zh-Hans">检查工作流运行并快速查看作业详情。</caption>
+      <caption xml:lang="hi">वर्कफ़्लो रन जांचें और जल्दी से जॉब विवरण देखें।</caption>
+      <caption xml:lang="es">Inspecciona ejecuciones de workflows y profundiza rápido en los detalles de jobs.</caption>
+      <caption xml:lang="fr">Inspectez les exécutions de workflows et accédez rapidement aux détails des jobs.</caption>
+      <caption xml:lang="ar">افحص عمليات تشغيل سير العمل وتعمّق سريعًا في تفاصيل المهام.</caption>
+      <caption xml:lang="bn">ওয়ার্কফ্লো রান পরীক্ষা করুন এবং দ্রুত জবের বিস্তারিত দেখুন।</caption>
+      <caption xml:lang="pt-BR">Inspecione execuções de workflow e aprofunde-se rapidamente nos detalhes dos jobs.</caption>
+      <caption xml:lang="ru">Проверяйте запуски workflow и быстро переходите к деталям заданий.</caption>
+      <caption xml:lang="ur">ورک فلو رنز دیکھیں اور جلدی سے جاب کی تفصیلات میں جائیں۔</caption>
+      <image type="source">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-2.png</image>
     </screenshot>
     <screenshot type="detail">
       <caption>Review job logs inline without leaving the app.</caption>
-      <image type="source">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/3.png</image>
+      <caption xml:lang="zh-Hans">在应用内直接查看作业日志，无需离开应用。</caption>
+      <caption xml:lang="hi">ऐप छोड़े बिना जॉब लॉग यहीं देखें।</caption>
+      <caption xml:lang="es">Revisa logs de jobs en línea sin salir de la aplicación.</caption>
+      <caption xml:lang="fr">Consultez les journaux des jobs directement dans l’application.</caption>
+      <caption xml:lang="ar">راجع سجلات المهام داخل التطبيق دون مغادرته.</caption>
+      <caption xml:lang="bn">অ্যাপ না ছেড়ে ইনলাইনেই জব লগ দেখুন।</caption>
+      <caption xml:lang="pt-BR">Revise logs de jobs no próprio app, sem sair dele.</caption>
+      <caption xml:lang="ru">Просматривайте логи заданий прямо в приложении.</caption>
+      <caption xml:lang="ur">ایپ چھوڑے بغیر جاب لاگز یہیں دیکھیں۔</caption>
+      <image type="source">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-3.png</image>
     </screenshot>
     <screenshot type="detail">
       <caption>Run a job on any branch.</caption>
-      <image type="source">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/4.png</image>
+      <caption xml:lang="zh-Hans">在任意分支上运行作业。</caption>
+      <caption xml:lang="hi">किसी भी ब्रांच पर जॉब चलाएँ।</caption>
+      <caption xml:lang="es">Ejecuta un job en cualquier rama.</caption>
+      <caption xml:lang="fr">Exécutez un job sur n’importe quelle branche.</caption>
+      <caption xml:lang="ar">شغّل مهمة على أي فرع.</caption>
+      <caption xml:lang="bn">যেকোনো ব্রাঞ্চে একটি জব চালান।</caption>
+      <caption xml:lang="pt-BR">Execute um job em qualquer branch.</caption>
+      <caption xml:lang="ru">Запускайте задание на любой ветке.</caption>
+      <caption xml:lang="ur">کسی بھی برانچ پر جاب چلائیں۔</caption>
+      <image type="source">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-4.png</image>
     </screenshot>
   </screenshots>
 
@@ -75,12 +246,120 @@
           <li>Dependency updates for ryu, unicode-ident, and zmij.</li>
         </ul>
       </description>
+      <description xml:lang="zh-Hans">
+        <ul>
+          <li>手动触发工作流现已支持带动态参数字段的 workflow_dispatch 输入。</li>
+          <li>更新了 ryu、unicode-ident 和 zmij 依赖。</li>
+        </ul>
+      </description>
+      <description xml:lang="hi">
+        <ul>
+          <li>मैनुअल वर्कफ़्लो ट्रिगर अब workflow_dispatch इनपुट को डायनामिक पैरामीटर फ़ील्ड्स के साथ सपोर्ट करते हैं।</li>
+          <li>ryu, unicode-ident और zmij के लिए डिपेंडेंसी अपडेट।</li>
+        </ul>
+      </description>
+      <description xml:lang="es">
+        <ul>
+          <li>Los disparadores manuales de workflows ahora admiten entradas workflow_dispatch con campos de parámetros dinámicos.</li>
+          <li>Actualizaciones de dependencias para ryu, unicode-ident y zmij.</li>
+        </ul>
+      </description>
+      <description xml:lang="fr">
+        <ul>
+          <li>Les déclenchements manuels de workflows prennent désormais en charge les entrées workflow_dispatch avec des champs de paramètres dynamiques.</li>
+          <li>Mises à jour des dépendances pour ryu, unicode-ident et zmij.</li>
+        </ul>
+      </description>
+      <description xml:lang="ar">
+        <ul>
+          <li>تشغيلات سير العمل اليدوية تدعم الآن مدخلات workflow_dispatch مع حقول معلمات ديناميكية.</li>
+          <li>تحديثات للتبعيات: ryu وunicode-ident وzmij.</li>
+        </ul>
+      </description>
+      <description xml:lang="bn">
+        <ul>
+          <li>ম্যানুয়াল ওয়ার্কফ্লো ট্রিগার এখন ডাইনামিক প্যারামিটার ফিল্ডসহ workflow_dispatch ইনপুট সমর্থন করে।</li>
+          <li>ryu, unicode-ident এবং zmij-এর জন্য ডিপেন্ডেন্সি আপডেট।</li>
+        </ul>
+      </description>
+      <description xml:lang="pt-BR">
+        <ul>
+          <li>Disparos manuais de workflow agora suportam entradas workflow_dispatch com campos dinâmicos de parâmetros.</li>
+          <li>Atualizações de dependências para ryu, unicode-ident e zmij.</li>
+        </ul>
+      </description>
+      <description xml:lang="ru">
+        <ul>
+          <li>Ручной запуск workflow теперь поддерживает входные параметры workflow_dispatch с динамическими полями.</li>
+          <li>Обновления зависимостей для ryu, unicode-ident и zmij.</li>
+        </ul>
+      </description>
+      <description xml:lang="ur">
+        <ul>
+          <li>دستی ورک فلو ٹرگرز اب workflow_dispatch ان پٹس کو ڈائنامک پیرامیٹر فیلڈز کے ساتھ سپورٹ کرتے ہیں۔</li>
+          <li>ryu، unicode-ident اور zmij کے لیے ڈپینڈنسی اپ ڈیٹس۔</li>
+        </ul>
+      </description>
     </release>
     <release version="1.0.4" date="2026-02-06">
       <description>
         <ul>
           <li>Handle expired job logs (HTTP 410) with clearer messaging instead of a broken view.</li>
           <li>Strip BOM markers in job logs so first-line timestamps render correctly.</li>
+        </ul>
+      </description>
+      <description xml:lang="zh-Hans">
+        <ul>
+          <li>处理过期作业日志（HTTP 410）时改为更清晰的提示，而不是显示损坏视图。</li>
+          <li>去除日志中的 BOM 标记，确保首行时间戳正确渲染。</li>
+        </ul>
+      </description>
+      <description xml:lang="hi">
+        <ul>
+          <li>एक्सपायर जॉब लॉग (HTTP 410) के लिए टूटे हुए दृश्य की जगह अधिक स्पष्ट संदेश दिखाया जाता है।</li>
+          <li>जॉब लॉग में BOM मार्कर हटाए गए ताकि पहली पंक्ति का टाइमस्टैम्प सही रेंडर हो।</li>
+        </ul>
+      </description>
+      <description xml:lang="es">
+        <ul>
+          <li>Los logs de jobs expirados (HTTP 410) ahora muestran un mensaje claro en lugar de una vista rota.</li>
+          <li>Se eliminan marcadores BOM en logs para que el timestamp de la primera línea se renderice correctamente.</li>
+        </ul>
+      </description>
+      <description xml:lang="fr">
+        <ul>
+          <li>Les logs de jobs expirés (HTTP 410) affichent désormais un message clair au lieu d’une vue cassée.</li>
+          <li>Suppression des marqueurs BOM dans les logs afin d’afficher correctement l’horodatage de la première ligne.</li>
+        </ul>
+      </description>
+      <description xml:lang="ar">
+        <ul>
+          <li>معالجة سجلات المهام المنتهية (HTTP 410) برسائل أوضح بدل عرض مكسور.</li>
+          <li>إزالة علامات BOM من السجلات لضمان عرض طابع الوقت في السطر الأول بشكل صحيح.</li>
+        </ul>
+      </description>
+      <description xml:lang="bn">
+        <ul>
+          <li>মেয়াদোত্তীর্ণ জব লগ (HTTP 410) এখন ভাঙা ভিউয়ের বদলে পরিষ্কার বার্তা দেখায়।</li>
+          <li>জব লগ থেকে BOM মার্কার সরানো হয়েছে, যাতে প্রথম লাইনের টাইমস্ট্যাম্প ঠিকমতো রেন্ডার হয়।</li>
+        </ul>
+      </description>
+      <description xml:lang="pt-BR">
+        <ul>
+          <li>Logs de jobs expirados (HTTP 410) agora mostram mensagens mais claras em vez de uma visualização quebrada.</li>
+          <li>Remoção de marcadores BOM nos logs para que o timestamp da primeira linha seja renderizado corretamente.</li>
+        </ul>
+      </description>
+      <description xml:lang="ru">
+        <ul>
+          <li>Для просроченных логов заданий (HTTP 410) теперь показывается понятное сообщение вместо «сломанного» экрана.</li>
+          <li>Удалены BOM-маркеры в логах, чтобы метки времени в первой строке отображались корректно.</li>
+        </ul>
+      </description>
+      <description xml:lang="ur">
+        <ul>
+          <li>میعاد ختم شدہ جاب لاگز (HTTP 410) کے لیے اب ٹوٹی ہوئی ویو کے بجائے واضح پیغام دکھایا جاتا ہے۔</li>
+          <li>جاب لاگز سے BOM مارکر ہٹا دیے گئے تاکہ پہلی لائن کا ٹائم اسٹیمپ درست دکھے۔</li>
         </ul>
       </description>
     </release>
@@ -91,6 +370,78 @@
           <li>Aligned timestamps and command prefixes improve scanability, with stronger error highlighting.</li>
           <li>Packaging CI refreshed with multi-arch updates for AppImage/Snap/Flatpak builds.</li>
           <li>Dependency updates and demo log refreshes for improved accuracy.</li>
+        </ul>
+      </description>
+      <description xml:lang="zh-Hans">
+        <ul>
+          <li>日志现在支持 ANSI 颜色、分组工作流区段以及更清晰的命令/输出格式。</li>
+          <li>对齐的时间戳和命令前缀提升了可读性，并增强了错误高亮。</li>
+          <li>打包 CI 已更新，包含 AppImage/Snap/Flatpak 的多架构构建改进。</li>
+          <li>依赖更新并刷新了演示日志以提高准确性。</li>
+        </ul>
+      </description>
+      <description xml:lang="hi">
+        <ul>
+          <li>जॉब लॉग अब ANSI रंग, समूहित वर्कफ़्लो सेक्शन और अधिक स्पष्ट कमांड/आउटपुट फॉर्मैटिंग दिखाते हैं।</li>
+          <li>संरेखित टाइमस्टैम्प और कमांड प्रीफ़िक्स पढ़ने में आसानी बढ़ाते हैं, साथ ही त्रुटि हाइलाइटिंग बेहतर हुई है।</li>
+          <li>पैकेजिंग CI को AppImage/Snap/Flatpak बिल्ड्स के लिए मल्टी-आर्क अपडेट के साथ रीफ़्रेश किया गया।</li>
+          <li>बेहतर सटीकता के लिए डिपेंडेंसी अपडेट और डेमो लॉग रीफ़्रेश किए गए।</li>
+        </ul>
+      </description>
+      <description xml:lang="es">
+        <ul>
+          <li>Los logs de jobs ahora renderizan colores ANSI, secciones de workflow agrupadas y un formato de comandos/salida más claro.</li>
+          <li>Timestamps y prefijos de comandos alineados mejoran la legibilidad, con un resaltado de errores más fuerte.</li>
+          <li>El CI de empaquetado se actualizó con mejoras multi-arquitectura para builds AppImage/Snap/Flatpak.</li>
+          <li>Actualizaciones de dependencias y renovación de logs de demo para mejorar la precisión.</li>
+        </ul>
+      </description>
+      <description xml:lang="fr">
+        <ul>
+          <li>Les logs de jobs affichent désormais les couleurs ANSI, des sections de workflow groupées et un format commande/sortie plus clair.</li>
+          <li>L’alignement des horodatages et préfixes de commande améliore la lisibilité, avec un surlignage des erreurs renforcé.</li>
+          <li>La CI de packaging a été rafraîchie avec des mises à jour multi-architecture pour AppImage/Snap/Flatpak.</li>
+          <li>Mises à jour des dépendances et rafraîchissement des logs de démonstration pour une meilleure précision.</li>
+        </ul>
+      </description>
+      <description xml:lang="ar">
+        <ul>
+          <li>سجلات المهام تعرض الآن ألوان ANSI وأقسام سير عمل مجمّعة وتنسيقًا أوضح للأوامر/المخرجات.</li>
+          <li>محاذاة الطوابع الزمنية وبوادئ الأوامر تحسّن قابلية القراءة مع إبراز أقوى للأخطاء.</li>
+          <li>تم تحديث CI الخاص بالحزم مع تحسينات متعددة المعماريات لبناءات AppImage/Snap/Flatpak.</li>
+          <li>تحديثات للتبعيات وتحديث سجلات العرض التوضيحي لتحسين الدقة.</li>
+        </ul>
+      </description>
+      <description xml:lang="bn">
+        <ul>
+          <li>জব লগ এখন ANSI রং, গ্রুপ করা ওয়ার্কফ্লো সেকশন এবং আরও পরিষ্কার কমান্ড/আউটপুট ফরম্যাট দেখায়।</li>
+          <li>সারিবদ্ধ টাইমস্ট্যাম্প ও কমান্ড প্রিফিক্স পড়ার সুবিধা বাড়ায়, সঙ্গে শক্তিশালী এরর হাইলাইটিং।</li>
+          <li>AppImage/Snap/Flatpak বিল্ডের জন্য মাল্টি-আর্ক আপডেটসহ প্যাকেজিং CI রিফ্রেশ করা হয়েছে।</li>
+          <li>উন্নত নির্ভুলতার জন্য ডিপেন্ডেন্সি আপডেট ও ডেমো লগ রিফ্রেশ।</li>
+        </ul>
+      </description>
+      <description xml:lang="pt-BR">
+        <ul>
+          <li>Os logs de jobs agora renderizam cores ANSI, seções de workflow agrupadas e formatação mais clara de comando/saída.</li>
+          <li>Timestamps e prefixos de comando alinhados melhoram a leitura, com realce de erros mais forte.</li>
+          <li>O CI de empacotamento foi atualizado com melhorias multiarquitetura para builds AppImage/Snap/Flatpak.</li>
+          <li>Atualizações de dependências e atualização dos logs de demonstração para melhorar a precisão.</li>
+        </ul>
+      </description>
+      <description xml:lang="ru">
+        <ul>
+          <li>Логи заданий теперь отображают ANSI-цвета, сгруппированные секции workflow и более понятный формат команд/вывода.</li>
+          <li>Выравнивание временных меток и префиксов команд улучшило читаемость, а подсветка ошибок стала заметнее.</li>
+          <li>CI упаковки обновлён, включая multi-arch улучшения для сборок AppImage/Snap/Flatpak.</li>
+          <li>Обновлены зависимости и демонстрационные логи для повышения точности.</li>
+        </ul>
+      </description>
+      <description xml:lang="ur">
+        <ul>
+          <li>جاب لاگز اب ANSI رنگ، گروپ شدہ ورک فلو سیکشنز اور زیادہ واضح کمانڈ/آؤٹ پٹ فارمیٹنگ دکھاتے ہیں۔</li>
+          <li>ترتیب شدہ ٹائم اسٹیمپس اور کمانڈ پری فکس پڑھنے کی سہولت بڑھاتے ہیں، اور ایرر ہائی لائٹنگ مزید بہتر ہوئی ہے۔</li>
+          <li>پیکیجنگ CI کو AppImage/Snap/Flatpak بلڈز کے لیے ملٹی آرک اپ ڈیٹس کے ساتھ ریفریش کیا گیا۔</li>
+          <li>بہتر درستگی کے لیے ڈپینڈنسی اپ ڈیٹس اور ڈیمو لاگز ریفریش کیے گئے۔</li>
         </ul>
       </description>
     </release>
@@ -107,6 +458,114 @@
           <li>Dependency updates and stability fixes.</li>
         </ul>
       </description>
+      <description xml:lang="zh-Hans">
+        <ul>
+          <li>更快更流畅的界面：仓库/工作流列表已刷新，滚动体验改进。</li>
+          <li>新增运行过滤控件并改进缓存，切换过滤条件即时生效且无需重新加载数据。</li>
+          <li>改进工作流自动刷新与运行状态更新，减少重复请求。</li>
+          <li>在 Snap/Flatpak 上通知更可靠，图标处理与回退机制改进。</li>
+          <li>改进了 Snap/Flatpak 沙箱下的凭据存储，使用 Secret Portal。</li>
+          <li>工作流、运行和任务的缓存持久化更适合离线使用。</li>
+          <li>更新了 Snap、Flatpak 和 AppImage 的打包与 CI，提升兼容性。</li>
+          <li>依赖更新和稳定性修复。</li>
+        </ul>
+      </description>
+      <description xml:lang="hi">
+        <ul>
+          <li>ताज़ा repo/workflow सूचियों और बेहतर स्क्रॉलिंग के साथ UI अधिक तेज़ और स्मूथ।</li>
+          <li>नए रन फ़िल्टर नियंत्रण बेहतर कैशिंग के साथ—फ़िल्टर बदलते ही परिणाम मिलते हैं और डेटा रीलोड नहीं होता।</li>
+          <li>वर्कफ़्लो ऑटो-रिफ़्रेश और रन स्थिति अपडेट बेहतर हुए, डुप्लिकेट फ़ेच कम हुए।</li>
+          <li>Snap/Flatpak पर नोटिफिकेशन अब अधिक भरोसेमंद हैं; आइकन हैंडलिंग और फॉलबैक बेहतर हुए।</li>
+          <li>Snap/Flatpak के लिए Secret Portal आधारित सैंडबॉक्स्ड क्रेडेंशियल स्टोरेज बेहतर किया गया।</li>
+          <li>workflows, runs और jobs के लिए ऑफ़लाइन-फ्रेंडली कैश पर्सिस्टेंस।</li>
+          <li>बेहतर संगतता के लिए Snap, Flatpak और AppImage में पैकेजिंग व CI अपडेट।</li>
+          <li>डिपेंडेंसी अपडेट और स्थिरता सुधार।</li>
+        </ul>
+      </description>
+      <description xml:lang="es">
+        <ul>
+          <li>Interfaz más rápida y fluida con listas de repositorios/workflows renovadas y mejor desplazamiento.</li>
+          <li>Nuevos controles de filtrado de ejecuciones con mejor caché: cambiar filtros es instantáneo y sin recargar datos.</li>
+          <li>Mejoras en el auto-refresh de workflows y en actualizaciones de estado, con menos solicitudes duplicadas.</li>
+          <li>Las notificaciones son más fiables en Snap/Flatpak, con mejor gestión de iconos y fallbacks.</li>
+          <li>Mejor almacenamiento de credenciales en sandbox usando Secret Portal para Snap/Flatpak.</li>
+          <li>Persistencia de caché apta para uso offline en workflows, ejecuciones y jobs.</li>
+          <li>Actualizaciones de empaquetado y CI para Snap, Flatpak y AppImage con mejor compatibilidad.</li>
+          <li>Actualizaciones de dependencias y correcciones de estabilidad.</li>
+        </ul>
+      </description>
+      <description xml:lang="fr">
+        <ul>
+          <li>Interface plus rapide et fluide avec des listes dépôts/workflows rafraîchies et un défilement amélioré.</li>
+          <li>Nouveaux contrôles de filtrage des exécutions avec un meilleur cache : le changement de filtre est instantané, sans rechargement.</li>
+          <li>Amélioration du rafraîchissement automatique des workflows et des mises à jour d’état, avec moins de requêtes en double.</li>
+          <li>Notifications plus fiables sur Snap/Flatpak, avec une meilleure gestion des icônes et des mécanismes de repli.</li>
+          <li>Amélioration du stockage des identifiants en sandbox via Secret Portal pour Snap/Flatpak.</li>
+          <li>Persistance de cache adaptée au mode hors ligne pour workflows, exécutions et jobs.</li>
+          <li>Mises à jour du packaging et de la CI pour Snap, Flatpak et AppImage afin d’améliorer la compatibilité.</li>
+          <li>Mises à jour des dépendances et correctifs de stabilité.</li>
+        </ul>
+      </description>
+      <description xml:lang="ar">
+        <ul>
+          <li>واجهة أسرع وأكثر سلاسة مع قوائم مستودعات/سير عمل محدّثة وسلوك تمرير أفضل.</li>
+          <li>عناصر تحكم جديدة لتصفية التشغيل مع تخزين مؤقت أفضل، لذا يصبح تبديل المرشحات فوريًا دون إعادة تحميل البيانات.</li>
+          <li>تحسين التحديث التلقائي لسير العمل وتحديثات الحالة مع تقليل عمليات الجلب المكررة.</li>
+          <li>الإشعارات أصبحت أكثر موثوقية عبر Snap/Flatpak مع تحسين معالجة الأيقونات وآليات الرجوع.</li>
+          <li>تحسين تخزين بيانات الاعتماد المعزولة باستخدام Secret Portal في Snap/Flatpak.</li>
+          <li>استمرارية تخزين مؤقت ملائمة للعمل دون اتصال لبيانات workflows وruns وjobs.</li>
+          <li>تحديثات في الحزم وCI عبر Snap وFlatpak وAppImage لتحسين التوافق.</li>
+          <li>تحديثات للتبعيات وإصلاحات للاستقرار.</li>
+        </ul>
+      </description>
+      <description xml:lang="bn">
+        <ul>
+          <li>রিফ্রেশ করা repo/workflow তালিকা ও উন্নত স্ক্রলিংসহ আরও দ্রুত ও মসৃণ UI।</li>
+          <li>উন্নত ক্যাশিংসহ নতুন রান ফিল্টার কন্ট্রোল; ফিল্টার বদলানো এখন তাৎক্ষণিক এবং ডেটা রিলোড লাগে না।</li>
+          <li>ওয়ার্কফ্লো অটো-রিফ্রেশ ও রান স্ট্যাটাস আপডেট উন্নত হয়েছে, ডুপ্লিকেট ফেচ কমেছে।</li>
+          <li>Snap/Flatpak জুড়ে নোটিফিকেশন আরও নির্ভরযোগ্য, আইকন হ্যান্ডলিং ও ফলব্যাক উন্নত।</li>
+          <li>Snap/Flatpak-এর জন্য Secret Portal ব্যবহার করে স্যান্ডবক্সড ক্রেডেনশিয়াল স্টোরেজ উন্নত।</li>
+          <li>workflows, runs ও jobs-এর জন্য অফলাইন-বান্ধব ক্যাশ স্থায়িত্ব।</li>
+          <li>আরও ভালো সামঞ্জস্যের জন্য Snap, Flatpak ও AppImage জুড়ে প্যাকেজিং ও CI আপডেট।</li>
+          <li>ডিপেন্ডেন্সি আপডেট ও স্থিতিশীলতা সংশোধন।</li>
+        </ul>
+      </description>
+      <description xml:lang="pt-BR">
+        <ul>
+          <li>UI mais rápida e fluida com listas de repositórios/workflows atualizadas e rolagem aprimorada.</li>
+          <li>Novos controles de filtro de execuções com cache melhorado, então trocar filtros é instantâneo e sem recarregar dados.</li>
+          <li>Melhorias na atualização automática de workflows e no status das execuções, com menos buscas duplicadas.</li>
+          <li>Notificações mais confiáveis em Snap/Flatpak, com tratamento de ícones e fallbacks aprimorados.</li>
+          <li>Armazenamento de credenciais em sandbox aprimorado usando Secret Portal no Snap/Flatpak.</li>
+          <li>Persistência de cache amigável ao uso offline para workflows, runs e jobs.</li>
+          <li>Atualizações de empacotamento e CI para Snap, Flatpak e AppImage com melhor compatibilidade.</li>
+          <li>Atualizações de dependências e correções de estabilidade.</li>
+        </ul>
+      </description>
+      <description xml:lang="ru">
+        <ul>
+          <li>Более быстрый и плавный интерфейс с обновлёнными списками репозиториев/workflow и улучшенной прокруткой.</li>
+          <li>Новые элементы фильтрации запусков с улучшенным кэшированием: переключение фильтров мгновенное и без перезагрузки данных.</li>
+          <li>Улучшено автообновление workflow и обновление статусов запусков, включая меньшее число дублирующих запросов.</li>
+          <li>Уведомления стали надёжнее в Snap/Flatpak благодаря улучшенной обработке иконок и fallback-механизмам.</li>
+          <li>Улучшено хранение учётных данных в песочнице с использованием Secret Portal для Snap/Flatpak.</li>
+          <li>Добавлена офлайн-дружественная персистентность кэша для workflow, запусков и заданий.</li>
+          <li>Обновлены упаковка и CI для Snap, Flatpak и AppImage для лучшей совместимости.</li>
+          <li>Обновления зависимостей и исправления стабильности.</li>
+        </ul>
+      </description>
+      <description xml:lang="ur">
+        <ul>
+          <li>ریفریشڈ repo/workflow فہرستوں اور بہتر اسکرولنگ کے ساتھ UI مزید تیز اور ہموار۔</li>
+          <li>بہتر کیشنگ کے ساتھ نئے رن فلٹر کنٹرولز، اس لیے فلٹر بدلنا فوری ہے اور ڈیٹا ری لوڈ نہیں ہوتا۔</li>
+          <li>ورک فلو آٹو ریفریش اور رن اسٹیٹس اپ ڈیٹس بہتر ہوئے، اور ڈپلیکیٹ فیچز کم ہوئیں۔</li>
+          <li>Snap/Flatpak میں نوٹیفکیشنز زیادہ قابلِ اعتماد ہوئیں، آئیکن ہینڈلنگ اور فال بیک بہتر ہوئے۔</li>
+          <li>Snap/Flatpak کے لیے Secret Portal کے ذریعے سینڈ باکسڈ اسناد کا ذخیرہ بہتر بنایا گیا۔</li>
+          <li>workflows, runs اور jobs کے لیے آف لائن دوست کیش پرسسٹنس شامل کی گئی۔</li>
+          <li>بہتر مطابقت کے لیے Snap، Flatpak اور AppImage میں پیکیجنگ اور CI اپ ڈیٹس۔</li>
+          <li>ڈپینڈنسی اپ ڈیٹس اور استحکام کی اصلاحات۔</li>
+        </ul>
+      </description>
     </release>
     <release version="1.0.1" date="2026-01-18">
       <description>
@@ -119,6 +578,114 @@
           <li>Offline-friendly cache persistence for workflows, runs, and jobs.</li>
           <li>Packaging and CI updates across Snap, Flatpak, and AppImage for better compatibility.</li>
           <li>Dependency updates and stability fixes.</li>
+        </ul>
+      </description>
+      <description xml:lang="zh-Hans">
+        <ul>
+          <li>更快更流畅的界面：仓库/工作流列表已刷新，滚动体验改进。</li>
+          <li>新增运行过滤控件并改进缓存，切换过滤条件即时生效且无需重新加载数据。</li>
+          <li>改进工作流自动刷新与运行状态更新，减少重复请求。</li>
+          <li>在 Snap/Flatpak 上通知更可靠，图标处理与回退机制改进。</li>
+          <li>改进了 Snap/Flatpak 沙箱下的凭据存储，使用 Secret Portal。</li>
+          <li>工作流、运行和任务的缓存持久化更适合离线使用。</li>
+          <li>更新了 Snap、Flatpak 和 AppImage 的打包与 CI，提升兼容性。</li>
+          <li>依赖更新和稳定性修复。</li>
+        </ul>
+      </description>
+      <description xml:lang="hi">
+        <ul>
+          <li>ताज़ा repo/workflow सूचियों और बेहतर स्क्रॉलिंग के साथ UI अधिक तेज़ और स्मूथ।</li>
+          <li>नए रन फ़िल्टर नियंत्रण बेहतर कैशिंग के साथ—फ़िल्टर बदलते ही परिणाम मिलते हैं और डेटा रीलोड नहीं होता।</li>
+          <li>वर्कफ़्लो ऑटो-रिफ़्रेश और रन स्थिति अपडेट बेहतर हुए, डुप्लिकेट फ़ेच कम हुए।</li>
+          <li>Snap/Flatpak पर नोटिफिकेशन अब अधिक भरोसेमंद हैं; आइकन हैंडलिंग और फॉलबैक बेहतर हुए।</li>
+          <li>Snap/Flatpak के लिए Secret Portal आधारित सैंडबॉक्स्ड क्रेडेंशियल स्टोरेज बेहतर किया गया।</li>
+          <li>workflows, runs और jobs के लिए ऑफ़लाइन-फ्रेंडली कैश पर्सिस्टेंस।</li>
+          <li>बेहतर संगतता के लिए Snap, Flatpak और AppImage में पैकेजिंग व CI अपडेट।</li>
+          <li>डिपेंडेंसी अपडेट और स्थिरता सुधार।</li>
+        </ul>
+      </description>
+      <description xml:lang="es">
+        <ul>
+          <li>Interfaz más rápida y fluida con listas de repositorios/workflows renovadas y mejor desplazamiento.</li>
+          <li>Nuevos controles de filtrado de ejecuciones con mejor caché: cambiar filtros es instantáneo y sin recargar datos.</li>
+          <li>Mejoras en el auto-refresh de workflows y en actualizaciones de estado, con menos solicitudes duplicadas.</li>
+          <li>Las notificaciones son más fiables en Snap/Flatpak, con mejor gestión de iconos y fallbacks.</li>
+          <li>Mejor almacenamiento de credenciales en sandbox usando Secret Portal para Snap/Flatpak.</li>
+          <li>Persistencia de caché apta para uso offline en workflows, ejecuciones y jobs.</li>
+          <li>Actualizaciones de empaquetado y CI para Snap, Flatpak y AppImage con mejor compatibilidad.</li>
+          <li>Actualizaciones de dependencias y correcciones de estabilidad.</li>
+        </ul>
+      </description>
+      <description xml:lang="fr">
+        <ul>
+          <li>Interface plus rapide et fluide avec des listes dépôts/workflows rafraîchies et un défilement amélioré.</li>
+          <li>Nouveaux contrôles de filtrage des exécutions avec un meilleur cache : le changement de filtre est instantané, sans rechargement.</li>
+          <li>Amélioration du rafraîchissement automatique des workflows et des mises à jour d’état, avec moins de requêtes en double.</li>
+          <li>Notifications plus fiables sur Snap/Flatpak, avec une meilleure gestion des icônes et des mécanismes de repli.</li>
+          <li>Amélioration du stockage des identifiants en sandbox via Secret Portal pour Snap/Flatpak.</li>
+          <li>Persistance de cache adaptée au mode hors ligne pour workflows, exécutions et jobs.</li>
+          <li>Mises à jour du packaging et de la CI pour Snap, Flatpak et AppImage afin d’améliorer la compatibilité.</li>
+          <li>Mises à jour des dépendances et correctifs de stabilité.</li>
+        </ul>
+      </description>
+      <description xml:lang="ar">
+        <ul>
+          <li>واجهة أسرع وأكثر سلاسة مع قوائم مستودعات/سير عمل محدّثة وسلوك تمرير أفضل.</li>
+          <li>عناصر تحكم جديدة لتصفية التشغيل مع تخزين مؤقت أفضل، لذا يصبح تبديل المرشحات فوريًا دون إعادة تحميل البيانات.</li>
+          <li>تحسين التحديث التلقائي لسير العمل وتحديثات الحالة مع تقليل عمليات الجلب المكررة.</li>
+          <li>الإشعارات أصبحت أكثر موثوقية عبر Snap/Flatpak مع تحسين معالجة الأيقونات وآليات الرجوع.</li>
+          <li>تحسين تخزين بيانات الاعتماد المعزولة باستخدام Secret Portal في Snap/Flatpak.</li>
+          <li>استمرارية تخزين مؤقت ملائمة للعمل دون اتصال لبيانات workflows وruns وjobs.</li>
+          <li>تحديثات في الحزم وCI عبر Snap وFlatpak وAppImage لتحسين التوافق.</li>
+          <li>تحديثات للتبعيات وإصلاحات للاستقرار.</li>
+        </ul>
+      </description>
+      <description xml:lang="bn">
+        <ul>
+          <li>রিফ্রেশ করা repo/workflow তালিকা ও উন্নত স্ক্রলিংসহ আরও দ্রুত ও মসৃণ UI।</li>
+          <li>উন্নত ক্যাশিংসহ নতুন রান ফিল্টার কন্ট্রোল; ফিল্টার বদলানো এখন তাৎক্ষণিক এবং ডেটা রিলোড লাগে না।</li>
+          <li>ওয়ার্কফ্লো অটো-রিফ্রেশ ও রান স্ট্যাটাস আপডেট উন্নত হয়েছে, ডুপ্লিকেট ফেচ কমেছে।</li>
+          <li>Snap/Flatpak জুড়ে নোটিফিকেশন আরও নির্ভরযোগ্য, আইকন হ্যান্ডলিং ও ফলব্যাক উন্নত।</li>
+          <li>Snap/Flatpak-এর জন্য Secret Portal ব্যবহার করে স্যান্ডবক্সড ক্রেডেনশিয়াল স্টোরেজ উন্নত।</li>
+          <li>workflows, runs ও jobs-এর জন্য অফলাইন-বান্ধব ক্যাশ স্থায়িত্ব।</li>
+          <li>আরও ভালো সামঞ্জস্যের জন্য Snap, Flatpak ও AppImage জুড়ে প্যাকেজিং ও CI আপডেট।</li>
+          <li>ডিপেন্ডেন্সি আপডেট ও স্থিতিশীলতা সংশোধন।</li>
+        </ul>
+      </description>
+      <description xml:lang="pt-BR">
+        <ul>
+          <li>UI mais rápida e fluida com listas de repositórios/workflows atualizadas e rolagem aprimorada.</li>
+          <li>Novos controles de filtro de execuções com cache melhorado, então trocar filtros é instantâneo e sem recarregar dados.</li>
+          <li>Melhorias na atualização automática de workflows e no status das execuções, com menos buscas duplicadas.</li>
+          <li>Notificações mais confiáveis em Snap/Flatpak, com tratamento de ícones e fallbacks aprimorados.</li>
+          <li>Armazenamento de credenciais em sandbox aprimorado usando Secret Portal no Snap/Flatpak.</li>
+          <li>Persistência de cache amigável ao uso offline para workflows, runs e jobs.</li>
+          <li>Atualizações de empacotamento e CI para Snap, Flatpak e AppImage com melhor compatibilidade.</li>
+          <li>Atualizações de dependências e correções de estabilidade.</li>
+        </ul>
+      </description>
+      <description xml:lang="ru">
+        <ul>
+          <li>Более быстрый и плавный интерфейс с обновлёнными списками репозиториев/workflow и улучшенной прокруткой.</li>
+          <li>Новые элементы фильтрации запусков с улучшенным кэшированием: переключение фильтров мгновенное и без перезагрузки данных.</li>
+          <li>Улучшено автообновление workflow и обновление статусов запусков, включая меньшее число дублирующих запросов.</li>
+          <li>Уведомления стали надёжнее в Snap/Flatpak благодаря улучшенной обработке иконок и fallback-механизмам.</li>
+          <li>Улучшено хранение учётных данных в песочнице с использованием Secret Portal для Snap/Flatpak.</li>
+          <li>Добавлена офлайн-дружественная персистентность кэша для workflow, запусков и заданий.</li>
+          <li>Обновлены упаковка и CI для Snap, Flatpak и AppImage для лучшей совместимости.</li>
+          <li>Обновления зависимостей и исправления стабильности.</li>
+        </ul>
+      </description>
+      <description xml:lang="ur">
+        <ul>
+          <li>ریفریشڈ repo/workflow فہرستوں اور بہتر اسکرولنگ کے ساتھ UI مزید تیز اور ہموار۔</li>
+          <li>بہتر کیشنگ کے ساتھ نئے رن فلٹر کنٹرولز، اس لیے فلٹر بدلنا فوری ہے اور ڈیٹا ری لوڈ نہیں ہوتا۔</li>
+          <li>ورک فلو آٹو ریفریش اور رن اسٹیٹس اپ ڈیٹس بہتر ہوئے، اور ڈپلیکیٹ فیچز کم ہوئیں۔</li>
+          <li>Snap/Flatpak میں نوٹیفکیشنز زیادہ قابلِ اعتماد ہوئیں، آئیکن ہینڈلنگ اور فال بیک بہتر ہوئے۔</li>
+          <li>Snap/Flatpak کے لیے Secret Portal کے ذریعے سینڈ باکسڈ اسناد کا ذخیرہ بہتر بنایا گیا۔</li>
+          <li>workflows, runs اور jobs کے لیے آف لائن دوست کیش پرسسٹنس شامل کی گئی۔</li>
+          <li>بہتر مطابقت کے لیے Snap، Flatpak اور AppImage میں پیکیجنگ اور CI اپ ڈیٹس۔</li>
+          <li>ڈپینڈنسی اپ ڈیٹس اور استحکام کی اصلاحات۔</li>
         </ul>
       </description>
     </release>
