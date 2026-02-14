@@ -4,6 +4,7 @@ use crate::api::models::{RateLimitInfo, Repo};
 use crate::cache::{CachePersistenceConfig, DataCache};
 use crate::demo;
 use crate::favorites::FavoritesManager;
+use crate::i18n::tr;
 use crate::notifications::NotificationManager;
 use crate::preferences::{Preferences, PreferencesManager};
 use crate::storage::TokenStorage;
@@ -43,20 +44,6 @@ const MIN_WINDOW_WIDTH: i32 = 860;
 const MIN_WINDOW_HEIGHT: i32 = 520;
 const HOMEPAGE_URL: &str = "https://github.com/makoni/actioneer-gtk";
 const ISSUE_URL: &str = "https://github.com/makoni/actioneer-gtk/issues";
-const HELP_TEXT: &str = "Actioneer Help\n\n\
-Getting started\n\
-1. Sign in with your GitHub account on the welcome screen.\n\
-2. Pick a repository in the left sidebar.\n\
-3. Expand a workflow to inspect recent runs.\n\n\
-Useful actions\n\
-- Refresh repository/workflow status with F5.\n\
-- Trigger manual workflow runs from the play button.\n\
-- Open Preferences with Ctrl+, to adjust refresh/notifications.\n\
-- Open Keyboard Shortcuts with Ctrl+? for quick references.\n\n\
-Troubleshooting\n\
-- If no repos appear, verify your token and network access.\n\
-- For expired logs, retry from the latest run or trigger a new run.\n\
-- Use Report Issue from the menu to send diagnostics and steps.";
 
 #[derive(Clone)]
 pub struct MainWindow {
@@ -131,10 +118,10 @@ impl MainWindow {
         let rate_limit_label = header_controls.rate_limit_label();
 
         let detail_status_page = adw::StatusPage::builder()
-            .title("Select a repository")
-            .description(
+            .title(tr("Select a repository"))
+            .description(tr(
                 "Choose a repository from the sidebar to browse its workflows and runs here.",
-            )
+            ))
             .icon_name("system-search-symbolic")
             .build();
         let detail_stack = gtk::Stack::new();
@@ -370,24 +357,32 @@ impl MainWindow {
 
         let menu_button = gtk::MenuButton::builder()
             .icon_name("open-menu-symbolic")
-            .tooltip_text("Application menu")
+            .tooltip_text(tr("Application menu"))
             .build();
         menu_button.add_css_class("flat");
 
         let menu = Menu::new();
-        menu.append(Some("Preferences"), Some("app.preferences"));
-        menu.append(Some("Keyboard Shortcuts"), Some("app.shortcuts"));
-        menu.append(Some("Help"), Some("app.help"));
+        let preferences_label = tr("Preferences");
+        let shortcuts_label = tr("Keyboard Shortcuts");
+        let help_label = tr("Help");
+        let sign_out_label = tr("Sign out");
+        let report_issue_label = tr("Report Issue");
+        let about_label = tr("About Actioneer");
+        let quit_label = tr("Quit");
+        menu.append(Some(preferences_label.as_str()), Some("app.preferences"));
+        menu.append(Some(shortcuts_label.as_str()), Some("app.shortcuts"));
+        menu.append(Some(help_label.as_str()), Some("app.help"));
         if cfg!(debug_assertions) {
+            let test_notification_label = tr("Send test notification");
             menu.append(
-                Some("Send test notification"),
+                Some(test_notification_label.as_str()),
                 Some("win.send_test_notification"),
             );
         }
-        menu.append(Some("Sign out"), Some("win.sign_out"));
-        menu.append(Some("Report Issue"), Some("app.report_issue"));
-        menu.append(Some("About Actioneer"), Some("app.about"));
-        menu.append(Some("Quit"), Some("app.quit"));
+        menu.append(Some(sign_out_label.as_str()), Some("win.sign_out"));
+        menu.append(Some(report_issue_label.as_str()), Some("app.report_issue"));
+        menu.append(Some(about_label.as_str()), Some("app.about"));
+        menu.append(Some(quit_label.as_str()), Some("app.quit"));
 
         menu_button.set_menu_model(Some(&menu));
         header.pack_end(&menu_button);
@@ -524,12 +519,13 @@ impl MainWindow {
             window.present();
         } else {
             warn!("Preferences unavailable; preferences manager failed to initialize");
+            let unavailable_message = tr("Preferences are currently unavailable.");
             let dialog = gtk::MessageDialog::new(
                 Some(&self.window),
                 gtk::DialogFlags::MODAL,
                 gtk::MessageType::Info,
                 gtk::ButtonsType::Ok,
-                "Preferences are currently unavailable.",
+                unavailable_message.as_str(),
             );
             dialog.connect_response(|dialog, _| dialog.close());
             dialog.present();
@@ -557,17 +553,30 @@ impl MainWindow {
             .default_width(460)
             .default_height(340)
             .build();
-        let section = gtk::ShortcutsSection::builder().title("General").build();
-        let group = gtk::ShortcutsGroup::builder().title("Application").build();
+        let section = gtk::ShortcutsSection::builder()
+            .title(tr("General"))
+            .build();
+        let group = gtk::ShortcutsGroup::builder()
+            .title(tr("Application"))
+            .build();
 
-        group.append(&Self::shortcut_item("Refresh repositories", "F5"));
-        group.append(&Self::shortcut_item("Open preferences", "<Primary>comma"));
         group.append(&Self::shortcut_item(
-            "Show keyboard shortcuts",
+            tr("Refresh repositories").as_str(),
+            "F5",
+        ));
+        group.append(&Self::shortcut_item(
+            tr("Open preferences").as_str(),
+            "<Primary>comma",
+        ));
+        group.append(&Self::shortcut_item(
+            tr("Show keyboard shortcuts").as_str(),
             "<Primary>question",
         ));
-        group.append(&Self::shortcut_item("Open help", "F1"));
-        group.append(&Self::shortcut_item("Quit application", "<Primary>q"));
+        group.append(&Self::shortcut_item(tr("Open help").as_str(), "F1"));
+        group.append(&Self::shortcut_item(
+            tr("Quit application").as_str(),
+            "<Primary>q",
+        ));
 
         section.append(&group);
         window.set_child(Some(&section));
@@ -583,7 +592,7 @@ impl MainWindow {
 
     fn open_help_window(&self) {
         let window = adw::Window::builder()
-            .title("Actioneer Help")
+            .title(tr("Actioneer Help"))
             .transient_for(&self.window)
             .modal(true)
             .default_width(620)
@@ -601,16 +610,32 @@ impl MainWindow {
         content.set_margin_start(18);
         content.set_margin_end(18);
 
-        let label = gtk::Label::new(Some(HELP_TEXT));
+        let help_text = tr("Actioneer Help\n\n\
+Getting started\n\
+1. Sign in with your GitHub account on the welcome screen.\n\
+2. Pick a repository in the left sidebar.\n\
+3. Expand a workflow to inspect recent runs.\n\n\
+Useful actions\n\
+- Refresh repository/workflow status with F5.\n\
+- Trigger manual workflow runs from the play button.\n\
+- Open Preferences with Ctrl+, to adjust refresh/notifications.\n\
+- Open Keyboard Shortcuts with Ctrl+? for quick references.\n\n\
+Troubleshooting\n\
+- If no repos appear, verify your token and network access.\n\
+- For expired logs, retry from the latest run or trigger a new run.\n\
+- Use Report Issue from the menu to send diagnostics and steps.");
+        let label = gtk::Label::new(Some(help_text.as_str()));
         label.set_wrap(true);
         label.set_selectable(false);
         label.set_xalign(0.0);
         content.append(&label);
 
-        let issue_hint = gtk::Label::new(Some(&format!(
-            "Need more help? Use “Report Issue” in the app menu or visit:\n{}",
+        let issue_hint_text = format!(
+            "{}\n{}",
+            tr("Need more help? Use “Report Issue” in the app menu or visit:"),
             ISSUE_URL
-        )));
+        );
+        let issue_hint = gtk::Label::new(Some(issue_hint_text.as_str()));
         issue_hint.set_wrap(true);
         issue_hint.set_xalign(0.0);
         issue_hint.add_css_class("dim-label");
@@ -633,7 +658,7 @@ impl MainWindow {
         spacer.set_hexpand(true);
         button_row.append(&spacer);
 
-        let close_button = gtk::Button::with_label("Close");
+        let close_button = gtk::Button::with_label(tr("Close").as_str());
         close_button.add_css_class("suggested-action");
         let window_for_close = window.clone();
         close_button.connect_clicked(move |_| {
@@ -649,12 +674,13 @@ impl MainWindow {
     fn open_report_issue(&self) {
         if let Err(err) = open::that(ISSUE_URL) {
             error!("Failed to open issue tracker URL: {}", err);
+            let open_issue_error = tr("Failed to open issue tracker in the browser.");
             let dialog = gtk::MessageDialog::new(
                 Some(&self.window),
                 gtk::DialogFlags::MODAL,
                 gtk::MessageType::Error,
                 gtk::ButtonsType::Ok,
-                "Failed to open issue tracker in the browser.",
+                open_issue_error.as_str(),
             );
             dialog.connect_response(|dialog, _| dialog.close());
             dialog.present();
@@ -670,7 +696,8 @@ impl MainWindow {
             gtk::DialogFlags::MODAL,
             gtk::MessageType::Warning,
             gtk::ButtonsType::YesNo,
-            "Are you sure you want to sign out?\n\nYou will need to sign in again to continue.",
+            tr("Are you sure you want to sign out?\n\nYou will need to sign in again to continue.")
+                .as_str(),
         );
 
         dialog.connect_response(move |dialog, response| {
@@ -704,8 +731,8 @@ impl MainWindow {
                 crate::runtime_handle().spawn(async move {
                     match manager
                         .notify_message(
-                            "Actioneer notification test",
-                            "If you can read this, GNOME notifications are working.",
+                            tr("Actioneer notification test").as_str(),
+                            tr("If you can read this, GNOME notifications are working.").as_str(),
                         )
                         .await
                     {
@@ -716,12 +743,13 @@ impl MainWindow {
             }
             None => {
                 warn!("Notifications unavailable; could not send test notification");
+                let notifications_unavailable = tr("Notifications are currently unavailable.");
                 let dialog = gtk::MessageDialog::new(
                     Some(&self.window),
                     gtk::DialogFlags::MODAL,
                     gtk::MessageType::Info,
                     gtk::ButtonsType::Ok,
-                    "Notifications are currently unavailable.",
+                    notifications_unavailable.as_str(),
                 );
                 dialog.connect_response(|dialog, _| dialog.close());
                 dialog.present();
@@ -1016,8 +1044,8 @@ impl MainWindow {
             glib::MainContext::default().spawn_local(async move {
                 if let Err(err) = manager
                     .notify_message(
-                        "Actioneer notification test",
-                        "If you see this, notifications are working.",
+                        tr("Actioneer notification test").as_str(),
+                        tr("If you see this, notifications are working.").as_str(),
                     )
                     .await
                 {

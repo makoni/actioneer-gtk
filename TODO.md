@@ -57,6 +57,9 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-02-14 — Translated previously empty localization entries across current PO catalogs (including top-10 locales) so all non-header msgstr values are populated.
+- [✅] 2026-02-14 — Added gettext catalogs for target top-10 locales (`en`, `zh_Hans`, `hi`, `es`, `fr`, `ar`, `bn`, `pt_BR`, `ru`, `ur`) and updated `po/LINGUAS`.
+- [✅] 2026-02-14 — Started gettext localization: wired runtime i18n setup, localized key main-window/preferences strings, and added initial de/it/ja translation catalogs plus extraction/compile scripts.
 - [✅] 2026-02-13 — Fixed Help UX: removed preselected text and pinned the Close button to the bottom-right corner.
 - [✅] 2026-02-13 — Added Help menu/action with embedded in-app help text and aligned shortcuts to best-practice bindings (F1 Help, Ctrl+? Shortcuts).
 - [✅] 2026-02-13 — Added keyboard shortcuts window and “Report Issue” menu action linking to https://github.com/makoni/actioneer-gtk/issues.

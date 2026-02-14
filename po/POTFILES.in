@@ -1,0 +1,3 @@
+src/main.rs
+src/ui/main_window.rs
+src/ui/preferences_window.rs

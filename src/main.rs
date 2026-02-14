@@ -4,6 +4,7 @@ mod cache;
 mod config;
 mod demo;
 mod favorites;
+mod i18n;
 mod notifications;
 mod preferences;
 mod storage;
@@ -12,6 +13,7 @@ mod ui;
 use gio::ApplicationFlags;
 use gtk4::prelude::*;
 use gtk4::{IconTheme, gdk, glib};
+use i18n::tr;
 use libadwaita as adw;
 use std::borrow::Cow;
 use std::ops::ControlFlow;
@@ -45,6 +47,8 @@ pub fn resolved_app_id() -> Cow<'static, str> {
 }
 
 fn main() -> anyhow::Result<()> {
+    i18n::init();
+
     // Initialize logging
     tracing_subscriber::fmt()
         .with_env_filter(
@@ -91,12 +95,13 @@ fn main() -> anyhow::Result<()> {
 
     let send_test_notification = Arc::new(AtomicBool::new(false));
     let option_flag = send_test_notification.clone();
+    let test_notification_help = tr("Send a test notification when the app starts");
     app.add_main_option(
         "test-notification",
         glib::Char::from(b't'),
         glib::OptionFlags::NONE,
         glib::OptionArg::None,
-        "Send a test notification when the app starts",
+        test_notification_help.as_str(),
         None,
     );
     app.connect_handle_local_options(move |_app, options| {

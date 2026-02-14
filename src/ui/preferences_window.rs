@@ -1,3 +1,4 @@
+use crate::i18n::tr;
 use crate::preferences::{Preferences, PreferencesManager};
 use crate::runtime_handle;
 use crate::ui::utils::MainContextChannelExt;
@@ -17,7 +18,7 @@ pub struct PreferencesWindow {
 impl PreferencesWindow {
     pub fn new(parent: &adw::ApplicationWindow, manager: Arc<PreferencesManager>) -> Self {
         let window = adw::PreferencesWindow::builder()
-            .title("Preferences")
+            .title(tr("Preferences"))
             .transient_for(parent)
             .modal(true)
             .default_width(420)
@@ -26,27 +27,37 @@ impl PreferencesWindow {
 
         let general_page = adw::PreferencesPage::new();
 
-        let refresh_group = adw::PreferencesGroup::builder().title("Refresh").build();
+        let refresh_group = adw::PreferencesGroup::builder()
+            .title(tr("Refresh"))
+            .build();
 
         // Create string list for combo row options
-        let string_list =
-            gtk::StringList::new(&["2 seconds", "5 seconds", "10 seconds", "30 seconds"]);
+        let two_seconds = tr("2 seconds");
+        let five_seconds = tr("5 seconds");
+        let ten_seconds = tr("10 seconds");
+        let thirty_seconds = tr("30 seconds");
+        let string_list = gtk::StringList::new(&[
+            two_seconds.as_str(),
+            five_seconds.as_str(),
+            ten_seconds.as_str(),
+            thirty_seconds.as_str(),
+        ]);
 
         let refresh_row = adw::ComboRow::builder()
-            .title("Auto-refresh interval")
-            .subtitle("How often to check for workflow run updates")
+            .title(tr("Auto-refresh interval"))
+            .subtitle(tr("How often to check for workflow run updates"))
             .model(&string_list)
             .build();
 
         refresh_group.add(&refresh_row);
 
         let notifications_group = adw::PreferencesGroup::builder()
-            .title("Notifications")
+            .title(tr("Notifications"))
             .build();
 
         let notify_row = adw::ActionRow::builder()
-            .title("Desktop Notifications")
-            .subtitle("Show a notification when a workflow run finishes")
+            .title(tr("Desktop Notifications"))
+            .subtitle(tr("Show a notification when a workflow run finishes"))
             .build();
         let notify_switch = gtk::Switch::new();
         notify_switch.set_hexpand(false);

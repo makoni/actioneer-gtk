@@ -1,0 +1,153 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: actioneer\n"
+"Report-Msgid-Bugs-To: https://github.com/makoni/actioneer-gtk/issues\n"
+"POT-Creation-Date: 2026-02-14 00:00+0000\n"
+"PO-Revision-Date: 2026-02-14 00:00+0000\n"
+"Last-Translator: Actioneer Contributors\n"
+"Language-Team: Arabic\n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+msgid "Send a test notification when the app starts"
+msgstr "إرسال إشعار تجريبي عند بدء التطبيق"
+
+msgid "Preferences"
+msgstr "التفضيلات"
+
+msgid "Refresh"
+msgstr "تحديث"
+
+msgid "2 seconds"
+msgstr "ثانيتان"
+
+msgid "5 seconds"
+msgstr "5 ثوانٍ"
+
+msgid "10 seconds"
+msgstr "10 ثوانٍ"
+
+msgid "30 seconds"
+msgstr "30 ثانية"
+
+msgid "Auto-refresh interval"
+msgstr "فترة التحديث التلقائي"
+
+msgid "How often to check for workflow run updates"
+msgstr "عدد مرات التحقق من تحديثات تشغيل سير العمل"
+
+msgid "Notifications"
+msgstr "الإشعارات"
+
+msgid "Desktop Notifications"
+msgstr "إشعارات سطح المكتب"
+
+msgid "Show a notification when a workflow run finishes"
+msgstr "إظهار إشعار عند انتهاء تشغيل سير العمل"
+
+msgid "Select a repository"
+msgstr "اختر مستودعًا"
+
+msgid "Choose a repository from the sidebar to browse its workflows and runs here."
+msgstr "اختر مستودعًا من الشريط الجانبي لتصفح مسارات العمل وعمليات التشغيل هنا."
+
+msgid "Application menu"
+msgstr "قائمة التطبيق"
+
+msgid "Keyboard Shortcuts"
+msgstr "اختصارات لوحة المفاتيح"
+
+msgid "Help"
+msgstr "المساعدة"
+
+msgid "Sign out"
+msgstr "تسجيل الخروج"
+
+msgid "Report Issue"
+msgstr "الإبلاغ عن مشكلة"
+
+msgid "About Actioneer"
+msgstr "حول Actioneer"
+
+msgid "Quit"
+msgstr "إنهاء"
+
+msgid "Send test notification"
+msgstr "إرسال إشعار تجريبي"
+
+msgid "Preferences are currently unavailable."
+msgstr "التفضيلات غير متاحة حاليًا."
+
+msgid "General"
+msgstr "عام"
+
+msgid "Application"
+msgstr "التطبيق"
+
+msgid "Refresh repositories"
+msgstr "تحديث المستودعات"
+
+msgid "Open preferences"
+msgstr "فتح التفضيلات"
+
+msgid "Show keyboard shortcuts"
+msgstr "إظهار اختصارات لوحة المفاتيح"
+
+msgid "Open help"
+msgstr "فتح المساعدة"
+
+msgid "Quit application"
+msgstr "إنهاء التطبيق"
+
+msgid "Actioneer Help"
+msgstr "مساعدة Actioneer"
+
+msgid ""
+"Actioneer Help\n"
+"\n"
+"Getting started\n"
+"1. Sign in with your GitHub account on the welcome screen.\n"
+"2. Pick a repository in the left sidebar.\n"
+"3. Expand a workflow to inspect recent runs.\n"
+"\n"
+"Useful actions\n"
+"- Refresh repository/workflow status with F5.\n"
+"- Trigger manual workflow runs from the play button.\n"
+"- Open Preferences with Ctrl+, to adjust refresh/notifications.\n"
+"- Open Keyboard Shortcuts with Ctrl+? for quick references.\n"
+"\n"
+"Troubleshooting\n"
+"- If no repos appear, verify your token and network access.\n"
+"- For expired logs, retry from the latest run or trigger a new run.\n"
+"- Use Report Issue from the menu to send diagnostics and steps."
+msgstr "مساعدة Actioneer\n\nالبدء\n1. سجّل الدخول بحساب GitHub الخاص بك من شاشة الترحيب.\n2. اختر مستودعًا في الشريط الجانبي الأيسر.\n3. وسّع مسار عمل لفحص آخر عمليات التشغيل.\n\nإجراءات مفيدة\n- حدّث حالة المستودع/مسار العمل باستخدام F5.\n- شغّل عمليات تشغيل يدوية لمسارات العمل من زر التشغيل.\n- افتح التفضيلات باستخدام Ctrl+, لضبط التحديث/الإشعارات.\n- افتح اختصارات لوحة المفاتيح باستخدام Ctrl+? للرجوع السريع.\n\nاستكشاف الأخطاء وإصلاحها\n- إذا لم تظهر أي مستودعات، فتحقق من الرمز المميز وإمكانية الوصول إلى الشبكة.\n- للسجلات المنتهية، أعد المحاولة من أحدث تشغيل أو شغّل تشغيلًا جديدًا.\n- استخدم الإبلاغ عن مشكلة من القائمة لإرسال التشخيص والخطوات."
+
+msgid "Need more help? Use “Report Issue” in the app menu or visit:"
+msgstr "هل تحتاج إلى مزيد من المساعدة؟ استخدم «الإبلاغ عن مشكلة» من قائمة التطبيق أو تفضّل بزيارة:"
+
+msgid "Close"
+msgstr "إغلاق"
+
+msgid "Failed to open issue tracker in the browser."
+msgstr "تعذر فتح متتبع المشكلات في المتصفح."
+
+msgid ""
+"Are you sure you want to sign out?\n"
+"\n"
+"You will need to sign in again to continue."
+msgstr "هل أنت متأكد أنك تريد تسجيل الخروج؟\n\nستحتاج إلى تسجيل الدخول مرة أخرى للمتابعة."
+
+msgid "Actioneer notification test"
+msgstr "اختبار إشعار Actioneer"
+
+msgid "If you can read this, GNOME notifications are working."
+msgstr "إذا كنت تستطيع قراءة هذا، فإشعارات GNOME تعمل."
+
+msgid "Notifications are currently unavailable."
+msgstr "الإشعارات غير متاحة حاليًا."
+
+msgid "If you see this, notifications are working."
+msgstr "إذا كنت ترى هذا، فالإشعارات تعمل."

@@ -1,0 +1,158 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: actioneer\n"
+"Report-Msgid-Bugs-To: https://github.com/makoni/actioneer-gtk/issues\n"
+"POT-Creation-Date: 2026-02-14 00:00+0000\n"
+"PO-Revision-Date: 2026-02-14 00:00+0000\n"
+"Last-Translator: Actioneer Contributors\n"
+"Language-Team: Japanese\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Send a test notification when the app starts"
+msgstr "アプリ起動時にテスト通知を送信する"
+
+msgid "Preferences"
+msgstr "設定"
+
+msgid "Refresh"
+msgstr "更新"
+
+msgid "2 seconds"
+msgstr "2 秒"
+
+msgid "5 seconds"
+msgstr "5 秒"
+
+msgid "10 seconds"
+msgstr "10 秒"
+
+msgid "30 seconds"
+msgstr "30 秒"
+
+msgid "Auto-refresh interval"
+msgstr "自動更新間隔"
+
+msgid "How often to check for workflow run updates"
+msgstr "ワークフロー実行の更新を確認する頻度"
+
+msgid "Notifications"
+msgstr "通知"
+
+msgid "Desktop Notifications"
+msgstr "デスクトップ通知"
+
+msgid "Show a notification when a workflow run finishes"
+msgstr "ワークフロー実行が完了したときに通知を表示する"
+
+msgid "Select a repository"
+msgstr "リポジトリを選択"
+
+msgid "Choose a repository from the sidebar to browse its workflows and runs here."
+msgstr ""
+"ここでワークフローと実行を表示するには、サイドバーからリポジトリを選択してく"
+"ださい。"
+
+msgid "Application menu"
+msgstr "アプリケーションメニュー"
+
+msgid "Keyboard Shortcuts"
+msgstr "キーボードショートカット"
+
+msgid "Help"
+msgstr "ヘルプ"
+
+msgid "Sign out"
+msgstr "サインアウト"
+
+msgid "Report Issue"
+msgstr "問題を報告"
+
+msgid "About Actioneer"
+msgstr "Actioneer について"
+
+msgid "Quit"
+msgstr "終了"
+
+msgid "Send test notification"
+msgstr "テスト通知を送信"
+
+msgid "Preferences are currently unavailable."
+msgstr "現在、設定は利用できません。"
+
+msgid "General"
+msgstr "一般"
+
+msgid "Application"
+msgstr "アプリケーション"
+
+msgid "Refresh repositories"
+msgstr "リポジトリを更新"
+
+msgid "Open preferences"
+msgstr "設定を開く"
+
+msgid "Show keyboard shortcuts"
+msgstr "キーボードショートカットを表示"
+
+msgid "Open help"
+msgstr "ヘルプを開く"
+
+msgid "Quit application"
+msgstr "アプリケーションを終了"
+
+msgid "Actioneer Help"
+msgstr "Actioneer ヘルプ"
+
+msgid ""
+"Actioneer Help\n"
+"\n"
+"Getting started\n"
+"1. Sign in with your GitHub account on the welcome screen.\n"
+"2. Pick a repository in the left sidebar.\n"
+"3. Expand a workflow to inspect recent runs.\n"
+"\n"
+"Useful actions\n"
+"- Refresh repository/workflow status with F5.\n"
+"- Trigger manual workflow runs from the play button.\n"
+"- Open Preferences with Ctrl+, to adjust refresh/notifications.\n"
+"- Open Keyboard Shortcuts with Ctrl+? for quick references.\n"
+"\n"
+"Troubleshooting\n"
+"- If no repos appear, verify your token and network access.\n"
+"- For expired logs, retry from the latest run or trigger a new run.\n"
+"- Use Report Issue from the menu to send diagnostics and steps."
+msgstr "Actioneer ヘルプ\n\nはじめに\n1. ウェルカム画面で GitHub アカウントにサインインします。\n2. 左側のサイドバーでリポジトリを選択します。\n3. ワークフローを展開して最近の実行を確認します。\n\n便利な操作\n- F5 でリポジトリ/ワークフローの状態を更新します。\n- 再生ボタンからワークフローを手動実行します。\n- Ctrl+, で「設定」を開き、更新/通知を調整します。\n- Ctrl+? で「キーボードショートカット」を開き、クイックリファレンスを確認します。\n\nトラブルシューティング\n- リポジトリが表示されない場合は、トークンとネットワークアクセスを確認してください。\n- 期限切れのログは、最新の実行から再試行するか新しい実行を開始してください。\n- 診断情報と再現手順を送るには、メニューの「問題を報告」を使用してください。"
+
+msgid "Need more help? Use “Report Issue” in the app menu or visit:"
+msgstr "さらにヘルプが必要ですか？ アプリメニューの「問題を報告」を使うか、次を開いてください:"
+
+msgid "Close"
+msgstr "閉じる"
+
+msgid "Failed to open issue tracker in the browser."
+msgstr "ブラウザーで Issue トラッカーを開けませんでした。"
+
+msgid ""
+"Are you sure you want to sign out?\n"
+"\n"
+"You will need to sign in again to continue."
+msgstr ""
+"サインアウトしてもよろしいですか？\n"
+"\n"
+"続行するには再度サインインが必要です。"
+
+msgid "Actioneer notification test"
+msgstr "Actioneer 通知テスト"
+
+msgid "If you can read this, GNOME notifications are working."
+msgstr "このメッセージが読める場合、GNOME 通知は正常に動作しています。"
+
+msgid "Notifications are currently unavailable."
+msgstr "現在、通知は利用できません。"
+
+msgid "If you see this, notifications are working."
+msgstr "このメッセージが見えていれば、通知は機能しています。"

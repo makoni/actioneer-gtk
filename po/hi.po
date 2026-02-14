@@ -1,0 +1,153 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: actioneer\n"
+"Report-Msgid-Bugs-To: https://github.com/makoni/actioneer-gtk/issues\n"
+"POT-Creation-Date: 2026-02-14 00:00+0000\n"
+"PO-Revision-Date: 2026-02-14 00:00+0000\n"
+"Last-Translator: Actioneer Contributors\n"
+"Language-Team: Hindi\n"
+"Language: hi\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Send a test notification when the app starts"
+msgstr "ऐप शुरू होने पर एक परीक्षण सूचना भेजें"
+
+msgid "Preferences"
+msgstr "प्राथमिकताएँ"
+
+msgid "Refresh"
+msgstr "रीफ़्रेश"
+
+msgid "2 seconds"
+msgstr "2 सेकंड"
+
+msgid "5 seconds"
+msgstr "5 सेकंड"
+
+msgid "10 seconds"
+msgstr "10 सेकंड"
+
+msgid "30 seconds"
+msgstr "30 सेकंड"
+
+msgid "Auto-refresh interval"
+msgstr "स्वतः-रीफ़्रेश अंतराल"
+
+msgid "How often to check for workflow run updates"
+msgstr "वर्कफ़्लो रन अपडेट की जाँच कितनी बार करनी है"
+
+msgid "Notifications"
+msgstr "सूचनाएँ"
+
+msgid "Desktop Notifications"
+msgstr "डेस्कटॉप सूचनाएँ"
+
+msgid "Show a notification when a workflow run finishes"
+msgstr "वर्कफ़्लो रन समाप्त होने पर सूचना दिखाएँ"
+
+msgid "Select a repository"
+msgstr "एक रिपॉज़िटरी चुनें"
+
+msgid "Choose a repository from the sidebar to browse its workflows and runs here."
+msgstr "इसके वर्कफ़्लो और रन यहाँ देखने के लिए साइडबार से एक रिपॉज़िटरी चुनें।"
+
+msgid "Application menu"
+msgstr "एप्लिकेशन मेनू"
+
+msgid "Keyboard Shortcuts"
+msgstr "कीबोर्ड शॉर्टकट"
+
+msgid "Help"
+msgstr "मदद"
+
+msgid "Sign out"
+msgstr "साइन आउट"
+
+msgid "Report Issue"
+msgstr "समस्या रिपोर्ट करें"
+
+msgid "About Actioneer"
+msgstr "Actioneer के बारे में"
+
+msgid "Quit"
+msgstr "बाहर निकलें"
+
+msgid "Send test notification"
+msgstr "परीक्षण सूचना भेजें"
+
+msgid "Preferences are currently unavailable."
+msgstr "प्राथमिकताएँ फिलहाल उपलब्ध नहीं हैं।"
+
+msgid "General"
+msgstr "सामान्य"
+
+msgid "Application"
+msgstr "एप्लिकेशन"
+
+msgid "Refresh repositories"
+msgstr "रिपॉज़िटरियाँ रीफ़्रेश करें"
+
+msgid "Open preferences"
+msgstr "प्राथमिकताएँ खोलें"
+
+msgid "Show keyboard shortcuts"
+msgstr "कीबोर्ड शॉर्टकट दिखाएँ"
+
+msgid "Open help"
+msgstr "मदद खोलें"
+
+msgid "Quit application"
+msgstr "एप्लिकेशन बंद करें"
+
+msgid "Actioneer Help"
+msgstr "Actioneer सहायता"
+
+msgid ""
+"Actioneer Help\n"
+"\n"
+"Getting started\n"
+"1. Sign in with your GitHub account on the welcome screen.\n"
+"2. Pick a repository in the left sidebar.\n"
+"3. Expand a workflow to inspect recent runs.\n"
+"\n"
+"Useful actions\n"
+"- Refresh repository/workflow status with F5.\n"
+"- Trigger manual workflow runs from the play button.\n"
+"- Open Preferences with Ctrl+, to adjust refresh/notifications.\n"
+"- Open Keyboard Shortcuts with Ctrl+? for quick references.\n"
+"\n"
+"Troubleshooting\n"
+"- If no repos appear, verify your token and network access.\n"
+"- For expired logs, retry from the latest run or trigger a new run.\n"
+"- Use Report Issue from the menu to send diagnostics and steps."
+msgstr "Actioneer सहायता\n\nशुरुआत\n1. स्वागत स्क्रीन पर अपने GitHub खाते से साइन इन करें।\n2. बाईं साइडबार में एक रिपॉज़िटरी चुनें।\n3. हाल की रन देखने के लिए किसी वर्कफ़्लो को फैलाएँ।\n\nउपयोगी कार्रवाइयाँ\n- F5 से रिपॉज़िटरी/वर्कफ़्लो स्थिति रीफ़्रेश करें।\n- प्ले बटन से वर्कफ़्लो रन मैन्युअली ट्रिगर करें।\n- रीफ़्रेश/सूचनाएँ समायोजित करने के लिए Ctrl+, से प्राथमिकताएँ खोलें।\n- त्वरित संदर्भ के लिए Ctrl+? से कीबोर्ड शॉर्टकट खोलें।\n\nसमस्या निवारण\n- अगर कोई रिपॉज़िटरी नहीं दिखती, तो अपना टोकन और नेटवर्क पहुँच जाँचें।\n- समाप्त लॉग के लिए, नवीनतम रन से फिर प्रयास करें या नया रन ट्रिगर करें।\n- निदान और चरण भेजने के लिए मेनू से समस्या रिपोर्ट करें का उपयोग करें।"
+
+msgid "Need more help? Use “Report Issue” in the app menu or visit:"
+msgstr "और मदद चाहिए? ऐप मेनू में “समस्या रिपोर्ट करें” का उपयोग करें या यहाँ जाएँ:"
+
+msgid "Close"
+msgstr "बंद करें"
+
+msgid "Failed to open issue tracker in the browser."
+msgstr "ब्राउज़र में इश्यू ट्रैकर नहीं खोला जा सका।"
+
+msgid ""
+"Are you sure you want to sign out?\n"
+"\n"
+"You will need to sign in again to continue."
+msgstr "क्या आप वाकई साइन आउट करना चाहते हैं?\n\nजारी रखने के लिए आपको फिर से साइन इन करना होगा।"
+
+msgid "Actioneer notification test"
+msgstr "Actioneer सूचना परीक्षण"
+
+msgid "If you can read this, GNOME notifications are working."
+msgstr "यदि आप इसे पढ़ सकते हैं, तो GNOME सूचनाएँ काम कर रही हैं।"
+
+msgid "Notifications are currently unavailable."
+msgstr "सूचनाएँ फिलहाल उपलब्ध नहीं हैं।"
+
+msgid "If you see this, notifications are working."
+msgstr "यदि आप इसे देख रहे हैं, तो सूचनाएँ काम कर रही हैं।"

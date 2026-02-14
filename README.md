@@ -123,6 +123,15 @@ cargo test -- --ignored  # Run UI integration tests (requires a display)
 
 See `docs/` for API, caching, and UI guidelines. The project enforces zero warnings in `cargo build` and `cargo clippy`.
 
+### Localization
+
+Actioneer uses gettext catalogs under `po/` (currently seeded with `en`, `zh_Hans`, `hi`, `es`, `fr`, `ar`, `bn`, `pt_BR`, `ru`, and `ur`).
+
+```bash
+scripts/extract-translations.sh   # requires xgettext (gettext package)
+scripts/compile-translations.sh   # requires msgfmt (gettext package)
+```
+
 ## Packaging Notes
 
 - **Flatpak**: The manifest lives in `flatpak/me.spaceinbox.actioneer.yaml`. Local builds should vendor dependencies via `flatpak/vendor`, pass AppStream validation before submission, and can be run with `scripts/flathub-build.sh --install flatpak/me.spaceinbox.actioneer.yaml` when `rofiles-fuse` is unavailable (for example in virtualised hosts). Whenever `Cargo.lock` changes (including `cargo update`), regenerate `flatpak/me.spaceinbox.actioneer.cargo-sources.json` with `flatpak-cargo-generator -d Cargo.lock -o flatpak/me.spaceinbox.actioneer.cargo-sources.json` so the offline build has the updated crates. See “Secret storage & sandbox expectations” for the required portal verification steps before shipping a Flatpak build.

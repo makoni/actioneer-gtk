@@ -37,6 +37,7 @@ open = "5.3"
 # Logging
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+gettextrs = { version = "0.7", package = "gettext-rs" }
 
 # Error handling
 anyhow = "1.0"
