@@ -1,4 +1,5 @@
 use crate::APP_ICON_NAME;
+use crate::i18n::tr;
 use crate::runtime_handle;
 use crate::ui::utils::channel::{MainContextChannelExt, Sender as UiChannelSender};
 use anyhow::anyhow;
@@ -118,8 +119,10 @@ impl NotificationManager {
             return Ok(());
         }
 
-        let summary = format!("Workflow Completed: {}", workflow_name);
-        let body = format!("{} - {}", run_title, self.conclusion_text(conclusion));
+        let summary = tr("Workflow Completed: {workflow}").replace("{workflow}", workflow_name);
+        let body = tr("{run} - {status}")
+            .replace("{run}", run_title)
+            .replace("{status}", self.conclusion_text(conclusion).as_str());
 
         let priority = if conclusion == Some("failure") {
             gio::NotificationPriority::High
@@ -195,13 +198,13 @@ impl NotificationManager {
 
     fn conclusion_text(&self, conclusion: Option<&str>) -> String {
         match conclusion {
-            Some("success") => "Success ✓".to_string(),
-            Some("failure") => "Failed ✗".to_string(),
-            Some("cancelled") => "Cancelled".to_string(),
-            Some("skipped") => "Skipped".to_string(),
-            Some("timed_out") => "Timed Out".to_string(),
-            Some("action_required") => "Action Required".to_string(),
-            Some("neutral") => "Neutral".to_string(),
+            Some("success") => tr("Success ✓"),
+            Some("failure") => tr("Failed ✗"),
+            Some("cancelled") => tr("Cancelled"),
+            Some("skipped") => tr("Skipped"),
+            Some("timed_out") => tr("Timed Out"),
+            Some("action_required") => tr("Action Required"),
+            Some("neutral") => tr("Neutral"),
             Some(other) => other
                 .replace('_', " ")
                 .split_whitespace()
@@ -214,7 +217,7 @@ impl NotificationManager {
                 })
                 .collect::<Vec<_>>()
                 .join(" "),
-            None => "Completed".to_string(),
+            None => tr("Completed"),
         }
     }
 
@@ -602,9 +605,13 @@ mod tests {
     fn test_conclusion_text() {
         let manager = NotificationManager::new("test");
 
-        assert_eq!(manager.conclusion_text(Some("success")), "Success ✓");
-        assert_eq!(manager.conclusion_text(Some("failure")), "Failed ✗");
-        assert_eq!(manager.conclusion_text(Some("cancelled")), "Cancelled");
-        assert_eq!(manager.conclusion_text(None), "Completed");
+        assert!(!manager.conclusion_text(Some("success")).is_empty());
+        assert!(!manager.conclusion_text(Some("failure")).is_empty());
+        assert!(!manager.conclusion_text(Some("cancelled")).is_empty());
+        assert!(!manager.conclusion_text(None).is_empty());
+        assert_eq!(
+            manager.conclusion_text(Some("action_required")),
+            tr("Action Required")
+        );
     }
 }

@@ -6,7 +6,7 @@ use crate::demo;
 use crate::favorites::FavoritesManager;
 use crate::i18n::tr;
 use crate::notifications::NotificationManager;
-use crate::preferences::{Preferences, PreferencesManager};
+use crate::preferences::{Preferences, PreferencesManager, ThemePreference};
 use crate::storage::TokenStorage;
 use crate::ui::auth_window::AuthWindow;
 use crate::ui::detail_view::RepoDetailPane;
@@ -337,6 +337,18 @@ impl MainWindow {
 
             receiver.attach(None, move |prefs| {
                 window.set_default_size(prefs.window_width, prefs.window_height);
+                let style_manager = adw::StyleManager::default();
+                match prefs.theme_preference {
+                    ThemePreference::System => {
+                        style_manager.set_color_scheme(adw::ColorScheme::Default);
+                    }
+                    ThemePreference::Light => {
+                        style_manager.set_color_scheme(adw::ColorScheme::ForceLight);
+                    }
+                    ThemePreference::Dark => {
+                        style_manager.set_color_scheme(adw::ColorScheme::ForceDark);
+                    }
+                }
                 {
                     let mut selected = selected_repo_id.lock();
                     *selected = prefs.last_selected_repo_id;
@@ -486,6 +498,16 @@ impl MainWindow {
             });
             app.add_action(&action);
         }
+
+        if app.lookup_action("reload-ui").is_some() {
+            app.remove_action("reload-ui");
+        }
+        let this = self.clone();
+        let action = gio::SimpleAction::new("reload-ui", None);
+        action.connect_activate(move |_, _| {
+            this.reload_window_for_language_change();
+        });
+        app.add_action(&action);
     }
 
     fn ensure_app_accels(&self, app: &adw::Application) {
@@ -1059,5 +1081,18 @@ Troubleshooting\n\
 
     pub fn present(&self) {
         self.window.present();
+    }
+
+    fn reload_window_for_language_change(&self) {
+        let Some(app) = self.window.application() else {
+            return;
+        };
+        let Ok(app) = app.downcast::<adw::Application>() else {
+            return;
+        };
+
+        let replacement = MainWindow::new(&app);
+        replacement.present();
+        self.window.close();
     }
 }

@@ -1,5 +1,6 @@
 use crate::api::models::Repo;
 use crate::favorites::FavoritesManager;
+use crate::i18n::tr;
 use crate::ui::state::{RepoActionsState, WorkflowStatusCounts};
 use crate::ui::utils::MainContextChannelExt;
 use gtk::prelude::*;
@@ -102,19 +103,19 @@ pub fn rebuild_repo_list(store: gio::ListStore, context: RepoListRenderContext) 
         };
 
     append_section(
-        "Favorites",
+        tr("Favorites").as_str(),
         "emblem-favorite-symbolic",
         favorites_section,
         &favorites_snapshot,
     );
     append_section(
-        "Actions Enabled",
+        tr("Actions Enabled").as_str(),
         "media-playback-start-symbolic",
         enabled_section,
         &favorites_snapshot,
     );
     append_section(
-        "Actions Disabled",
+        tr("Actions Disabled").as_str(),
         "process-stop-symbolic",
         disabled_section,
         &favorites_snapshot,
@@ -185,7 +186,7 @@ fn build_repo_row(
     favorite_button.add_css_class("flat");
     favorite_button.set_valign(gtk::Align::Center);
     favorite_button.set_icon_name("emblem-favorite-symbolic");
-    favorite_button.set_tooltip_text(Some("Toggle favorite"));
+    favorite_button.set_tooltip_text(Some(tr("Toggle favorite").as_str()));
     favorite_button.set_active(is_favorite);
     update_favorite_button_visual(&favorite_button, is_favorite);
 
@@ -289,10 +290,10 @@ fn build_repo_row(
     content_box.append(&name_label);
 
     if repo.is_private {
-        let private_label = create_meta_label("Private".to_string());
+        let private_label = create_meta_label(tr("Private"));
         content_box.append(&private_label);
     } else {
-        let public_label = create_meta_label("Public".to_string());
+        let public_label = create_meta_label(tr("Public"));
         content_box.append(&public_label);
     }
 
@@ -300,14 +301,16 @@ fn build_repo_row(
     meta_box.set_halign(gtk::Align::Start);
 
     if workflow_counts.active > 0 {
-        meta_box.append(&create_meta_label(format!(
-            "Active runs: {}",
-            workflow_counts.active
-        )));
+        meta_box.append(&create_meta_label(
+            tr("Active runs: {count}")
+                .replace("{count}", workflow_counts.active.to_string().as_str()),
+        ));
     }
 
     if workflow_counts.failed > 0 {
-        let failed_label = create_meta_label(format!("Failures: {}", workflow_counts.failed));
+        let failed_label = create_meta_label(
+            tr("Failures: {count}").replace("{count}", workflow_counts.failed.to_string().as_str()),
+        );
         failed_label.add_css_class("error");
         meta_box.append(&failed_label);
     }
@@ -450,7 +453,7 @@ fn group_repos_by_owner(repos: Vec<Repo>) -> BTreeMap<String, Vec<Repo>> {
 }
 
 fn create_meta_label(text: String) -> gtk::Label {
-    let label = gtk::Label::new(Some(&text));
+    let label = gtk::Label::new(Some(text.as_str()));
     label.set_halign(gtk::Align::Start);
     label.add_css_class("dim-label");
     label.add_css_class("caption");

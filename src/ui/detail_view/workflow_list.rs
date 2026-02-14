@@ -4,6 +4,7 @@ use super::helpers::{
 };
 use super::{RepoDetailPane, WorkflowListContext};
 use crate::api::models::Workflow;
+use crate::i18n::tr;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, gio};
 use std::collections::{HashMap, HashSet};
@@ -66,7 +67,7 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
     store.remove_all();
 
     if workflows.is_empty() {
-        let placeholder = gtk::Label::new(Some("No workflows found."));
+        let placeholder = gtk::Label::new(Some(tr("No workflows found.").as_str()));
         placeholder.add_css_class("dim-label");
         placeholder.set_margin_top(24);
         placeholder.set_margin_bottom(24);

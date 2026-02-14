@@ -2,6 +2,7 @@ use crate::auth::device::{
     AccessToken, AuthError, DeviceFlowInfo, poll_device_token, start_device_flow,
 };
 use crate::config::Config;
+use crate::i18n::tr;
 use crate::runtime_handle;
 use crate::storage::TokenStorage;
 use crate::ui::utils::MainContextChannelExt;
@@ -36,7 +37,9 @@ pub struct AuthWindow {
 
 impl AuthWindow {
     pub fn new() -> Self {
-        let dialog = adw::Dialog::builder().title("Sign in to GitHub").build();
+        let dialog = adw::Dialog::builder()
+            .title(tr("Sign in to GitHub"))
+            .build();
         dialog.set_content_width(460);
 
         let device_info = Arc::new(Mutex::new(None));
@@ -101,7 +104,7 @@ impl AuthWindow {
         content_box.set_margin_end(48);
         content_box.set_valign(gtk::Align::Center);
 
-        let title = gtk::Label::new(Some("Sign in to GitHub"));
+        let title = gtk::Label::new(Some(tr("Sign in to GitHub").as_str()));
         title.add_css_class("title-1");
         content_box.append(&title);
 
@@ -109,7 +112,7 @@ impl AuthWindow {
         let status_box = gtk::Box::new(gtk::Orientation::Horizontal, 12);
         status_box.set_halign(gtk::Align::Center);
 
-        let status_label = gtk::Label::new(Some("Initializing authentication..."));
+        let status_label = gtk::Label::new(Some(tr("Initializing authentication...").as_str()));
         status_label.set_wrap(true);
         status_label.set_justify(gtk::Justification::Center);
         status_box.append(&status_label);
@@ -123,7 +126,7 @@ impl AuthWindow {
         let code_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
         code_box.set_visible(false);
 
-        let code_label = gtk::Label::new(Some("Enter this code on GitHub:"));
+        let code_label = gtk::Label::new(Some(tr("Enter this code on GitHub:").as_str()));
         code_box.append(&code_label);
 
         // Code display with copy button
@@ -136,7 +139,7 @@ impl AuthWindow {
         code_display_box.append(&user_code);
 
         let copy_button = gtk::Button::from_icon_name("edit-copy-symbolic");
-        copy_button.set_tooltip_text(Some("Copy code to clipboard"));
+        copy_button.set_tooltip_text(Some(tr("Copy code to clipboard").as_str()));
         copy_button.add_css_class("flat");
         copy_button.add_css_class("circular");
         copy_button.set_visible(false);
@@ -164,13 +167,13 @@ impl AuthWindow {
 
         content_box.append(&code_box);
 
-        let open_button = gtk::Button::with_label("Open GitHub in Browser");
+        let open_button = gtk::Button::with_label(tr("Open GitHub in Browser").as_str());
         open_button.add_css_class("suggested-action");
         open_button.add_css_class("pill");
         open_button.set_visible(false);
         content_box.append(&open_button);
 
-        let cancel_button = gtk::Button::with_label("Cancel");
+        let cancel_button = gtk::Button::with_label(tr("Cancel").as_str());
         content_box.append(&cancel_button);
 
         (
@@ -196,7 +199,8 @@ impl AuthWindow {
 
     fn reset_ui(&self) {
         *self.device_info.lock() = None;
-        self.status_label.set_text("Initializing authentication...");
+        self.status_label
+            .set_text(tr("Initializing authentication...").as_str());
         self.code_box.set_visible(false);
         self.user_code.set_text("");
         self.open_button.set_visible(false);
@@ -243,7 +247,8 @@ impl AuthWindow {
                 copy_button_clone.set_visible(true);
                 spinner_clone.set_visible(true);
                 spinner_clone.start();
-                status_clone.set_text("Open GitHub in your browser and enter the code.");
+                status_clone
+                    .set_text(tr("Open GitHub in your browser and enter the code.").as_str());
 
                 let poll_info = info.clone();
                 let sender_for_polling = poll_sender.clone();
@@ -258,7 +263,7 @@ impl AuthWindow {
                     loop {
                         if attempts >= max_attempts {
                             let _ = sender_for_polling
-                                .send(AuthMessage::PollError("Authentication timeout".into()));
+                                .send(AuthMessage::PollError(tr("Authentication timeout")));
                             break;
                         }
 
@@ -286,12 +291,12 @@ impl AuthWindow {
                             }
                             Err(AuthError::ExpiredToken) => {
                                 let _ = sender_for_polling
-                                    .send(AuthMessage::PollError("Authentication timeout".into()));
+                                    .send(AuthMessage::PollError(tr("Authentication timeout")));
                                 break;
                             }
                             Err(AuthError::AccessDenied) => {
                                 let _ = sender_for_polling
-                                    .send(AuthMessage::PollError("Access denied".into()));
+                                    .send(AuthMessage::PollError(tr("Access denied")));
                                 break;
                             }
                             Err(AuthError::RequestFailed(err)) => {
@@ -307,12 +312,16 @@ impl AuthWindow {
                     }
                 });
 
-                status_clone.set_text("Waiting for authorization...");
+                status_clone.set_text(tr("Waiting for authorization...").as_str());
                 ControlFlow::Continue
             }
             AuthMessage::FlowError(err) => {
                 error!("Failed to start device flow: {}", err);
-                status_clone.set_text(&format!("Error: {}", err));
+                status_clone.set_text(
+                    tr("Error: {message}")
+                        .replace("{message}", err.as_str())
+                        .as_str(),
+                );
                 spinner_clone.stop();
                 spinner_clone.set_visible(false);
                 ControlFlow::Break
@@ -322,12 +331,16 @@ impl AuthWindow {
                 spinner_clone.set_visible(false);
                 match save_token_and_close(token, &dialog_clone) {
                     Ok(()) => {
-                        status_clone.set_text("Signed in successfully");
+                        status_clone.set_text(tr("Signed in successfully").as_str());
                         completion();
                     }
                     Err(err) => {
                         error!("Failed to save token: {}", err);
-                        status_clone.set_text(&format!("Error saving token: {}", err));
+                        status_clone.set_text(
+                            tr("Error saving token: {message}")
+                                .replace("{message}", err.to_string().as_str())
+                                .as_str(),
+                        );
                     }
                 }
                 ControlFlow::Break
@@ -336,7 +349,11 @@ impl AuthWindow {
                 error!("Polling failed: {}", err);
                 spinner_clone.stop();
                 spinner_clone.set_visible(false);
-                status_clone.set_text(&format!("Error: {}", err));
+                status_clone.set_text(
+                    tr("Error: {message}")
+                        .replace("{message}", err.as_str())
+                        .as_str(),
+                );
                 ControlFlow::Break
             }
         });

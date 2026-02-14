@@ -1,3 +1,4 @@
+use crate::i18n::tr;
 use crate::ui::sidebar::row_matches_query;
 use crate::ui::utils::create_sidebar_clamp;
 use gtk4::prelude::*;
@@ -80,7 +81,7 @@ impl SidebarPanel {
         repo_view.set_accessible_role(gtk::AccessibleRole::List);
 
         let search_entry = gtk::SearchEntry::new();
-        search_entry.set_placeholder_text(Some("Search repositories..."));
+        search_entry.set_placeholder_text(Some(tr("Search repositories...").as_str()));
         search_entry.set_margin_top(12);
         search_entry.set_margin_bottom(12);
         search_entry.set_margin_start(12);
@@ -163,13 +164,14 @@ mod tests {
             return;
         };
         let panel = SidebarPanel::new();
+        let expected_placeholder = tr("Search repositories...");
         assert_eq!(
             panel
                 .search_entry()
                 .placeholder_text()
                 .as_ref()
                 .map(|s| s.as_str()),
-            Some("Search repositories...")
+            Some(expected_placeholder.as_str())
         );
         assert_eq!(
             panel.repo_list().accessible_role(),

@@ -1,5 +1,6 @@
 use crate::api::models::{Job, Repo, WorkflowRun};
 use crate::api::{GitHubClient, GitHubError};
+use crate::i18n::tr;
 use crate::ui::utils::MainContextChannelExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
@@ -14,12 +15,13 @@ fn run_display_title(run: &WorkflowRun) -> String {
         .display_title
         .as_deref()
         .or(run.name.as_deref())
-        .unwrap_or("Workflow Run");
+        .map(str::to_string)
+        .unwrap_or_else(|| tr("Workflow Run"));
 
     if let Some(number) = run.run_number {
         format!("{} #{}", base, number)
     } else {
-        base.to_string()
+        base
     }
 }
 
@@ -41,7 +43,7 @@ impl RunJobsWindow {
         let title = run_display_title(&run);
 
         let window = adw::Window::builder()
-            .title(format!("{} - Jobs", title))
+            .title(tr("{title} - Jobs").replace("{title}", title.as_str()))
             .modal(false)
             .default_width(900)
             .default_height(700)
@@ -74,12 +76,12 @@ impl RunJobsWindow {
 
         // Refresh button
         let refresh_button = gtk::Button::from_icon_name("view-refresh-symbolic");
-        refresh_button.set_tooltip_text(Some("Refresh jobs"));
+        refresh_button.set_tooltip_text(Some(tr("Refresh jobs").as_str()));
         header.pack_start(&refresh_button);
 
         // Cancel run button
         let cancel_button = gtk::Button::from_icon_name("process-stop-symbolic");
-        cancel_button.set_tooltip_text(Some("Cancel run"));
+        cancel_button.set_tooltip_text(Some(tr("Cancel run").as_str()));
         cancel_button.add_css_class("destructive-action");
 
         // Only show cancel if run is in progress
@@ -103,8 +105,9 @@ impl RunJobsWindow {
             .display_title
             .as_deref()
             .or(self.run.name.as_deref())
-            .unwrap_or("Workflow Run");
-        let run_label = gtk::Label::new(Some(title));
+            .map(str::to_string)
+            .unwrap_or_else(|| tr("Workflow Run"));
+        let run_label = gtk::Label::new(Some(title.as_str()));
         run_label.add_css_class("title-2");
         run_label.set_halign(gtk::Align::Start);
         info_box.append(&run_label);
@@ -261,7 +264,7 @@ impl RunJobsWindow {
                             gtk::DialogFlags::MODAL,
                             gtk::MessageType::Info,
                             gtk::ButtonsType::Ok,
-                            "Run cancellation requested successfully.",
+                            tr("Run cancellation requested successfully.").as_str(),
                         );
                         dialog.connect_response(|dialog, _| {
                             dialog.close();
@@ -277,7 +280,8 @@ impl RunJobsWindow {
                             gtk::DialogFlags::MODAL,
                             gtk::MessageType::Error,
                             gtk::ButtonsType::Ok,
-                            format!("Failed to cancel run: {}", e),
+                            tr("Failed to cancel run: {error}")
+                                .replace("{error}", e.to_string().as_str()),
                         );
                         dialog.connect_response(|dialog, _| {
                             dialog.close();
@@ -396,7 +400,8 @@ fn create_job_row(job: &Job) -> gtk::ListBoxRow {
     // Job info
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 4);
 
-    let name = job.name.as_deref().unwrap_or("Job");
+    let fallback = tr("Job");
+    let name = job.name.as_deref().unwrap_or(fallback.as_str());
     let name_label = gtk::Label::new(Some(name));
     name_label.set_halign(gtk::Align::Start);
     name_label.add_css_class("heading");
@@ -406,7 +411,7 @@ fn create_job_row(job: &Job) -> gtk::ListBoxRow {
 
     // Show friendly status
     let status_text = job.friendly_status();
-    if !status_text.is_empty() && status_text != "Unknown" {
+    if !status_text.is_empty() && status_text != tr("Unknown") {
         details.push(status_text);
     }
 

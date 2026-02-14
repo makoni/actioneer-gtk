@@ -1,6 +1,7 @@
 use super::filters::summarize_visible_runs;
 use super::row::{RunRowContext, create_run_expander_row};
 use crate::api::models::WorkflowRun;
+use crate::i18n::tr;
 use crate::ui::detail_view::RunFilters;
 use glib::subclass::types::ObjectSubclassIsExt;
 use gtk4::prelude::*;
@@ -330,7 +331,7 @@ fn build_spinner() -> gtk::Widget {
 }
 
 fn build_idle_placeholder() -> gtk::Widget {
-    let label = gtk::Label::new(Some("Click to load runs..."));
+    let label = gtk::Label::new(Some(tr("Click to load runs...").as_str()));
     label.add_css_class("dim-label");
     label.set_halign(gtk::Align::Start);
     let container = gtk::Box::new(gtk::Orientation::Vertical, 4);
@@ -342,12 +343,14 @@ fn build_idle_placeholder() -> gtk::Widget {
 fn build_empty_placeholder() -> gtk::Widget {
     let container = gtk::Box::new(gtk::Orientation::Vertical, 6);
     container.set_halign(gtk::Align::Start);
-    let label = gtk::Label::new(Some("No recent runs"));
+    let label = gtk::Label::new(Some(tr("No recent runs").as_str()));
     label.add_css_class("dim-label");
     label.set_halign(gtk::Align::Start);
     container.append(&label);
 
-    let info_label = gtk::Label::new(Some("Triggered runs may take 10-30 seconds to appear"));
+    let info_label = gtk::Label::new(Some(
+        tr("Triggered runs may take 10-30 seconds to appear").as_str(),
+    ));
     info_label.add_css_class("dim-label");
     info_label.add_css_class("caption");
     info_label.set_halign(gtk::Align::Start);
@@ -359,12 +362,14 @@ fn build_filtered_placeholder() -> gtk::Widget {
     let container = gtk::Box::new(gtk::Orientation::Vertical, 6);
     container.set_halign(gtk::Align::Start);
 
-    let label = gtk::Label::new(Some("No runs match the current filters"));
+    let label = gtk::Label::new(Some(tr("No runs match the current filters").as_str()));
     label.add_css_class("dim-label");
     label.set_halign(gtk::Align::Start);
     container.append(&label);
 
-    let hint = gtk::Label::new(Some("Adjust the status chips above to see more runs."));
+    let hint = gtk::Label::new(Some(
+        tr("Adjust the status chips above to see more runs.").as_str(),
+    ));
     hint.add_css_class("dim-label");
     hint.add_css_class("caption");
     hint.set_halign(gtk::Align::Start);
@@ -376,7 +381,7 @@ fn build_error_placeholder() -> (gtk::Widget, gtk::Label, RetryHandler) {
     let container = gtk::Box::new(gtk::Orientation::Vertical, 8);
     container.set_halign(gtk::Align::Start);
 
-    let label = gtk::Label::new(Some("Unable to load workflow runs"));
+    let label = gtk::Label::new(Some(tr("Unable to load workflow runs").as_str()));
     label.add_css_class("dim-label");
     label.set_halign(gtk::Align::Start);
     container.append(&label);
@@ -387,7 +392,7 @@ fn build_error_placeholder() -> (gtk::Widget, gtk::Label, RetryHandler) {
     detail_label.set_halign(gtk::Align::Start);
     container.append(&detail_label);
 
-    let retry_button = gtk::Button::with_label("Retry");
+    let retry_button = gtk::Button::with_label(tr("Retry").as_str());
     retry_button.add_css_class("suggested-action");
     retry_button.set_halign(gtk::Align::Start);
     retry_button.set_margin_top(8);
@@ -406,18 +411,16 @@ fn build_error_placeholder() -> (gtk::Widget, gtk::Label, RetryHandler) {
 fn format_runs_header(visible_count: usize, filtered_total: usize, overall_total: usize) -> String {
     if filtered_total == overall_total || visible_count == filtered_total {
         if visible_count < overall_total {
-            format!(
-                "Recent runs (showing {} of {})",
-                visible_count, overall_total
-            )
+            tr("Recent runs (showing {visible} of {overall})")
+                .replace("{visible}", visible_count.to_string().as_str())
+                .replace("{overall}", overall_total.to_string().as_str())
         } else {
-            format!("Recent runs ({})", overall_total)
+            tr("Recent runs ({overall})").replace("{overall}", overall_total.to_string().as_str())
         }
     } else {
-        format!(
-            "Recent runs (showing {} of {} matching filters)",
-            visible_count, filtered_total
-        )
+        tr("Recent runs (showing {visible} of {filtered} matching filters)")
+            .replace("{visible}", visible_count.to_string().as_str())
+            .replace("{filtered}", filtered_total.to_string().as_str())
     }
 }
 
@@ -501,6 +504,7 @@ mod tests {
     use super::test_run_list_model;
     use super::{STATE_CONTENT, STATE_ERROR, STATE_IDLE, format_runs_header, state_requires_load};
     use crate::api::models::WorkflowRun;
+    use crate::i18n::tr;
     use crate::ui::detail_view::RunFilters;
     use crate::ui::test_helpers::gtk_test_guard;
     use gtk4::prelude::ListModelExt;
@@ -509,19 +513,32 @@ mod tests {
     #[test]
     fn formats_header_with_partial_visible() {
         let text = format_runs_header(5, 5, 12);
-        assert_eq!(text, "Recent runs (showing 5 of 12)");
+        assert_eq!(
+            text,
+            tr("Recent runs (showing {visible} of {overall})")
+                .replace("{visible}", "5")
+                .replace("{overall}", "12")
+        );
     }
 
     #[test]
     fn formats_header_with_matching_filters() {
         let text = format_runs_header(3, 4, 10);
-        assert_eq!(text, "Recent runs (showing 3 of 4 matching filters)");
+        assert_eq!(
+            text,
+            tr("Recent runs (showing {visible} of {filtered} matching filters)")
+                .replace("{visible}", "3")
+                .replace("{filtered}", "4")
+        );
     }
 
     #[test]
     fn formats_header_with_exact_count() {
         let text = format_runs_header(10, 10, 10);
-        assert_eq!(text, "Recent runs (10)");
+        assert_eq!(
+            text,
+            tr("Recent runs ({overall})").replace("{overall}", "10")
+        );
     }
 
     #[test]

@@ -15,6 +15,7 @@ use gtk4::prelude::*;
 use gtk4::{IconTheme, gdk, glib};
 use i18n::tr;
 use libadwaita as adw;
+use preferences::{PreferencesManager, ThemePreference};
 use std::borrow::Cow;
 use std::ops::ControlFlow;
 use std::path::Path;
@@ -48,6 +49,10 @@ pub fn resolved_app_id() -> Cow<'static, str> {
 
 fn main() -> anyhow::Result<()> {
     i18n::init();
+    let startup_preferences = PreferencesManager::new()
+        .map(|manager| manager.get_blocking())
+        .unwrap_or_default();
+    i18n::apply_language_preference(startup_preferences.language_preference);
 
     // Initialize logging
     tracing_subscriber::fmt()
@@ -115,6 +120,21 @@ fn main() -> anyhow::Result<()> {
         register_icon_theme_paths();
         gtk4::Window::set_default_icon_name(APP_ICON_NAME);
         style::install_app_css();
+    });
+    let startup_theme_preference = startup_preferences.theme_preference;
+    app.connect_startup(move |_| {
+        let style_manager = adw::StyleManager::default();
+        match startup_theme_preference {
+            ThemePreference::System => {
+                style_manager.set_color_scheme(adw::ColorScheme::Default);
+            }
+            ThemePreference::Light => {
+                style_manager.set_color_scheme(adw::ColorScheme::ForceLight);
+            }
+            ThemePreference::Dark => {
+                style_manager.set_color_scheme(adw::ColorScheme::ForceDark);
+            }
+        }
     });
 
     let activate_flag = send_test_notification.clone();

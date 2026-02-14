@@ -138,7 +138,10 @@ msgid ""
 "Are you sure you want to sign out?\n"
 "\n"
 "You will need to sign in again to continue."
-msgstr "Вы уверены, что хотите выйти из аккаунта?\n\nЧтобы продолжить, потребуется войти снова."
+msgstr ""
+"Вы уверены, что хотите выйти из аккаунта?\n"
+"\n"
+"Чтобы продолжить, потребуется войти снова."
 
 msgid "Actioneer notification test"
 msgstr "Тест уведомлений Actioneer"
@@ -151,3 +154,447 @@ msgstr "Уведомления сейчас недоступны."
 
 msgid "If you see this, notifications are working."
 msgstr "Если вы видите это, уведомления работают."
+
+msgid "Workflow Completed: {workflow}"
+msgstr "Рабочий процесс завершен: {workflow}"
+
+msgid "{run} - {status}"
+msgstr "{run} - {status}"
+
+msgid "Success ✓"
+msgstr "Успешно ✓"
+
+msgid "Failed ✗"
+msgstr "Не удалось ✗"
+
+msgid "Cancelled"
+msgstr "Отменено"
+
+msgid "Skipped"
+msgstr "Пропущено"
+
+msgid "Timed Out"
+msgstr "Время ожидания истекло"
+
+msgid "Action Required"
+msgstr "Требуется действие"
+
+msgid "Neutral"
+msgstr "Нейтрально"
+
+msgid "Completed"
+msgstr "Завершено"
+
+msgid "Appearance"
+msgstr "Внешний вид"
+
+msgid "System"
+msgstr "Системная"
+
+msgid "Light"
+msgstr "Светлая"
+
+msgid "Dark"
+msgstr "Тёмная"
+
+msgid "Theme"
+msgstr "Тема"
+
+msgid "Select application theme"
+msgstr "Выберите тему приложения"
+
+msgid "Language"
+msgstr "Язык"
+
+msgid "System language (fallback: English)"
+msgstr "Язык системы (резервный: английский)"
+
+msgid "Application language"
+msgstr "Язык приложения"
+
+msgid "Switch language instantly"
+msgstr "Мгновенно переключать язык"
+
+msgid "Sign in to GitHub"
+msgstr "Войти в GitHub"
+
+msgid "Initializing authentication..."
+msgstr "Инициализация аутентификации..."
+
+msgid "Enter this code on GitHub:"
+msgstr "Введите этот код на GitHub:"
+
+msgid "Copy code to clipboard"
+msgstr "Скопировать код в буфер обмена"
+
+msgid "Open GitHub in Browser"
+msgstr "Открыть GitHub в браузере"
+
+msgid "Cancel"
+msgstr "Отмена"
+
+msgid "Open GitHub in your browser and enter the code."
+msgstr "Откройте GitHub в браузере и введите код."
+
+msgid "Authentication timeout"
+msgstr "Время ожидания аутентификации истекло"
+
+msgid "Access denied"
+msgstr "Доступ запрещён"
+
+msgid "Waiting for authorization..."
+msgstr "Ожидание авторизации..."
+
+msgid "Error: {message}"
+msgstr "Ошибка: {message}"
+
+msgid "Signed in successfully"
+msgstr "Вход выполнен успешно"
+
+msgid "Error saving token: {message}"
+msgstr "Ошибка сохранения токена: {message}"
+
+msgid "Welcome to Actioneer"
+msgstr "Добро пожаловать в Actioneer"
+
+msgid "Manage your GitHub Actions workflows with ease"
+msgstr "Управляйте workflow GitHub Actions с лёгкостью"
+
+msgid "Trigger workflows instantly"
+msgstr "Запускайте workflow мгновенно"
+
+msgid "Monitor runs in real-time"
+msgstr "Отслеживайте запуски в реальном времени"
+
+msgid "View detailed logs"
+msgstr "Просматривайте подробные логи"
+
+msgid "Sign in with GitHub"
+msgstr "Войти через GitHub"
+
+msgid "Try Demo Mode"
+msgstr "Попробовать демо-режим"
+
+msgid "Explore Actioneer with sample data"
+msgstr "Ознакомьтесь с Actioneer на примере тестовых данных"
+
+msgid "Workflow Run"
+msgstr "Запуск workflow"
+
+msgid "{title} - Jobs"
+msgstr "{title} - Задания"
+
+msgid "Refresh jobs"
+msgstr "Обновить задания"
+
+msgid "Cancel run"
+msgstr "Отменить запуск"
+
+msgid "Run cancellation requested successfully."
+msgstr "Запрос на отмену запуска успешно отправлен."
+
+msgid "Failed to cancel run: {error}"
+msgstr "Не удалось отменить запуск: {error}"
+
+msgid "Job"
+msgstr "Задание"
+
+msgid "Unknown"
+msgstr "Неизвестно"
+
+msgid "Workflows and runs will load in the detail pane."
+msgstr "Workflow и запуски будут загружены в панели деталей."
+
+msgid "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs."
+msgstr "GitHub Actions отключены для этого репозитория. Включите Actions, чтобы просматривать workflow и запуски."
+
+msgid "Favorites"
+msgstr "Избранное"
+
+msgid "Actions Enabled"
+msgstr "Actions включены"
+
+msgid "Actions Disabled"
+msgstr "Actions отключены"
+
+msgid "Toggle favorite"
+msgstr "Переключить избранное"
+
+msgid "Private"
+msgstr "Приватный"
+
+msgid "Public"
+msgstr "Публичный"
+
+msgid "Active runs: {count}"
+msgstr "Активные запуски: {count}"
+
+msgid "Failures: {count}"
+msgstr "Сбоев: {count}"
+
+msgid "Fetching logs..."
+msgstr "Загрузка логов..."
+
+msgid "Refresh logs"
+msgstr "Обновить логи"
+
+msgid "Copy logs to clipboard"
+msgstr "Скопировать логи в буфер обмена"
+
+msgid "Save logs to file"
+msgstr "Сохранить логи в файл"
+
+msgid "Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments."
+msgstr "Логи для этого задания пока недоступны. GitHub предоставляет логи только после начала вывода или завершения задания. Попробуйте обновить через несколько секунд."
+
+msgid "The logs for this run have expired and are no longer available."
+msgstr "Срок хранения логов для этого запуска истёк, и они больше недоступны."
+
+msgid "Unable to load logs right now. Please try again later.\n"
+"\n"
+"Details: {error}"
+msgstr ""
+"Сейчас не удалось загрузить логи. Повторите попытку позже.\n"
+"\n"
+"Подробности: {error}"
+
+msgid "Logs are empty; nothing to copy"
+msgstr "Логи пусты; копировать нечего"
+
+msgid "Logs copied to clipboard"
+msgstr "Логи скопированы в буфер обмена"
+
+msgid "Clipboard unavailable on this system"
+msgstr "Буфер обмена недоступен в этой системе"
+
+msgid "Save Logs"
+msgstr "Сохранить логи"
+
+msgid "Save"
+msgstr "Сохранить"
+
+msgid "Logs are empty; nothing saved"
+msgstr "Логи пусты; сохранять нечего"
+
+msgid "Logs saved"
+msgstr "Логи сохранены"
+
+msgid "Failed to save logs: {error}"
+msgstr "Не удалось сохранить логи: {error}"
+
+msgid "Unable to determine save location"
+msgstr "Не удалось определить место сохранения"
+
+msgid "No file selected"
+msgstr "Файл не выбран"
+
+msgid "Are you sure you want to sign out?\n"
+"\n"
+"You will need to sign in again to continue."
+msgstr ""
+"Вы уверены, что хотите выйти из аккаунта?\n"
+"\n"
+"Чтобы продолжить, потребуется войти снова."
+
+msgid "Loading repositories..."
+msgstr "Загрузка репозиториев..."
+
+msgid "Search repositories..."
+msgstr "Поиск репозиториев..."
+
+msgid "Rate limit: –"
+msgstr "Лимит запросов: –"
+
+msgid "No workflows found."
+msgstr "Workflow не найдены."
+
+msgid "Favorites unavailable"
+msgstr "Избранное недоступно"
+
+msgid "Loading workflows..."
+msgstr "Загрузка workflow..."
+
+msgid "Refresh workflows"
+msgstr "Обновить workflow"
+
+msgid "Private Repository"
+msgstr "Приватный репозиторий"
+
+msgid "Show successful runs"
+msgstr "Показывать успешные запуски"
+
+msgid "Show failed runs"
+msgstr "Показывать неуспешные запуски"
+
+msgid "Show running/queued runs"
+msgstr "Показывать выполняющиеся/ожидающие запуски"
+
+msgid "now"
+msgstr "сейчас"
+
+msgid "Rate limit (low)"
+msgstr "Лимит запросов (низкий)"
+
+msgid "Rate limit"
+msgstr "Лимит запросов"
+
+msgid "{prefix}: {remaining}/{limit} (resets in {time})"
+msgstr "{prefix}: {remaining}/{limit} (сброс через {time})"
+
+msgid "Unnamed job"
+msgstr "Задание без названия"
+
+msgid "View logs"
+msgstr "Просмотреть логи"
+
+msgid "Open job in GitHub"
+msgstr "Открыть задание в GitHub"
+
+msgid "No jobs found"
+msgstr "Задания не найдены"
+
+msgid "Showing {count} jobs"
+msgstr "Показано {count} заданий"
+
+msgid "Unable to load jobs"
+msgstr "Не удалось загрузить задания"
+
+msgid "Retry"
+msgstr "Повторить"
+
+msgid "{description} (required)"
+msgstr "{description} (обязательно)"
+
+msgid "Required"
+msgstr "Обязательно"
+
+msgid "Trigger workflow"
+msgstr "Запустить workflow"
+
+msgid "Trigger Workflow"
+msgstr "Запустить Workflow"
+
+msgid "Trigger"
+msgstr "Запустить"
+
+msgid "This will trigger the \"{workflow}\" workflow."
+msgstr "Это запустит workflow \"{workflow}\"."
+
+msgid "Triggered runs typically appear within 10-30 seconds."
+msgstr "Запущенные процессы обычно появляются в течение 10-30 секунд."
+
+msgid "Branch or ref:"
+msgstr "Ветка или ref:"
+
+msgid "Loading branches..."
+msgstr "Загрузка веток..."
+
+msgid "Loading workflow inputs..."
+msgstr "Загрузка входных параметров workflow..."
+
+msgid "Inputs"
+msgstr "Параметры"
+
+msgid "No inputs defined for this workflow."
+msgstr "Для этого workflow не определены входные параметры."
+
+msgid "Workflow inputs could not be loaded."
+msgstr "Не удалось загрузить входные параметры workflow."
+
+msgid "✗ Failed to load workflow inputs: {error}"
+msgstr "✗ Не удалось загрузить входные параметры workflow: {error}"
+
+msgid "Failed to load workflow inputs: {error}"
+msgstr "Не удалось загрузить входные параметры workflow: {error}"
+
+msgid "✗ {error}"
+msgstr "✗ {error}"
+
+msgid "Failed to trigger workflow: {error}"
+msgstr "Не удалось запустить workflow: {error}"
+
+msgid "✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear once GitHub reports it."
+msgstr "✓ Workflow '{workflow}' запущен в ветке '{branch}'. Запуск появится, как только GitHub сообщит о нём."
+
+msgid "✗ Failed to trigger workflow: {error}"
+msgstr "✗ Не удалось запустить workflow: {error}"
+
+msgid "Open in GitHub"
+msgstr "Открыть в GitHub"
+
+msgid "Re-run workflow"
+msgstr "Перезапустить workflow"
+
+msgid "Do you want to re-run \"{run}\"?"
+msgstr "Вы хотите перезапустить \"{run}\"?"
+
+msgid "Re-run Workflow"
+msgstr "Перезапустить Workflow"
+
+msgid "✓ Re-running '{run}'"
+msgstr "✓ Перезапускается '{run}'"
+
+msgid "✗ Failed to re-run workflow"
+msgstr "✗ Не удалось перезапустить workflow"
+
+msgid "Re-run failed jobs"
+msgstr "Перезапустить неуспешные задания"
+
+msgid "Do you want to re-run all failed jobs in \"{run}\"?"
+msgstr "Вы хотите перезапустить все неуспешные задания в \"{run}\"?"
+
+msgid "Re-run Failed Jobs"
+msgstr "Перезапустить неуспешные задания"
+
+msgid "✓ Re-running failed jobs for '{run}'"
+msgstr "✓ Перезапускаются неуспешные задания для '{run}'"
+
+msgid "✗ Failed to re-run failed jobs"
+msgstr "✗ Не удалось перезапустить неуспешные задания"
+
+msgid "Do you want to cancel the in-progress run \"{run}\"?\n"
+"\n"
+"This action cannot be undone."
+msgstr ""
+"Вы хотите отменить выполняющийся запуск \"{run}\"?\n"
+"\n"
+"Это действие нельзя отменить."
+
+msgid "Cancel Workflow Run"
+msgstr "Отменить запуск workflow"
+
+msgid "✓ Cancelled run '{run}'"
+msgstr "✓ Запуск '{run}' отменён"
+
+msgid "✗ Failed to cancel run"
+msgstr "✗ Не удалось отменить запуск"
+
+msgid "Click to load jobs..."
+msgstr "Нажмите, чтобы загрузить задания..."
+
+msgid "Click to load runs..."
+msgstr "Нажмите, чтобы загрузить запуски..."
+
+msgid "No recent runs"
+msgstr "Недавние запуски отсутствуют"
+
+msgid "Triggered runs may take 10-30 seconds to appear"
+msgstr "Запущенные процессы могут появиться через 10-30 секунд"
+
+msgid "No runs match the current filters"
+msgstr "Нет запусков, соответствующих текущим фильтрам"
+
+msgid "Adjust the status chips above to see more runs."
+msgstr "Измените фильтры статусов выше, чтобы увидеть больше запусков."
+
+msgid "Unable to load workflow runs"
+msgstr "Не удалось загрузить запуски workflow"
+
+msgid "Recent runs (showing {visible} of {overall})"
+msgstr "Недавние запуски (показано {visible} из {overall})"
+
+msgid "Recent runs ({overall})"
+msgstr "Недавние запуски ({overall})"
+
+msgid "Recent runs (showing {visible} of {filtered} matching filters)"
+msgstr "Недавние запуски (показано {visible} из {filtered}, соответствующих фильтрам)"

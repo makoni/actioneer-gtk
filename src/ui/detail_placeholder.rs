@@ -1,4 +1,5 @@
 use crate::api::models::Repo;
+use crate::i18n::tr;
 use gtk4::glib::idle_add_local_once;
 use libadwaita as adw;
 
@@ -11,8 +12,9 @@ pub fn schedule_status_page_update(status_page: adw::StatusPage, repo: Option<Re
                 "folder-remote-symbolic"
             };
             let description = format!(
-                "{}\nWorkflows and runs will load in the detail pane.",
-                repo.full_name
+                "{}\n{}",
+                repo.full_name,
+                tr("Workflows and runs will load in the detail pane.")
             );
 
             status_page.set_title(&repo.name);
@@ -20,9 +22,10 @@ pub fn schedule_status_page_update(status_page: adw::StatusPage, repo: Option<Re
             status_page.set_icon_name(Some(icon_name));
         }
         None => {
-            status_page.set_title("Select a repository");
+            status_page.set_title(tr("Select a repository").as_str());
             status_page.set_description(Some(
-                "Choose a repository from the sidebar to browse its workflows and runs here.",
+                tr("Choose a repository from the sidebar to browse its workflows and runs here.")
+                    .as_str(),
             ));
             status_page.set_icon_name(Some("system-search-symbolic"));
         }
@@ -33,7 +36,7 @@ pub fn schedule_actions_disabled_page(status_page: adw::StatusPage, repo: Repo) 
     idle_add_local_once(move || {
         status_page.set_title(&repo.name);
         status_page.set_description(Some(
-            "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs.",
+            tr("GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs.").as_str(),
         ));
         status_page.set_icon_name(Some("emblem-unreadable-symbolic"));
     });

@@ -1,3 +1,4 @@
+use crate::i18n::tr;
 use gtk4::prelude::*;
 use gtk4::{self as gtk};
 use libadwaita as adw;
@@ -14,10 +15,10 @@ impl HeaderControls {
         let header_bar = adw::HeaderBar::new();
 
         let refresh_button = gtk::Button::from_icon_name("view-refresh-symbolic");
-        refresh_button.set_tooltip_text(Some("Refresh repositories"));
+        refresh_button.set_tooltip_text(Some(tr("Refresh repositories").as_str()));
         header_bar.pack_start(&refresh_button);
 
-        let rate_limit_label = gtk::Label::new(Some("Rate limit: –"));
+        let rate_limit_label = gtk::Label::new(Some(tr("Rate limit: –").as_str()));
         rate_limit_label.add_css_class("dim-label");
         rate_limit_label.add_css_class("caption");
         rate_limit_label.set_halign(gtk::Align::End);
@@ -59,14 +60,15 @@ mod tests {
             return;
         };
         let controls = HeaderControls::new();
+        let expected_tooltip = tr("Refresh repositories");
         assert_eq!(
             controls
                 .refresh_button()
                 .tooltip_text()
                 .as_ref()
                 .map(|s| s.as_str()),
-            Some("Refresh repositories")
+            Some(expected_tooltip.as_str())
         );
-        assert_eq!(controls.rate_limit_label().text(), "Rate limit: –");
+        assert_eq!(controls.rate_limit_label().text(), tr("Rate limit: –"));
     }
 }

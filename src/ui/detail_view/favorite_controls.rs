@@ -1,4 +1,5 @@
 use crate::favorites::FavoritesManager;
+use crate::i18n::tr;
 use crate::ui::utils::MainContextChannelExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
@@ -15,7 +16,7 @@ pub(super) fn setup_favorite_button(
 ) {
     if let Some(manager) = favorites_manager {
         button.set_sensitive(true);
-        button.set_tooltip_text(Some("Toggle favorite"));
+        button.set_tooltip_text(Some(tr("Toggle favorite").as_str()));
 
         let manager_for_toggle = manager.clone();
         let favorites_state = favorites_state.clone();
@@ -63,7 +64,7 @@ pub(super) fn setup_favorite_button(
         });
     } else {
         button.set_sensitive(false);
-        button.set_tooltip_text(Some("Favorites unavailable"));
+        button.set_tooltip_text(Some(tr("Favorites unavailable").as_str()));
         update_detail_favorite_button(button, false);
     }
 }

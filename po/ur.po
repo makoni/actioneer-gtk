@@ -151,3 +151,444 @@ msgstr "اطلاعات فی الحال دستیاب نہیں ہیں۔"
 
 msgid "If you see this, notifications are working."
 msgstr "اگر آپ یہ دیکھ رہے ہیں تو اطلاعات کام کر رہی ہیں۔"
+
+msgid "Workflow Completed: {workflow}"
+msgstr "ورک فلو مکمل ہوا: {workflow}"
+
+msgid "{run} - {status}"
+msgstr "{run} - {status}"
+
+msgid "Success ✓"
+msgstr "کامیاب ✓"
+
+msgid "Failed ✗"
+msgstr "ناکام ✗"
+
+msgid "Cancelled"
+msgstr "منسوخ"
+
+msgid "Skipped"
+msgstr "چھوڑ دیا گیا"
+
+msgid "Timed Out"
+msgstr "وقت ختم ہو گیا"
+
+msgid "Action Required"
+msgstr "کارروائی درکار"
+
+msgid "Neutral"
+msgstr "غیر جانبدار"
+
+msgid "Completed"
+msgstr "مکمل"
+
+msgid "Appearance"
+msgstr "ظاہری شکل"
+
+msgid "System"
+msgstr "سسٹم"
+
+msgid "Light"
+msgstr "ہلکا"
+
+msgid "Dark"
+msgstr "گہرا"
+
+msgid "Theme"
+msgstr "تھیم"
+
+msgid "Select application theme"
+msgstr "ایپلیکیشن تھیم منتخب کریں"
+
+msgid "Language"
+msgstr "زبان"
+
+msgid "System language (fallback: English)"
+msgstr "سسٹم زبان (فال بیک: انگریزی)"
+
+msgid "Application language"
+msgstr "ایپلیکیشن زبان"
+
+msgid "Switch language instantly"
+msgstr "زبان فوراً تبدیل کریں"
+
+msgid "Sign in to GitHub"
+msgstr "Sign in to GitHub"
+
+msgid "Initializing authentication..."
+msgstr "Initializing authentication..."
+
+msgid "Enter this code on GitHub:"
+msgstr "Enter this code on GitHub:"
+
+msgid "Copy code to clipboard"
+msgstr "Copy code to clipboard"
+
+msgid "Open GitHub in Browser"
+msgstr "Open GitHub in Browser"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Open GitHub in your browser and enter the code."
+msgstr "Open GitHub in your browser and enter the code."
+
+msgid "Authentication timeout"
+msgstr "Authentication timeout"
+
+msgid "Access denied"
+msgstr "Access denied"
+
+msgid "Waiting for authorization..."
+msgstr "Waiting for authorization..."
+
+msgid "Error: {message}"
+msgstr "Error: {message}"
+
+msgid "Signed in successfully"
+msgstr "Signed in successfully"
+
+msgid "Error saving token: {message}"
+msgstr "Error saving token: {message}"
+
+msgid "Welcome to Actioneer"
+msgstr "Welcome to Actioneer"
+
+msgid "Manage your GitHub Actions workflows with ease"
+msgstr "Manage your GitHub Actions workflows with ease"
+
+msgid "Trigger workflows instantly"
+msgstr "Trigger workflows instantly"
+
+msgid "Monitor runs in real-time"
+msgstr "Monitor runs in real-time"
+
+msgid "View detailed logs"
+msgstr "View detailed logs"
+
+msgid "Sign in with GitHub"
+msgstr "Sign in with GitHub"
+
+msgid "Try Demo Mode"
+msgstr "Try Demo Mode"
+
+msgid "Explore Actioneer with sample data"
+msgstr "Explore Actioneer with sample data"
+
+msgid "Workflow Run"
+msgstr "Workflow Run"
+
+msgid "{title} - Jobs"
+msgstr "{title} - Jobs"
+
+msgid "Refresh jobs"
+msgstr "Refresh jobs"
+
+msgid "Cancel run"
+msgstr "Cancel run"
+
+msgid "Run cancellation requested successfully."
+msgstr "Run cancellation requested successfully."
+
+msgid "Failed to cancel run: {error}"
+msgstr "Failed to cancel run: {error}"
+
+msgid "Job"
+msgstr "Job"
+
+msgid "Unknown"
+msgstr "Unknown"
+
+msgid "Workflows and runs will load in the detail pane."
+msgstr "Workflows and runs will load in the detail pane."
+
+msgid "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs."
+msgstr "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs."
+
+msgid "Favorites"
+msgstr "Favorites"
+
+msgid "Actions Enabled"
+msgstr "Actions Enabled"
+
+msgid "Actions Disabled"
+msgstr "Actions Disabled"
+
+msgid "Toggle favorite"
+msgstr "Toggle favorite"
+
+msgid "Private"
+msgstr "Private"
+
+msgid "Public"
+msgstr "Public"
+
+msgid "Active runs: {count}"
+msgstr "Active runs: {count}"
+
+msgid "Failures: {count}"
+msgstr "Failures: {count}"
+
+msgid "Fetching logs..."
+msgstr "Fetching logs..."
+
+msgid "Refresh logs"
+msgstr "Refresh logs"
+
+msgid "Copy logs to clipboard"
+msgstr "Copy logs to clipboard"
+
+msgid "Save logs to file"
+msgstr "Save logs to file"
+
+msgid "Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments."
+msgstr "Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments."
+
+msgid "The logs for this run have expired and are no longer available."
+msgstr "The logs for this run have expired and are no longer available."
+
+msgid "Unable to load logs right now. Please try again later.\n"
+"\n"
+"Details: {error}"
+msgstr "Unable to load logs right now. Please try again later.\n"
+"\n"
+"Details: {error}"
+
+msgid "Logs are empty; nothing to copy"
+msgstr "Logs are empty; nothing to copy"
+
+msgid "Logs copied to clipboard"
+msgstr "Logs copied to clipboard"
+
+msgid "Clipboard unavailable on this system"
+msgstr "Clipboard unavailable on this system"
+
+msgid "Save Logs"
+msgstr "Save Logs"
+
+msgid "Save"
+msgstr "Save"
+
+msgid "Logs are empty; nothing saved"
+msgstr "Logs are empty; nothing saved"
+
+msgid "Logs saved"
+msgstr "Logs saved"
+
+msgid "Failed to save logs: {error}"
+msgstr "Failed to save logs: {error}"
+
+msgid "Unable to determine save location"
+msgstr "Unable to determine save location"
+
+msgid "No file selected"
+msgstr "No file selected"
+
+msgid "Are you sure you want to sign out?\n"
+"\n"
+"You will need to sign in again to continue."
+msgstr "Are you sure you want to sign out?\n"
+"\n"
+"You will need to sign in again to continue."
+
+msgid "Loading repositories..."
+msgstr "Loading repositories..."
+
+msgid "Search repositories..."
+msgstr "Search repositories..."
+
+msgid "Rate limit: –"
+msgstr "Rate limit: –"
+
+msgid "No workflows found."
+msgstr "No workflows found."
+
+msgid "Favorites unavailable"
+msgstr "Favorites unavailable"
+
+msgid "Loading workflows..."
+msgstr "Loading workflows..."
+
+msgid "Refresh workflows"
+msgstr "Refresh workflows"
+
+msgid "Private Repository"
+msgstr "Private Repository"
+
+msgid "Show successful runs"
+msgstr "Show successful runs"
+
+msgid "Show failed runs"
+msgstr "Show failed runs"
+
+msgid "Show running/queued runs"
+msgstr "Show running/queued runs"
+
+msgid "now"
+msgstr "now"
+
+msgid "Rate limit (low)"
+msgstr "Rate limit (low)"
+
+msgid "Rate limit"
+msgstr "Rate limit"
+
+msgid "{prefix}: {remaining}/{limit} (resets in {time})"
+msgstr "{prefix}: {remaining}/{limit} (resets in {time})"
+
+msgid "Unnamed job"
+msgstr "Unnamed job"
+
+msgid "View logs"
+msgstr "View logs"
+
+msgid "Open job in GitHub"
+msgstr "Open job in GitHub"
+
+msgid "No jobs found"
+msgstr "No jobs found"
+
+msgid "Showing {count} jobs"
+msgstr "Showing {count} jobs"
+
+msgid "Unable to load jobs"
+msgstr "Unable to load jobs"
+
+msgid "Retry"
+msgstr "Retry"
+
+msgid "{description} (required)"
+msgstr "{description} (required)"
+
+msgid "Required"
+msgstr "Required"
+
+msgid "Trigger workflow"
+msgstr "Trigger workflow"
+
+msgid "Trigger Workflow"
+msgstr "Trigger Workflow"
+
+msgid "Trigger"
+msgstr "Trigger"
+
+msgid "This will trigger the \"{workflow}\" workflow."
+msgstr "This will trigger the \"{workflow}\" workflow."
+
+msgid "Triggered runs typically appear within 10-30 seconds."
+msgstr "Triggered runs typically appear within 10-30 seconds."
+
+msgid "Branch or ref:"
+msgstr "Branch or ref:"
+
+msgid "Loading branches..."
+msgstr "Loading branches..."
+
+msgid "Loading workflow inputs..."
+msgstr "Loading workflow inputs..."
+
+msgid "Inputs"
+msgstr "Inputs"
+
+msgid "No inputs defined for this workflow."
+msgstr "No inputs defined for this workflow."
+
+msgid "Workflow inputs could not be loaded."
+msgstr "Workflow inputs could not be loaded."
+
+msgid "✗ Failed to load workflow inputs: {error}"
+msgstr "✗ Failed to load workflow inputs: {error}"
+
+msgid "Failed to load workflow inputs: {error}"
+msgstr "Failed to load workflow inputs: {error}"
+
+msgid "✗ {error}"
+msgstr "✗ {error}"
+
+msgid "Failed to trigger workflow: {error}"
+msgstr "Failed to trigger workflow: {error}"
+
+msgid "✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear once GitHub reports it."
+msgstr "✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear once GitHub reports it."
+
+msgid "✗ Failed to trigger workflow: {error}"
+msgstr "✗ Failed to trigger workflow: {error}"
+
+msgid "Open in GitHub"
+msgstr "Open in GitHub"
+
+msgid "Re-run workflow"
+msgstr "Re-run workflow"
+
+msgid "Do you want to re-run \"{run}\"?"
+msgstr "Do you want to re-run \"{run}\"?"
+
+msgid "Re-run Workflow"
+msgstr "Re-run Workflow"
+
+msgid "✓ Re-running '{run}'"
+msgstr "✓ Re-running '{run}'"
+
+msgid "✗ Failed to re-run workflow"
+msgstr "✗ Failed to re-run workflow"
+
+msgid "Re-run failed jobs"
+msgstr "Re-run failed jobs"
+
+msgid "Do you want to re-run all failed jobs in \"{run}\"?"
+msgstr "Do you want to re-run all failed jobs in \"{run}\"?"
+
+msgid "Re-run Failed Jobs"
+msgstr "Re-run Failed Jobs"
+
+msgid "✓ Re-running failed jobs for '{run}'"
+msgstr "✓ Re-running failed jobs for '{run}'"
+
+msgid "✗ Failed to re-run failed jobs"
+msgstr "✗ Failed to re-run failed jobs"
+
+msgid "Do you want to cancel the in-progress run \"{run}\"?\n"
+"\n"
+"This action cannot be undone."
+msgstr "Do you want to cancel the in-progress run \"{run}\"?\n"
+"\n"
+"This action cannot be undone."
+
+msgid "Cancel Workflow Run"
+msgstr "Cancel Workflow Run"
+
+msgid "✓ Cancelled run '{run}'"
+msgstr "✓ Cancelled run '{run}'"
+
+msgid "✗ Failed to cancel run"
+msgstr "✗ Failed to cancel run"
+
+msgid "Click to load jobs..."
+msgstr "Click to load jobs..."
+
+msgid "Click to load runs..."
+msgstr "Click to load runs..."
+
+msgid "No recent runs"
+msgstr "No recent runs"
+
+msgid "Triggered runs may take 10-30 seconds to appear"
+msgstr "Triggered runs may take 10-30 seconds to appear"
+
+msgid "No runs match the current filters"
+msgstr "No runs match the current filters"
+
+msgid "Adjust the status chips above to see more runs."
+msgstr "Adjust the status chips above to see more runs."
+
+msgid "Unable to load workflow runs"
+msgstr "Unable to load workflow runs"
+
+msgid "Recent runs (showing {visible} of {overall})"
+msgstr "Recent runs (showing {visible} of {overall})"
+
+msgid "Recent runs ({overall})"
+msgstr "Recent runs ({overall})"
+
+msgid "Recent runs (showing {visible} of {filtered} matching filters)"
+msgstr "Recent runs (showing {visible} of {filtered} matching filters)"

@@ -6,6 +6,7 @@ use super::super::jobs::{LoadJobsParams, load_run_jobs};
 use super::actions::{RunActionContext, create_actions_box};
 use crate::api::GitHubClient;
 use crate::api::models::{Repo, WorkflowRun};
+use crate::i18n::tr;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib, pango};
 use libadwaita as adw;
@@ -187,7 +188,7 @@ fn build_jobs_placeholder() -> gtk::Box {
     jobs_box.set_margin_bottom(4);
     jobs_box.set_hexpand(true);
 
-    let placeholder = gtk::Label::new(Some("Click to load jobs..."));
+    let placeholder = gtk::Label::new(Some(tr("Click to load jobs...").as_str()));
     placeholder.add_css_class("dim-label");
     placeholder.set_halign(gtk::Align::Start);
     jobs_box.append(&placeholder);

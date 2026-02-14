@@ -1,6 +1,7 @@
 use super::super::formatting::format_run_title;
 use crate::api::GitHubClient;
 use crate::api::models::WorkflowRun;
+use crate::i18n::tr;
 use crate::ui::utils::MainContextChannelExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
@@ -44,7 +45,7 @@ pub(super) fn create_actions_box(run: &WorkflowRun, context: &RunActionContext) 
 
 fn create_open_button(url: &str) -> gtk::Button {
     let button = gtk::Button::from_icon_name("adw-external-link-symbolic");
-    button.set_tooltip_text(Some("Open in GitHub"));
+    button.set_tooltip_text(Some(tr("Open in GitHub").as_str()));
     button.add_css_class("flat");
     button.add_css_class("circular");
     button.set_focus_on_click(false);
@@ -61,7 +62,7 @@ fn create_open_button(url: &str) -> gtk::Button {
 
 fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Button {
     let button = gtk::Button::from_icon_name("view-refresh-symbolic");
-    button.set_tooltip_text(Some("Re-run workflow"));
+    button.set_tooltip_text(Some(tr("Re-run workflow").as_str()));
     button.add_css_class("flat");
     button.add_css_class("circular");
     button.add_css_class("warning");
@@ -81,9 +82,9 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
             gtk::DialogFlags::MODAL,
             gtk::MessageType::Question,
             gtk::ButtonsType::YesNo,
-            format!("Do you want to re-run \"{}\"?", run_title),
+            tr("Do you want to re-run \"{run}\"?").replace("{run}", run_title.as_str()),
         );
-        dialog.set_title(Some("Re-run Workflow"));
+        dialog.set_title(Some(tr("Re-run Workflow").as_str()));
 
         let btn_clone = btn.clone();
         let client = client.clone();
@@ -111,9 +112,13 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
 
             receiver.attach(None, move |success| {
                 let toast = if success {
-                    adw::Toast::new(&format!("✓ Re-running '{}'", run_title))
+                    adw::Toast::new(
+                        tr("✓ Re-running '{run}'")
+                            .replace("{run}", run_title.as_str())
+                            .as_str(),
+                    )
                 } else {
-                    adw::Toast::new("✗ Failed to re-run workflow")
+                    adw::Toast::new(tr("✗ Failed to re-run workflow").as_str())
                 };
                 toast.set_timeout(if success { 3 } else { 5 });
                 toast_overlay.add_toast(toast);
@@ -140,7 +145,7 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
 
 fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Button {
     let button = gtk::Button::from_icon_name("system-reboot-symbolic");
-    button.set_tooltip_text(Some("Re-run failed jobs"));
+    button.set_tooltip_text(Some(tr("Re-run failed jobs").as_str()));
     button.add_css_class("flat");
     button.add_css_class("circular");
     button.add_css_class("error");
@@ -160,12 +165,10 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
             gtk::DialogFlags::MODAL,
             gtk::MessageType::Warning,
             gtk::ButtonsType::YesNo,
-            format!(
-                "Do you want to re-run all failed jobs in \"{}\"?",
-                run_title
-            ),
+            tr("Do you want to re-run all failed jobs in \"{run}\"?")
+                .replace("{run}", run_title.as_str()),
         );
-        dialog.set_title(Some("Re-run Failed Jobs"));
+        dialog.set_title(Some(tr("Re-run Failed Jobs").as_str()));
 
         let btn_clone = btn.clone();
         let client = client.clone();
@@ -193,9 +196,9 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
 
             receiver.attach(None, move |success| {
                 let message = if success {
-                    format!("✓ Re-running failed jobs for '{}'", run_title)
+                    tr("✓ Re-running failed jobs for '{run}'").replace("{run}", run_title.as_str())
                 } else {
-                    "✗ Failed to re-run failed jobs".into()
+                    tr("✗ Failed to re-run failed jobs")
                 };
                 let toast = adw::Toast::new(&message);
                 toast.set_timeout(if success { 3 } else { 5 });
@@ -223,7 +226,7 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
 
 fn create_cancel_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Button {
     let button = gtk::Button::from_icon_name("process-stop-symbolic");
-    button.set_tooltip_text(Some("Cancel run"));
+    button.set_tooltip_text(Some(tr("Cancel run").as_str()));
     button.add_css_class("flat");
     button.add_css_class("circular");
     button.add_css_class("destructive-action");
@@ -243,12 +246,10 @@ fn create_cancel_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::B
             gtk::DialogFlags::MODAL,
             gtk::MessageType::Warning,
             gtk::ButtonsType::YesNo,
-            format!(
-                "Do you want to cancel the in-progress run \"{}\"?\n\nThis action cannot be undone.",
-                run_title
-            ),
+            tr("Do you want to cancel the in-progress run \"{run}\"?\n\nThis action cannot be undone.")
+                .replace("{run}", run_title.as_str()),
         );
-        dialog.set_title(Some("Cancel Workflow Run"));
+        dialog.set_title(Some(tr("Cancel Workflow Run").as_str()));
 
         let btn_clone = btn.clone();
         let client = client.clone();
@@ -276,9 +277,9 @@ fn create_cancel_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::B
 
             receiver.attach(None, move |success| {
                 let message = if success {
-                    format!("✓ Cancelled run '{}'", run_title)
+                    tr("✓ Cancelled run '{run}'").replace("{run}", run_title.as_str())
                 } else {
-                    "✗ Failed to cancel run".into()
+                    tr("✗ Failed to cancel run")
                 };
                 let toast = adw::Toast::new(&message);
                 toast.set_timeout(if success { 3 } else { 5 });

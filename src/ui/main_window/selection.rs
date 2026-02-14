@@ -1,5 +1,6 @@
 use super::MainWindow;
 use crate::api::models::Repo;
+use crate::i18n::tr;
 use crate::ui::detail_placeholder::{schedule_actions_disabled_page, schedule_status_page_update};
 use crate::ui::detail_view::{RepoDetailDeps, RepoDetailPane};
 use gtk4::prelude::WidgetExt;
@@ -228,7 +229,7 @@ impl MainWindow {
                 let spinner = gtk::Spinner::new();
                 spinner.start();
                 spinner.set_size_request(24, 24);
-                spinner.set_tooltip_text(Some("Loading repositories..."));
+                spinner.set_tooltip_text(Some(tr("Loading repositories...").as_str()));
                 header.pack_start(&spinner);
                 spinner.set_visible(true);
 

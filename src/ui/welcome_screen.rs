@@ -1,4 +1,5 @@
 use crate::APP_ICON_NAME;
+use crate::i18n::tr;
 use gtk4 as gtk;
 use gtk4::prelude::*;
 
@@ -28,13 +29,15 @@ impl WelcomeScreen {
         widget.append(&icon_box);
 
         // Welcome title
-        let title = gtk::Label::new(Some("Welcome to Actioneer"));
+        let title = gtk::Label::new(Some(tr("Welcome to Actioneer").as_str()));
         title.add_css_class("title-1");
         title.set_margin_bottom(12);
         widget.append(&title);
 
         // Subtitle
-        let subtitle = gtk::Label::new(Some("Manage your GitHub Actions workflows with ease"));
+        let subtitle = gtk::Label::new(Some(
+            tr("Manage your GitHub Actions workflows with ease").as_str(),
+        ));
         subtitle.add_css_class("dim-label");
         subtitle.set_margin_bottom(36);
         widget.append(&subtitle);
@@ -47,19 +50,19 @@ impl WelcomeScreen {
         Self::add_feature(
             &features_box,
             "media-playback-start-symbolic",
-            "Trigger workflows instantly",
+            tr("Trigger workflows instantly").as_str(),
             "success",
         );
         Self::add_feature(
             &features_box,
             "view-reveal-symbolic",
-            "Monitor runs in real-time",
+            tr("Monitor runs in real-time").as_str(),
             "accent",
         );
         Self::add_feature(
             &features_box,
             "folder-documents-symbolic",
-            "View detailed logs",
+            tr("View detailed logs").as_str(),
             "warning",
         );
 
@@ -83,7 +86,7 @@ impl WelcomeScreen {
         signin_icon.set_pixel_size(20);
         signin_content.append(&signin_icon);
 
-        let signin_label = gtk::Label::new(Some("Sign in with GitHub"));
+        let signin_label = gtk::Label::new(Some(tr("Sign in with GitHub").as_str()));
         signin_label.set_halign(gtk::Align::Center);
         signin_label.add_css_class("heading");
         signin_content.append(&signin_label);
@@ -91,10 +94,10 @@ impl WelcomeScreen {
         signin_button.set_child(Some(&signin_content));
         buttons_box.append(&signin_button);
 
-        let demo_button = gtk::Button::with_label("Try Demo Mode");
+        let demo_button = gtk::Button::with_label(tr("Try Demo Mode").as_str());
         demo_button.add_css_class("pill");
         demo_button.set_widget_name("welcome-demo-button");
-        demo_button.set_tooltip_text(Some("Explore Actioneer with sample data"));
+        demo_button.set_tooltip_text(Some(tr("Explore Actioneer with sample data").as_str()));
         if !cfg!(debug_assertions) {
             demo_button.set_visible(false);
         }
@@ -113,7 +116,7 @@ impl WelcomeScreen {
         quit_icon.set_pixel_size(18);
         quit_content.append(&quit_icon);
 
-        let quit_label = gtk::Label::new(Some("Quit"));
+        let quit_label = gtk::Label::new(Some(tr("Quit").as_str()));
         quit_label.set_halign(gtk::Align::Center);
         quit_content.append(&quit_label);
 

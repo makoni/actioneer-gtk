@@ -4,6 +4,7 @@ use super::helpers::{
 use super::{RepoDetailPane, WorkflowListContext};
 use crate::api::models::Workflow;
 use crate::api::{GitHubClient, GitHubError};
+use crate::i18n::tr;
 use crate::ui::utils::MainContextChannelExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
@@ -541,7 +542,7 @@ impl RepoDetailPane {
 
                 let spinner = gtk::Spinner::new();
                 spinner.start();
-                spinner.set_tooltip_text(Some("Loading workflows..."));
+                spinner.set_tooltip_text(Some(tr("Loading workflows...").as_str()));
                 spinner.set_widget_name("detail-spinner");
                 spinner.set_size_request(24, 24);
                 buttons_box.prepend(&spinner);
@@ -588,7 +589,7 @@ impl CallbackRefs {
 
                 let spinner = gtk::Spinner::new();
                 spinner.start();
-                spinner.set_tooltip_text(Some("Loading workflows..."));
+                spinner.set_tooltip_text(Some(tr("Loading workflows...").as_str()));
                 spinner.set_widget_name("detail-spinner");
                 spinner.set_size_request(24, 24);
                 buttons_box.prepend(&spinner);

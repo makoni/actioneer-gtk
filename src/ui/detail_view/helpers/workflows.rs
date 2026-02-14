@@ -6,6 +6,7 @@ use crate::api::models::{
     Repo, Workflow, WorkflowDispatchInput, WorkflowDispatchInputType, WorkflowDispatchInputValue,
     build_dispatch_inputs_payload,
 };
+use crate::i18n::tr;
 use crate::notifications::NotificationManager;
 use crate::preferences::PreferencesManager;
 use crate::ui::detail_view::RunFilters;
@@ -85,9 +86,11 @@ fn dispatch_input_title(input: &WorkflowDispatchInput) -> String {
 
 fn dispatch_input_subtitle(input: &WorkflowDispatchInput) -> Option<String> {
     match (input.description.as_ref(), input.required) {
-        (Some(description), true) => Some(format!("{} (required)", description)),
+        (Some(description), true) => {
+            Some(tr("{description} (required)").replace("{description}", description.as_str()))
+        }
         (Some(description), false) => Some(description.clone()),
-        (None, true) => Some("Required".to_string()),
+        (None, true) => Some(tr("Required")),
         (None, false) => None,
     }
 }
@@ -133,7 +136,7 @@ pub(crate) fn create_workflow_expander_row(
     header_box.append(&workflow_name_label);
 
     let trigger_btn = gtk::Button::from_icon_name("media-playback-start-symbolic");
-    trigger_btn.set_tooltip_text(Some("Trigger workflow"));
+    trigger_btn.set_tooltip_text(Some(tr("Trigger workflow").as_str()));
     trigger_btn.add_css_class("flat");
     trigger_btn.add_css_class("circular");
     trigger_btn.set_valign(gtk::Align::Center);
@@ -355,10 +358,13 @@ pub(crate) fn create_workflow_expander_row(
         let run_load_service_for_dialog = run_load_service_for_trigger.clone();
 
         let dialog = gtk::Dialog::with_buttons(
-            Some("Trigger Workflow"),
+            Some(tr("Trigger Workflow").as_str()),
             Some(&parent_window),
             gtk::DialogFlags::MODAL | gtk::DialogFlags::DESTROY_WITH_PARENT,
-            &[("Cancel", gtk::ResponseType::Cancel), ("Trigger", gtk::ResponseType::Accept)],
+            &[
+                (tr("Cancel").as_str(), gtk::ResponseType::Cancel),
+                (tr("Trigger").as_str(), gtk::ResponseType::Accept),
+            ],
         );
         dialog.set_default_response(gtk::ResponseType::Accept);
         dialog.set_modal(true);
@@ -371,29 +377,34 @@ pub(crate) fn create_workflow_expander_row(
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 12);
 
         let info_label = gtk::Label::new(Some(&format!(
-            "This will trigger the \"{}\" workflow.\n\nTriggered runs typically appear within 10-30 seconds.",
-            workflow_name
+            "{}\n\n{}",
+            tr("This will trigger the \"{workflow}\" workflow.")
+                .replace("{workflow}", workflow_name.as_str()),
+            tr("Triggered runs typically appear within 10-30 seconds.")
         )));
         info_label.set_wrap(true);
         info_label.set_xalign(0.0);
         vbox.append(&info_label);
 
         let branch_box = gtk::Box::new(gtk::Orientation::Vertical, 6);
-        let branch_label = gtk::Label::new(Some("Branch or ref:"));
+        let branch_label = gtk::Label::new(Some(tr("Branch or ref:").as_str()));
         branch_label.set_xalign(0.0);
         branch_box.append(&branch_label);
 
-        let branch_model = gtk::StringList::new(&["Loading branches..."]);
+        let loading_branches = tr("Loading branches...");
+        let branch_model = gtk::StringList::new(&[loading_branches.as_str()]);
         let branch_dropdown = gtk::DropDown::new(Some(branch_model.clone()), None::<&gtk::Expression>);
         branch_dropdown.set_selected(0);
         branch_dropdown.set_sensitive(false);
         branch_box.append(&branch_dropdown);
 
-        let inputs_placeholder = gtk::Label::new(Some("Loading workflow inputs..."));
+        let inputs_placeholder = gtk::Label::new(Some(tr("Loading workflow inputs...").as_str()));
         inputs_placeholder.set_wrap(true);
         inputs_placeholder.set_xalign(0.0);
 
-        let inputs_group = adw::PreferencesGroup::builder().title("Inputs").build();
+        let inputs_group = adw::PreferencesGroup::builder()
+            .title(tr("Inputs"))
+            .build();
         inputs_group.set_visible(false);
 
         if let Some(trigger_button) = dialog
@@ -502,7 +513,8 @@ pub(crate) fn create_workflow_expander_row(
             input_fields_for_loader.borrow_mut().clear();
             match result {
                 Ok(inputs) if inputs.is_empty() => {
-                    inputs_placeholder_for_loader.set_text("No inputs defined for this workflow.");
+                    inputs_placeholder_for_loader
+                        .set_text(tr("No inputs defined for this workflow.").as_str());
                     inputs_placeholder_for_loader.set_visible(true);
                     inputs_group_for_loader.set_visible(false);
                 }
@@ -573,16 +585,17 @@ pub(crate) fn create_workflow_expander_row(
                 }
                 Err(error) => {
                     inputs_placeholder_for_loader
-                        .set_text("Workflow inputs could not be loaded.");
+                        .set_text(tr("Workflow inputs could not be loaded.").as_str());
                     inputs_placeholder_for_loader.set_visible(true);
                     inputs_group_for_loader.set_visible(false);
 
                     let toast_overlay = toast_overlay_for_inputs.clone();
                     glib::MainContext::default().spawn_local(async move {
-                        let toast = adw::Toast::new(&format!(
-                            "✗ Failed to load workflow inputs: {}",
-                            error
-                        ));
+                        let toast = adw::Toast::new(
+                            tr("✗ Failed to load workflow inputs: {error}")
+                                .replace("{error}", error.as_str())
+                                .as_str(),
+                        );
                         toast.set_timeout(5);
                         toast_overlay.add_toast(toast);
                     });
@@ -612,7 +625,10 @@ pub(crate) fn create_workflow_expander_row(
                 .await;
 
             let _ = inputs_sender.send(
-                inputs_result.map_err(|error| format!("Failed to load workflow inputs: {}", error)),
+                inputs_result.map_err(|error| {
+                    tr("Failed to load workflow inputs: {error}")
+                        .replace("{error}", error.to_string().as_str())
+                }),
             );
         });
 
@@ -674,7 +690,8 @@ pub(crate) fn create_workflow_expander_row(
                     Err(error) => {
                         let toast_overlay = toast_overlay_clone.clone();
                         glib::MainContext::default().spawn_local(async move {
-                            let toast = adw::Toast::new(&format!("✗ {}", error));
+                            let toast =
+                                adw::Toast::new(tr("✗ {error}").replace("{error}", error.as_str()).as_str());
                             toast.set_timeout(5);
                             toast_overlay.add_toast(toast);
                         });
@@ -703,7 +720,10 @@ pub(crate) fn create_workflow_expander_row(
                         }
                         Err(e) => {
                             let _ = sender
-                                .send(Err(format!("Failed to trigger workflow: {}", e)));
+                                .send(Err(
+                                    tr("Failed to trigger workflow: {error}")
+                                        .replace("{error}", e.to_string().as_str()),
+                                ));
                         }
                     }
                 });
@@ -851,10 +871,12 @@ pub(crate) fn create_workflow_expander_row(
                             let workflow_name = workflow_name.clone();
                             let branch = branch_name.clone();
                             glib::MainContext::default().spawn_local(async move {
-                                let toast = adw::Toast::new(&format!(
-                                    "✓ Workflow '{}' triggered on branch '{}'. The run will appear once GitHub reports it.",
-                                    workflow_name, branch
-                                ));
+                                let toast = adw::Toast::new(
+                                    tr("✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear once GitHub reports it.")
+                                        .replace("{workflow}", workflow_name.as_str())
+                                        .replace("{branch}", branch.as_str())
+                                        .as_str(),
+                                );
                                 toast.set_timeout(3);
                                 toast_overlay.add_toast(toast);
                             });
@@ -865,7 +887,11 @@ pub(crate) fn create_workflow_expander_row(
                             let toast_overlay = toast_overlay.clone();
                             let error = error_msg.clone();
                             glib::MainContext::default().spawn_local(async move {
-                                let toast = adw::Toast::new(&format!("✗ Failed to trigger workflow: {}", error));
+                                let toast = adw::Toast::new(
+                                    tr("✗ Failed to trigger workflow: {error}")
+                                        .replace("{error}", error.as_str())
+                                        .as_str(),
+                                );
                                 toast.set_timeout(5);
                                 toast_overlay.add_toast(toast);
                             });

@@ -57,6 +57,11 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-02-14 — Fixed live language switching end-to-end and translated additional UI surfaces (sidebar section headers/meta labels, welcome screen, auth/status dialogs, run/workflow placeholders/tooltips); synchronized new msgids across all locale catalogs.
+- [✅] 2026-02-14 — Stabilized localization test isolation by restoring the previous effective language in i18n tests; `cargo test` no longer depends on execution order.
+- [✅] 2026-02-14 — Ran ignored GTK UI tests with `xvfb-run`; all ignored UI tests passed after localization updates.
+- [✅] 2026-02-14 — Fixed language-switching bug: app now loads `po/*.po` catalogs at runtime in dev mode, so selected locale applies on-the-fly and after restart.
+- [✅] 2026-02-14 — Localized workflow completion notification text/status labels and added Preferences controls for theme + language (system fallback to English, runtime window reload on language switch).
 - [✅] 2026-02-14 — Translated previously empty localization entries across current PO catalogs (including top-10 locales) so all non-header msgstr values are populated.
 - [✅] 2026-02-14 — Added gettext catalogs for target top-10 locales (`en`, `zh_Hans`, `hi`, `es`, `fr`, `ar`, `bn`, `pt_BR`, `ru`, `ur`) and updated `po/LINGUAS`.
 - [✅] 2026-02-14 — Started gettext localization: wired runtime i18n setup, localized key main-window/preferences strings, and added initial de/it/ja translation catalogs plus extraction/compile scripts.

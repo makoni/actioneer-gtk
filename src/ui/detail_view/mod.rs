@@ -1,6 +1,7 @@
 use crate::api::GitHubClient;
 use crate::api::models::{Repo, Workflow};
 use crate::favorites::FavoritesManager;
+use crate::i18n::tr;
 use crate::notifications::NotificationManager;
 use crate::preferences::{PreferencesManager, RunFilterPreferences};
 use gtk4::prelude::*;
@@ -135,10 +136,10 @@ impl RepoDetailPane {
         let favorite_button = gtk::ToggleButton::new();
         favorite_button.set_icon_name("emblem-favorite-symbolic");
         favorite_button.add_css_class("flat");
-        favorite_button.set_tooltip_text(Some("Toggle favorite"));
+        favorite_button.set_tooltip_text(Some(tr("Toggle favorite").as_str()));
 
         let refresh_button = gtk::Button::from_icon_name("view-refresh-symbolic");
-        refresh_button.set_tooltip_text(Some("Refresh workflows"));
+        refresh_button.set_tooltip_text(Some(tr("Refresh workflows").as_str()));
         refresh_button.add_css_class("flat");
 
         let buttons_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
@@ -303,7 +304,7 @@ impl RepoDetailPane {
         info_box.append(&repo_label);
 
         if self.repo.is_private {
-            let private_label = gtk::Label::new(Some("Private Repository"));
+            let private_label = gtk::Label::new(Some(tr("Private Repository").as_str()));
             private_label.add_css_class("dim-label");
             private_label.add_css_class("caption");
             private_label.set_halign(gtk::Align::Start);

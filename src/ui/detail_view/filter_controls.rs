@@ -1,3 +1,4 @@
+use crate::i18n::tr;
 use gtk4::{self as gtk, prelude::*};
 
 #[derive(Clone)]
@@ -19,10 +20,14 @@ impl FilterControls {
         container.add_css_class("linked");
         container.set_valign(gtk::Align::Center);
 
-        let success_chip = create_status_toggle("emblem-ok-symbolic", "Show successful runs");
-        let failed_chip = create_status_toggle("dialog-error-symbolic", "Show failed runs");
-        let running_chip =
-            create_status_toggle("media-playback-start-symbolic", "Show running/queued runs");
+        let success_chip =
+            create_status_toggle("emblem-ok-symbolic", tr("Show successful runs").as_str());
+        let failed_chip =
+            create_status_toggle("dialog-error-symbolic", tr("Show failed runs").as_str());
+        let running_chip = create_status_toggle(
+            "media-playback-start-symbolic",
+            tr("Show running/queued runs").as_str(),
+        );
 
         container.append(&success_chip);
         container.append(&failed_chip);

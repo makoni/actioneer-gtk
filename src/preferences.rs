@@ -4,6 +4,32 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::{RwLock, watch};
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum ThemePreference {
+    #[default]
+    System,
+    Light,
+    Dark,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum LanguagePreference {
+    #[default]
+    System,
+    En,
+    ZhHans,
+    Hi,
+    Es,
+    Fr,
+    Ar,
+    Bn,
+    PtBr,
+    Ru,
+    Ur,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Preferences {
     /// Auto-refresh interval in seconds (0 = disabled)
@@ -20,6 +46,14 @@ pub struct Preferences {
 
     /// Show notifications
     pub enable_notifications: bool,
+
+    /// App color theme preference
+    #[serde(default)]
+    pub theme_preference: ThemePreference,
+
+    /// App language preference
+    #[serde(default)]
+    pub language_preference: LanguagePreference,
 
     /// Saved run filter preferences for workflow panes
     #[serde(default)]
@@ -53,6 +87,8 @@ impl Default for Preferences {
             window_width: 1000,
             window_height: 700,
             enable_notifications: true,
+            theme_preference: ThemePreference::System,
+            language_preference: LanguagePreference::System,
             run_filters: RunFilterPreferences::default(),
         }
     }
@@ -94,6 +130,10 @@ impl PreferencesManager {
         self.prefs.read().await.clone()
     }
 
+    pub fn get_blocking(&self) -> Preferences {
+        self.prefs.blocking_read().clone()
+    }
+
     pub async fn update<F>(&self, f: F) -> anyhow::Result<()>
     where
         F: FnOnce(&mut Preferences),
@@ -124,6 +164,17 @@ impl PreferencesManager {
 
     pub async fn set_notifications_enabled(&self, enabled: bool) -> anyhow::Result<()> {
         self.update(|p| p.enable_notifications = enabled).await
+    }
+
+    pub async fn set_theme_preference(&self, preference: ThemePreference) -> anyhow::Result<()> {
+        self.update(|p| p.theme_preference = preference).await
+    }
+
+    pub async fn set_language_preference(
+        &self,
+        preference: LanguagePreference,
+    ) -> anyhow::Result<()> {
+        self.update(|p| p.language_preference = preference).await
     }
 
     pub async fn set_run_filters(&self, filters: RunFilterPreferences) -> anyhow::Result<()> {
@@ -157,6 +208,8 @@ mod tests {
         assert_eq!(prefs.refresh_interval, 10); // Default 10 seconds
         assert_eq!(prefs.window_width, 1000);
         assert!(prefs.enable_notifications);
+        assert_eq!(prefs.theme_preference, ThemePreference::System);
+        assert_eq!(prefs.language_preference, LanguagePreference::System);
         assert!(prefs.run_filters.show_success);
         assert!(prefs.run_filters.show_failed);
         assert!(prefs.run_filters.show_running);

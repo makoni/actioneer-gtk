@@ -1,5 +1,6 @@
 /// Utility functions for rate limit display
 use crate::api::models::RateLimitInfo;
+use crate::i18n::tr;
 use chrono::{DateTime, Utc};
 use gtk4::{self as gtk};
 
@@ -12,7 +13,7 @@ pub fn update_rate_limit_label(label: &gtk::Label, info: Option<RateLimitInfo>) 
         let duration = reset_time.signed_duration_since(now);
 
         let time_str = if duration.num_seconds() < 0 {
-            "now".to_string()
+            tr("now")
         } else if duration.num_minutes() < 1 {
             format!("{}s", duration.num_seconds())
         } else if duration.num_hours() < 1 {
@@ -22,16 +23,20 @@ pub fn update_rate_limit_label(label: &gtk::Label, info: Option<RateLimitInfo>) 
         };
 
         let prefix = if info.is_low() {
-            "Rate limit (low)"
+            tr("Rate limit (low)")
         } else {
-            "Rate limit"
+            tr("Rate limit")
         };
 
-        label.set_text(&format!(
-            "{}: {}/{} (resets in {})",
-            prefix, info.remaining, info.limit, time_str
-        ));
+        label.set_text(
+            tr("{prefix}: {remaining}/{limit} (resets in {time})")
+                .replace("{prefix}", prefix.as_str())
+                .replace("{remaining}", info.remaining.to_string().as_str())
+                .replace("{limit}", info.limit.to_string().as_str())
+                .replace("{time}", time_str.as_str())
+                .as_str(),
+        );
     } else {
-        label.set_text("Rate limit: –");
+        label.set_text(tr("Rate limit: –").as_str());
     }
 }

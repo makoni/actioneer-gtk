@@ -1,5 +1,6 @@
 use crate::api::models::{Job, Repo};
 use crate::api::{GitHubClient, GitHubError};
+use crate::i18n::tr;
 use crate::ui::ansi::{AnsiStyle, parse_ansi};
 use crate::ui::utils::channel::MainContextChannelExt;
 use gtk4::gdk;
@@ -40,7 +41,12 @@ impl JobLogsWindow {
         job: Job,
         client: Arc<Mutex<GitHubClient>>,
     ) -> Self {
-        let job_title = job.name.as_deref().unwrap_or("Job").to_string();
+        let fallback_job = tr("Job");
+        let job_title = job
+            .name
+            .as_deref()
+            .unwrap_or(fallback_job.as_str())
+            .to_string();
 
         let window = adw::Window::builder()
             .title(format!("{} - Logs", job_title))
@@ -61,7 +67,7 @@ impl JobLogsWindow {
             .bottom_margin(12)
             .wrap_mode(gtk::WrapMode::Word)
             .build();
-        text_view.buffer().set_text("Fetching logs…");
+        text_view.buffer().set_text(tr("Fetching logs...").as_str());
 
         let toast_overlay = adw::ToastOverlay::new();
         let buttons = Self::build_ui(
@@ -106,17 +112,17 @@ impl JobLogsWindow {
         let header = adw::HeaderBar::new();
         // Refresh button
         let refresh_button = gtk::Button::from_icon_name("view-refresh-symbolic");
-        refresh_button.set_tooltip_text(Some("Refresh logs"));
+        refresh_button.set_tooltip_text(Some(tr("Refresh logs").as_str()));
         header.pack_start(&refresh_button);
 
         // Copy button
         let copy_button = gtk::Button::from_icon_name("edit-copy-symbolic");
-        copy_button.set_tooltip_text(Some("Copy logs to clipboard"));
+        copy_button.set_tooltip_text(Some(tr("Copy logs to clipboard").as_str()));
         header.pack_end(&copy_button);
 
         // Save button
         let save_button = gtk::Button::from_icon_name("document-save-symbolic");
-        save_button.set_tooltip_text(Some("Save logs to file"));
+        save_button.set_tooltip_text(Some(tr("Save logs to file").as_str()));
         header.pack_end(&save_button);
         main_box.append(&header);
 
@@ -185,9 +191,7 @@ impl JobLogsWindow {
                 Err(GitHubError::NotFound) => {
                     warn!("Job logs unavailable; job may still be running");
                     text_view.set_sensitive(false);
-                    text_view.buffer().set_text(
-                        "Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments.",
-                    );
+                    text_view.buffer().set_text(tr("Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments.").as_str());
                     copy_button.set_sensitive(false);
                     save_button.set_sensitive(false);
                 }
@@ -195,7 +199,8 @@ impl JobLogsWindow {
                     warn!("Job logs expired (410 Gone)");
                     text_view.set_sensitive(false);
                     text_view.buffer().set_text(
-                        "The logs for this run have expired and are no longer available.",
+                        tr("The logs for this run have expired and are no longer available.")
+                            .as_str(),
                     );
                     copy_button.set_sensitive(false);
                     save_button.set_sensitive(false);
@@ -203,10 +208,11 @@ impl JobLogsWindow {
                 Err(e) => {
                     error!("Failed to load logs: {}", e);
                     text_view.set_sensitive(false);
-                    text_view.buffer().set_text(&format!(
-                        "Unable to load logs right now. Please try again later.\n\nDetails: {}",
-                        e
-                    ));
+                    text_view.buffer().set_text(
+                        tr("Unable to load logs right now. Please try again later.\n\nDetails: {error}")
+                            .replace("{error}", e.to_string().as_str())
+                            .as_str(),
+                    );
                     copy_button.set_sensitive(false);
                     save_button.set_sensitive(false);
                 }
@@ -256,9 +262,7 @@ impl JobLogsWindow {
                     Err(GitHubError::NotFound) => {
                         warn!("Job logs still unavailable during refresh");
                         tv_for_ui.set_sensitive(false);
-                        tv_for_ui.buffer().set_text(
-                            "Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments.",
-                        );
+                        tv_for_ui.buffer().set_text(tr("Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments.").as_str());
                         copy_for_result.set_sensitive(false);
                         save_for_result.set_sensitive(false);
                     }
@@ -266,7 +270,8 @@ impl JobLogsWindow {
                         warn!("Job logs expired during refresh (410 Gone)");
                         tv_for_ui.set_sensitive(false);
                         tv_for_ui.buffer().set_text(
-                            "The logs for this run have expired and are no longer available.",
+                            tr("The logs for this run have expired and are no longer available.")
+                                .as_str(),
                         );
                         copy_for_result.set_sensitive(false);
                         save_for_result.set_sensitive(false);
@@ -274,10 +279,11 @@ impl JobLogsWindow {
                     Err(e) => {
                         error!("Failed to refresh logs: {}", e);
                         tv_for_ui.set_sensitive(false);
-                        tv_for_ui.buffer().set_text(&format!(
-                            "Unable to load logs right now. Please try again later.\n\nDetails: {}",
-                            e
-                        ));
+                        tv_for_ui.buffer().set_text(
+                            tr("Unable to load logs right now. Please try again later.\n\nDetails: {error}")
+                                .replace("{error}", e.to_string().as_str())
+                                .as_str(),
+                        );
                         copy_for_result.set_sensitive(false);
                         save_for_result.set_sensitive(false);
                     }
@@ -309,7 +315,7 @@ impl JobLogsWindow {
                 .to_string();
 
             if text.is_empty() {
-                let toast = adw::Toast::new("Logs are empty; nothing to copy");
+                let toast = adw::Toast::new(tr("Logs are empty; nothing to copy").as_str());
                 toast.set_timeout(3);
                 overlay.add_toast(toast);
                 return;
@@ -320,12 +326,13 @@ impl JobLogsWindow {
                 Some(display) => {
                     let clipboard = display.clipboard();
                     clipboard.set_text(&text);
-                    let toast = adw::Toast::new("Logs copied to clipboard");
+                    let toast = adw::Toast::new(tr("Logs copied to clipboard").as_str());
                     toast.set_timeout(3);
                     overlay.add_toast(toast);
                 }
                 None => {
-                    let toast = adw::Toast::new("Clipboard unavailable on this system");
+                    let toast =
+                        adw::Toast::new(tr("Clipboard unavailable on this system").as_str());
                     toast.set_timeout(5);
                     overlay.add_toast(toast);
                 }
@@ -342,9 +349,9 @@ impl JobLogsWindow {
 
         button.connect_clicked(move |_| {
             let dialog = gtk::FileChooserNative::builder()
-                .title("Save Logs")
-                .accept_label("Save")
-                .cancel_label("Cancel")
+                .title(tr("Save Logs"))
+                .accept_label(tr("Save"))
+                .cancel_label(tr("Cancel"))
                 .action(gtk::FileChooserAction::Save)
                 .transient_for(&window)
                 .modal(true)
@@ -368,7 +375,7 @@ impl JobLogsWindow {
                     .to_string();
 
                 if text.is_empty() {
-                    let toast = adw::Toast::new("Logs are empty; nothing saved");
+                    let toast = adw::Toast::new(tr("Logs are empty; nothing saved").as_str());
                     toast.set_timeout(3);
                     overlay_for_dialog.add_toast(toast);
                     dialog.destroy();
@@ -386,15 +393,16 @@ impl JobLogsWindow {
                             receiver.attach(None, move |message| {
                                 match message {
                                     Ok(()) => {
-                                        let toast = adw::Toast::new("Logs saved");
+                                        let toast = adw::Toast::new(tr("Logs saved").as_str());
                                         toast.set_timeout(3);
                                         overlay_for_result.add_toast(toast);
                                     }
                                     Err(err) => {
-                                        let toast = adw::Toast::new(&format!(
-                                            "Failed to save logs: {}",
-                                            err
-                                        ));
+                                        let toast = adw::Toast::new(
+                                            tr("Failed to save logs: {error}")
+                                                .replace("{error}", err.as_str())
+                                                .as_str(),
+                                        );
                                         toast.set_timeout(5);
                                         overlay_for_result.add_toast(toast);
                                     }
@@ -407,13 +415,14 @@ impl JobLogsWindow {
                                 let _ = sender.send(result.map_err(|e| e.to_string()));
                             });
                         } else {
-                            let toast = adw::Toast::new("Unable to determine save location");
+                            let toast =
+                                adw::Toast::new(tr("Unable to determine save location").as_str());
                             toast.set_timeout(5);
                             overlay_for_dialog.add_toast(toast);
                         }
                     }
                     _ => {
-                        let toast = adw::Toast::new("No file selected");
+                        let toast = adw::Toast::new(tr("No file selected").as_str());
                         toast.set_timeout(5);
                         overlay_for_dialog.add_toast(toast);
                     }

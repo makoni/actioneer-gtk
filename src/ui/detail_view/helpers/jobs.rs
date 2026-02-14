@@ -4,6 +4,7 @@ use super::formatting::{
 };
 use crate::api::models::{Job, Repo};
 use crate::api::{GitHubClient, GitHubError};
+use crate::i18n::tr;
 use crate::ui::job_logs_window::JobLogsWindow;
 use crate::ui::utils::MainContextChannelExt;
 use gtk4::prelude::*;
@@ -55,7 +56,10 @@ pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -
     icon.set_valign(gtk::Align::Center);
     job_box.append(&icon);
 
-    let job_name_label = gtk::Label::new(Some(job.name.as_deref().unwrap_or("Unnamed job")));
+    let fallback_job_name = tr("Unnamed job");
+    let job_name_label = gtk::Label::new(Some(
+        job.name.as_deref().unwrap_or(fallback_job_name.as_str()),
+    ));
     job_name_label.set_halign(gtk::Align::Start);
     job_name_label.set_hexpand(true);
     job_name_label.set_valign(gtk::Align::Center);
@@ -94,7 +98,7 @@ pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -
 
     if let Some(ctx) = context {
         let logs_button = gtk::Button::from_icon_name("text-x-generic-symbolic");
-        logs_button.set_tooltip_text(Some("View logs"));
+        logs_button.set_tooltip_text(Some(tr("View logs").as_str()));
         logs_button.add_css_class("flat");
         logs_button.add_css_class("circular");
         logs_button.set_valign(gtk::Align::Center);
@@ -121,7 +125,7 @@ pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -
 
     if let Some(ref url) = job.html_url {
         let open_btn = gtk::Button::from_icon_name("adw-external-link-symbolic");
-        open_btn.set_tooltip_text(Some("Open job in GitHub"));
+        open_btn.set_tooltip_text(Some(tr("Open job in GitHub").as_str()));
         open_btn.add_css_class("flat");
         open_btn.add_css_class("circular");
         open_btn.set_valign(gtk::Align::Center);
@@ -199,7 +203,8 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
         match result {
             Ok(jobs) if jobs.is_empty() => {
                 if !background {
-                    let label = gtk::Label::new(Some("No jobs found"));
+                    let no_jobs = tr("No jobs found");
+                    let label = gtk::Label::new(Some(no_jobs.as_str()));
                     label.add_css_class("dim-label");
                     label.set_halign(gtk::Align::Start);
                     jobs_box.append(&label);
@@ -242,11 +247,11 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
                 }
 
                 if total_jobs > 0 {
-                    let count_label = gtk::Label::new(Some(&format!(
-                        "Showing {} job{}",
-                        total_jobs,
-                        if total_jobs == 1 { "" } else { "s" }
-                    )));
+                    let count_label = gtk::Label::new(Some(
+                        tr("Showing {count} jobs")
+                            .replace("{count}", total_jobs.to_string().as_str())
+                            .as_str(),
+                    ));
                     count_label.add_css_class("dim-label");
                     count_label.add_css_class("caption");
                     count_label.set_halign(gtk::Align::Start);
@@ -264,18 +269,22 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
                     error_box.set_margin_top(8);
                     error_box.set_margin_bottom(8);
 
-                    let error_label = gtk::Label::new(Some("Unable to load jobs"));
+                    let error_label = gtk::Label::new(Some(tr("Unable to load jobs").as_str()));
                     error_label.add_css_class("dim-label");
                     error_label.set_halign(gtk::Align::Start);
                     error_box.append(&error_label);
 
-                    let detail_label = gtk::Label::new(Some(&format!("Error: {}", e)));
+                    let detail_label = gtk::Label::new(Some(
+                        tr("Error: {message}")
+                            .replace("{message}", e.to_string().as_str())
+                            .as_str(),
+                    ));
                     detail_label.add_css_class("caption");
                     detail_label.add_css_class("dim-label");
                     detail_label.set_halign(gtk::Align::Start);
                     error_box.append(&detail_label);
 
-                    let retry_button = gtk::Button::with_label("Retry");
+                    let retry_button = gtk::Button::with_label(tr("Retry").as_str());
                     retry_button.add_css_class("suggested-action");
                     retry_button.set_halign(gtk::Align::Start);
                     retry_button.set_margin_top(8);
