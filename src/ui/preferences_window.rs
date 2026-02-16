@@ -207,7 +207,10 @@ impl PreferencesWindow {
                 }
             });
 
-            if changed && let Some(app) = parent_for_language.application() {
+            let app = window_for_language
+                .application()
+                .or_else(|| parent_for_language.application());
+            if changed && let Some(app) = app {
                 window_for_language.close();
                 app.activate_action("reload-ui", None);
             }

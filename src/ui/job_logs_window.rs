@@ -49,7 +49,7 @@ impl JobLogsWindow {
             .to_string();
 
         let window = adw::Window::builder()
-            .title(format!("{} - Logs", job_title))
+            .title(tr("{title} - Logs").replace("{title}", job_title.as_str()))
             .modal(false)
             .default_width(1000)
             .default_height(700)

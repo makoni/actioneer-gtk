@@ -584,3 +584,46 @@ msgstr ""
 
 msgid "Recent runs (showing {visible} of {filtered} matching filters)"
 msgstr ""
+
+msgid "Queued"
+msgstr ""
+
+msgid "In Progress"
+msgstr ""
+
+msgid "Waiting"
+msgstr ""
+
+msgid "Requested"
+msgstr ""
+
+msgid "Pending"
+msgstr ""
+
+msgid "Success"
+msgstr ""
+
+msgid "Failed"
+msgstr ""
+
+msgid "Stale"
+msgstr ""
+
+msgid "Just now"
+msgstr ""
+
+msgid "Yesterday"
+msgstr ""
+
+msgid "{count}m ago"
+msgstr ""
+
+msgid "{count}h ago"
+msgstr ""
+
+msgid "{count}d ago"
+msgstr ""
+
+msgid "{title} - Logs"
+msgstr ""
+

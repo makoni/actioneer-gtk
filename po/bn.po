@@ -168,7 +168,7 @@ msgid "Cancelled"
 msgstr "বাতিল"
 
 msgid "Skipped"
-msgstr "এড়িয়ে যাওয়া হয়েছে"
+msgstr "এড়ানো"
 
 msgid "Timed Out"
 msgstr "সময় শেষ"
@@ -252,31 +252,31 @@ msgid "Error saving token: {message}"
 msgstr "Error saving token: {message}"
 
 msgid "Welcome to Actioneer"
-msgstr "Welcome to Actioneer"
+msgstr "Actioneer-এ স্বাগতম"
 
 msgid "Manage your GitHub Actions workflows with ease"
-msgstr "Manage your GitHub Actions workflows with ease"
+msgstr "সহজে আপনার GitHub Actions ওয়ার্কফ্লো পরিচালনা করুন"
 
 msgid "Trigger workflows instantly"
-msgstr "Trigger workflows instantly"
+msgstr "তৎক্ষণাৎ ওয়ার্কফ্লো চালু করুন"
 
 msgid "Monitor runs in real-time"
-msgstr "Monitor runs in real-time"
+msgstr "রানগুলো রিয়েল-টাইমে পর্যবেক্ষণ করুন"
 
 msgid "View detailed logs"
-msgstr "View detailed logs"
+msgstr "বিস্তারিত লগ দেখুন"
 
 msgid "Sign in with GitHub"
-msgstr "Sign in with GitHub"
+msgstr "GitHub দিয়ে সাইন ইন করুন"
 
 msgid "Try Demo Mode"
-msgstr "Try Demo Mode"
+msgstr "ডেমো মোড চেষ্টা করুন"
 
 msgid "Explore Actioneer with sample data"
-msgstr "Explore Actioneer with sample data"
+msgstr "নমুনা ডেটা দিয়ে Actioneer ঘুরে দেখুন"
 
 msgid "Workflow Run"
-msgstr "Workflow Run"
+msgstr "ওয়ার্কফ্লো রান"
 
 msgid "{title} - Jobs"
 msgstr "{title} - Jobs"
@@ -297,7 +297,7 @@ msgid "Job"
 msgstr "Job"
 
 msgid "Unknown"
-msgstr "Unknown"
+msgstr "অজানা"
 
 msgid "Workflows and runs will load in the detail pane."
 msgstr "Workflows and runs will load in the detail pane."
@@ -306,28 +306,28 @@ msgid "GitHub Actions is disabled for this repository. Enable Actions to view wo
 msgstr "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs."
 
 msgid "Favorites"
-msgstr "Favorites"
+msgstr "প্রিয়"
 
 msgid "Actions Enabled"
-msgstr "Actions Enabled"
+msgstr "অ্যাকশন সক্রিয়"
 
 msgid "Actions Disabled"
-msgstr "Actions Disabled"
+msgstr "অ্যাকশন নিষ্ক্রিয়"
 
 msgid "Toggle favorite"
-msgstr "Toggle favorite"
+msgstr "প্রিয় টগল করুন"
 
 msgid "Private"
-msgstr "Private"
+msgstr "ব্যক্তিগত"
 
 msgid "Public"
-msgstr "Public"
+msgstr "উন্মুক্ত"
 
 msgid "Active runs: {count}"
-msgstr "Active runs: {count}"
+msgstr "সক্রিয় রান: {count}"
 
 msgid "Failures: {count}"
-msgstr "Failures: {count}"
+msgstr "ব্যর্থতা: {count}"
 
 msgid "Fetching logs..."
 msgstr "Fetching logs..."
@@ -392,49 +392,49 @@ msgstr "Are you sure you want to sign out?\n"
 "You will need to sign in again to continue."
 
 msgid "Loading repositories..."
-msgstr "Loading repositories..."
+msgstr "রিপোজিটরি লোড হচ্ছে..."
 
 msgid "Search repositories..."
-msgstr "Search repositories..."
+msgstr "রিপোজিটরি খুঁজুন..."
 
 msgid "Rate limit: –"
-msgstr "Rate limit: –"
+msgstr "রেট সীমা: –"
 
 msgid "No workflows found."
 msgstr "No workflows found."
 
 msgid "Favorites unavailable"
-msgstr "Favorites unavailable"
+msgstr "প্রিয় তালিকা উপলভ্য নয়"
 
 msgid "Loading workflows..."
-msgstr "Loading workflows..."
+msgstr "ওয়ার্কফ্লো লোড হচ্ছে..."
 
 msgid "Refresh workflows"
-msgstr "Refresh workflows"
+msgstr "ওয়ার্কফ্লো রিফ্রেশ করুন"
 
 msgid "Private Repository"
-msgstr "Private Repository"
+msgstr "ব্যক্তিগত রিপোজিটরি"
 
 msgid "Show successful runs"
-msgstr "Show successful runs"
+msgstr "সফল রান দেখান"
 
 msgid "Show failed runs"
-msgstr "Show failed runs"
+msgstr "ব্যর্থ রান দেখান"
 
 msgid "Show running/queued runs"
-msgstr "Show running/queued runs"
+msgstr "চলমান/সারিবদ্ধ রান দেখান"
 
 msgid "now"
-msgstr "now"
+msgstr "এখন"
 
 msgid "Rate limit (low)"
-msgstr "Rate limit (low)"
+msgstr "রেট সীমা (কম)"
 
 msgid "Rate limit"
-msgstr "Rate limit"
+msgstr "রেট সীমা"
 
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
-msgstr "{prefix}: {remaining}/{limit} (resets in {time})"
+msgstr "{prefix}: {remaining}/{limit} ({time} পরে রিসেট হবে)"
 
 msgid "Unnamed job"
 msgstr "Unnamed job"
@@ -592,3 +592,46 @@ msgstr "Recent runs ({overall})"
 
 msgid "Recent runs (showing {visible} of {filtered} matching filters)"
 msgstr "Recent runs (showing {visible} of {filtered} matching filters)"
+
+msgid "Queued"
+msgstr "সারিবদ্ধ"
+
+msgid "In Progress"
+msgstr "চলমান"
+
+msgid "Waiting"
+msgstr "অপেক্ষমাণ"
+
+msgid "Requested"
+msgstr "অনুরোধ করা হয়েছে"
+
+msgid "Pending"
+msgstr "মুলতুবি"
+
+msgid "Success"
+msgstr "সফল"
+
+msgid "Failed"
+msgstr "ব্যর্থ"
+
+msgid "Stale"
+msgstr "পুরোনো"
+
+msgid "Just now"
+msgstr "এইমাত্র"
+
+msgid "Yesterday"
+msgstr "গতকাল"
+
+msgid "{count}m ago"
+msgstr "{count} মিনিট আগে"
+
+msgid "{count}h ago"
+msgstr "{count} ঘন্টা আগে"
+
+msgid "{count}d ago"
+msgstr "{count} দিন আগে"
+
+msgid "{title} - Logs"
+msgstr "{title} - লগ"
+

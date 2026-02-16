@@ -170,7 +170,7 @@ msgid "Failed ✗"
 msgstr "失敗 ✗"
 
 msgid "Cancelled"
-msgstr "キャンセル"
+msgstr "キャンセル済み"
 
 msgid "Skipped"
 msgstr "スキップ"
@@ -179,7 +179,7 @@ msgid "Timed Out"
 msgstr "タイムアウト"
 
 msgid "Action Required"
-msgstr "要対応"
+msgstr "対応が必要"
 
 msgid "Neutral"
 msgstr "中立"
@@ -281,7 +281,7 @@ msgid "Explore Actioneer with sample data"
 msgstr "Explore Actioneer with sample data"
 
 msgid "Workflow Run"
-msgstr "Workflow Run"
+msgstr "ワークフロー実行"
 
 msgid "{title} - Jobs"
 msgstr "{title} - Jobs"
@@ -302,7 +302,7 @@ msgid "Job"
 msgstr "Job"
 
 msgid "Unknown"
-msgstr "Unknown"
+msgstr "不明"
 
 msgid "Workflows and runs will load in the detail pane."
 msgstr "Workflows and runs will load in the detail pane."
@@ -311,28 +311,28 @@ msgid "GitHub Actions is disabled for this repository. Enable Actions to view wo
 msgstr "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs."
 
 msgid "Favorites"
-msgstr "Favorites"
+msgstr "お気に入り"
 
 msgid "Actions Enabled"
-msgstr "Actions Enabled"
+msgstr "Actions 有効"
 
 msgid "Actions Disabled"
-msgstr "Actions Disabled"
+msgstr "Actions 無効"
 
 msgid "Toggle favorite"
-msgstr "Toggle favorite"
+msgstr "お気に入りを切り替え"
 
 msgid "Private"
-msgstr "Private"
+msgstr "非公開"
 
 msgid "Public"
-msgstr "Public"
+msgstr "公開"
 
 msgid "Active runs: {count}"
-msgstr "Active runs: {count}"
+msgstr "実行中: {count}"
 
 msgid "Failures: {count}"
-msgstr "Failures: {count}"
+msgstr "失敗: {count}"
 
 msgid "Fetching logs..."
 msgstr "Fetching logs..."
@@ -397,49 +397,49 @@ msgstr "Are you sure you want to sign out?\n"
 "You will need to sign in again to continue."
 
 msgid "Loading repositories..."
-msgstr "Loading repositories..."
+msgstr "リポジトリを読み込み中..."
 
 msgid "Search repositories..."
-msgstr "Search repositories..."
+msgstr "リポジトリを検索..."
 
 msgid "Rate limit: –"
-msgstr "Rate limit: –"
+msgstr "レート制限: –"
 
 msgid "No workflows found."
 msgstr "No workflows found."
 
 msgid "Favorites unavailable"
-msgstr "Favorites unavailable"
+msgstr "お気に入りは利用できません"
 
 msgid "Loading workflows..."
-msgstr "Loading workflows..."
+msgstr "ワークフローを読み込み中..."
 
 msgid "Refresh workflows"
-msgstr "Refresh workflows"
+msgstr "ワークフローを更新"
 
 msgid "Private Repository"
-msgstr "Private Repository"
+msgstr "非公開リポジトリ"
 
 msgid "Show successful runs"
-msgstr "Show successful runs"
+msgstr "成功した実行を表示"
 
 msgid "Show failed runs"
-msgstr "Show failed runs"
+msgstr "失敗した実行を表示"
 
 msgid "Show running/queued runs"
-msgstr "Show running/queued runs"
+msgstr "実行中/キュー中の実行を表示"
 
 msgid "now"
-msgstr "now"
+msgstr "今"
 
 msgid "Rate limit (low)"
-msgstr "Rate limit (low)"
+msgstr "レート制限（低）"
 
 msgid "Rate limit"
-msgstr "Rate limit"
+msgstr "レート制限"
 
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
-msgstr "{prefix}: {remaining}/{limit} (resets in {time})"
+msgstr "{prefix}: {remaining}/{limit} ({time} でリセット)"
 
 msgid "Unnamed job"
 msgstr "Unnamed job"
@@ -597,3 +597,46 @@ msgstr "Recent runs ({overall})"
 
 msgid "Recent runs (showing {visible} of {filtered} matching filters)"
 msgstr "Recent runs (showing {visible} of {filtered} matching filters)"
+
+msgid "Queued"
+msgstr "キュー中"
+
+msgid "In Progress"
+msgstr "実行中"
+
+msgid "Waiting"
+msgstr "待機中"
+
+msgid "Requested"
+msgstr "要求済み"
+
+msgid "Pending"
+msgstr "保留中"
+
+msgid "Success"
+msgstr "成功"
+
+msgid "Failed"
+msgstr "失敗"
+
+msgid "Stale"
+msgstr "古い"
+
+msgid "Just now"
+msgstr "たった今"
+
+msgid "Yesterday"
+msgstr "昨日"
+
+msgid "{count}m ago"
+msgstr "{count}分前"
+
+msgid "{count}h ago"
+msgstr "{count}時間前"
+
+msgid "{count}d ago"
+msgstr "{count}日前"
+
+msgid "{title} - Logs"
+msgstr "{title} - ログ"
+

@@ -159,7 +159,7 @@ msgid "Workflow Completed: {workflow}"
 msgstr "Рабочий процесс завершен: {workflow}"
 
 msgid "{run} - {status}"
-msgstr "{run} - {status}"
+msgstr "{run} — {status}"
 
 msgid "Success ✓"
 msgstr "Успешно ✓"
@@ -508,7 +508,7 @@ msgid "Failed to load workflow inputs: {error}"
 msgstr "Не удалось загрузить входные параметры workflow: {error}"
 
 msgid "✗ {error}"
-msgstr "✗ {error}"
+msgstr "✗ Ошибка: {error}"
 
 msgid "Failed to trigger workflow: {error}"
 msgstr "Не удалось запустить workflow: {error}"
@@ -598,3 +598,45 @@ msgstr "Недавние запуски ({overall})"
 
 msgid "Recent runs (showing {visible} of {filtered} matching filters)"
 msgstr "Недавние запуски (показано {visible} из {filtered}, соответствующих фильтрам)"
+
+msgid "Queued"
+msgstr "В очереди"
+
+msgid "In Progress"
+msgstr "Выполняется"
+
+msgid "Waiting"
+msgstr "Ожидание"
+
+msgid "Requested"
+msgstr "Запрошено"
+
+msgid "Pending"
+msgstr "В ожидании"
+
+msgid "Success"
+msgstr "Успешно"
+
+msgid "Failed"
+msgstr "Неуспешно"
+
+msgid "Stale"
+msgstr "Устарело"
+
+msgid "Just now"
+msgstr "только что"
+
+msgid "Yesterday"
+msgstr "вчера"
+
+msgid "{count}m ago"
+msgstr "{count}м назад"
+
+msgid "{count}h ago"
+msgstr "{count}ч назад"
+
+msgid "{count}d ago"
+msgstr "{count}д назад"
+
+msgid "{title} - Logs"
+msgstr "{title} — Логи"

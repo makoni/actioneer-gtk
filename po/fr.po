@@ -171,7 +171,7 @@ msgid "Skipped"
 msgstr "Ignoré"
 
 msgid "Timed Out"
-msgstr "Délai dépassé"
+msgstr "Expiré"
 
 msgid "Action Required"
 msgstr "Action requise"
@@ -252,31 +252,31 @@ msgid "Error saving token: {message}"
 msgstr "Error saving token: {message}"
 
 msgid "Welcome to Actioneer"
-msgstr "Welcome to Actioneer"
+msgstr "Bienvenue dans Actioneer"
 
 msgid "Manage your GitHub Actions workflows with ease"
-msgstr "Manage your GitHub Actions workflows with ease"
+msgstr "Gérez vos workflows GitHub Actions en toute simplicité"
 
 msgid "Trigger workflows instantly"
-msgstr "Trigger workflows instantly"
+msgstr "Déclenchez des workflows instantanément"
 
 msgid "Monitor runs in real-time"
-msgstr "Monitor runs in real-time"
+msgstr "Surveillez les exécutions en temps réel"
 
 msgid "View detailed logs"
-msgstr "View detailed logs"
+msgstr "Consultez des journaux détaillés"
 
 msgid "Sign in with GitHub"
-msgstr "Sign in with GitHub"
+msgstr "Se connecter avec GitHub"
 
 msgid "Try Demo Mode"
-msgstr "Try Demo Mode"
+msgstr "Essayer le mode démo"
 
 msgid "Explore Actioneer with sample data"
-msgstr "Explore Actioneer with sample data"
+msgstr "Découvrez Actioneer avec des données d'exemple"
 
 msgid "Workflow Run"
-msgstr "Workflow Run"
+msgstr "Exécution de workflow"
 
 msgid "{title} - Jobs"
 msgstr "{title} - Jobs"
@@ -297,7 +297,7 @@ msgid "Job"
 msgstr "Job"
 
 msgid "Unknown"
-msgstr "Unknown"
+msgstr "Inconnu"
 
 msgid "Workflows and runs will load in the detail pane."
 msgstr "Workflows and runs will load in the detail pane."
@@ -306,28 +306,28 @@ msgid "GitHub Actions is disabled for this repository. Enable Actions to view wo
 msgstr "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs."
 
 msgid "Favorites"
-msgstr "Favorites"
+msgstr "Favoris"
 
 msgid "Actions Enabled"
-msgstr "Actions Enabled"
+msgstr "Actions activées"
 
 msgid "Actions Disabled"
-msgstr "Actions Disabled"
+msgstr "Actions désactivées"
 
 msgid "Toggle favorite"
-msgstr "Toggle favorite"
+msgstr "Basculer le favori"
 
 msgid "Private"
-msgstr "Private"
+msgstr "Privé"
 
 msgid "Public"
 msgstr "Public"
 
 msgid "Active runs: {count}"
-msgstr "Active runs: {count}"
+msgstr "Exécutions actives : {count}"
 
 msgid "Failures: {count}"
-msgstr "Failures: {count}"
+msgstr "Échecs : {count}"
 
 msgid "Fetching logs..."
 msgstr "Fetching logs..."
@@ -392,49 +392,49 @@ msgstr "Are you sure you want to sign out?\n"
 "You will need to sign in again to continue."
 
 msgid "Loading repositories..."
-msgstr "Loading repositories..."
+msgstr "Chargement des dépôts..."
 
 msgid "Search repositories..."
-msgstr "Search repositories..."
+msgstr "Rechercher des dépôts..."
 
 msgid "Rate limit: –"
-msgstr "Rate limit: –"
+msgstr "Limite de débit : –"
 
 msgid "No workflows found."
 msgstr "No workflows found."
 
 msgid "Favorites unavailable"
-msgstr "Favorites unavailable"
+msgstr "Favoris indisponibles"
 
 msgid "Loading workflows..."
-msgstr "Loading workflows..."
+msgstr "Chargement des workflows..."
 
 msgid "Refresh workflows"
-msgstr "Refresh workflows"
+msgstr "Actualiser les workflows"
 
 msgid "Private Repository"
-msgstr "Private Repository"
+msgstr "Dépôt privé"
 
 msgid "Show successful runs"
-msgstr "Show successful runs"
+msgstr "Afficher les exécutions réussies"
 
 msgid "Show failed runs"
-msgstr "Show failed runs"
+msgstr "Afficher les exécutions échouées"
 
 msgid "Show running/queued runs"
-msgstr "Show running/queued runs"
+msgstr "Afficher les exécutions en cours/en file d'attente"
 
 msgid "now"
-msgstr "now"
+msgstr "maintenant"
 
 msgid "Rate limit (low)"
-msgstr "Rate limit (low)"
+msgstr "Limite de débit (faible)"
 
 msgid "Rate limit"
-msgstr "Rate limit"
+msgstr "Limite de débit"
 
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
-msgstr "{prefix}: {remaining}/{limit} (resets in {time})"
+msgstr "{prefix}: {remaining}/{limit} (réinitialisation dans {time})"
 
 msgid "Unnamed job"
 msgstr "Unnamed job"
@@ -592,3 +592,46 @@ msgstr "Recent runs ({overall})"
 
 msgid "Recent runs (showing {visible} of {filtered} matching filters)"
 msgstr "Recent runs (showing {visible} of {filtered} matching filters)"
+
+msgid "Queued"
+msgstr "En file d'attente"
+
+msgid "In Progress"
+msgstr "En cours"
+
+msgid "Waiting"
+msgstr "En attente"
+
+msgid "Requested"
+msgstr "Demandé"
+
+msgid "Pending"
+msgstr "En attente"
+
+msgid "Success"
+msgstr "Succès"
+
+msgid "Failed"
+msgstr "Échec"
+
+msgid "Stale"
+msgstr "Obsolète"
+
+msgid "Just now"
+msgstr "À l'instant"
+
+msgid "Yesterday"
+msgstr "Hier"
+
+msgid "{count}m ago"
+msgstr "il y a {count} min"
+
+msgid "{count}h ago"
+msgstr "il y a {count} h"
+
+msgid "{count}d ago"
+msgstr "il y a {count} j"
+
+msgid "{title} - Logs"
+msgstr "{title} - Journaux"
+

@@ -252,31 +252,31 @@ msgid "Error saving token: {message}"
 msgstr "Error saving token: {message}"
 
 msgid "Welcome to Actioneer"
-msgstr "Welcome to Actioneer"
+msgstr "Actioneer में आपका स्वागत है"
 
 msgid "Manage your GitHub Actions workflows with ease"
-msgstr "Manage your GitHub Actions workflows with ease"
+msgstr "अपने GitHub Actions वर्कफ़्लो आसानी से प्रबंधित करें"
 
 msgid "Trigger workflows instantly"
-msgstr "Trigger workflows instantly"
+msgstr "वर्कफ़्लो तुरंत ट्रिगर करें"
 
 msgid "Monitor runs in real-time"
-msgstr "Monitor runs in real-time"
+msgstr "रनों को रीयल-टाइम में मॉनिटर करें"
 
 msgid "View detailed logs"
-msgstr "View detailed logs"
+msgstr "विस्तृत लॉग देखें"
 
 msgid "Sign in with GitHub"
-msgstr "Sign in with GitHub"
+msgstr "GitHub से साइन इन करें"
 
 msgid "Try Demo Mode"
-msgstr "Try Demo Mode"
+msgstr "डेमो मोड आज़माएँ"
 
 msgid "Explore Actioneer with sample data"
-msgstr "Explore Actioneer with sample data"
+msgstr "सैंपल डेटा के साथ Actioneer का अनुभव करें"
 
 msgid "Workflow Run"
-msgstr "Workflow Run"
+msgstr "वर्कफ़्लो रन"
 
 msgid "{title} - Jobs"
 msgstr "{title} - Jobs"
@@ -297,7 +297,7 @@ msgid "Job"
 msgstr "Job"
 
 msgid "Unknown"
-msgstr "Unknown"
+msgstr "अज्ञात"
 
 msgid "Workflows and runs will load in the detail pane."
 msgstr "Workflows and runs will load in the detail pane."
@@ -306,28 +306,28 @@ msgid "GitHub Actions is disabled for this repository. Enable Actions to view wo
 msgstr "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs."
 
 msgid "Favorites"
-msgstr "Favorites"
+msgstr "पसंदीदा"
 
 msgid "Actions Enabled"
-msgstr "Actions Enabled"
+msgstr "Actions सक्षम"
 
 msgid "Actions Disabled"
-msgstr "Actions Disabled"
+msgstr "Actions अक्षम"
 
 msgid "Toggle favorite"
-msgstr "Toggle favorite"
+msgstr "पसंदीदा टॉगल करें"
 
 msgid "Private"
-msgstr "Private"
+msgstr "निजी"
 
 msgid "Public"
-msgstr "Public"
+msgstr "सार्वजनिक"
 
 msgid "Active runs: {count}"
-msgstr "Active runs: {count}"
+msgstr "सक्रिय रन: {count}"
 
 msgid "Failures: {count}"
-msgstr "Failures: {count}"
+msgstr "विफलताएँ: {count}"
 
 msgid "Fetching logs..."
 msgstr "Fetching logs..."
@@ -392,49 +392,49 @@ msgstr "Are you sure you want to sign out?\n"
 "You will need to sign in again to continue."
 
 msgid "Loading repositories..."
-msgstr "Loading repositories..."
+msgstr "रिपॉजिटरी लोड हो रही हैं..."
 
 msgid "Search repositories..."
-msgstr "Search repositories..."
+msgstr "रिपॉजिटरी खोजें..."
 
 msgid "Rate limit: –"
-msgstr "Rate limit: –"
+msgstr "रेट सीमा: –"
 
 msgid "No workflows found."
 msgstr "No workflows found."
 
 msgid "Favorites unavailable"
-msgstr "Favorites unavailable"
+msgstr "पसंदीदा उपलब्ध नहीं"
 
 msgid "Loading workflows..."
-msgstr "Loading workflows..."
+msgstr "वर्कफ़्लो लोड हो रहे हैं..."
 
 msgid "Refresh workflows"
-msgstr "Refresh workflows"
+msgstr "वर्कफ़्लो रीफ़्रेश करें"
 
 msgid "Private Repository"
-msgstr "Private Repository"
+msgstr "निजी रिपॉजिटरी"
 
 msgid "Show successful runs"
-msgstr "Show successful runs"
+msgstr "सफल रन दिखाएँ"
 
 msgid "Show failed runs"
-msgstr "Show failed runs"
+msgstr "विफल रन दिखाएँ"
 
 msgid "Show running/queued runs"
-msgstr "Show running/queued runs"
+msgstr "चल रहे/क्यू में रन दिखाएँ"
 
 msgid "now"
-msgstr "now"
+msgstr "अब"
 
 msgid "Rate limit (low)"
-msgstr "Rate limit (low)"
+msgstr "रेट सीमा (कम)"
 
 msgid "Rate limit"
-msgstr "Rate limit"
+msgstr "रेट सीमा"
 
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
-msgstr "{prefix}: {remaining}/{limit} (resets in {time})"
+msgstr "{prefix}: {remaining}/{limit} ({time} में रीसेट)"
 
 msgid "Unnamed job"
 msgstr "Unnamed job"
@@ -592,3 +592,46 @@ msgstr "Recent runs ({overall})"
 
 msgid "Recent runs (showing {visible} of {filtered} matching filters)"
 msgstr "Recent runs (showing {visible} of {filtered} matching filters)"
+
+msgid "Queued"
+msgstr "कतार में"
+
+msgid "In Progress"
+msgstr "प्रगति पर"
+
+msgid "Waiting"
+msgstr "प्रतीक्षारत"
+
+msgid "Requested"
+msgstr "अनुरोधित"
+
+msgid "Pending"
+msgstr "लंबित"
+
+msgid "Success"
+msgstr "सफल"
+
+msgid "Failed"
+msgstr "विफल"
+
+msgid "Stale"
+msgstr "पुराना"
+
+msgid "Just now"
+msgstr "अभी"
+
+msgid "Yesterday"
+msgstr "कल"
+
+msgid "{count}m ago"
+msgstr "{count}मि पहले"
+
+msgid "{count}h ago"
+msgstr "{count}घं पहले"
+
+msgid "{count}d ago"
+msgstr "{count}दि पहले"
+
+msgid "{title} - Logs"
+msgstr "{title} - लॉग"
+

@@ -1,3 +1,4 @@
+use crate::i18n::tr;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -201,22 +202,22 @@ impl WorkflowRun {
     pub fn friendly_status(&self) -> String {
         if let Some(status) = &self.status {
             match status.to_lowercase().as_str() {
-                "queued" => "Queued".to_string(),
-                "in_progress" => "In Progress".to_string(),
+                "queued" => tr("Queued"),
+                "in_progress" => tr("In Progress"),
                 "completed" => {
                     if self.conclusion.is_some() {
                         self.friendly_conclusion()
                     } else {
-                        "Completed".to_string()
+                        tr("Completed")
                     }
                 }
-                "waiting" => "Waiting".to_string(),
-                "requested" => "Requested".to_string(),
-                "pending" => "Pending".to_string(),
+                "waiting" => tr("Waiting"),
+                "requested" => tr("Requested"),
+                "pending" => tr("Pending"),
                 _ => status.replace('_', " "),
             }
         } else {
-            "Unknown".to_string()
+            tr("Unknown")
         }
     }
 
@@ -224,14 +225,14 @@ impl WorkflowRun {
     pub fn friendly_conclusion(&self) -> String {
         if let Some(conclusion) = &self.conclusion {
             match conclusion.to_lowercase().as_str() {
-                "success" => "Success".to_string(),
-                "failure" => "Failed".to_string(),
-                "cancelled" => "Cancelled".to_string(),
-                "skipped" => "Skipped".to_string(),
-                "timed_out" => "Timed Out".to_string(),
-                "action_required" => "Action Required".to_string(),
-                "neutral" => "Neutral".to_string(),
-                "stale" => "Stale".to_string(),
+                "success" => tr("Success"),
+                "failure" => tr("Failed"),
+                "cancelled" => tr("Cancelled"),
+                "skipped" => tr("Skipped"),
+                "timed_out" => tr("Timed Out"),
+                "action_required" => tr("Action Required"),
+                "neutral" => tr("Neutral"),
+                "stale" => tr("Stale"),
                 _ => conclusion.replace('_', " "),
             }
         } else {
@@ -328,23 +329,23 @@ fn relative_time_from_iso(iso_string: &str) -> String {
         let seconds = duration.num_seconds();
 
         if seconds < 60 {
-            "Just now".to_string()
+            tr("Just now")
         } else if seconds < 3600 {
             let minutes = seconds / 60;
-            format!("{}m ago", minutes)
+            tr("{count}m ago").replace("{count}", minutes.to_string().as_str())
         } else if seconds < 86400 {
             let hours = seconds / 3600;
-            format!("{}h ago", hours)
+            tr("{count}h ago").replace("{count}", hours.to_string().as_str())
         } else if seconds < 604800 {
             let days = seconds / 86400;
             if days == 1 {
-                "Yesterday".to_string()
+                tr("Yesterday")
             } else {
-                format!("{}d ago", days)
+                tr("{count}d ago").replace("{count}", days.to_string().as_str())
             }
         } else {
-            // For older dates, use date formatting
-            dt.format("%b %d").to_string()
+            // Use numeric format to avoid locale-specific month abbreviations.
+            dt.format("%Y-%m-%d").to_string()
         }
     } else {
         String::new()
@@ -356,22 +357,22 @@ impl Job {
     pub fn friendly_status(&self) -> String {
         if let Some(status) = &self.status {
             match status.to_lowercase().as_str() {
-                "queued" => "Queued".to_string(),
-                "in_progress" => "In Progress".to_string(),
+                "queued" => tr("Queued"),
+                "in_progress" => tr("In Progress"),
                 "completed" => {
                     if self.conclusion.is_some() {
                         self.friendly_conclusion()
                     } else {
-                        "Completed".to_string()
+                        tr("Completed")
                     }
                 }
-                "waiting" => "Waiting".to_string(),
-                "requested" => "Requested".to_string(),
-                "pending" => "Pending".to_string(),
+                "waiting" => tr("Waiting"),
+                "requested" => tr("Requested"),
+                "pending" => tr("Pending"),
                 _ => status.replace('_', " "),
             }
         } else {
-            "Unknown".to_string()
+            tr("Unknown")
         }
     }
 
@@ -379,13 +380,13 @@ impl Job {
     pub fn friendly_conclusion(&self) -> String {
         if let Some(conclusion) = &self.conclusion {
             match conclusion.to_lowercase().as_str() {
-                "success" => "Success".to_string(),
-                "failure" => "Failed".to_string(),
-                "cancelled" => "Cancelled".to_string(),
-                "skipped" => "Skipped".to_string(),
-                "timed_out" => "Timed Out".to_string(),
-                "action_required" => "Action Required".to_string(),
-                "neutral" => "Neutral".to_string(),
+                "success" => tr("Success"),
+                "failure" => tr("Failed"),
+                "cancelled" => tr("Cancelled"),
+                "skipped" => tr("Skipped"),
+                "timed_out" => tr("Timed Out"),
+                "action_required" => tr("Action Required"),
+                "neutral" => tr("Neutral"),
                 _ => conclusion.replace('_', " "),
             }
         } else {

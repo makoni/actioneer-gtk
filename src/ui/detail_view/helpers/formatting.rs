@@ -1,14 +1,16 @@
 use crate::api::models::{Job, JobSummary, WorkflowRun};
+use crate::i18n::tr;
 use gtk4::prelude::*;
 use gtk4::{self as gtk};
 
 pub(crate) fn format_run_title(run: &WorkflowRun) -> String {
+    let workflow_run_fallback = tr("Workflow Run");
     let base = run
         .display_title
         .as_ref()
         .or(run.name.as_ref())
         .map(|s| s.as_str())
-        .unwrap_or("Workflow Run");
+        .unwrap_or(workflow_run_fallback.as_str());
 
     if let Some(num) = run.run_number {
         format!("{} #{}", base, num)

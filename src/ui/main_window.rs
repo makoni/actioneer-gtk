@@ -432,52 +432,59 @@ impl MainWindow {
     }
 
     fn ensure_app_actions(&self, app: &adw::Application) {
-        if app.lookup_action("preferences").is_none() {
+        let replace_action = |name: &str, action: &gio::SimpleAction| {
+            if app.lookup_action(name).is_some() {
+                app.remove_action(name);
+            }
+            app.add_action(action);
+        };
+
+        {
             let this = self.clone();
             let action = gio::SimpleAction::new("preferences", None);
             action.connect_activate(move |_, _| {
                 this.open_preferences_window();
             });
-            app.add_action(&action);
+            replace_action("preferences", &action);
         }
 
-        if app.lookup_action("about").is_none() {
+        {
             let this = self.clone();
             let action = gio::SimpleAction::new("about", None);
             action.connect_activate(move |_, _| {
                 this.open_about_window();
             });
-            app.add_action(&action);
+            replace_action("about", &action);
         }
 
-        if app.lookup_action("shortcuts").is_none() {
+        {
             let this = self.clone();
             let action = gio::SimpleAction::new("shortcuts", None);
             action.connect_activate(move |_, _| {
                 this.open_shortcuts_window();
             });
-            app.add_action(&action);
+            replace_action("shortcuts", &action);
         }
 
-        if app.lookup_action("help").is_none() {
+        {
             let this = self.clone();
             let action = gio::SimpleAction::new("help", None);
             action.connect_activate(move |_, _| {
                 this.open_help_window();
             });
-            app.add_action(&action);
+            replace_action("help", &action);
         }
 
-        if app.lookup_action("report_issue").is_none() {
+        {
             let this = self.clone();
             let action = gio::SimpleAction::new("report_issue", None);
             action.connect_activate(move |_, _| {
                 this.open_report_issue();
             });
-            app.add_action(&action);
+            replace_action("report_issue", &action);
         }
 
-        if app.lookup_action("refresh").is_none() {
+        {
             let this = self.clone();
             let action = gio::SimpleAction::new("refresh", None);
             action.connect_activate(move |_, _| {
@@ -487,7 +494,7 @@ impl MainWindow {
                     warn!("Cannot refresh: GitHub client not initialized");
                 }
             });
-            app.add_action(&action);
+            replace_action("refresh", &action);
         }
 
         if app.lookup_action("quit").is_none() {
@@ -499,15 +506,12 @@ impl MainWindow {
             app.add_action(&action);
         }
 
-        if app.lookup_action("reload-ui").is_some() {
-            app.remove_action("reload-ui");
-        }
         let this = self.clone();
         let action = gio::SimpleAction::new("reload-ui", None);
         action.connect_activate(move |_, _| {
             this.reload_window_for_language_change();
         });
-        app.add_action(&action);
+        replace_action("reload-ui", &action);
     }
 
     fn ensure_app_accels(&self, app: &adw::Application) {
