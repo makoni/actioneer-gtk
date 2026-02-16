@@ -80,6 +80,7 @@ pub struct MainWindow {
 
 impl MainWindow {
     pub fn new(app: &adw::Application) -> Self {
+        crate::apply_text_direction_for_language();
         let window = adw::ApplicationWindow::builder()
             .application(app)
             .title("Actioneer")

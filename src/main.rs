@@ -37,6 +37,15 @@ pub fn runtime_handle() -> &'static Handle {
     RUNTIME_HANDLE.get().expect("Runtime not initialized")
 }
 
+pub fn apply_text_direction_for_language() {
+    let direction = if i18n::current_language_is_rtl() {
+        gtk4::TextDirection::Rtl
+    } else {
+        gtk4::TextDirection::Ltr
+    };
+    gtk4::Widget::set_default_direction(direction);
+}
+
 pub fn resolved_app_id() -> Cow<'static, str> {
     if let Ok(snap_name) =
         std::env::var("SNAP_INSTANCE_NAME").or_else(|_| std::env::var("SNAP_NAME"))
@@ -117,6 +126,7 @@ fn main() -> anyhow::Result<()> {
     });
 
     app.connect_startup(|_| {
+        apply_text_direction_for_language();
         register_icon_theme_paths();
         gtk4::Window::set_default_icon_name(APP_ICON_NAME);
         style::install_app_css();

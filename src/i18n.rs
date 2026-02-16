@@ -71,6 +71,15 @@ pub fn language_code(language: LanguagePreference) -> &'static str {
     }
 }
 
+pub fn is_rtl_language(language: &str) -> bool {
+    let normalized = language.to_ascii_lowercase();
+    normalized == "ar" || normalized == "ur"
+}
+
+pub fn current_language_is_rtl() -> bool {
+    is_rtl_language(current_effective_language().as_str())
+}
+
 fn lookup_po_translation(message: &str) -> Option<String> {
     let lang = current_effective_language();
     let catalogs = PO_TRANSLATIONS.get_or_init(load_po_translations);
@@ -300,9 +309,9 @@ fn resolve_locale_dir(
 #[cfg(test)]
 mod tests {
     use super::{
-        apply_language_preference, current_effective_language, init, normalize_system_locale,
-        parse_po_catalog, resolve_language_preference, resolve_locale_dir, set_effective_language,
-        tr,
+        apply_language_preference, current_effective_language, current_language_is_rtl, init,
+        is_rtl_language, normalize_system_locale, parse_po_catalog, resolve_language_preference,
+        resolve_locale_dir, set_effective_language, tr,
     };
     use crate::preferences::LanguagePreference;
     use std::path::PathBuf;
@@ -366,6 +375,13 @@ mod tests {
     }
 
     #[test]
+    fn identifies_rtl_languages() {
+        assert!(is_rtl_language("ar"));
+        assert!(is_rtl_language("ur"));
+        assert!(!is_rtl_language("ru"));
+    }
+
+    #[test]
     fn tr_uses_selected_language_catalog() {
         init();
         let previous = current_effective_language();
@@ -379,6 +395,17 @@ mod tests {
             std::env::set_var("LANGUAGE", previous.clone());
             std::env::set_var("ACTIONEER_EFFECTIVE_LANG", previous);
         }
+    }
+
+    #[test]
+    fn current_language_rtl_reflects_effective_language() {
+        init();
+        let previous = current_effective_language();
+        set_effective_language("ar".to_string());
+        assert!(current_language_is_rtl());
+        set_effective_language("en".to_string());
+        assert!(!current_language_is_rtl());
+        set_effective_language(previous);
     }
 
     #[test]
