@@ -57,12 +57,6 @@ pub fn resolved_app_id() -> Cow<'static, str> {
 }
 
 fn main() -> anyhow::Result<()> {
-    i18n::init();
-    let startup_preferences = PreferencesManager::new()
-        .map(|manager| manager.get_blocking())
-        .unwrap_or_default();
-    i18n::apply_language_preference(startup_preferences.language_preference);
-
     // Initialize logging
     tracing_subscriber::fmt()
         .with_env_filter(
@@ -99,7 +93,6 @@ fn main() -> anyhow::Result<()> {
 
     info!("Tokio runtime initialized");
 
-    // Create GTK application
     let runtime_app_id = resolved_app_id();
 
     let app = adw::Application::builder()
@@ -109,7 +102,12 @@ fn main() -> anyhow::Result<()> {
 
     let send_test_notification = Arc::new(AtomicBool::new(false));
     let option_flag = send_test_notification.clone();
+
+    let locale_string = Arc::new(std::sync::Mutex::new(None));
+    let locale_flag = locale_string.clone();
     let test_notification_help = tr("Send a test notification when the app starts");
+    let locale_help = tr("Set the application language (e.g., ru, en, zh_Hans)");
+
     app.add_main_option(
         "test-notification",
         glib::Char::from(b't'),
@@ -118,12 +116,36 @@ fn main() -> anyhow::Result<()> {
         test_notification_help.as_str(),
         None,
     );
+
+    app.add_main_option(
+        "locale",
+        glib::Char::from(b'l'),
+        glib::OptionFlags::NONE,
+        glib::OptionArg::String,
+        locale_help.as_str(),
+        Some("LOCALE"),
+    );
+
     app.connect_handle_local_options(move |_app, options| {
+        if let Ok(Some(variant)) = options.lookup::<glib::Variant>("locale")
+            && let Some(argval) = variant.get::<String>()
+        {
+            *locale_flag.lock().unwrap() = Some(argval);
+        }
+
         if options.contains("test-notification") {
             option_flag.store(true, Ordering::Relaxed);
         }
         ControlFlow::Continue(())
     });
+
+    let cli_locale = locale_string.lock().unwrap().clone();
+    let cli_locale_ref: Option<&str> = cli_locale.as_deref();
+    i18n::init(cli_locale_ref);
+    let startup_preferences = PreferencesManager::new()
+        .map(|manager| manager.get_blocking())
+        .unwrap_or_default();
+    i18n::apply_language_preference(startup_preferences.language_preference);
 
     app.connect_startup(|_| {
         apply_text_direction_for_language();

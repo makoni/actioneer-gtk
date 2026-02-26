@@ -12,16 +12,14 @@ pub const GETTEXT_PACKAGE: &str = "actioneer";
 static EFFECTIVE_LANGUAGE: OnceLock<RwLock<String>> = OnceLock::new();
 static PO_TRANSLATIONS: OnceLock<HashMap<String, HashMap<String, String>>> = OnceLock::new();
 
-pub fn init() {
+pub fn init(cli_locale: Option<&str>) {
     let _ = setlocale(LocaleCategory::LcAll, "");
     let locale_dir = locale_dir();
     let _ = bindtextdomain(GETTEXT_PACKAGE, &locale_dir);
     let _ = bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
     let _ = textdomain(GETTEXT_PACKAGE);
 
-    let initial_language = std::env::var("ACTIONEER_EFFECTIVE_LANG")
-        .ok()
-        .unwrap_or_else(|| resolve_language_preference(LanguagePreference::System));
+    let initial_language = resolve_initial_language(cli_locale);
     set_effective_language(initial_language);
     let _ = PO_TRANSLATIONS.get_or_init(load_po_translations);
 }
@@ -46,6 +44,36 @@ pub fn apply_language_preference(preference: LanguagePreference) -> bool {
     set_effective_language(effective_language);
     let _ = setlocale(LocaleCategory::LcAll, "");
     changed
+}
+
+pub fn resolve_initial_language(cli_locale: Option<&str>) -> String {
+    if let Some(locale_str) = cli_locale
+        && let Some(effective_lang) = parse_locale_string(locale_str)
+    {
+        return effective_lang;
+    }
+
+    std::env::var("ACTIONEER_EFFECTIVE_LANG")
+        .ok()
+        .unwrap_or_else(|| resolve_language_preference(LanguagePreference::System))
+}
+
+pub fn parse_locale_string(locale: &str) -> Option<String> {
+    let normalized = locale.to_lowercase().trim().to_string();
+
+    match normalized.as_str() {
+        "ru" => Some("ru".to_string()),
+        "en" | "en_us" | "en_gb" => Some("en".to_string()),
+        "zh_hans" | "zh_cn" => Some("zh_Hans".to_string()),
+        "hi" => Some("hi".to_string()),
+        "es" | "es_es" | "es_mx" => Some("es".to_string()),
+        "fr" | "fr_fr" | "fr_ca" => Some("fr".to_string()),
+        "ar" => Some("ar".to_string()),
+        "bn" => Some("bn".to_string()),
+        "pt_br" | "pt" => Some("pt_BR".to_string()),
+        "ur" => Some("ur".to_string()),
+        _ => None,
+    }
 }
 
 pub fn resolve_language_preference(preference: LanguagePreference) -> String {
@@ -310,8 +338,9 @@ fn resolve_locale_dir(
 mod tests {
     use super::{
         apply_language_preference, current_effective_language, current_language_is_rtl, init,
-        is_rtl_language, normalize_system_locale, parse_po_catalog, resolve_language_preference,
-        resolve_locale_dir, set_effective_language, tr,
+        is_rtl_language, normalize_system_locale, parse_locale_string, parse_po_catalog,
+        resolve_initial_language, resolve_language_preference, resolve_locale_dir,
+        set_effective_language, tr,
     };
     use crate::preferences::LanguagePreference;
     use std::path::PathBuf;
@@ -383,7 +412,7 @@ mod tests {
 
     #[test]
     fn tr_uses_selected_language_catalog() {
-        init();
+        init(None);
         let previous = current_effective_language();
         let changed = apply_language_preference(LanguagePreference::Ru);
         assert!(changed || current_effective_language() == "ru");
@@ -399,7 +428,7 @@ mod tests {
 
     #[test]
     fn current_language_rtl_reflects_effective_language() {
-        init();
+        init(None);
         let previous = current_effective_language();
         set_effective_language("ar".to_string());
         assert!(current_language_is_rtl());
@@ -433,5 +462,67 @@ msgstr ""
             parsed.get("Actioneer Help").cloned(),
             Some("Справка Actioneer".to_string())
         );
+    }
+
+    #[test]
+    fn parses_locale_string_ru() {
+        assert_eq!(parse_locale_string("ru"), Some("ru".to_string()));
+    }
+
+    #[test]
+    fn parses_locale_string_en_us() {
+        assert_eq!(parse_locale_string("en_US"), Some("en".to_string()));
+    }
+
+    #[test]
+    fn parses_locale_string_zh_cn() {
+        assert_eq!(parse_locale_string("zh_CN"), Some("zh_Hans".to_string()));
+    }
+
+    #[test]
+    fn parses_locale_string_pt_br() {
+        assert_eq!(parse_locale_string("pt_BR"), Some("pt_BR".to_string()));
+    }
+
+    #[test]
+    fn parses_locale_string_lowercase() {
+        assert_eq!(parse_locale_string("RU"), Some("ru".to_string()));
+        assert_eq!(parse_locale_string("en_gb"), Some("en".to_string()));
+    }
+
+    #[test]
+    fn rejects_invalid_locale_string() {
+        assert_eq!(parse_locale_string("de_DE"), None);
+        assert_eq!(parse_locale_string("invalid"), None);
+    }
+
+    #[test]
+    fn resolve_initial_language_uses_cli_locale() {
+        let result = resolve_initial_language(Some("ru"));
+        assert_eq!(result, "ru");
+    }
+
+    #[test]
+    fn resolve_initial_language_falls_back_to_env_or_system() {
+        unsafe {
+            std::env::set_var("ACTIONEER_EFFECTIVE_LANG", "fr");
+        }
+        let result = resolve_initial_language(None);
+        assert_eq!(result, "fr");
+        unsafe {
+            std::env::remove_var("ACTIONEER_EFFECTIVE_LANG");
+        }
+    }
+
+    #[test]
+    fn cli_locale_takes_precedence_over_env() {
+        unsafe {
+            std::env::set_var("ACTIONEER_EFFECTIVE_LANG", "fr");
+        }
+        let result = resolve_initial_language(Some("ru"));
+        assert_eq!(result, "ru");
+        unsafe {
+            std::env::remove_var("ACTIONEER_EFFECTIVE_LANG");
+        }
     }
 }
