@@ -317,7 +317,41 @@ fn po_dir() -> PathBuf {
     if let Ok(path) = std::env::var("ACTIONEER_PO_DIR") {
         return PathBuf::from(path);
     }
-    [env!("CARGO_MANIFEST_DIR"), "po"].iter().collect()
+
+    let dev_po_dir: PathBuf = [env!("CARGO_MANIFEST_DIR"), "po"].iter().collect();
+    resolve_po_dir(
+        std::env::var("SNAP").ok(),
+        std::env::var("FLATPAK_ID").is_ok(),
+        dev_po_dir.exists(),
+        &dev_po_dir,
+    )
+}
+
+fn resolve_po_dir(
+    snap_root: Option<String>,
+    is_flatpak: bool,
+    dev_po_dir_exists: bool,
+    dev_po_dir: &Path,
+) -> PathBuf {
+    if let Some(snap_root) = snap_root {
+        let snap_po_dir = Path::new(&snap_root).join("usr/share/actioneer/po");
+        if snap_po_dir.exists() {
+            return snap_po_dir;
+        }
+    }
+
+    if is_flatpak {
+        let flatpak_po_dir = PathBuf::from("/app/share/actioneer/po");
+        if flatpak_po_dir.exists() {
+            return flatpak_po_dir;
+        }
+    }
+
+    if dev_po_dir_exists {
+        return dev_po_dir.to_path_buf();
+    }
+
+    dev_po_dir.to_path_buf()
 }
 
 fn resolve_locale_dir(
@@ -351,7 +385,7 @@ mod tests {
     use super::{
         apply_language_preference, current_effective_language, current_language_is_rtl, init,
         is_rtl_language, normalize_system_locale, parse_locale_string, parse_po_catalog,
-        resolve_initial_language, resolve_language_preference, resolve_locale_dir,
+        resolve_initial_language, resolve_language_preference, resolve_locale_dir, resolve_po_dir,
         set_effective_language, tr,
     };
     use crate::preferences::LanguagePreference;
@@ -388,6 +422,13 @@ mod tests {
         let dev_dir = PathBuf::from("/tmp/actioneer-dev-locale");
         let actual = resolve_locale_dir(None, None, false, true, &dev_dir);
         assert_eq!(actual, "/tmp/actioneer-dev-locale");
+    }
+
+    #[test]
+    fn falls_back_to_dev_po_dir() {
+        let dev_dir = PathBuf::from("/tmp/actioneer-dev-po");
+        let actual = resolve_po_dir(None, false, true, &dev_dir);
+        assert_eq!(actual, dev_dir);
     }
 
     #[test]
