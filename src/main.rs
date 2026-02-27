@@ -57,6 +57,9 @@ pub fn resolved_app_id() -> Cow<'static, str> {
 }
 
 fn main() -> anyhow::Result<()> {
+    let cli_locale = parse_cli_locale_arg().and_then(|locale| i18n::parse_locale_string(&locale));
+    i18n::init(cli_locale.as_deref());
+
     // Initialize logging
     tracing_subscriber::fmt()
         .with_env_filter(
@@ -103,8 +106,6 @@ fn main() -> anyhow::Result<()> {
     let send_test_notification = Arc::new(AtomicBool::new(false));
     let option_flag = send_test_notification.clone();
 
-    let locale_string = Arc::new(std::sync::Mutex::new(None));
-    let locale_flag = locale_string.clone();
     let test_notification_help = tr("Send a test notification when the app starts");
     let locale_help = tr("Set the application language (e.g., ru, en, zh_Hans)");
 
@@ -127,25 +128,18 @@ fn main() -> anyhow::Result<()> {
     );
 
     app.connect_handle_local_options(move |_app, options| {
-        if let Ok(Some(variant)) = options.lookup::<glib::Variant>("locale")
-            && let Some(argval) = variant.get::<String>()
-        {
-            *locale_flag.lock().unwrap() = Some(argval);
-        }
-
         if options.contains("test-notification") {
             option_flag.store(true, Ordering::Relaxed);
         }
         ControlFlow::Continue(())
     });
 
-    let cli_locale = locale_string.lock().unwrap().clone();
-    let cli_locale_ref: Option<&str> = cli_locale.as_deref();
-    i18n::init(cli_locale_ref);
     let startup_preferences = PreferencesManager::new()
         .map(|manager| manager.get_blocking())
         .unwrap_or_default();
-    i18n::apply_language_preference(startup_preferences.language_preference);
+    if cli_locale.is_none() {
+        i18n::apply_language_preference(startup_preferences.language_preference);
+    }
 
     app.connect_startup(|_| {
         apply_text_direction_for_language();
@@ -175,6 +169,31 @@ fn main() -> anyhow::Result<()> {
     // Run the application
     app.run();
     Ok(())
+}
+
+fn parse_cli_locale_arg() -> Option<String> {
+    extract_cli_locale_arg(std::env::args().skip(1))
+}
+
+fn extract_cli_locale_arg<I, S>(args: I) -> Option<String>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
+    let mut iter = args.into_iter();
+    while let Some(arg) = iter.next() {
+        let arg = arg.as_ref();
+        if arg == "--locale" || arg == "-l" {
+            return iter.next().map(|next| next.as_ref().to_string());
+        }
+        if let Some(locale) = arg.strip_prefix("--locale=") {
+            return Some(locale.to_string());
+        }
+        if let Some(locale) = arg.strip_prefix("-l=") {
+            return Some(locale.to_string());
+        }
+    }
+    None
 }
 
 fn build_ui(app: &adw::Application, send_test_notification: bool) {
@@ -216,5 +235,34 @@ fn register_icon_theme_paths() {
         if meta_gui_icons.exists() {
             theme.add_search_path(&meta_gui_icons);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::extract_cli_locale_arg;
+
+    #[test]
+    fn extracts_locale_from_long_option_with_value() {
+        let args = vec!["--locale", "ru"];
+        assert_eq!(extract_cli_locale_arg(args), Some("ru".to_string()));
+    }
+
+    #[test]
+    fn extracts_locale_from_long_option_equals() {
+        let args = vec!["--locale=fr"];
+        assert_eq!(extract_cli_locale_arg(args), Some("fr".to_string()));
+    }
+
+    #[test]
+    fn extracts_locale_from_short_option_with_value() {
+        let args = vec!["-l", "zh_Hans"];
+        assert_eq!(extract_cli_locale_arg(args), Some("zh_Hans".to_string()));
+    }
+
+    #[test]
+    fn returns_none_when_locale_is_missing() {
+        let args = vec!["--locale"];
+        assert_eq!(extract_cli_locale_arg(args), None);
     }
 }
