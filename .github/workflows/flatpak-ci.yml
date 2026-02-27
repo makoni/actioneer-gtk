@@ -45,7 +45,6 @@ jobs:
         shell: bash
         run: |
           rm -rf flatpak/vendor
-          cargo generate-lockfile
           cargo vendor --locked --versioned-dirs flatpak/vendor
 
       - name: Stage Flatpak source directory
