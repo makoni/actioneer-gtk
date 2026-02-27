@@ -239,6 +239,78 @@
   </screenshots>
 
   <releases>
+    <release version="1.0.6" date="2026-02-27">
+      <description>
+        <ul>
+          <li>Actioneer is now localized in English, Simplified Chinese, Hindi, Spanish, French, Arabic, Bengali, Brazilian Portuguese, Russian, and Urdu.</li>
+          <li>Added Help and Shortcuts to make in-app guidance and keyboard workflows easier.</li>
+          <li>Improved GitHub request stability with client-side timeouts.</li>
+        </ul>
+      </description>
+      <description xml:lang="zh-Hans">
+        <ul>
+          <li>Actioneer 现已支持以下语言：英语、简体中文、印地语、西班牙语、法语、阿拉伯语、孟加拉语、巴西葡萄牙语、俄语和乌尔都语。</li>
+          <li>新增“帮助”和“快捷键”，让应用内指引和键盘操作更便捷。</li>
+          <li>通过客户端超时机制提升了 GitHub 请求稳定性。</li>
+        </ul>
+      </description>
+      <description xml:lang="hi">
+        <ul>
+          <li>Actioneer अब इन भाषाओं में उपलब्ध है: अंग्रेज़ी, सरल चीनी, हिंदी, स्पेनिश, फ़्रेंच, अरबी, बांग्ला, ब्राज़ीलियाई पुर्तगाली, रूसी और उर्दू।</li>
+          <li>इन-ऐप मार्गदर्शन और कीबोर्ड वर्कफ़्लो आसान बनाने के लिए Help और Shortcuts जोड़े गए।</li>
+          <li>क्लाइंट-स्तरीय टाइमआउट के साथ GitHub अनुरोधों की स्थिरता बेहतर की गई।</li>
+        </ul>
+      </description>
+      <description xml:lang="es">
+        <ul>
+          <li>Actioneer ahora está disponible en inglés, chino simplificado, hindi, español, francés, árabe, bengalí, portugués de Brasil, ruso y urdu.</li>
+          <li>Se añadieron Ayuda y Atajos para facilitar la guía dentro de la app y los flujos con teclado.</li>
+          <li>Se mejoró la estabilidad de las solicitudes a GitHub con tiempos de espera en el cliente.</li>
+        </ul>
+      </description>
+      <description xml:lang="fr">
+        <ul>
+          <li>Actioneer est désormais disponible en anglais, chinois simplifié, hindi, espagnol, français, arabe, bengali, portugais du Brésil, russe et ourdou.</li>
+          <li>Aide et Raccourcis ont été ajoutés pour faciliter l’assistance intégrée et les flux au clavier.</li>
+          <li>La stabilité des requêtes GitHub a été améliorée grâce à des délais d’expiration côté client.</li>
+        </ul>
+      </description>
+      <description xml:lang="ar">
+        <ul>
+          <li>يدعم Actioneer الآن اللغات التالية: الإنجليزية، الصينية المبسطة، الهندية، الإسبانية، الفرنسية، العربية، البنغالية، البرتغالية البرازيلية، الروسية والأردية.</li>
+          <li>تمت إضافة «المساعدة» و«الاختصارات» لتسهيل الإرشادات داخل التطبيق والعمل عبر لوحة المفاتيح.</li>
+          <li>تم تحسين استقرار طلبات GitHub عبر مهلات زمنية على مستوى العميل.</li>
+        </ul>
+      </description>
+      <description xml:lang="bn">
+        <ul>
+          <li>Actioneer এখন এই ভাষাগুলো সমর্থন করে: ইংরেজি, সরলীকৃত চীনা, হিন্দি, স্প্যানিশ, ফরাসি, আরবি, বাংলা, ব্রাজিলিয়ান পর্তুগিজ, রুশ এবং উর্দু।</li>
+          <li>অ্যাপের ভেতরের গাইড ও কিবোর্ড ওয়ার্কফ্লো সহজ করতে Help এবং Shortcuts যোগ করা হয়েছে।</li>
+          <li>ক্লায়েন্ট-সাইড টাইমআউট যোগ করে GitHub অনুরোধের স্থিতিশীলতা উন্নত করা হয়েছে।</li>
+        </ul>
+      </description>
+      <description xml:lang="pt-BR">
+        <ul>
+          <li>O Actioneer agora está disponível em inglês, chinês simplificado, hindi, espanhol, francês, árabe, bengali, português do Brasil, russo e urdu.</li>
+          <li>Foram adicionados Ajuda e Atalhos para facilitar a orientação no app e os fluxos com teclado.</li>
+          <li>A estabilidade das requisições ao GitHub foi melhorada com timeouts no cliente.</li>
+        </ul>
+      </description>
+      <description xml:lang="ru">
+        <ul>
+          <li>Actioneer теперь доступен на английском, китайском (упрощённом), хинди, испанском, французском, арабском, бенгальском, португальском (Бразилия), русском и урду.</li>
+          <li>Добавлены «Справка» и «Горячие клавиши», чтобы упростить подсказки в приложении и работу с клавиатуры.</li>
+          <li>Повышена стабильность запросов к GitHub за счёт таймаутов на стороне клиента.</li>
+        </ul>
+      </description>
+      <description xml:lang="ur">
+        <ul>
+          <li>Actioneer اب ان زبانوں میں دستیاب ہے: انگریزی، سادہ چینی، ہندی، ہسپانوی، فرانسیسی، عربی، بنگالی، برازیلی پرتگالی، روسی اور اردو۔</li>
+          <li>ایپ کے اندر رہنمائی اور کی بورڈ ورک فلو کو آسان بنانے کے لیے Help اور Shortcuts شامل کیے گئے ہیں۔</li>
+          <li>کلائنٹ سائیڈ ٹائم آؤٹس کے ذریعے GitHub درخواستوں کا استحکام بہتر بنایا گیا ہے۔</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.5" date="2026-02-09">
       <description>
         <ul>
