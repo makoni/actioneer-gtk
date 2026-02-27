@@ -6,6 +6,7 @@ use crate::demo;
 use anyhow::Result;
 use reqwest::Client;
 use std::sync::{Arc, Mutex as StdMutex};
+use std::time::Duration;
 
 #[derive(Clone)]
 pub struct GitHubClient {
@@ -18,6 +19,7 @@ impl GitHubClient {
     pub fn new(token: Option<String>) -> Result<Self> {
         let client = Client::builder()
             .user_agent("Actioneer-Linux/0.1.0")
+            .timeout(Duration::from_secs(30))
             .build()?;
 
         let rate_limit = Arc::new(StdMutex::new(None));

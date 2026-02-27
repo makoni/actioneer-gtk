@@ -11,6 +11,15 @@ pub const GETTEXT_PACKAGE: &str = "actioneer";
 
 static EFFECTIVE_LANGUAGE: OnceLock<RwLock<String>> = OnceLock::new();
 static PO_TRANSLATIONS: OnceLock<HashMap<String, HashMap<String, String>>> = OnceLock::new();
+#[cfg(test)]
+static I18N_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+#[cfg(test)]
+pub(crate) fn i18n_test_guard() -> std::sync::MutexGuard<'static, ()> {
+    I18N_TEST_LOCK
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
 
 pub fn init(cli_locale: Option<&str>) {
     let _ = setlocale(LocaleCategory::LcAll, "");
@@ -119,16 +128,19 @@ fn lookup_po_translation(message: &str) -> Option<String> {
 }
 
 fn current_effective_language() -> String {
-    EFFECTIVE_LANGUAGE
-        .get_or_init(|| RwLock::new("en".to_string()))
-        .read()
-        .expect("effective language lock poisoned")
-        .clone()
+    let lock = EFFECTIVE_LANGUAGE.get_or_init(|| RwLock::new("en".to_string()));
+    match lock.read() {
+        Ok(guard) => guard.clone(),
+        Err(poisoned) => poisoned.into_inner().clone(),
+    }
 }
 
 fn set_effective_language(language: String) {
     let lock = EFFECTIVE_LANGUAGE.get_or_init(|| RwLock::new("en".to_string()));
-    let mut guard = lock.write().expect("effective language lock poisoned");
+    let mut guard = match lock.write() {
+        Ok(guard) => guard,
+        Err(poisoned) => poisoned.into_inner(),
+    };
     *guard = language;
 }
 
@@ -412,6 +424,7 @@ mod tests {
 
     #[test]
     fn tr_uses_selected_language_catalog() {
+        let _guard = super::i18n_test_guard();
         init(None);
         let previous = current_effective_language();
         let changed = apply_language_preference(LanguagePreference::Ru);
@@ -428,6 +441,7 @@ mod tests {
 
     #[test]
     fn current_language_rtl_reflects_effective_language() {
+        let _guard = super::i18n_test_guard();
         init(None);
         let previous = current_effective_language();
         set_effective_language("ar".to_string());
@@ -504,6 +518,7 @@ msgstr ""
 
     #[test]
     fn resolve_initial_language_falls_back_to_env_or_system() {
+        let _guard = super::i18n_test_guard();
         unsafe {
             std::env::set_var("ACTIONEER_EFFECTIVE_LANG", "fr");
         }
@@ -516,6 +531,7 @@ msgstr ""
 
     #[test]
     fn cli_locale_takes_precedence_over_env() {
+        let _guard = super::i18n_test_guard();
         unsafe {
             std::env::set_var("ACTIONEER_EFFECTIVE_LANG", "fr");
         }

@@ -504,7 +504,7 @@ mod tests {
     use super::test_run_list_model;
     use super::{STATE_CONTENT, STATE_ERROR, STATE_IDLE, format_runs_header, state_requires_load};
     use crate::api::models::WorkflowRun;
-    use crate::i18n::tr;
+    use crate::i18n::{i18n_test_guard, tr};
     use crate::ui::detail_view::RunFilters;
     use crate::ui::test_helpers::gtk_test_guard;
     use gtk4::prelude::ListModelExt;
@@ -512,6 +512,7 @@ mod tests {
 
     #[test]
     fn formats_header_with_partial_visible() {
+        let _guard = i18n_test_guard();
         let text = format_runs_header(5, 5, 12);
         assert_eq!(
             text,
@@ -523,6 +524,7 @@ mod tests {
 
     #[test]
     fn formats_header_with_matching_filters() {
+        let _guard = i18n_test_guard();
         let text = format_runs_header(3, 4, 10);
         assert_eq!(
             text,
@@ -534,6 +536,7 @@ mod tests {
 
     #[test]
     fn formats_header_with_exact_count() {
+        let _guard = i18n_test_guard();
         let text = format_runs_header(10, 10, 10);
         assert_eq!(
             text,

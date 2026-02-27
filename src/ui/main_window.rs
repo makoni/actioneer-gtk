@@ -1096,7 +1096,32 @@ Troubleshooting\n\
             return;
         };
 
+        let selected_repo = *self.selected_repo_id.lock();
+        let search_query = self.search_entry.text().to_string();
+        let window_width = self.window.width();
+        let window_height = self.window.height();
+        let was_demo_mode = self.is_demo_mode();
+
+        self.stop_background_refresh();
+
         let replacement = MainWindow::new(&app);
+        {
+            let mut replacement_selected = replacement.selected_repo_id.lock();
+            *replacement_selected = selected_repo;
+        }
+        replacement.search_entry.set_text(&search_query);
+        replacement
+            .window
+            .set_default_size(window_width, window_height);
+
+        if was_demo_mode {
+            replacement.enter_demo_mode();
+            if let Some(repo_id) = selected_repo {
+                *replacement.selected_repo_id.lock() = Some(repo_id);
+                replacement.ensure_detail_matches_selection();
+            }
+        }
+
         replacement.present();
         self.window.close();
     }
