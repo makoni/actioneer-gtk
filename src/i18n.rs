@@ -186,7 +186,9 @@ fn parse_po_catalog(content: &str) -> HashMap<String, String> {
     let flush_entry =
         |translations: &mut HashMap<String, String>, msgid: &mut String, msgstr: &mut String| {
             if !msgid.is_empty() && !msgstr.is_empty() {
-                translations.insert(msgid.clone(), msgstr.clone());
+                translations
+                    .entry(msgid.clone())
+                    .or_insert_with(|| msgstr.clone());
             }
             msgid.clear();
             msgstr.clear();
@@ -516,6 +518,23 @@ msgstr ""
         assert_eq!(
             parsed.get("Actioneer Help").cloned(),
             Some("Справка Actioneer".to_string())
+        );
+    }
+
+    #[test]
+    fn keeps_first_translation_when_msgid_is_duplicated() {
+        let source = r#"
+msgid "Sign out"
+msgstr "Cerrar sesión"
+
+msgid "Sign out"
+msgstr "Sign out"
+"#;
+
+        let parsed = parse_po_catalog(source);
+        assert_eq!(
+            parsed.get("Sign out").cloned(),
+            Some("Cerrar sesión".to_string())
         );
     }
 
