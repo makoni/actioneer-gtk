@@ -5,6 +5,8 @@
   <metadata_license>MIT</metadata_license>
   <name>Actioneer</name>
   <summary>Track GitHub Actions runs</summary>
+  <summary xml:lang="de">GitHub-Actions-Ausführungen verfolgen</summary>
+  <summary xml:lang="nl">GitHub Actions-uitvoeringen volgen</summary>
   <summary xml:lang="zh-Hans">跟踪 GitHub Actions 运行</summary>
   <summary xml:lang="hi">GitHub Actions रन ट्रैक करें</summary>
   <summary xml:lang="es">Sigue las ejecuciones de GitHub Actions</summary>
@@ -17,6 +19,8 @@
   <description>
     <p>Actioneer lets you browse GitHub repositories, inspect workflow runs, check job
     logs, and refresh status without leaving your desktop.</p>
+    <p xml:lang="de">Actioneer ermöglicht es Ihnen, GitHub-Repositories zu durchsuchen, Workflow-Ausführungen zu prüfen, Job-Protokolle einzusehen und den Status zu aktualisieren, ohne den Desktop zu verlassen.</p>
+    <p xml:lang="nl">Met Actioneer kun je GitHub-repositories doorzoeken, workflow-uitvoeringen inspecteren, joblogs bekijken en de status verversen zonder je desktop te verlaten.</p>
     <p xml:lang="zh-Hans">Actioneer 让你浏览 GitHub 仓库、检查工作流运行、查看作业日志，并在不离开桌面的情况下刷新状态。</p>
     <p xml:lang="hi">Actioneer आपको GitHub रिपॉज़िटरी ब्राउज़ करने, वर्कफ़्लो रन देखने, जॉब लॉग जांचने और डेस्कटॉप छोड़े बिना स्थिति रीफ़्रेश करने देता है।</p>
     <p xml:lang="es">Actioneer te permite explorar repositorios de GitHub, revisar ejecuciones de workflows, consultar logs de jobs y actualizar el estado sin salir del escritorio.</p>
@@ -28,6 +32,8 @@
     <p xml:lang="ur">Actioneer آپ کو GitHub ریپازٹریز براؤز کرنے، ورک فلو رنز دیکھنے، جاب لاگز چیک کرنے اور ڈیسک ٹاپ چھوڑے بغیر اسٹیٹس ریفریش کرنے دیتا ہے۔</p>
 
     <p>Key features</p>
+    <p xml:lang="de">Hauptfunktionen</p>
+    <p xml:lang="nl">Belangrijkste functies</p>
     <p xml:lang="zh-Hans">主要功能</p>
     <p xml:lang="hi">मुख्य विशेषताएँ</p>
     <p xml:lang="es">Funciones principales</p>
@@ -39,6 +45,8 @@
     <p xml:lang="ur">اہم خصوصیات</p>
     <ul>
       <li>Browse your GitHub repositories and view Actions workflows and recent runs quickly.</li>
+      <li xml:lang="de">Durchsuchen Sie Ihre GitHub-Repositories und sehen Sie schnell Actions-Workflows und aktuelle Ausführungen.</li>
+      <li xml:lang="nl">Blader snel door je GitHub-repositories en bekijk Actions-workflows en recente uitvoeringen.</li>
       <li xml:lang="zh-Hans">快速浏览你的 GitHub 仓库，查看 Actions 工作流和最近运行。</li>
       <li xml:lang="hi">अपने GitHub रिपॉज़िटरी जल्दी ब्राउज़ करें और Actions वर्कफ़्लो व हाल के रन देखें।</li>
       <li xml:lang="es">Explora rápidamente tus repositorios de GitHub y consulta workflows de Actions y ejecuciones recientes.</li>
@@ -49,6 +57,8 @@
       <li xml:lang="ru">Быстро просматривайте свои репозитории GitHub и последние запуски в Actions.</li>
       <li xml:lang="ur">اپنی GitHub ریپازٹریز تیزی سے براؤز کریں اور Actions ورک فلوز اور حالیہ رنز دیکھیں۔</li>
       <li>Inspect run status (success, failure, queued, in progress) with clear badges and counts.</li>
+      <li xml:lang="de">Prüfen Sie den Ausführungsstatus (erfolgreich, fehlgeschlagen, in Warteschlange, in Ausführung) mit klaren Badges und Zählern.</li>
+      <li xml:lang="nl">Inspecteer de uitvoeringsstatus (succes, mislukt, in wachtrij, bezig) met duidelijke badges en aantallen.</li>
       <li xml:lang="zh-Hans">通过清晰的徽章和计数查看运行状态（成功、失败、排队、进行中）。</li>
       <li xml:lang="hi">स्पष्ट बैज और गिनती के साथ रन स्थिति (सफल, विफल, कतार में, प्रगति में) जांचें।</li>
       <li xml:lang="es">Revisa el estado de las ejecuciones (éxito, fallo, en cola, en progreso) con insignias y conteos claros.</li>
@@ -59,6 +69,8 @@
       <li xml:lang="ru">Проверяйте статус запусков (успех, ошибка, в очереди, выполняется) с наглядными метками и счётчиками.</li>
       <li xml:lang="ur">واضح بیجز اور گنتی کے ساتھ رن اسٹیٹس (کامیاب، ناکام، قطار میں، جاری) دیکھیں۔</li>
       <li>Filter runs and focus on what matters most.</li>
+      <li xml:lang="de">Filtern Sie Ausführungen und konzentrieren Sie sich auf das Wesentliche.</li>
+      <li xml:lang="nl">Filter uitvoeringen en focus op wat het belangrijkst is.</li>
       <li xml:lang="zh-Hans">筛选运行记录，专注最重要的内容。</li>
       <li xml:lang="hi">रन फ़िल्टर करें और सबसे महत्वपूर्ण चीज़ों पर ध्यान दें।</li>
       <li xml:lang="es">Filtra ejecuciones y céntrate en lo más importante.</li>
@@ -69,6 +81,8 @@
       <li xml:lang="ru">Фильтруйте запуски и фокусируйтесь на самом важном.</li>
       <li xml:lang="ur">رنز فلٹر کریں اور اہم ترین چیزوں پر توجہ دیں۔</li>
       <li>View job logs: download and preview run logs for quick troubleshooting.</li>
+      <li xml:lang="de">Zeigen Sie Job-Protokolle an: Laden Sie Ausführungsprotokolle herunter und sehen Sie sie zur schnellen Fehlerbehebung an.</li>
+      <li xml:lang="nl">Bekijk joblogs: download en bekijk uitvoeringslogs voor snelle probleemoplossing.</li>
       <li xml:lang="zh-Hans">查看作业日志：下载并预览运行日志，快速排查问题。</li>
       <li xml:lang="hi">जॉब लॉग देखें: तेज़ ट्रबलशूटिंग के लिए रन लॉग डाउनलोड और प्रीव्यू करें।</li>
       <li xml:lang="es">Consulta logs de jobs: descarga y previsualiza logs para resolver problemas rápidamente.</li>
@@ -79,6 +93,8 @@
       <li xml:lang="ru">Просматривайте логи заданий: скачивайте и предварительно смотрите логи для быстрой диагностики.</li>
       <li xml:lang="ur">جاب لاگز دیکھیں: تیز ٹربل شوٹنگ کے لیے رن لاگز ڈاؤن لوڈ اور پری ویو کریں۔</li>
       <li>Dispatch workflows, cancel running workflows, and re-run failed runs directly from the app.</li>
+      <li xml:lang="de">Starten Sie Workflows, brechen Sie laufende Workflows ab und starten Sie fehlgeschlagene Ausführungen direkt in der App neu.</li>
+      <li xml:lang="nl">Start workflows, annuleer lopende workflows en start mislukte uitvoeringen direct vanuit de app opnieuw.</li>
       <li xml:lang="zh-Hans">可直接在应用中触发工作流、取消进行中的工作流，并重新运行失败的运行。</li>
       <li xml:lang="hi">ऐप से सीधे वर्कफ़्लो ट्रिगर करें, चल रहे वर्कफ़्लो रद्द करें और विफल रन फिर से चलाएँ।</li>
       <li xml:lang="es">Lanza workflows, cancela workflows en ejecución y vuelve a ejecutar fallos directamente desde la app.</li>
@@ -89,6 +105,8 @@
       <li xml:lang="ru">Запускайте workflow, отменяйте выполняющиеся и перезапускайте неудачные запуски прямо из приложения.</li>
       <li xml:lang="ur">ایپ سے براہ راست ورک فلوز چلائیں، جاری ورک فلوز منسوخ کریں، اور ناکام رنز دوبارہ چلائیں۔</li>
       <li>Favorites and quick search let you focus on the repositories and workflows that matter most.</li>
+      <li xml:lang="de">Favoriten und schnelle Suche helfen Ihnen, sich auf die wichtigsten Repositories und Workflows zu konzentrieren.</li>
+      <li xml:lang="nl">Favorieten en snel zoeken helpen je te focussen op de repositories en workflows die het belangrijkst zijn.</li>
       <li xml:lang="zh-Hans">收藏与快速搜索可帮助你聚焦最重要的仓库和工作流。</li>
       <li xml:lang="hi">फ़ेवरिट्स और क्विक सर्च आपको सबसे ज़रूरी रिपॉज़िटरी और वर्कफ़्लो पर ध्यान देने देते हैं।</li>
       <li xml:lang="es">Favoritos y búsqueda rápida te ayudan a enfocarte en los repositorios y workflows que más importan.</li>
@@ -99,6 +117,8 @@
       <li xml:lang="ru">Избранное и быстрый поиск помогают сосредоточиться на самых важных репозиториях и workflow.</li>
       <li xml:lang="ur">فیورٹس اور فوری تلاش آپ کو سب سے اہم ریپازٹریز اور ورک فلوز پر توجہ دینے میں مدد دیتے ہیں۔</li>
       <li>Desktop notifications for run completions and failures so you never miss important results.</li>
+      <li xml:lang="de">Desktop-Benachrichtigungen bei abgeschlossenen und fehlgeschlagenen Ausführungen, damit Sie keine wichtigen Ergebnisse verpassen.</li>
+      <li xml:lang="nl">Desktopmeldingen voor voltooide en mislukte uitvoeringen, zodat je geen belangrijke resultaten mist.</li>
       <li xml:lang="zh-Hans">提供运行完成与失败的桌面通知，不错过关键结果。</li>
       <li xml:lang="hi">रन पूरा होने और विफल होने पर डेस्कटॉप सूचनाएँ मिलती हैं ताकि महत्वपूर्ण परिणाम न छूटें।</li>
       <li xml:lang="es">Notificaciones de escritorio para ejecuciones completadas y fallidas para no perder resultados importantes.</li>
@@ -109,6 +129,8 @@
       <li xml:lang="ru">Получайте уведомления о завершённых и неудачных запусках, чтобы не пропустить важные результаты.</li>
       <li xml:lang="ur">رن مکمل یا ناکام ہونے پر ڈیسک ٹاپ نوٹیفکیشنز ملیں تاکہ اہم نتائج آپ سے رہ نہ جائیں۔</li>
       <li>Keep recent workflow data available offline.</li>
+      <li xml:lang="de">Halten Sie aktuelle Workflow-Daten offline verfügbar.</li>
+      <li xml:lang="nl">Houd recente workflowgegevens offline beschikbaar.</li>
       <li xml:lang="zh-Hans">最近的工作流数据可离线访问。</li>
       <li xml:lang="hi">हाल का वर्कफ़्लो डेटा ऑफ़लाइन उपलब्ध रहता है।</li>
       <li xml:lang="es">Mantén disponibles sin conexión los datos recientes de workflows.</li>
@@ -119,6 +141,8 @@
       <li xml:lang="ru">Последние данные workflow доступны офлайн.</li>
       <li xml:lang="ur">حالیہ ورک فلو ڈیٹا آف لائن دستیاب رہتا ہے۔</li>
       <li>Fast refreshes that keep the interface responsive.</li>
+      <li xml:lang="de">Schnelle Aktualisierungen halten die Oberfläche reaktionsschnell.</li>
+      <li xml:lang="nl">Snelle verversingen houden de interface responsief.</li>
       <li xml:lang="zh-Hans">快速刷新，保持界面响应。</li>
       <li xml:lang="hi">तेज़ रिफ्रेश इंटरफ़ेस को उत्तरदायी बनाए रखते हैं।</li>
       <li xml:lang="es">Actualizaciones rápidas que mantienen la interfaz fluida.</li>
@@ -133,6 +157,8 @@
     <p>This package contains the desktop application, icons and AppStream metadata required for
     distribution via Flatpak/Flathub. See the project repository for source code, contribution
     guidelines, and additional documentation.</p>
+    <p xml:lang="de">Dieses Paket enthält die Desktop-Anwendung, Symbole und AppStream-Metadaten, die für die Verteilung über Flatpak/Flathub erforderlich sind. Quellcode, Beitragsrichtlinien und weitere Dokumentation finden Sie im Projekt-Repository.</p>
+    <p xml:lang="nl">Dit pakket bevat de desktopapplicatie, pictogrammen en AppStream-metadata die nodig zijn voor distributie via Flatpak/Flathub. Zie de projectrepository voor broncode, bijdragerichtlijnen en aanvullende documentatie.</p>
     <p xml:lang="zh-Hans">此软件包包含通过 Flatpak/Flathub 分发所需的桌面应用、图标和 AppStream 元数据。源代码、贡献指南和更多文档请见项目仓库。</p>
     <p xml:lang="hi">इस पैकेज में Flatpak/Flathub के माध्यम से वितरण के लिए आवश्यक डेस्कटॉप ऐप, आइकन और AppStream मेटाडेटा शामिल हैं। सोर्स कोड, योगदान दिशानिर्देश और अतिरिक्त दस्तावेज़ के लिए प्रोजेक्ट रिपॉज़िटरी देखें।</p>
     <p xml:lang="es">Este paquete incluye la aplicación de escritorio, los iconos y los metadatos de AppStream necesarios para distribuir mediante Flatpak/Flathub. Consulta el repositorio del proyecto para el código fuente, las guías de contribución y documentación adicional.</p>
@@ -168,6 +194,8 @@
     <!-- Referencing screenshots added under data/screenshots/ -->
     <screenshot type="default">
       <caption>Browse Actions workflows.</caption>
+      <caption xml:lang="de">Actions-Workflows durchsuchen.</caption>
+      <caption xml:lang="nl">Blader door Actions-workflows.</caption>
       <caption xml:lang="zh-Hans">浏览 Actions 工作流。</caption>
       <caption xml:lang="hi">Actions वर्कफ़्लो ब्राउज़ करें।</caption>
       <caption xml:lang="es">Explora workflows de Actions.</caption>
@@ -181,6 +209,8 @@
     </screenshot>
     <screenshot type="detail">
       <caption>Inspect workflow runs and drill into job details quickly.</caption>
+      <caption xml:lang="de">Workflow-Ausführungen pruefen und schnell zu Job-Details springen.</caption>
+      <caption xml:lang="nl">Inspecteer workflow-uitvoeringen en ga snel naar jobdetails.</caption>
       <caption xml:lang="zh-Hans">检查工作流运行并快速查看作业详情。</caption>
       <caption xml:lang="hi">वर्कफ़्लो रन जांचें और जल्दी से जॉब विवरण देखें।</caption>
       <caption xml:lang="es">Inspecciona ejecuciones de workflows y profundiza rápido en los detalles de jobs.</caption>
@@ -194,6 +224,8 @@
     </screenshot>
     <screenshot type="detail">
       <caption>Review job logs inline without leaving the app.</caption>
+      <caption xml:lang="de">Job-Protokolle direkt in der App pruefen.</caption>
+      <caption xml:lang="nl">Bekijk joblogs inline zonder de app te verlaten.</caption>
       <caption xml:lang="zh-Hans">在应用内直接查看作业日志，无需离开应用。</caption>
       <caption xml:lang="hi">ऐप छोड़े बिना जॉब लॉग यहीं देखें।</caption>
       <caption xml:lang="es">Revisa logs de jobs en línea sin salir de la aplicación.</caption>
@@ -207,6 +239,8 @@
     </screenshot>
     <screenshot type="detail">
       <caption>Run a job on any branch.</caption>
+      <caption xml:lang="de">Einen Job auf jedem Branch ausführen.</caption>
+      <caption xml:lang="nl">Voer een job uit op elke branch.</caption>
       <caption xml:lang="zh-Hans">在任意分支上运行作业。</caption>
       <caption xml:lang="hi">किसी भी ब्रांच पर जॉब चलाएँ।</caption>
       <caption xml:lang="es">Ejecuta un job en cualquier rama.</caption>
@@ -224,7 +258,9 @@
     <release version="1.0.6" date="2026-02-27">
       <description>
         <ul>
-          <li>Actioneer is now localized in English, Simplified Chinese, Hindi, Spanish, French, Arabic, Bengali, Brazilian Portuguese, Russian, and Urdu.</li>
+          <li>Actioneer is now localized in English, German, Dutch, Simplified Chinese, Hindi, Spanish, French, Arabic, Bengali, Brazilian Portuguese, Russian, and Urdu.</li>
+          <li xml:lang="de">Actioneer ist jetzt auf Englisch, Deutsch, Niederländisch, vereinfachtem Chinesisch, Hindi, Spanisch, Französisch, Arabisch, Bengalisch, brasilianischem Portugiesisch, Russisch und Urdu verfügbar.</li>
+          <li xml:lang="nl">Actioneer is nu beschikbaar in het Engels, Duits, Nederlands, Vereenvoudigd Chinees, Hindi, Spaans, Frans, Arabisch, Bengaals, Braziliaans Portugees, Russisch en Urdu.</li>
           <li xml:lang="zh-Hans">Actioneer 现已支持以下语言：英语、简体中文、印地语、西班牙语、法语、阿拉伯语、孟加拉语、巴西葡萄牙语、俄语和乌尔都语。</li>
           <li xml:lang="hi">Actioneer अब इन भाषाओं में उपलब्ध है: अंग्रेज़ी, सरल चीनी, हिंदी, स्पेनिश, फ़्रेंच, अरबी, बांग्ला, ब्राज़ीलियाई पुर्तगाली, रूसी और उर्दू।</li>
           <li xml:lang="es">Actioneer ahora está disponible en inglés, chino simplificado, hindi, español, francés, árabe, bengalí, portugués de Brasil, ruso y urdu.</li>
@@ -235,6 +271,8 @@
           <li xml:lang="ru">Actioneer теперь доступен на английском, китайском (упрощённом), хинди, испанском, французском, арабском, бенгальском, португальском (Бразилия), русском и урду.</li>
           <li xml:lang="ur">Actioneer اب ان زبانوں میں دستیاب ہے: انگریزی، سادہ چینی، ہندی، ہسپانوی، فرانسیسی، عربی، بنگالی، برازیلی پرتگالی، روسی اور اردو۔</li>
           <li>Added Help and Shortcuts to make in-app guidance and keyboard workflows easier.</li>
+          <li xml:lang="de">Hilfe und Tastenkombinationen wurden hinzugefügt, um In-App-Anleitungen und Tastatur-Workflows zu erleichtern.</li>
+          <li xml:lang="nl">Help en sneltoetsen zijn toegevoegd om begeleiding in de app en toetsenbordworkflows eenvoudiger te maken.</li>
           <li xml:lang="zh-Hans">新增“帮助”和“快捷键”，让应用内指引和键盘操作更便捷。</li>
           <li xml:lang="hi">इन-ऐप मार्गदर्शन और कीबोर्ड वर्कफ़्लो आसान बनाने के लिए Help और Shortcuts जोड़े गए।</li>
           <li xml:lang="es">Se añadieron Ayuda y Atajos para facilitar la guía dentro de la app y los flujos con teclado.</li>
@@ -245,6 +283,8 @@
           <li xml:lang="ru">Добавлены «Справка» и «Горячие клавиши», чтобы упростить подсказки в приложении и работу с клавиатуры.</li>
           <li xml:lang="ur">ایپ کے اندر رہنمائی اور کی بورڈ ورک فلو کو آسان بنانے کے لیے Help اور Shortcuts شامل کیے گئے ہیں۔</li>
           <li>Improved GitHub request stability with client-side timeouts.</li>
+          <li xml:lang="de">Die Stabilität von GitHub-Anfragen wurde durch clientseitige Timeouts verbessert.</li>
+          <li xml:lang="nl">De stabiliteit van GitHub-verzoeken is verbeterd met time-outs aan clientzijde.</li>
           <li xml:lang="zh-Hans">通过客户端超时机制提升了 GitHub 请求稳定性。</li>
           <li xml:lang="hi">क्लाइंट-स्तरीय टाइमआउट के साथ GitHub अनुरोधों की स्थिरता बेहतर की गई।</li>
           <li xml:lang="es">Se mejoró la estabilidad de las solicitudes a GitHub con tiempos de espera en el cliente.</li>
