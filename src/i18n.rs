@@ -73,6 +73,8 @@ pub fn parse_locale_string(locale: &str) -> Option<String> {
     match normalized.as_str() {
         "ru" => Some("ru".to_string()),
         "en" | "en_us" | "en_gb" => Some("en".to_string()),
+        "de" | "de_de" | "de_at" | "de_ch" => Some("de".to_string()),
+        "nl" | "nl_nl" | "nl_be" => Some("nl".to_string()),
         "zh_hans" | "zh_cn" => Some("zh_Hans".to_string()),
         "hi" => Some("hi".to_string()),
         "es" | "es_es" | "es_mx" => Some("es".to_string()),
@@ -96,6 +98,8 @@ pub fn language_code(language: LanguagePreference) -> &'static str {
     match language {
         LanguagePreference::System => "system",
         LanguagePreference::En => "en",
+        LanguagePreference::De => "de",
+        LanguagePreference::Nl => "nl",
         LanguagePreference::ZhHans => "zh_Hans",
         LanguagePreference::Hi => "hi",
         LanguagePreference::Es => "es",
@@ -274,6 +278,12 @@ fn normalize_system_locale(raw_locale: &str) -> Option<String> {
         }
         return None;
     }
+    if lowered.starts_with("de") {
+        return Some("de".to_string());
+    }
+    if lowered.starts_with("nl") {
+        return Some("nl".to_string());
+    }
     if lowered.starts_with("hi") {
         return Some("hi".to_string());
     }
@@ -440,6 +450,14 @@ mod tests {
             Some("ru".to_string())
         );
         assert_eq!(
+            normalize_system_locale("de_DE.UTF-8"),
+            Some("de".to_string())
+        );
+        assert_eq!(
+            normalize_system_locale("nl_NL.UTF-8"),
+            Some("nl".to_string())
+        );
+        assert_eq!(
             normalize_system_locale("pt_PT.UTF-8"),
             Some("pt_BR".to_string())
         );
@@ -447,7 +465,6 @@ mod tests {
             normalize_system_locale("zh_CN.UTF-8"),
             Some("zh_Hans".to_string())
         );
-        assert_eq!(normalize_system_locale("de_DE.UTF-8"), None);
     }
 
     #[test]
@@ -455,6 +472,14 @@ mod tests {
         assert_eq!(
             resolve_language_preference(LanguagePreference::Fr),
             "fr".to_string()
+        );
+        assert_eq!(
+            resolve_language_preference(LanguagePreference::De),
+            "de".to_string()
+        );
+        assert_eq!(
+            resolve_language_preference(LanguagePreference::Nl),
+            "nl".to_string()
         );
     }
 
@@ -559,6 +584,16 @@ msgstr "Sign out"
     }
 
     #[test]
+    fn parses_locale_string_de_de() {
+        assert_eq!(parse_locale_string("de_DE"), Some("de".to_string()));
+    }
+
+    #[test]
+    fn parses_locale_string_nl_nl() {
+        assert_eq!(parse_locale_string("nl_NL"), Some("nl".to_string()));
+    }
+
+    #[test]
     fn parses_locale_string_lowercase() {
         assert_eq!(parse_locale_string("RU"), Some("ru".to_string()));
         assert_eq!(parse_locale_string("en_gb"), Some("en".to_string()));
@@ -566,7 +601,6 @@ msgstr "Sign out"
 
     #[test]
     fn rejects_invalid_locale_string() {
-        assert_eq!(parse_locale_string("de_DE"), None);
         assert_eq!(parse_locale_string("invalid"), None);
     }
 

@@ -1,0 +1,683 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: actioneer\n"
+"Report-Msgid-Bugs-To: https://github.com/makoni/actioneer-gtk/issues\n"
+"POT-Creation-Date: 2026-02-14 00:00+0000\n"
+"PO-Revision-Date: 2026-02-14 00:00+0000\n"
+"Last-Translator: Actioneer Contributors\n"
+"Language-Team: Dutch\n"
+"Language: nl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Send a test notification when the app starts"
+msgstr "Stuur een testmelding wanneer de app start"
+
+msgid "Preferences"
+msgstr "Voorkeuren"
+
+msgid "Refresh"
+msgstr "Vernieuwen"
+
+msgid "2 seconds"
+msgstr "2 seconden"
+
+msgid "5 seconds"
+msgstr "5 seconden"
+
+msgid "10 seconds"
+msgstr "10 seconden"
+
+msgid "30 seconds"
+msgstr "30 seconden"
+
+msgid "Auto-refresh interval"
+msgstr "Interval voor automatisch vernieuwen"
+
+msgid "How often to check for workflow run updates"
+msgstr "Hoe vaak gecontroleerd wordt op updates van workflow-uitvoeringen"
+
+msgid "Notifications"
+msgstr "Meldingen"
+
+msgid "Desktop Notifications"
+msgstr "Desktopmeldingen"
+
+msgid "Show a notification when a workflow run finishes"
+msgstr "Toon een melding wanneer een workflow-uitvoering is voltooid"
+
+msgid "Select a repository"
+msgstr "Selecteer een repository"
+
+msgid ""
+"Choose a repository from the sidebar to browse its workflows and runs here."
+msgstr ""
+"Kies een repository in de zijbalk om hier de workflows en uitvoeringen te "
+"bekijken."
+
+msgid "Application menu"
+msgstr "Applicatiemenu"
+
+msgid "Keyboard Shortcuts"
+msgstr "Sneltoetsen"
+
+msgid "Help"
+msgstr "Hulp"
+
+msgid "Sign out"
+msgstr "Afmelden"
+
+msgid "Report Issue"
+msgstr "Probleem melden"
+
+msgid "About Actioneer"
+msgstr "Over Actioneer"
+
+msgid "Quit"
+msgstr "Afsluiten"
+
+msgid "Send test notification"
+msgstr "Testmelding verzenden"
+
+msgid "Preferences are currently unavailable."
+msgstr "Voorkeuren zijn momenteel niet beschikbaar."
+
+msgid "General"
+msgstr "Algemeen"
+
+msgid "Application"
+msgstr "Applicatie"
+
+msgid "Refresh repositories"
+msgstr "Repositories vernieuwen"
+
+msgid "Open preferences"
+msgstr "Voorkeuren openen"
+
+msgid "Show keyboard shortcuts"
+msgstr "Sneltoetsen tonen"
+
+msgid "Open help"
+msgstr "Help openen"
+
+msgid "Quit application"
+msgstr "Applicatie afsluiten"
+
+msgid "Actioneer Help"
+msgstr "Actioneer-help"
+
+msgid ""
+"Actioneer Help\n"
+"\n"
+"Getting started\n"
+"1. Sign in with your GitHub account on the welcome screen.\n"
+"2. Pick a repository in the left sidebar.\n"
+"3. Expand a workflow to inspect recent runs.\n"
+"\n"
+"Useful actions\n"
+"- Refresh repository/workflow status with F5.\n"
+"- Trigger manual workflow runs from the play button.\n"
+"- Open Preferences with Ctrl+, to adjust refresh/notifications.\n"
+"- Open Keyboard Shortcuts with Ctrl+? for quick references.\n"
+"\n"
+"Troubleshooting\n"
+"- If no repos appear, verify your token and network access.\n"
+"- For expired logs, retry from the latest run or trigger a new run.\n"
+"- Use Report Issue from the menu to send diagnostics and steps."
+msgstr ""
+"Actioneer-help\n"
+"\n"
+"Aan de slag\n"
+"1. Meld je aan met je GitHub-account op het welkomstscherm.\n"
+"2. Kies een repository in de linkerzijbalk.\n"
+"3. Klap een workflow open om recente uitvoeringen te bekijken.\n"
+"\n"
+"Handige acties\n"
+"- Vernieuw de status van repository/workflow met F5.\n"
+"- Start handmatig een workflow-uitvoering met de afspeelknop.\n"
+"- Open Voorkeuren met Ctrl+, om vernieuwen/meldingen aan te passen.\n"
+"- Open Sneltoetsen met Ctrl+? voor snelle referenties.\n"
+"\n"
+"Probleemoplossing\n"
+"- Als er geen repositories verschijnen, controleer je token en netwerktoegang.\n"
+"- Voor verlopen logboeken: probeer opnieuw vanaf de nieuwste uitvoering of start een nieuwe uitvoering.\n"
+"- Gebruik Probleem melden in het menu om diagnostiek en stappen te verzenden."
+
+msgid "Need more help? Use “Report Issue” in the app menu or visit:"
+msgstr "Meer hulp nodig? Gebruik “Probleem melden” in het appmenu of ga naar:"
+
+msgid "Close"
+msgstr "Sluiten"
+
+msgid "Failed to open issue tracker in the browser."
+msgstr "Kon issue-tracker niet in de browser openen."
+
+msgid ""
+"Are you sure you want to sign out?\n"
+"\n"
+"You will need to sign in again to continue."
+msgstr ""
+"Weet je zeker dat je wilt afmelden?\n"
+"\n"
+"Je moet opnieuw aanmelden om door te gaan."
+
+msgid "Actioneer notification test"
+msgstr "Actioneer-meldingstest"
+
+msgid "If you can read this, GNOME notifications are working."
+msgstr "Als je dit kunt lezen, werken GNOME-meldingen."
+
+msgid "Notifications are currently unavailable."
+msgstr "Meldingen zijn momenteel niet beschikbaar."
+
+msgid "If you see this, notifications are working."
+msgstr "Als je dit ziet, werken meldingen."
+
+msgid "Workflow Completed: {workflow}"
+msgstr "Workflow voltooid: {workflow}"
+
+msgid "{run} - {status}"
+msgstr "{run} - {status}"
+
+msgid "Success ✓"
+msgstr "Geslaagd ✓"
+
+msgid "Failed ✗"
+msgstr "Mislukt ✗"
+
+msgid "Cancelled"
+msgstr "Geannuleerd"
+
+msgid "Skipped"
+msgstr "Overgeslagen"
+
+msgid "Timed Out"
+msgstr "Time-out"
+
+msgid "Action Required"
+msgstr "Actie vereist"
+
+msgid "Neutral"
+msgstr "Neutraal"
+
+msgid "Completed"
+msgstr "Voltooid"
+
+msgid "Appearance"
+msgstr "Uiterlijk"
+
+msgid "System"
+msgstr "Systeem"
+
+msgid "Light"
+msgstr "Licht"
+
+msgid "Dark"
+msgstr "Donker"
+
+msgid "Theme"
+msgstr "Thema"
+
+msgid "Select application theme"
+msgstr "Selecteer applicatiethema"
+
+msgid "Language"
+msgstr "Taal"
+
+msgid "System language (fallback: English)"
+msgstr "Systeemtaal (terugval: Engels)"
+
+msgid "Application language"
+msgstr "Applicatietaal"
+
+msgid "Switch language instantly"
+msgstr "Wissel direct van taal"
+
+msgid "Sign in to GitHub"
+msgstr "Aanmelden bij GitHub"
+
+msgid "Initializing authentication..."
+msgstr "Authenticatie initialiseren..."
+
+msgid "Enter this code on GitHub:"
+msgstr "Voer deze code in op GitHub:"
+
+msgid "Copy code to clipboard"
+msgstr "Code kopiëren naar klembord"
+
+msgid "Open GitHub in Browser"
+msgstr "Open GitHub in browser"
+
+msgid "Cancel"
+msgstr "Annuleren"
+
+msgid "Open GitHub in your browser and enter the code."
+msgstr "Open GitHub in je browser en voer de code in."
+
+msgid "Authentication timeout"
+msgstr "Authenticatie-time-out"
+
+msgid "Access denied"
+msgstr "Toegang geweigerd"
+
+msgid "Waiting for authorization..."
+msgstr "Wachten op autorisatie..."
+
+msgid "Error: {message}"
+msgstr "Fout: {message}"
+
+msgid "Signed in successfully"
+msgstr "Succesvol aangemeld"
+
+msgid "Error saving token: {message}"
+msgstr "Fout bij opslaan van token: {message}"
+
+msgid "Welcome to Actioneer"
+msgstr "Welkom bij Actioneer"
+
+msgid "Manage your GitHub Actions workflows with ease"
+msgstr "Beheer je GitHub Actions-workflows eenvoudig"
+
+msgid "Trigger workflows instantly"
+msgstr "Start workflows direct"
+
+msgid "Monitor runs in real-time"
+msgstr "Volg uitvoeringen in realtime"
+
+msgid "View detailed logs"
+msgstr "Bekijk gedetailleerde logboeken"
+
+msgid "Sign in with GitHub"
+msgstr "Aanmelden met GitHub"
+
+msgid "Try Demo Mode"
+msgstr "Demomodus proberen"
+
+msgid "Explore Actioneer with sample data"
+msgstr "Verken Actioneer met voorbeeldgegevens"
+
+msgid "Workflow Run"
+msgstr "Workflow-uitvoering"
+
+msgid "{title} - Jobs"
+msgstr "{title} - Taken"
+
+msgid "Refresh jobs"
+msgstr "Taken vernieuwen"
+
+msgid "Cancel run"
+msgstr "Uitvoering annuleren"
+
+msgid "Run cancellation requested successfully."
+msgstr "Annulering van uitvoering succesvol aangevraagd."
+
+msgid "Failed to cancel run: {error}"
+msgstr "Annuleren van uitvoering mislukt: {error}"
+
+msgid "Job"
+msgstr "Taak"
+
+msgid "Unknown"
+msgstr "Onbekend"
+
+msgid "Workflows and runs will load in the detail pane."
+msgstr "Workflows en uitvoeringen worden geladen in het detailpaneel."
+
+msgid ""
+"GitHub Actions is disabled for this repository. Enable Actions to view "
+"workflows and runs."
+msgstr ""
+"GitHub Actions is uitgeschakeld voor deze repository. Schakel Actions in om "
+"workflows en uitvoeringen te bekijken."
+
+msgid "Favorites"
+msgstr "Favorieten"
+
+msgid "Actions Enabled"
+msgstr "Actions ingeschakeld"
+
+msgid "Actions Disabled"
+msgstr "Actions uitgeschakeld"
+
+msgid "Toggle favorite"
+msgstr "Favoriet in-/uitschakelen"
+
+msgid "Private"
+msgstr "Privé"
+
+msgid "Public"
+msgstr "Openbaar"
+
+msgid "Active runs: {count}"
+msgstr "Actieve uitvoeringen: {count}"
+
+msgid "Failures: {count}"
+msgstr "Mislukkingen: {count}"
+
+msgid "Fetching logs..."
+msgstr "Logboeken ophalen..."
+
+msgid "Refresh logs"
+msgstr "Logboeken vernieuwen"
+
+msgid "Copy logs to clipboard"
+msgstr "Logboeken kopiëren naar klembord"
+
+msgid "Save logs to file"
+msgstr "Logboeken opslaan naar bestand"
+
+msgid ""
+"Logs are not yet available for this job. GitHub only provides logs once the "
+"job starts streaming output or completes. Try refreshing in a few moments."
+msgstr ""
+"Logboeken zijn nog niet beschikbaar voor deze taak. GitHub levert logboeken "
+"pas zodra de taak uitvoer begint te streamen of is voltooid. Probeer over "
+"een paar ogenblikken opnieuw te vernieuwen."
+
+msgid "The logs for this run have expired and are no longer available."
+msgstr ""
+"De logboeken voor deze uitvoering zijn verlopen en niet langer beschikbaar."
+
+msgid ""
+"Unable to load logs right now. Please try again later.\n"
+"\n"
+"Details: {error}"
+msgstr ""
+"Kan logboeken nu niet laden. Probeer het later opnieuw.\n"
+"\n"
+"Details: {error}"
+
+msgid "Logs are empty; nothing to copy"
+msgstr "Logboeken zijn leeg; niets om te kopiëren"
+
+msgid "Logs copied to clipboard"
+msgstr "Logboeken gekopieerd naar klembord"
+
+msgid "Clipboard unavailable on this system"
+msgstr "Klembord niet beschikbaar op dit systeem"
+
+msgid "Save Logs"
+msgstr "Logboeken opslaan"
+
+msgid "Save"
+msgstr "Opslaan"
+
+msgid "Logs are empty; nothing saved"
+msgstr "Logboeken zijn leeg; niets opgeslagen"
+
+msgid "Logs saved"
+msgstr "Logboeken opgeslagen"
+
+msgid "Failed to save logs: {error}"
+msgstr "Opslaan van logboeken mislukt: {error}"
+
+msgid "Unable to determine save location"
+msgstr "Kan opslaglocatie niet bepalen"
+
+msgid "No file selected"
+msgstr "Geen bestand geselecteerd"
+
+msgid ""
+"Are you sure you want to sign out?\n"
+"\n"
+"You will need to sign in again to continue."
+msgstr ""
+"Weet je zeker dat je wilt afmelden?\n"
+"\n"
+"Je moet opnieuw aanmelden om door te gaan."
+
+msgid "Loading repositories..."
+msgstr "Repositories laden..."
+
+msgid "Search repositories..."
+msgstr "Repositories zoeken..."
+
+msgid "Rate limit: –"
+msgstr "Rate-limiet: –"
+
+msgid "No workflows found."
+msgstr "Geen workflows gevonden."
+
+msgid "Favorites unavailable"
+msgstr "Favorieten niet beschikbaar"
+
+msgid "Loading workflows..."
+msgstr "Workflows laden..."
+
+msgid "Refresh workflows"
+msgstr "Workflows vernieuwen"
+
+msgid "Private Repository"
+msgstr "Privérepository"
+
+msgid "Show successful runs"
+msgstr "Toon geslaagde uitvoeringen"
+
+msgid "Show failed runs"
+msgstr "Toon mislukte uitvoeringen"
+
+msgid "Show running/queued runs"
+msgstr "Toon lopende/in wachtrij staande uitvoeringen"
+
+msgid "now"
+msgstr "nu"
+
+msgid "Rate limit (low)"
+msgstr "Rate-limiet (laag)"
+
+msgid "Rate limit"
+msgstr "Rate-limiet"
+
+msgid "{prefix}: {remaining}/{limit} (resets in {time})"
+msgstr "{prefix}: {remaining}/{limit} (herstelt over {time})"
+
+msgid "Unnamed job"
+msgstr "Naamloze taak"
+
+msgid "View logs"
+msgstr "Logboeken bekijken"
+
+msgid "Open job in GitHub"
+msgstr "Taak openen in GitHub"
+
+msgid "No jobs found"
+msgstr "Geen taken gevonden"
+
+msgid "Showing {count} jobs"
+msgstr "{count} taken weergegeven"
+
+msgid "Unable to load jobs"
+msgstr "Kan taken niet laden"
+
+msgid "Retry"
+msgstr "Opnieuw proberen"
+
+msgid "{description} (required)"
+msgstr "{description} (vereist)"
+
+msgid "Required"
+msgstr "Vereist"
+
+msgid "Trigger workflow"
+msgstr "Workflow starten"
+
+msgid "Trigger Workflow"
+msgstr "Workflow starten"
+
+msgid "Trigger"
+msgstr "Start"
+
+msgid "This will trigger the \"{workflow}\" workflow."
+msgstr "Dit zal de workflow \"{workflow}\" starten."
+
+msgid "Triggered runs typically appear within 10-30 seconds."
+msgstr "Gestarte uitvoeringen verschijnen meestal binnen 10-30 seconden."
+
+msgid "Branch or ref:"
+msgstr "Branch of ref:"
+
+msgid "Loading branches..."
+msgstr "Branches laden..."
+
+msgid "Loading workflow inputs..."
+msgstr "Workflow-invoer laden..."
+
+msgid "Inputs"
+msgstr "Invoer"
+
+msgid "No inputs defined for this workflow."
+msgstr "Geen invoer gedefinieerd voor deze workflow."
+
+msgid "Workflow inputs could not be loaded."
+msgstr "Workflow-invoer kon niet worden geladen."
+
+msgid "✗ Failed to load workflow inputs: {error}"
+msgstr "✗ Laden van workflow-invoer mislukt: {error}"
+
+msgid "Failed to load workflow inputs: {error}"
+msgstr "Laden van workflow-invoer mislukt: {error}"
+
+msgid "✗ {error}"
+msgstr "✗ {error}"
+
+msgid "Failed to trigger workflow: {error}"
+msgstr "Starten van workflow mislukt: {error}"
+
+msgid ""
+"✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear "
+"once GitHub reports it."
+msgstr ""
+"✓ Workflow '{workflow}' gestart op branch '{branch}'. De uitvoering "
+"verschijnt zodra GitHub die meldt."
+
+msgid "✗ Failed to trigger workflow: {error}"
+msgstr "✗ Starten van workflow mislukt: {error}"
+
+msgid "Open in GitHub"
+msgstr "Openen in GitHub"
+
+msgid "Re-run workflow"
+msgstr "Workflow opnieuw uitvoeren"
+
+msgid "Do you want to re-run \"{run}\"?"
+msgstr "Wil je \"{run}\" opnieuw uitvoeren?"
+
+msgid "Re-run Workflow"
+msgstr "Workflow opnieuw uitvoeren"
+
+msgid "✓ Re-running '{run}'"
+msgstr "✓ '{run}' wordt opnieuw uitgevoerd"
+
+msgid "✗ Failed to re-run workflow"
+msgstr "✗ Workflow opnieuw uitvoeren mislukt"
+
+msgid "Re-run failed jobs"
+msgstr "Mislukte taken opnieuw uitvoeren"
+
+msgid "Do you want to re-run all failed jobs in \"{run}\"?"
+msgstr "Wil je alle mislukte taken in \"{run}\" opnieuw uitvoeren?"
+
+msgid "Re-run Failed Jobs"
+msgstr "Mislukte taken opnieuw uitvoeren"
+
+msgid "✓ Re-running failed jobs for '{run}'"
+msgstr "✓ Mislukte taken voor '{run}' worden opnieuw uitgevoerd"
+
+msgid "✗ Failed to re-run failed jobs"
+msgstr "✗ Opnieuw uitvoeren van mislukte taken mislukt"
+
+msgid ""
+"Do you want to cancel the in-progress run \"{run}\"?\n"
+"\n"
+"This action cannot be undone."
+msgstr ""
+"Wil je de lopende uitvoering \"{run}\" annuleren?\n"
+"\n"
+"Deze actie kan niet ongedaan worden gemaakt."
+
+msgid "Cancel Workflow Run"
+msgstr "Workflow-uitvoering annuleren"
+
+msgid "✓ Cancelled run '{run}'"
+msgstr "✓ Uitvoering '{run}' geannuleerd"
+
+msgid "✗ Failed to cancel run"
+msgstr "✗ Annuleren van uitvoering mislukt"
+
+msgid "Click to load jobs..."
+msgstr "Klik om taken te laden..."
+
+msgid "Click to load runs..."
+msgstr "Klik om uitvoeringen te laden..."
+
+msgid "No recent runs"
+msgstr "Geen recente uitvoeringen"
+
+msgid "Triggered runs may take 10-30 seconds to appear"
+msgstr ""
+"Gestarte uitvoeringen kunnen 10-30 seconden duren voordat ze verschijnen"
+
+msgid "No runs match the current filters"
+msgstr "Geen uitvoeringen komen overeen met de huidige filters"
+
+msgid "Adjust the status chips above to see more runs."
+msgstr "Pas de statuschips hierboven aan om meer uitvoeringen te zien."
+
+msgid "Unable to load workflow runs"
+msgstr "Kan workflow-uitvoeringen niet laden"
+
+msgid "Recent runs (showing {visible} of {overall})"
+msgstr "Recente uitvoeringen ({visible} van {overall} getoond)"
+
+msgid "Recent runs ({overall})"
+msgstr "Recente uitvoeringen ({overall})"
+
+msgid "Recent runs (showing {visible} of {filtered} matching filters)"
+msgstr ""
+"Recente uitvoeringen ({visible} van {filtered} overeenkomend met filters "
+"getoond)"
+
+msgid "Queued"
+msgstr "In wachtrij"
+
+msgid "In Progress"
+msgstr "Bezig"
+
+msgid "Waiting"
+msgstr "Wachtend"
+
+msgid "Requested"
+msgstr "Aangevraagd"
+
+msgid "Pending"
+msgstr "In afwachting"
+
+msgid "Success"
+msgstr "Geslaagd"
+
+msgid "Failed"
+msgstr "Mislukt"
+
+msgid "Stale"
+msgstr "Verouderd"
+
+msgid "Just now"
+msgstr "Zojuist"
+
+msgid "Yesterday"
+msgstr "Gisteren"
+
+msgid "{count}m ago"
+msgstr "{count}m geleden"
+
+msgid "{count}h ago"
+msgstr "{count}u geleden"
+
+msgid "{count}d ago"
+msgstr "{count}d geleden"
+
+msgid "{title} - Logs"
+msgstr "{title} - Logboeken"

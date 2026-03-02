@@ -19,6 +19,8 @@ pub enum LanguagePreference {
     #[default]
     System,
     En,
+    De,
+    Nl,
     ZhHans,
     Hi,
     Es,

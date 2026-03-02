@@ -57,6 +57,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-03-02 — Added German and Dutch locale support in preferences/system-locale detection, enabled `de`/`nl` catalogs in `po/LINGUAS`, added `po/nl.po`, and backfilled missing German translations.
 - [✅] 2026-02-27 — Bumped app version to 1.0.6 across configs/docs, added AppStream release notes, and refreshed Flatpak cargo-sources metadata.
 - [✅] 2026-02-16 — Ran a full UI localization audit across all `tr(...)` strings, fixed remaining code-level hardcoded run status/time/log-title text, and backfilled key high-visibility translations (Rate Limit block, sidebar labels, filter tooltips, run status/time labels) across all shipped locale catalogs.
 - [✅] 2026-02-16 — Re-audited localization wiring, fixed a remaining non-localized run-title fallback in `format_run_title`, and translated Chinese sidebar/filter-chip strings (including hover tooltips) that were still in English.

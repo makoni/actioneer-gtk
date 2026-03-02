@@ -91,6 +91,8 @@ impl PreferencesWindow {
         let language_options = gtk::StringList::new(&[
             system_language.as_str(),
             "English",
+            "Deutsch",
+            "Nederlands",
             "简体中文",
             "हिन्दी",
             "Español",
@@ -254,30 +256,48 @@ fn language_to_index(language: LanguagePreference) -> u32 {
     match language {
         LanguagePreference::System => 0,
         LanguagePreference::En => 1,
-        LanguagePreference::ZhHans => 2,
-        LanguagePreference::Hi => 3,
-        LanguagePreference::Es => 4,
-        LanguagePreference::Fr => 5,
-        LanguagePreference::Ar => 6,
-        LanguagePreference::Bn => 7,
-        LanguagePreference::PtBr => 8,
-        LanguagePreference::Ru => 9,
-        LanguagePreference::Ur => 10,
+        LanguagePreference::De => 2,
+        LanguagePreference::Nl => 3,
+        LanguagePreference::ZhHans => 4,
+        LanguagePreference::Hi => 5,
+        LanguagePreference::Es => 6,
+        LanguagePreference::Fr => 7,
+        LanguagePreference::Ar => 8,
+        LanguagePreference::Bn => 9,
+        LanguagePreference::PtBr => 10,
+        LanguagePreference::Ru => 11,
+        LanguagePreference::Ur => 12,
     }
 }
 
 fn index_to_language(index: u32) -> LanguagePreference {
     match index {
         1 => LanguagePreference::En,
-        2 => LanguagePreference::ZhHans,
-        3 => LanguagePreference::Hi,
-        4 => LanguagePreference::Es,
-        5 => LanguagePreference::Fr,
-        6 => LanguagePreference::Ar,
-        7 => LanguagePreference::Bn,
-        8 => LanguagePreference::PtBr,
-        9 => LanguagePreference::Ru,
-        10 => LanguagePreference::Ur,
+        2 => LanguagePreference::De,
+        3 => LanguagePreference::Nl,
+        4 => LanguagePreference::ZhHans,
+        5 => LanguagePreference::Hi,
+        6 => LanguagePreference::Es,
+        7 => LanguagePreference::Fr,
+        8 => LanguagePreference::Ar,
+        9 => LanguagePreference::Bn,
+        10 => LanguagePreference::PtBr,
+        11 => LanguagePreference::Ru,
+        12 => LanguagePreference::Ur,
         _ => LanguagePreference::System,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{index_to_language, language_to_index};
+    use crate::preferences::LanguagePreference;
+
+    #[test]
+    fn language_index_mapping_handles_de_and_nl() {
+        assert_eq!(language_to_index(LanguagePreference::De), 2);
+        assert_eq!(language_to_index(LanguagePreference::Nl), 3);
+        assert_eq!(index_to_language(2), LanguagePreference::De);
+        assert_eq!(index_to_language(3), LanguagePreference::Nl);
     }
 }

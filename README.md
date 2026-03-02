@@ -129,7 +129,7 @@ See `docs/` for API, caching, and UI guidelines. The project enforces zero warni
 
 ### Localization
 
-Actioneer uses gettext catalogs under `po/` (currently seeded with `en`, `zh_Hans`, `hi`, `es`, `fr`, `ar`, `bn`, `pt_BR`, `ru`, and `ur`).
+Actioneer uses gettext catalogs under `po/` (currently seeded with `en`, `de`, `nl`, `zh_Hans`, `hi`, `es`, `fr`, `ar`, `bn`, `pt_BR`, `ru`, and `ur`).
 
 ```bash
 scripts/extract-translations.sh   # requires xgettext (gettext package)
