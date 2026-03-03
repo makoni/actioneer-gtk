@@ -22,6 +22,87 @@ Quick validation (local)
 3. Lint: `cargo clippy -- -D warnings`
 4. Format: `cargo fmt`
 
+## UI safety/stability remediation plan (2026-03-03)
+
+Goal: address the GTK/Tokio/threading issues identified in the deep review, with safety and UI responsiveness first.
+
+### Phase 1 — must-fix stabilization (ship first)
+
+1. [ ] **Auth cancel/poll race hardening** (`src/ui/auth_window.rs`)
+   - Track spawned polling task handle(s) and abort on:
+     - Cancel button click
+     - Dialog close/hide
+   - Add an auth-attempt generation id so stale `PollSuccess`/`PollError` messages are ignored.
+   - Ensure canceled auth can never call `save_token_and_close` or `on_success`.
+   - Validation:
+     - Manual: open auth, cancel, then complete device flow in browser; app must stay signed out.
+     - Add unit/integration coverage for stale message suppression.
+
+2. [ ] **Move secure token I/O off GTK main thread** (`src/ui/main_window.rs`, `src/ui/auth_window.rs`, `src/storage/*`)
+   - Introduce an async auth/storage service boundary used by UI code.
+   - Replace direct synchronous calls in signal/focus handlers (`TokenStorage::new/get_token/delete_token/save_token`) with Tokio-side work and GLib UI handoff.
+   - Keep GTK object access strictly on GLib main context.
+   - Validation:
+     - Manual sign-in/sign-out/focus checks while interacting with UI; no visible freezes.
+     - Logging confirms storage work runs off main thread.
+
+3. [ ] **Fix disabled-refresh busy loop** (`src/ui/main_window/refresh.rs`)
+   - Respect `refresh_interval == 0` as disabled without looping/sleep(0).
+   - Re-arm background refresh only when preferences change to non-zero.
+   - Validation:
+     - Set refresh to disabled and verify no hot loop/high CPU.
+     - Re-enable refresh and verify timer resumes.
+
+4. [ ] **Remove unsafe runtime-time env mutation pattern** (`src/i18n.rs`, `src/notifications.rs`, `src/main.rs`)
+   - Stop mutating process env after runtime startup; initialize once during startup or pass explicit runtime config.
+   - Keep behavior for snap/portal app-id resolution unchanged.
+   - Validation:
+     - Notification routing still works (native + portal path).
+     - Language preference and startup locale behavior unchanged.
+
+### Phase 2 — concurrency/perf hardening
+
+5. [ ] **Timer lifecycle ownership cleanup** (`src/ui/detail_view/helpers/workflows.rs`, `src/ui/detail_view/workflow_refresh.rs`)
+   - Replace ad-hoc expander timer data management with explicit timer ownership in pane state.
+   - Ensure timers are canceled when rows/panes are rebuilt or destroyed.
+   - Validation: no stale follow-up refreshes after pane switch/close.
+
+6. [ ] **Bound or coalesce UI channels where producers can burst** (`src/ui/utils/channel.rs` callers)
+   - Replace unbounded channels for burst-prone paths or add coalescing/debouncing.
+   - Validation: stress refresh paths and confirm stable memory behavior.
+
+7. [ ] **Make preference writes non-blocking for async contexts** (`src/preferences.rs`)
+   - Move `fs::write` to `tokio::fs` or `spawn_blocking`.
+   - Validation: preference changes remain responsive and persistent.
+
+### Phase 3 — architecture/testability follow-through
+
+8. [ ] **Extract high-risk large files into focused modules**
+   - Prioritize: `src/ui/main_window.rs`, `src/ui/job_logs_window.rs`, `src/ui/detail_view/helpers/workflows.rs`, `src/ui/detail_view/workflow_refresh.rs`, `src/notifications.rs`.
+   - Proposed boundaries:
+     - Auth/session controller
+     - Focus/activation handlers
+     - Refresh scheduler + lifecycle
+     - Workflow row/render helpers
+     - Notification dispatch adapters
+   - Validation: equivalent behavior, smaller units, targeted tests per module.
+
+9. [ ] **Reduce unsafe widget-data patterns where feasible**
+   - Add typed wrappers for widget data keys and centralize lifecycle assumptions.
+   - Preserve existing behavior while shrinking unsafe surface area.
+
+### Exit criteria before marking this plan complete
+
+- `cargo fmt`
+- `cargo clippy --all-targets --all-features -- -D warnings`
+- `cargo test`
+- `cargo test -- --ignored` (with display or `xvfb-run`)
+- Manual smoke:
+  - Sign in/out flow
+  - Window focus auth recovery path
+  - Auto-refresh enable/disable transitions
+  - Notification test action on supported environments
+
 Optional / next steps (low priority)
 - Enhanced streaming job logs (advanced viewer)
   - Prototype incremental log streaming in the API client (chunked transfer, retries, resume markers).
@@ -57,6 +138,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-03-03 — Added a detailed, phased remediation TODO plan for GTK UI-thread safety, auth/task races, refresh-loop fixes, and architecture follow-up from the deep code review.
 - [✅] 2026-03-02 — Updated `data/metainfo.xml` with German and Dutch localized summary/description/features/screenshot captions and 1.0.6 release notes; AppStream validation now passes locally and via `org.flatpak.Builder`.
 - [✅] 2026-03-02 — Added German and Dutch locale support in preferences/system-locale detection, enabled `de`/`nl` catalogs in `po/LINGUAS`, added `po/nl.po`, and backfilled missing German translations.
 - [✅] 2026-02-27 — Bumped app version to 1.0.6 across configs/docs, added AppStream release notes, and refreshed Flatpak cargo-sources metadata.
