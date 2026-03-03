@@ -19,7 +19,7 @@ jobs:
       - name: Install system packages (GTK4 & libadwaita)
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-4-dev libadwaita-1-dev libglib2.0-dev pkg-config build-essential
+          sudo apt-get install -y libgtk-4-dev libadwaita-1-dev libglib2.0-dev pkg-config build-essential gettext
       
       - name: Install Rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -59,7 +59,7 @@ jobs:
       - name: Install system packages (GTK4 & libadwaita)
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-4-dev libadwaita-1-dev libglib2.0-dev pkg-config build-essential
+          sudo apt-get install -y libgtk-4-dev libadwaita-1-dev libglib2.0-dev pkg-config build-essential gettext
       
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -79,6 +79,9 @@ jobs:
       
       - name: Cargo build (debug)
         run: cargo build --workspace --all-targets --verbose
+
+      - name: Compile translation catalogs
+        run: bash scripts/compile-translations.sh
       
       - name: Cargo test (unit)
         run: cargo test --workspace --verbose
@@ -97,7 +100,7 @@ jobs:
       - name: Install system packages (GUI deps)
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-4-dev libadwaita-1-dev libglib2.0-dev pkg-config xvfb libx11-dev
+          sudo apt-get install -y libgtk-4-dev libadwaita-1-dev libglib2.0-dev pkg-config xvfb libx11-dev gettext
 
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1

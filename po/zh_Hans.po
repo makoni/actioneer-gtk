@@ -384,13 +384,6 @@ msgstr "Unable to determine save location"
 msgid "No file selected"
 msgstr "No file selected"
 
-msgid "Are you sure you want to sign out?\n"
-"\n"
-"You will need to sign in again to continue."
-msgstr "Are you sure you want to sign out?\n"
-"\n"
-"You will need to sign in again to continue."
-
 msgid "Loading repositories..."
 msgstr "正在加载仓库..."
 

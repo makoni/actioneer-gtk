@@ -388,14 +388,6 @@ msgstr "Не удалось определить место сохранения
 msgid "No file selected"
 msgstr "Файл не выбран"
 
-msgid "Are you sure you want to sign out?\n"
-"\n"
-"You will need to sign in again to continue."
-msgstr ""
-"Вы уверены, что хотите выйти из аккаунта?\n"
-"\n"
-"Чтобы продолжить, потребуется войти снова."
-
 msgid "Loading repositories..."
 msgstr "Загрузка репозиториев..."
 

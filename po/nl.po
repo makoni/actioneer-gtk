@@ -420,15 +420,6 @@ msgstr "Kan opslaglocatie niet bepalen"
 msgid "No file selected"
 msgstr "Geen bestand geselecteerd"
 
-msgid ""
-"Are you sure you want to sign out?\n"
-"\n"
-"You will need to sign in again to continue."
-msgstr ""
-"Weet je zeker dat je wilt afmelden?\n"
-"\n"
-"Je moet opnieuw aanmelden om door te gaan."
-
 msgid "Loading repositories..."
 msgstr "Repositories laden..."
 

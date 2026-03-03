@@ -172,6 +172,7 @@
 
   <project_license>MIT</project_license>
   <url type="homepage">https://github.com/makoni/actioneer-gtk</url>
+  <url type="donation">https://nowpayments.io/donation/makoni</url>
   <url type="bugtracker">https://github.com/makoni/actioneer-gtk/issues</url>
   <url type="vcs-browser">https://github.com/makoni/actioneer-gtk</url>
   <developer id="com.spaceinbox">
@@ -255,6 +256,48 @@
   </screenshots>
 
   <releases>
+    <release version="1.0.7" date="2026-03-03">
+      <description>
+        <ul>
+          <li>The app now feels faster and smoother during sign-in, refreshes, and everyday navigation.</li>
+          <li xml:lang="de">Die App fühlt sich jetzt bei Anmeldung, Aktualisierungen und der täglichen Navigation schneller und flüssiger an.</li>
+          <li xml:lang="nl">De app voelt nu sneller en vloeiender aan tijdens aanmelden, verversen en dagelijks gebruik.</li>
+          <li xml:lang="zh-Hans">应用在登录、刷新和日常浏览时更快、更流畅。</li>
+          <li xml:lang="hi">अब साइन-इन, रिफ्रेश और रोज़मर्रा नेविगेशन के दौरान ऐप अधिक तेज़ और स्मूथ महसूस होता है।</li>
+          <li xml:lang="es">La app ahora se siente más rápida y fluida al iniciar sesión, actualizar y navegar cada día.</li>
+          <li xml:lang="fr">L’application est désormais plus rapide et fluide lors de la connexion, des actualisations et de la navigation quotidienne.</li>
+          <li xml:lang="ar">أصبح التطبيق أسرع وأكثر سلاسة أثناء تسجيل الدخول والتحديث والتنقل اليومي.</li>
+          <li xml:lang="bn">সাইন-ইন, রিফ্রেশ এবং দৈনন্দিন নেভিগেশনে অ্যাপ এখন আরও দ্রুত ও মসৃণ লাগে।</li>
+          <li xml:lang="pt-BR">O app agora está mais rápido e fluido durante login, atualizações e navegação do dia a dia.</li>
+          <li xml:lang="ru">Приложение стало быстрее и плавнее при входе, обновлениях и повседневной навигации.</li>
+          <li xml:lang="ur">لاگ اِن، ریفریش اور روزمرہ نیویگیشن کے دوران ایپ اب زیادہ تیز اور ہموار محسوس ہوتی ہے۔</li>
+          <li>Notifications and background updates are more reliable, so important run results are less likely to be missed.</li>
+          <li xml:lang="de">Benachrichtigungen und Hintergrundaktualisierungen sind zuverlässiger, sodass wichtige Ausführungsergebnisse seltener verpasst werden.</li>
+          <li xml:lang="nl">Meldingen en achtergrondupdates zijn betrouwbaarder, waardoor je belangrijke uitvoeringsresultaten minder snel mist.</li>
+          <li xml:lang="zh-Hans">通知和后台更新更加可靠，因此不容易错过重要的运行结果。</li>
+          <li xml:lang="hi">नोटिफिकेशन और बैकग्राउंड अपडेट अब अधिक विश्वसनीय हैं, इसलिए महत्वपूर्ण रन परिणाम छूटने की संभावना कम है।</li>
+          <li xml:lang="es">Las notificaciones y las actualizaciones en segundo plano son más fiables, por lo que es menos probable perder resultados importantes.</li>
+          <li xml:lang="fr">Les notifications et les mises à jour en arrière-plan sont plus fiables, ce qui réduit le risque de manquer des résultats importants.</li>
+          <li xml:lang="ar">أصبحت الإشعارات والتحديثات في الخلفية أكثر موثوقية، لذا تقل احتمالية تفويت النتائج المهمة.</li>
+          <li xml:lang="bn">নোটিফিকেশন ও ব্যাকগ্রাউন্ড আপডেট এখন আরও নির্ভরযোগ্য, তাই গুরুত্বপূর্ণ রানের ফল মিস হওয়ার সম্ভাবনা কম।</li>
+          <li xml:lang="pt-BR">As notificações e atualizações em segundo plano estão mais confiáveis, reduzindo a chance de perder resultados importantes.</li>
+          <li xml:lang="ru">Уведомления и фоновые обновления стали надёжнее, поэтому важные результаты запусков реже пропускаются.</li>
+          <li xml:lang="ur">نوٹیفکیشنز اور بیک گراؤنڈ اپ ڈیٹس اب زیادہ قابلِ اعتماد ہیں، اس لیے اہم رن نتائج چھوٹنے کا امکان کم ہے۔</li>
+          <li>German and Dutch translations are now available across the app and listing metadata.</li>
+          <li xml:lang="de">Deutsche und niederländische Übersetzungen sind jetzt in der gesamten App und in den Listing-Metadaten verfügbar.</li>
+          <li xml:lang="nl">Duitse en Nederlandse vertalingen zijn nu beschikbaar in de hele app en in de metadata van de appvermelding.</li>
+          <li xml:lang="zh-Hans">现已新增德语和荷兰语翻译，覆盖应用界面和应用条目元数据。</li>
+          <li xml:lang="hi">अब पूरे ऐप और लिस्टिंग मेटाडेटा में जर्मन और डच अनुवाद उपलब्ध हैं।</li>
+          <li xml:lang="es">Ahora hay traducciones al alemán y al neerlandés disponibles en toda la app y en los metadatos de la ficha.</li>
+          <li xml:lang="fr">Des traductions allemande et néerlandaise sont désormais disponibles dans toute l’application et dans les métadonnées de la fiche.</li>
+          <li xml:lang="ar">أصبحت الترجمات الألمانية والهولندية متاحة الآن عبر التطبيق وبيانات الإدراج الوصفية.</li>
+          <li xml:lang="bn">এখন পুরো অ্যাপ এবং তালিকার মেটাডেটা জুড়ে জার্মান ও ডাচ অনুবাদ উপলব্ধ।</li>
+          <li xml:lang="pt-BR">As traduções em alemão e holandês agora estão disponíveis em todo o app e nos metadados da listagem.</li>
+          <li xml:lang="ru">Теперь немецкий и нидерландский переводы доступны во всём приложении и в метаданных карточки.</li>
+          <li xml:lang="ur">اب جرمن اور ڈچ ترجمے پوری ایپ اور لسٹنگ میٹاڈیٹا میں دستیاب ہیں۔</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.6" date="2026-02-27">
       <description>
         <ul>
