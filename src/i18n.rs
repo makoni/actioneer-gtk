@@ -29,6 +29,7 @@ pub fn init(cli_locale: Option<&str>) {
     let _ = textdomain(GETTEXT_PACKAGE);
 
     let initial_language = resolve_initial_language(cli_locale);
+    set_language_env_for_process(&initial_language);
     set_effective_language(initial_language);
     let _ = PO_TRANSLATIONS.get_or_init(load_po_translations);
 }
@@ -44,15 +45,17 @@ pub fn apply_language_preference(preference: LanguagePreference) -> bool {
     let effective_language = resolve_language_preference(preference);
     let changed = current_effective_language() != effective_language;
 
-    // SAFETY: process-local environment variables for current process only.
-    unsafe {
-        std::env::set_var("LANGUAGE", &effective_language);
-        std::env::set_var("ACTIONEER_EFFECTIVE_LANG", &effective_language);
-    }
-
     set_effective_language(effective_language);
     let _ = setlocale(LocaleCategory::LcAll, "");
     changed
+}
+
+fn set_language_env_for_process(effective_language: &str) {
+    // SAFETY: invoked during startup initialization before worker threads are spawned.
+    unsafe {
+        std::env::set_var("LANGUAGE", effective_language);
+        std::env::set_var("ACTIONEER_EFFECTIVE_LANG", effective_language);
+    }
 }
 
 pub fn resolve_initial_language(cli_locale: Option<&str>) -> String {
@@ -632,6 +635,28 @@ msgstr "Sign out"
         let result = resolve_initial_language(Some("ru"));
         assert_eq!(result, "ru");
         unsafe {
+            std::env::remove_var("ACTIONEER_EFFECTIVE_LANG");
+        }
+    }
+
+    #[test]
+    fn apply_language_preference_does_not_mutate_environment() {
+        let _guard = super::i18n_test_guard();
+        unsafe {
+            std::env::set_var("LANGUAGE", "en");
+            std::env::set_var("ACTIONEER_EFFECTIVE_LANG", "en");
+        }
+
+        let _ = apply_language_preference(LanguagePreference::Ru);
+
+        assert_eq!(std::env::var("LANGUAGE").ok().as_deref(), Some("en"));
+        assert_eq!(
+            std::env::var("ACTIONEER_EFFECTIVE_LANG").ok().as_deref(),
+            Some("en")
+        );
+
+        unsafe {
+            std::env::remove_var("LANGUAGE");
             std::env::remove_var("ACTIONEER_EFFECTIVE_LANG");
         }
     }

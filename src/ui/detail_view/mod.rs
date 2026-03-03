@@ -122,6 +122,12 @@ impl From<RunFilters> for RunFilterPreferences {
     }
 }
 
+impl Drop for RepoDetailPane {
+    fn drop(&mut self) {
+        self.teardown_refresh_timers();
+    }
+}
+
 impl RepoDetailPane {
     pub fn new(
         parent: adw::ApplicationWindow,

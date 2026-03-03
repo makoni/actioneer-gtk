@@ -14,14 +14,47 @@ use libadwaita::prelude::*;
 use parking_lot::Mutex;
 use std::rc::Rc;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 use tracing::{error, info};
 
 enum AuthMessage {
-    FlowReady(DeviceFlowInfo),
-    FlowError(String),
-    PollSuccess(AccessToken),
-    PollError(String),
+    FlowReady(u64, DeviceFlowInfo),
+    FlowError(u64, String),
+    PollSuccess(u64, AccessToken),
+    PollError(u64, String),
+    SaveCompleted(u64, Result<(), String>),
+}
+
+impl AuthMessage {
+    fn attempt_id(&self) -> u64 {
+        match self {
+            Self::FlowReady(attempt_id, _)
+            | Self::FlowError(attempt_id, _)
+            | Self::PollSuccess(attempt_id, _)
+            | Self::PollError(attempt_id, _)
+            | Self::SaveCompleted(attempt_id, _) => *attempt_id,
+        }
+    }
+}
+
+#[derive(Default)]
+struct AuthAttemptTracker {
+    generation: AtomicU64,
+}
+
+impl AuthAttemptTracker {
+    fn begin_attempt(&self) -> u64 {
+        self.generation.fetch_add(1, Ordering::SeqCst) + 1
+    }
+
+    fn cancel_active_attempt(&self) {
+        self.generation.fetch_add(1, Ordering::SeqCst);
+    }
+
+    fn is_current(&self, attempt_id: u64) -> bool {
+        self.generation.load(Ordering::SeqCst) == attempt_id
+    }
 }
 
 pub struct AuthWindow {
@@ -33,6 +66,8 @@ pub struct AuthWindow {
     open_button: gtk::Button,
     copy_button: gtk::Button,
     spinner: gtk::Spinner,
+    attempt_tracker: Arc<AuthAttemptTracker>,
+    poll_task: Arc<Mutex<Option<tokio::task::JoinHandle<()>>>>,
 }
 
 impl AuthWindow {
@@ -43,6 +78,8 @@ impl AuthWindow {
         dialog.set_content_width(460);
 
         let device_info = Arc::new(Mutex::new(None));
+        let attempt_tracker = Arc::new(AuthAttemptTracker::default());
+        let poll_task = Arc::new(Mutex::new(None));
 
         let (
             content_box,
@@ -66,6 +103,8 @@ impl AuthWindow {
             open_button: open_button.clone(),
             copy_button,
             spinner,
+            attempt_tracker: attempt_tracker.clone(),
+            poll_task: poll_task.clone(),
         };
 
         {
@@ -79,8 +118,19 @@ impl AuthWindow {
 
         {
             let dialog = dialog.clone();
+            let attempt_tracker = attempt_tracker.clone();
+            let poll_task = poll_task.clone();
             cancel_button.connect_clicked(move |_| {
+                cancel_attempt(&attempt_tracker, &poll_task);
                 dialog.close();
+            });
+        }
+
+        {
+            let attempt_tracker = attempt_tracker.clone();
+            let poll_task = poll_task.clone();
+            dialog.connect_closed(move |_| {
+                cancel_attempt(&attempt_tracker, &poll_task);
             });
         }
 
@@ -192,8 +242,10 @@ impl AuthWindow {
     where
         F: Fn() + 'static,
     {
+        self.cancel_active_attempt();
         self.reset_ui();
-        self.start_device_flow(Rc::new(on_success));
+        let attempt_id = self.attempt_tracker.begin_attempt();
+        self.start_device_flow(attempt_id, Rc::new(on_success));
         self.dialog.present(parent);
     }
 
@@ -209,7 +261,11 @@ impl AuthWindow {
         self.spinner.set_visible(false);
     }
 
-    fn start_device_flow(&self, on_success: Rc<dyn Fn()>) {
+    fn cancel_active_attempt(&self) {
+        cancel_attempt(&self.attempt_tracker, &self.poll_task);
+    }
+
+    fn start_device_flow(&self, attempt_id: u64, on_success: Rc<dyn Fn()>) {
         let (sender, receiver) =
             glib::MainContext::default().channel::<AuthMessage>(glib::Priority::default());
 
@@ -218,8 +274,8 @@ impl AuthWindow {
             info!("Starting device flow authentication");
             let scopes = ["repo", "workflow"];
             let message = match start_device_flow(Config::github_client_id(), &scopes).await {
-                Ok(flow_info) => AuthMessage::FlowReady(flow_info),
-                Err(err) => AuthMessage::FlowError(err.to_string()),
+                Ok(flow_info) => AuthMessage::FlowReady(attempt_id, flow_info),
+                Err(err) => AuthMessage::FlowError(attempt_id, err.to_string()),
             };
 
             if start_sender.send(message).is_err() {
@@ -237,135 +293,193 @@ impl AuthWindow {
         let spinner_clone = self.spinner.clone();
         let dialog_clone = self.dialog.clone();
         let completion = on_success.clone();
+        let attempt_tracker = self.attempt_tracker.clone();
+        let poll_task = self.poll_task.clone();
 
-        receiver.attach(None, move |message| match message {
-            AuthMessage::FlowReady(info) => {
-                *device_info_clone.lock() = Some(info.clone());
-                user_code_clone.set_text(&info.user_code);
-                code_box_clone.set_visible(true);
-                open_button_clone.set_visible(true);
-                copy_button_clone.set_visible(true);
-                spinner_clone.set_visible(true);
-                spinner_clone.start();
-                status_clone
-                    .set_text(tr("Open GitHub in your browser and enter the code.").as_str());
+        receiver.attach(None, move |message| {
+            if !attempt_tracker.is_current(message.attempt_id()) {
+                return ControlFlow::Continue;
+            }
 
-                let poll_info = info.clone();
-                let sender_for_polling = poll_sender.clone();
+            match message {
+                AuthMessage::FlowReady(_, info) => {
+                    *device_info_clone.lock() = Some(info.clone());
+                    user_code_clone.set_text(&info.user_code);
+                    code_box_clone.set_visible(true);
+                    open_button_clone.set_visible(true);
+                    copy_button_clone.set_visible(true);
+                    spinner_clone.set_visible(true);
+                    spinner_clone.start();
+                    status_clone
+                        .set_text(tr("Open GitHub in your browser and enter the code.").as_str());
 
-                runtime_handle().spawn(async move {
-                    let interval_secs = poll_info.interval.max(1) as u64;
-                    let interval = Duration::from_secs(interval_secs);
-                    let max_attempts =
-                        (poll_info.expires_in / poll_info.interval.max(1)).max(1) as usize;
-                    let mut attempts = 0usize;
+                    let poll_info = info.clone();
+                    let sender_for_polling = poll_sender.clone();
+                    let poll_handle = runtime_handle().spawn(async move {
+                        let interval_secs = poll_info.interval.max(1) as u64;
+                        let interval = Duration::from_secs(interval_secs);
+                        let max_attempts =
+                            (poll_info.expires_in / poll_info.interval.max(1)).max(1) as usize;
+                        let mut attempts = 0usize;
 
-                    loop {
-                        if attempts >= max_attempts {
-                            let _ = sender_for_polling
-                                .send(AuthMessage::PollError(tr("Authentication timeout")));
-                            break;
-                        }
+                        loop {
+                            if attempts >= max_attempts {
+                                let _ = sender_for_polling.send(AuthMessage::PollError(
+                                    attempt_id,
+                                    tr("Authentication timeout"),
+                                ));
+                                break;
+                            }
 
-                        tokio::time::sleep(interval).await;
-                        attempts += 1;
+                            tokio::time::sleep(interval).await;
+                            attempts += 1;
 
-                        let poll_result =
-                            poll_device_token(Config::github_client_id(), &poll_info.device_code)
-                                .await;
+                            let poll_result = poll_device_token(
+                                Config::github_client_id(),
+                                &poll_info.device_code,
+                            )
+                            .await;
 
-                        match poll_result {
-                            Ok(token) => {
-                                info!("Authentication successful");
-                                if sender_for_polling
-                                    .send(AuthMessage::PollSuccess(token))
-                                    .is_err()
-                                {
-                                    error!("Failed to deliver authentication success to UI");
+                            match poll_result {
+                                Ok(token) => {
+                                    info!("Authentication successful");
+                                    if sender_for_polling
+                                        .send(AuthMessage::PollSuccess(attempt_id, token))
+                                        .is_err()
+                                    {
+                                        error!("Failed to deliver authentication success to UI");
+                                    }
+                                    break;
                                 }
-                                break;
-                            }
-                            Err(AuthError::AuthorizationPending) => continue,
-                            Err(AuthError::SlowDown) => {
-                                tokio::time::sleep(interval).await;
-                            }
-                            Err(AuthError::ExpiredToken) => {
-                                let _ = sender_for_polling
-                                    .send(AuthMessage::PollError(tr("Authentication timeout")));
-                                break;
-                            }
-                            Err(AuthError::AccessDenied) => {
-                                let _ = sender_for_polling
-                                    .send(AuthMessage::PollError(tr("Access denied")));
-                                break;
-                            }
-                            Err(AuthError::RequestFailed(err)) => {
-                                let _ = sender_for_polling
-                                    .send(AuthMessage::PollError(err.to_string()));
-                                break;
-                            }
-                            Err(AuthError::Unknown(err)) => {
-                                let _ = sender_for_polling.send(AuthMessage::PollError(err));
-                                break;
+                                Err(AuthError::AuthorizationPending) => continue,
+                                Err(AuthError::SlowDown) => {
+                                    tokio::time::sleep(interval).await;
+                                }
+                                Err(AuthError::ExpiredToken) => {
+                                    let _ = sender_for_polling.send(AuthMessage::PollError(
+                                        attempt_id,
+                                        tr("Authentication timeout"),
+                                    ));
+                                    break;
+                                }
+                                Err(AuthError::AccessDenied) => {
+                                    let _ = sender_for_polling.send(AuthMessage::PollError(
+                                        attempt_id,
+                                        tr("Access denied"),
+                                    ));
+                                    break;
+                                }
+                                Err(AuthError::RequestFailed(err)) => {
+                                    let _ = sender_for_polling
+                                        .send(AuthMessage::PollError(attempt_id, err.to_string()));
+                                    break;
+                                }
+                                Err(AuthError::Unknown(err)) => {
+                                    let _ = sender_for_polling
+                                        .send(AuthMessage::PollError(attempt_id, err));
+                                    break;
+                                }
                             }
                         }
+                    });
+                    if let Some(existing) = poll_task.lock().replace(poll_handle) {
+                        existing.abort();
                     }
-                });
 
-                status_clone.set_text(tr("Waiting for authorization...").as_str());
-                ControlFlow::Continue
-            }
-            AuthMessage::FlowError(err) => {
-                error!("Failed to start device flow: {}", err);
-                status_clone.set_text(
-                    tr("Error: {message}")
-                        .replace("{message}", err.as_str())
-                        .as_str(),
-                );
-                spinner_clone.stop();
-                spinner_clone.set_visible(false);
-                ControlFlow::Break
-            }
-            AuthMessage::PollSuccess(token) => {
-                spinner_clone.stop();
-                spinner_clone.set_visible(false);
-                match save_token_and_close(token, &dialog_clone) {
-                    Ok(()) => {
-                        status_clone.set_text(tr("Signed in successfully").as_str());
-                        completion();
-                    }
-                    Err(err) => {
-                        error!("Failed to save token: {}", err);
-                        status_clone.set_text(
-                            tr("Error saving token: {message}")
-                                .replace("{message}", err.to_string().as_str())
-                                .as_str(),
-                        );
-                    }
+                    status_clone.set_text(tr("Waiting for authorization...").as_str());
+                    ControlFlow::Continue
                 }
-                ControlFlow::Break
-            }
-            AuthMessage::PollError(err) => {
-                error!("Polling failed: {}", err);
-                spinner_clone.stop();
-                spinner_clone.set_visible(false);
-                status_clone.set_text(
-                    tr("Error: {message}")
-                        .replace("{message}", err.as_str())
-                        .as_str(),
-                );
-                ControlFlow::Break
+                AuthMessage::FlowError(_, err) => {
+                    error!("Failed to start device flow: {}", err);
+                    status_clone.set_text(
+                        tr("Error: {message}")
+                            .replace("{message}", err.as_str())
+                            .as_str(),
+                    );
+                    if let Some(existing) = poll_task.lock().take() {
+                        existing.abort();
+                    }
+                    spinner_clone.stop();
+                    spinner_clone.set_visible(false);
+                    ControlFlow::Break
+                }
+                AuthMessage::PollSuccess(_, token) => {
+                    status_clone.set_text(tr("Saving token...").as_str());
+                    spinner_clone.set_visible(true);
+                    spinner_clone.start();
+                    poll_task.lock().take();
+
+                    let save_sender = poll_sender.clone();
+                    runtime_handle().spawn(async move {
+                        let save_result = tokio::task::spawn_blocking(move || save_token(token))
+                            .await
+                            .map_err(|err| format!("Failed to join token save task: {err}"))
+                            .and_then(|result| result);
+
+                        if save_sender
+                            .send(AuthMessage::SaveCompleted(attempt_id, save_result))
+                            .is_err()
+                        {
+                            error!("Failed to deliver token save result to UI");
+                        }
+                    });
+
+                    ControlFlow::Continue
+                }
+                AuthMessage::PollError(_, err) => {
+                    error!("Polling failed: {}", err);
+                    if let Some(existing) = poll_task.lock().take() {
+                        existing.abort();
+                    }
+                    spinner_clone.stop();
+                    spinner_clone.set_visible(false);
+                    status_clone.set_text(
+                        tr("Error: {message}")
+                            .replace("{message}", err.as_str())
+                            .as_str(),
+                    );
+                    ControlFlow::Break
+                }
+                AuthMessage::SaveCompleted(_, save_result) => {
+                    spinner_clone.stop();
+                    spinner_clone.set_visible(false);
+                    match save_result {
+                        Ok(()) => {
+                            status_clone.set_text(tr("Signed in successfully").as_str());
+                            dialog_clone.close();
+                            completion();
+                        }
+                        Err(err) => {
+                            error!("Failed to save token: {}", err);
+                            status_clone.set_text(
+                                tr("Error saving token: {message}")
+                                    .replace("{message}", err.as_str())
+                                    .as_str(),
+                            );
+                        }
+                    }
+                    ControlFlow::Break
+                }
             }
         });
     }
 }
 
-fn save_token_and_close(
-    token: AccessToken,
-    dialog: &adw::Dialog,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let storage = TokenStorage::new()?;
-    storage.save_token(&token.token)?;
+fn cancel_attempt(
+    attempt_tracker: &AuthAttemptTracker,
+    poll_task: &Mutex<Option<tokio::task::JoinHandle<()>>>,
+) {
+    attempt_tracker.cancel_active_attempt();
+    if let Some(existing) = poll_task.lock().take() {
+        existing.abort();
+    }
+}
+
+fn save_token(token: AccessToken) -> Result<(), String> {
+    let storage = TokenStorage::new().map_err(|err| err.to_string())?;
+    storage
+        .save_token(&token.token)
+        .map_err(|err| err.to_string())?;
     if token.scope.is_empty() {
         info!("Token saved successfully (type: {})", token.token_type);
     } else {
@@ -374,8 +488,24 @@ fn save_token_and_close(
             token.token_type, token.scope
         );
     }
-
-    dialog.close();
-
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::AuthAttemptTracker;
+
+    #[test]
+    fn auth_attempt_tracker_invalidates_stale_attempts() {
+        let tracker = AuthAttemptTracker::default();
+        let first = tracker.begin_attempt();
+        assert!(tracker.is_current(first));
+
+        let second = tracker.begin_attempt();
+        assert!(!tracker.is_current(first));
+        assert!(tracker.is_current(second));
+
+        tracker.cancel_active_attempt();
+        assert!(!tracker.is_current(second));
+    }
 }

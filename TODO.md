@@ -28,7 +28,7 @@ Goal: address the GTK/Tokio/threading issues identified in the deep review, with
 
 ### Phase 1 — must-fix stabilization (ship first)
 
-1. [ ] **Auth cancel/poll race hardening** (`src/ui/auth_window.rs`)
+1. [✅] **Auth cancel/poll race hardening** (`src/ui/auth_window.rs`)
    - Track spawned polling task handle(s) and abort on:
      - Cancel button click
      - Dialog close/hide
@@ -38,7 +38,7 @@ Goal: address the GTK/Tokio/threading issues identified in the deep review, with
      - Manual: open auth, cancel, then complete device flow in browser; app must stay signed out.
      - Add unit/integration coverage for stale message suppression.
 
-2. [ ] **Move secure token I/O off GTK main thread** (`src/ui/main_window.rs`, `src/ui/auth_window.rs`, `src/storage/*`)
+2. [✅] **Move secure token I/O off GTK main thread** (`src/ui/main_window.rs`, `src/ui/auth_window.rs`, `src/storage/*`)
    - Introduce an async auth/storage service boundary used by UI code.
    - Replace direct synchronous calls in signal/focus handlers (`TokenStorage::new/get_token/delete_token/save_token`) with Tokio-side work and GLib UI handoff.
    - Keep GTK object access strictly on GLib main context.
@@ -46,14 +46,14 @@ Goal: address the GTK/Tokio/threading issues identified in the deep review, with
      - Manual sign-in/sign-out/focus checks while interacting with UI; no visible freezes.
      - Logging confirms storage work runs off main thread.
 
-3. [ ] **Fix disabled-refresh busy loop** (`src/ui/main_window/refresh.rs`)
+3. [✅] **Fix disabled-refresh busy loop** (`src/ui/main_window/refresh.rs`)
    - Respect `refresh_interval == 0` as disabled without looping/sleep(0).
    - Re-arm background refresh only when preferences change to non-zero.
    - Validation:
      - Set refresh to disabled and verify no hot loop/high CPU.
      - Re-enable refresh and verify timer resumes.
 
-4. [ ] **Remove unsafe runtime-time env mutation pattern** (`src/i18n.rs`, `src/notifications.rs`, `src/main.rs`)
+4. [✅] **Remove unsafe runtime-time env mutation pattern** (`src/i18n.rs`, `src/notifications.rs`, `src/main.rs`)
    - Stop mutating process env after runtime startup; initialize once during startup or pass explicit runtime config.
    - Keep behavior for snap/portal app-id resolution unchanged.
    - Validation:
@@ -62,16 +62,16 @@ Goal: address the GTK/Tokio/threading issues identified in the deep review, with
 
 ### Phase 2 — concurrency/perf hardening
 
-5. [ ] **Timer lifecycle ownership cleanup** (`src/ui/detail_view/helpers/workflows.rs`, `src/ui/detail_view/workflow_refresh.rs`)
+5. [✅] **Timer lifecycle ownership cleanup** (`src/ui/detail_view/helpers/workflows.rs`, `src/ui/detail_view/workflow_refresh.rs`)
    - Replace ad-hoc expander timer data management with explicit timer ownership in pane state.
    - Ensure timers are canceled when rows/panes are rebuilt or destroyed.
    - Validation: no stale follow-up refreshes after pane switch/close.
 
-6. [ ] **Bound or coalesce UI channels where producers can burst** (`src/ui/utils/channel.rs` callers)
+6. [✅] **Bound or coalesce UI channels where producers can burst** (`src/ui/utils/channel.rs` callers)
    - Replace unbounded channels for burst-prone paths or add coalescing/debouncing.
    - Validation: stress refresh paths and confirm stable memory behavior.
 
-7. [ ] **Make preference writes non-blocking for async contexts** (`src/preferences.rs`)
+7. [✅] **Make preference writes non-blocking for async contexts** (`src/preferences.rs`)
    - Move `fs::write` to `tokio::fs` or `spawn_blocking`.
    - Validation: preference changes remain responsive and persistent.
 
@@ -138,6 +138,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-03-03 — Implemented Phase 1+2 remediation: auth attempt generation + poll cancellation, token storage moved off GTK thread paths, refresh=0 loop fix, startup-only portal/i18n env setup, follow-up timer teardown on pane drop, bounded UI channels, and async preference writes (with new regression tests).
 - [✅] 2026-03-03 — Added a detailed, phased remediation TODO plan for GTK UI-thread safety, auth/task races, refresh-loop fixes, and architecture follow-up from the deep code review.
 - [✅] 2026-03-02 — Updated `data/metainfo.xml` with German and Dutch localized summary/description/features/screenshot captions and 1.0.6 release notes; AppStream validation now passes locally and via `org.flatpak.Builder`.
 - [✅] 2026-03-02 — Added German and Dutch locale support in preferences/system-locale detection, enabled `de`/`nl` catalogs in `po/LINGUAS`, added `po/nl.po`, and backfilled missing German translations.

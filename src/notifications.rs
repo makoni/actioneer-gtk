@@ -365,7 +365,6 @@ impl NotificationManager {
 
     async fn dispatch_via_portal(&self, payload: NotificationPayload) -> anyhow::Result<()> {
         let resolved_app_id = resolve_portal_app_id(&self.app_id);
-        prepare_portal_env(&resolved_app_id);
 
         let payload = NotificationPayload {
             identifier: Some(
@@ -521,10 +520,14 @@ fn is_sandboxed() -> bool {
         || env::var_os("APPIMAGE").is_some()
 }
 
-fn prepare_portal_env(resolved_app_id: &str) {
+pub fn initialize_portal_env(resolved_app_id: &str) {
+    apply_portal_env_overrides(resolved_app_id);
+}
+
+fn apply_portal_env_overrides(resolved_app_id: &str) {
     let force_key = "XDG_DESKTOP_PORTAL_FORCE_USE_THIS_APP_ID";
     if env::var_os(force_key).is_none() {
-        // SAFETY: process-local env var
+        // SAFETY: startup-only process-local env var mutation.
         unsafe {
             env::set_var(force_key, resolved_app_id);
         }
@@ -532,7 +535,7 @@ fn prepare_portal_env(resolved_app_id: &str) {
 
     let app_id_key = "XDG_DESKTOP_PORTAL_APP_ID";
     if env::var_os(app_id_key).is_none() {
-        // SAFETY: process-local env var
+        // SAFETY: startup-only process-local env var mutation.
         unsafe {
             env::set_var(app_id_key, resolved_app_id);
         }

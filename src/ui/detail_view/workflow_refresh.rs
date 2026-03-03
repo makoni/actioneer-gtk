@@ -420,6 +420,11 @@ impl RepoDetailPane {
         }
     }
 
+    pub(super) fn teardown_refresh_timers(&self) {
+        self.cancel_auto_refresh_timer();
+        super::helpers::clear_follow_up_refresh_timers(&self.workflow_store);
+    }
+
     fn refresh_runs_background(context: &WorkflowListContext) {
         let client = context.client.clone();
         let owner = context.owner.clone();

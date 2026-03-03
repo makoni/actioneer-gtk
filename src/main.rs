@@ -69,6 +69,8 @@ fn main() -> anyhow::Result<()> {
         .init();
 
     info!("Starting Actioneer for Linux");
+    let runtime_app_id = resolved_app_id();
+    notifications::initialize_portal_env(runtime_app_id.as_ref());
 
     // Start tokio runtime in background thread and keep it alive
     std::thread::spawn(|| {
@@ -95,8 +97,6 @@ fn main() -> anyhow::Result<()> {
     }
 
     info!("Tokio runtime initialized");
-
-    let runtime_app_id = resolved_app_id();
 
     let app = adw::Application::builder()
         .application_id(runtime_app_id.as_ref())

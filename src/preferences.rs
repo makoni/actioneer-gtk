@@ -140,10 +140,12 @@ impl PreferencesManager {
     where
         F: FnOnce(&mut Preferences),
     {
-        let mut prefs = self.prefs.write().await;
-        f(&mut prefs);
-        let current = prefs.clone();
-        self.save(&current)?;
+        let current = {
+            let mut prefs = self.prefs.write().await;
+            f(&mut prefs);
+            prefs.clone()
+        };
+        self.save(&current).await?;
         let _ = self.updates.send(current);
         Ok(())
     }
@@ -187,9 +189,9 @@ impl PreferencesManager {
         self.updates.subscribe()
     }
 
-    fn save(&self, prefs: &Preferences) -> anyhow::Result<()> {
+    async fn save(&self, prefs: &Preferences) -> anyhow::Result<()> {
         let data = serde_json::to_string_pretty(prefs)?;
-        fs::write(&self.config_path, data)?;
+        tokio::fs::write(&self.config_path, data).await?;
         Ok(())
     }
 }

@@ -45,6 +45,24 @@ const MIN_WINDOW_HEIGHT: i32 = 520;
 const HOMEPAGE_URL: &str = "https://github.com/makoni/actioneer-gtk";
 const ISSUE_URL: &str = "https://github.com/makoni/actioneer-gtk/issues";
 
+fn load_token_if_present_blocking() -> Result<Option<String>, String> {
+    let storage = TokenStorage::new().map_err(|err| err.to_string())?;
+    if !storage.has_token() {
+        return Ok(None);
+    }
+    storage.get_token().map(Some).map_err(|err| err.to_string())
+}
+
+fn load_token_blocking() -> Result<String, String> {
+    let storage = TokenStorage::new().map_err(|err| err.to_string())?;
+    storage.get_token().map_err(|err| err.to_string())
+}
+
+fn delete_token_blocking() -> Result<(), String> {
+    let storage = TokenStorage::new().map_err(|err| err.to_string())?;
+    storage.delete_token().map_err(|err| err.to_string())
+}
+
 #[derive(Clone)]
 pub struct MainWindow {
     window: adw::ApplicationWindow,
@@ -731,20 +749,28 @@ Troubleshooting\n\
             dialog.close();
 
             if response == gtk::ResponseType::Yes {
-                match TokenStorage::new() {
-                    Ok(storage) => match storage.delete_token() {
-                        Err(err) => {
-                            error!("Failed to delete token: {}", err);
-                        }
-                        _ => {
+                let this_for_ui = this.clone();
+                let (sender, receiver) = glib::MainContext::default()
+                    .channel::<Result<(), String>>(glib::Priority::default());
+
+                receiver.attach(None, move |result| {
+                    match result {
+                        Ok(()) => {
                             info!("Signed out successfully");
-                            this.enter_signed_out_state();
+                            this_for_ui.enter_signed_out_state();
                         }
-                    },
-                    Err(err) => {
-                        error!("Failed to access token storage: {}", err);
+                        Err(err) => error!("Failed to delete token: {}", err),
                     }
-                }
+                    glib::ControlFlow::Break
+                });
+
+                crate::runtime_handle().spawn(async move {
+                    let result = tokio::task::spawn_blocking(delete_token_blocking)
+                        .await
+                        .map_err(|err| format!("Failed to join sign-out task: {err}"))
+                        .and_then(|result| result);
+                    let _ = sender.send(result);
+                });
             }
         });
 
@@ -785,34 +811,37 @@ Troubleshooting\n\
     }
 
     fn check_authentication(&self) {
-        match TokenStorage::new() {
-            Ok(storage) => {
-                if !storage.has_token() {
-                    info!("No token found, presenting welcome screen");
-                    self.enter_signed_out_state();
-                    return;
-                }
+        let this = self.clone();
+        let (sender, receiver) = glib::MainContext::default()
+            .channel::<Result<Option<String>, String>>(glib::Priority::default());
 
-                match storage.get_token() {
-                    Ok(token) => {
-                        info!("Found existing token, initializing client");
-                        if !self.initialize_client(token) {
-                            self.enter_signed_out_state();
-                        }
-                    }
-                    Err(_) => {
-                        info!(
-                            "Failed to retrieve token despite presence flag; showing welcome screen"
-                        );
-                        self.enter_signed_out_state();
+        receiver.attach(None, move |result| {
+            match result {
+                Ok(Some(token)) => {
+                    info!("Found existing token, initializing client");
+                    if !this.initialize_client(token) {
+                        this.enter_signed_out_state();
                     }
                 }
+                Ok(None) => {
+                    info!("No token found, presenting welcome screen");
+                    this.enter_signed_out_state();
+                }
+                Err(err) => {
+                    error!("Failed to access token storage: {}", err);
+                    this.enter_signed_out_state();
+                }
             }
-            Err(e) => {
-                error!("Failed to access token storage: {}", e);
-                self.enter_signed_out_state();
-            }
-        }
+            glib::ControlFlow::Break
+        });
+
+        crate::runtime_handle().spawn(async move {
+            let result = tokio::task::spawn_blocking(load_token_if_present_blocking)
+                .await
+                .map_err(|err| format!("Failed to join auth check task: {err}"))
+                .and_then(|result| result);
+            let _ = sender.send(result);
+        });
     }
 
     fn show_auth_window(&self) {
@@ -826,39 +855,46 @@ Troubleshooting\n\
     fn handle_auth_failure(&self) {
         info!("Authentication failed; clearing token and returning to welcome");
 
-        match TokenStorage::new() {
-            Ok(storage) => {
-                if let Err(err) = storage.delete_token() {
-                    warn!("Failed to delete token after auth failure: {}", err);
-                }
-            }
-            Err(err) => warn!(
-                "Token storage unavailable during auth failure handling: {}",
-                err
-            ),
-        }
-
         self.enter_signed_out_state();
+
+        crate::runtime_handle().spawn(async move {
+            let result = tokio::task::spawn_blocking(delete_token_blocking)
+                .await
+                .map_err(|err| format!("Failed to join auth-failure token cleanup task: {err}"))
+                .and_then(|result| result);
+            if let Err(err) = result {
+                warn!("Failed to delete token after auth failure: {}", err);
+            }
+        });
     }
 
     fn handle_sign_in_success(&self) {
-        match TokenStorage::new() {
-            Ok(storage) => match storage.get_token() {
+        let this = self.clone();
+        let (sender, receiver) = glib::MainContext::default()
+            .channel::<Result<String, String>>(glib::Priority::default());
+
+        receiver.attach(None, move |result| {
+            match result {
                 Ok(token) => {
-                    if !self.initialize_client(token) {
-                        self.enter_signed_out_state();
+                    if !this.initialize_client(token) {
+                        this.enter_signed_out_state();
                     }
                 }
                 Err(err) => {
                     error!("Token unavailable after sign-in: {}", err);
-                    self.enter_signed_out_state();
+                    this.enter_signed_out_state();
                 }
-            },
-            Err(err) => {
-                error!("Failed to reopen token storage after sign-in: {}", err);
-                self.enter_signed_out_state();
             }
-        }
+            glib::ControlFlow::Break
+        });
+
+        crate::runtime_handle().spawn(async move {
+            let result = tokio::task::spawn_blocking(load_token_blocking)
+                .await
+                .map_err(|err| format!("Failed to join sign-in token load task: {err}"))
+                .and_then(|result| result);
+            let _ = sender.send(result);
+        });
     }
 
     fn initialize_client(&self, token: String) -> bool {
@@ -1001,41 +1037,46 @@ Troubleshooting\n\
                 return;
             }
 
-            let storage = match TokenStorage::new() {
-                Ok(storage) => storage,
-                Err(err) => {
-                    error!("Failed to access token storage during focus check: {}", err);
-                    this.enter_signed_out_state();
-                    return;
-                }
-            };
+            let this_for_ui = this.clone();
+            let (sender, receiver) = glib::MainContext::default()
+                .channel::<Result<String, String>>(glib::Priority::default());
 
-            let token_result = storage.get_token();
-            match token_result {
-                Ok(token) => {
-                    let needs_client = this.client.lock().is_none();
-                    if needs_client {
-                        info!("Token available after auth, initializing client");
-                        if !this.initialize_client(token) {
-                            this.enter_signed_out_state();
+            receiver.attach(None, move |token_result| {
+                match token_result {
+                    Ok(token) => {
+                        let needs_client = this_for_ui.client.lock().is_none();
+                        if needs_client {
+                            info!("Token available after auth, initializing client");
+                            if !this_for_ui.initialize_client(token) {
+                                this_for_ui.enter_signed_out_state();
+                            }
                         }
                     }
-                }
-                Err(_) => {
-                    let had_client = {
-                        let mut guard = this.client.lock();
-                        let had = guard.is_some();
-                        *guard = None;
-                        had
-                    };
+                    Err(_) => {
+                        let had_client = {
+                            let mut guard = this_for_ui.client.lock();
+                            let had = guard.is_some();
+                            *guard = None;
+                            had
+                        };
 
-                    if had_client {
-                        info!("Token missing after focus, returning to welcome screen");
+                        if had_client {
+                            info!("Token missing after focus, returning to welcome screen");
+                        }
+
+                        this_for_ui.enter_signed_out_state();
                     }
-
-                    this.enter_signed_out_state();
                 }
-            }
+                glib::ControlFlow::Break
+            });
+
+            crate::runtime_handle().spawn(async move {
+                let result = tokio::task::spawn_blocking(load_token_blocking)
+                    .await
+                    .map_err(|err| format!("Failed to join focus token check task: {err}"))
+                    .and_then(|result| result);
+                let _ = sender.send(result);
+            });
         });
     }
 

@@ -12,7 +12,7 @@ use crate::preferences::PreferencesManager;
 use crate::ui::detail_view::RunFilters;
 use crate::ui::utils::MainContextChannelExt;
 use gtk4::prelude::*;
-use gtk4::{self as gtk, glib};
+use gtk4::{self as gtk, gio, glib};
 use libadwaita as adw;
 use libadwaita::prelude::*;
 use parking_lot::Mutex;
@@ -22,6 +22,8 @@ use std::rc::Rc;
 use std::sync::Arc;
 use std::time::Instant;
 use tracing::{error, info};
+
+const FOLLOW_UP_SOURCE_KEY: &str = "actioneer-follow-up-refresh";
 
 #[derive(Clone)]
 pub(crate) struct WorkflowRowContext {
@@ -853,7 +855,7 @@ pub(crate) fn create_workflow_expander_row(
                                 run_list: run_list_for_reload.clone(),
                                 parent_window: parent_window_for_reload.clone(),
                                 status_badge: None,
-                                expander: expander.clone(),
+                                expander: expander.downgrade(),
                                 toast_overlay: toast_overlay_for_reload.clone(),
                                 job_contexts: job_contexts_for_reload.clone(),
                                 workflows_with_active: workflows_with_active_for_reload.clone(),
@@ -937,7 +939,7 @@ struct FollowUpRefreshParams {
     run_list: WorkflowRunListModel,
     parent_window: adw::ApplicationWindow,
     status_badge: Option<gtk::Label>,
-    expander: gtk::Expander,
+    expander: glib::WeakRef<gtk::Expander>,
     toast_overlay: adw::ToastOverlay,
     job_contexts: JobContextMap,
     workflows_with_active: Arc<Mutex<HashSet<i64>>>,
@@ -951,12 +953,12 @@ struct FollowUpRefreshParams {
 }
 
 fn schedule_follow_up_refresh(params: FollowUpRefreshParams) {
-    const SOURCE_KEY: &str = "actioneer-follow-up-refresh";
-
     let params_rc = Rc::new(params);
-    let expander = params_rc.expander.clone();
+    let Some(expander) = params_rc.expander.upgrade() else {
+        return;
+    };
 
-    if let Some(existing) = unsafe { expander.steal_data::<glib::SourceId>(SOURCE_KEY) } {
+    if let Some(existing) = unsafe { expander.steal_data::<glib::SourceId>(FOLLOW_UP_SOURCE_KEY) } {
         existing.remove();
     }
 
@@ -978,8 +980,11 @@ fn schedule_follow_up_refresh(params: FollowUpRefreshParams) {
 
         let interval_secs = interval_secs.max(1);
         let params_for_timer = params_for_async.clone();
-        let params_for_handle = params_for_async;
+        let expander_weak = params_for_async.expander.clone();
         let source_id = glib::timeout_add_seconds_local(interval_secs as u32, move || {
+            let Some(expander) = expander_weak.upgrade() else {
+                return glib::ControlFlow::Break;
+            };
             let preserved_runs: Vec<i64> = params_for_timer
                 .run_list
                 .expanded_run_ids()
@@ -996,7 +1001,7 @@ fn schedule_follow_up_refresh(params: FollowUpRefreshParams) {
                 run_list: params_for_timer.run_list.clone(),
                 parent_window: params_for_timer.parent_window.clone(),
                 status_badge: params_for_timer.status_badge.clone(),
-                expander: params_for_timer.expander.clone(),
+                expander,
                 toast_overlay: params_for_timer.toast_overlay.clone(),
                 job_contexts: params_for_timer.job_contexts.clone(),
                 expanded_run_ids: preserved_runs,
@@ -1013,8 +1018,31 @@ fn schedule_follow_up_refresh(params: FollowUpRefreshParams) {
             glib::ControlFlow::Continue
         });
 
-        unsafe {
-            params_for_handle.expander.set_data(SOURCE_KEY, source_id);
+        if let Some(expander_for_handle) = params_for_async.expander.upgrade() {
+            unsafe {
+                expander_for_handle.set_data(FOLLOW_UP_SOURCE_KEY, source_id);
+            }
         }
     });
+}
+
+pub(crate) fn clear_follow_up_refresh_timers(store: &gio::ListStore) {
+    for row in super::super::workflow_list::collect_workflow_rows(store) {
+        clear_follow_up_from_widget(&row);
+    }
+}
+
+fn clear_follow_up_from_widget(widget: &gtk::Widget) {
+    if let Some(expander) = widget.downcast_ref::<gtk::Expander>()
+        && let Some(existing) =
+            unsafe { expander.steal_data::<glib::SourceId>(FOLLOW_UP_SOURCE_KEY) }
+    {
+        existing.remove();
+    }
+
+    let mut child = widget.first_child();
+    while let Some(current) = child {
+        clear_follow_up_from_widget(&current);
+        child = current.next_sibling();
+    }
 }
