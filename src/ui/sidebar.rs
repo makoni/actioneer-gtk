@@ -3,6 +3,7 @@ use crate::favorites::FavoritesManager;
 use crate::i18n::tr;
 use crate::ui::state::{RepoActionsState, WorkflowStatusCounts};
 use crate::ui::utils::MainContextChannelExt;
+use crate::ui::utils::widget_data::{get_data_clone, get_data_copy, set_data};
 use gtk::prelude::*;
 use gtk4::{self as gtk, gio, glib};
 use parking_lot::Mutex;
@@ -323,20 +324,15 @@ fn build_repo_row(
 
     row.set_child(Some(&wrapper));
 
-    unsafe {
-        row.set_data("actioneer-repo-id", repo_id);
-        row.set_data("actioneer-repo-full-name", repo.full_name.clone());
-        row.set_data("actioneer-repo-model", repo);
-    }
+    set_data(&row, "actioneer-repo-id", repo_id);
+    set_data(&row, "actioneer-repo-full-name", repo.full_name.clone());
+    set_data(&row, "actioneer-repo-model", repo);
 
     row
 }
 
 fn repo_from_row(row: &gtk::ListBoxRow) -> Option<Repo> {
-    unsafe {
-        row.data::<Repo>("actioneer-repo-model")
-            .map(|ptr| ptr.as_ref().clone())
-    }
+    get_data_clone(row, "actioneer-repo-model")
 }
 
 pub fn repo_from_object(obj: &glib::Object) -> Option<Repo> {
@@ -345,10 +341,7 @@ pub fn repo_from_object(obj: &glib::Object) -> Option<Repo> {
 }
 
 fn repo_id_from_row(row: &gtk::ListBoxRow) -> Option<i64> {
-    unsafe {
-        row.data::<i64>("actioneer-repo-id")
-            .map(|ptr| *ptr.as_ref())
-    }
+    get_data_copy(row, "actioneer-repo-id")
 }
 
 pub fn repo_id_from_object(obj: &glib::Object) -> Option<i64> {

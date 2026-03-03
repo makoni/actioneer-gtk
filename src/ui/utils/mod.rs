@@ -1,6 +1,7 @@
 pub mod channel;
 pub mod layout;
 pub mod rate_limit;
+pub mod widget_data;
 pub mod workflow_run;
 
 pub use channel::MainContextChannelExt;

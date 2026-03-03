@@ -3,7 +3,8 @@ use super::workflow_refresh::run_list_for_expander;
 use super::{RepoDetailPane, RunFilters};
 use crate::preferences::RunFilterPreferences;
 use crate::ui::utils::MainContextChannelExt;
-use gtk4::prelude::{Cast, ObjectExt, ToggleButtonExt, WidgetExt};
+use crate::ui::utils::widget_data::{get_data_clone, get_data_copy};
+use gtk4::prelude::{Cast, ToggleButtonExt, WidgetExt};
 use gtk4::{self as gtk, glib};
 use std::collections::HashSet;
 use tracing::{debug, info, warn};
@@ -153,12 +154,10 @@ impl RepoDetailPane {
                     if re_applied {
                         return;
                     }
-                    let workflow_label = unsafe {
-                        expander
-                            .data::<String>("actioneer-workflow-name")
-                            .map(|name_ptr| name_ptr.as_ref().clone())
-                    }
-                    .unwrap_or_else(|| format!("{}/{} • Workflow {}", owner, repo, workflow_id));
+                    let workflow_label = get_data_clone(expander, "actioneer-workflow-name")
+                        .unwrap_or_else(|| {
+                            format!("{}/{} • Workflow {}", owner, repo, workflow_id)
+                        });
 
                     context.run_load_service.request(LoadRunsParams {
                         client: context.client.clone(),
@@ -196,9 +195,8 @@ impl RepoDetailPane {
 
 fn visit_expanders<F: FnMut(&gtk::Expander, i64)>(widget: &gtk::Widget, f: &mut F) {
     if let Some(expander) = widget.downcast_ref::<gtk::Expander>()
-        && let Some(workflow_id_ptr) = unsafe { expander.data::<i64>("actioneer-workflow-id") }
+        && let Some(workflow_id) = get_data_copy(expander, "actioneer-workflow-id")
     {
-        let workflow_id = unsafe { *workflow_id_ptr.as_ref() };
         f(expander, workflow_id);
     }
 

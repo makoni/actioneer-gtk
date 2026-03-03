@@ -77,7 +77,7 @@ Goal: address the GTK/Tokio/threading issues identified in the deep review, with
 
 ### Phase 3 — architecture/testability follow-through
 
-8. [ ] **Extract high-risk large files into focused modules**
+8. [✅] **Extract high-risk large files into focused modules**
    - Prioritize: `src/ui/main_window.rs`, `src/ui/job_logs_window.rs`, `src/ui/detail_view/helpers/workflows.rs`, `src/ui/detail_view/workflow_refresh.rs`, `src/notifications.rs`.
    - Proposed boundaries:
      - Auth/session controller
@@ -87,7 +87,7 @@ Goal: address the GTK/Tokio/threading issues identified in the deep review, with
      - Notification dispatch adapters
    - Validation: equivalent behavior, smaller units, targeted tests per module.
 
-9. [ ] **Reduce unsafe widget-data patterns where feasible**
+9. [✅] **Reduce unsafe widget-data patterns where feasible**
    - Add typed wrappers for widget data keys and centralize lifecycle assumptions.
    - Preserve existing behavior while shrinking unsafe surface area.
 
@@ -138,6 +138,9 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-03-03 — Completed Phase 3 modularization follow-through: split job log rendering into `src/ui/job_logs_window/render.rs`, moved workflow follow-up timer lifecycle into `src/ui/detail_view/helpers/workflow_follow_up.rs`, extracted workflow expander scanning helpers to `src/ui/detail_view/workflow_refresh/scan.rs`, and split notification icon resolution into `src/notifications/icon.rs`; full validation passed (`cargo fmt`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test`, `cargo test -- --ignored`).
+- [✅] 2026-03-03 — Continued Phase 3 modularization: moved main-window action/help/preferences/about/notification window logic into `src/ui/main_window/window_actions.rs` and split notification sandbox/env/app-id helpers into `src/notifications/env_config.rs`.
+- [✅] 2026-03-03 — Started Phase 3: extracted main-window auth/session/focus/sign-out logic into `src/ui/main_window/auth.rs` and introduced typed widget-data helpers (`src/ui/utils/widget_data.rs`), replacing unsafe widget-data access in sidebar/detail modules.
 - [✅] 2026-03-03 — Implemented Phase 1+2 remediation: auth attempt generation + poll cancellation, token storage moved off GTK thread paths, refresh=0 loop fix, startup-only portal/i18n env setup, follow-up timer teardown on pane drop, bounded UI channels, and async preference writes (with new regression tests).
 - [✅] 2026-03-03 — Added a detailed, phased remediation TODO plan for GTK UI-thread safety, auth/task races, refresh-loop fixes, and architecture follow-up from the deep code review.
 - [✅] 2026-03-02 — Updated `data/metainfo.xml` with German and Dutch localized summary/description/features/screenshot captions and 1.0.6 release notes; AppStream validation now passes locally and via `org.flatpak.Builder`.

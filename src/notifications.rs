@@ -7,14 +7,19 @@ use ashpd::desktop::Icon as PortalIcon;
 use ashpd::desktop::notification::{
     Notification as PortalNotification, NotificationProxy, Priority as PortalPriority,
 };
-use gtk4::prelude::{ApplicationExt, Cast, IsA};
+use gtk4::prelude::{ApplicationExt, IsA};
 use gtk4::{gio, glib};
 use std::env;
-use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex as StdMutex};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tokio::sync::oneshot;
 use tracing::{debug, error, info, warn};
+
+mod env_config;
+mod icon;
+pub use env_config::initialize_portal_env;
+use env_config::{is_sandboxed, resolve_portal_app_id};
+use icon::resolve_notification_icon;
 
 const DEFAULT_ICON_NAME: &str = APP_ICON_NAME;
 const DEFAULT_NOTIFICATION_ACTION: &str = "app.focus-main-window";
@@ -512,92 +517,6 @@ enum NotificationDispatcher {
 struct NotificationCommand {
     payload: NotificationPayload,
     completion: oneshot::Sender<anyhow::Result<()>>,
-}
-
-fn is_sandboxed() -> bool {
-    env::var_os("FLATPAK_ID").is_some()
-        || env::var_os("SNAP").is_some()
-        || env::var_os("APPIMAGE").is_some()
-}
-
-pub fn initialize_portal_env(resolved_app_id: &str) {
-    apply_portal_env_overrides(resolved_app_id);
-}
-
-fn apply_portal_env_overrides(resolved_app_id: &str) {
-    let force_key = "XDG_DESKTOP_PORTAL_FORCE_USE_THIS_APP_ID";
-    if env::var_os(force_key).is_none() {
-        // SAFETY: startup-only process-local env var mutation.
-        unsafe {
-            env::set_var(force_key, resolved_app_id);
-        }
-    }
-
-    let app_id_key = "XDG_DESKTOP_PORTAL_APP_ID";
-    if env::var_os(app_id_key).is_none() {
-        // SAFETY: startup-only process-local env var mutation.
-        unsafe {
-            env::set_var(app_id_key, resolved_app_id);
-        }
-    }
-
-    // For snaps, also provide the desktop file hint expected by portals. snapd exports
-    // desktop files as <snap>_<desktop-id>.desktop, so mirror that to avoid app-id lookup
-    // failures when the desktop file name differs from the snap name.
-    if env::var_os("SNAP").is_some()
-        && env::var_os("XDG_DESKTOP_PORTAL_USE_THIS_DESKTOP_ID").is_none()
-    {
-        let desktop_id = format!("{}.desktop", resolved_app_id);
-        unsafe {
-            env::set_var("XDG_DESKTOP_PORTAL_USE_THIS_DESKTOP_ID", desktop_id);
-        }
-    }
-}
-
-fn resolve_portal_app_id(default_app_id: &str) -> String {
-    if env::var_os("SNAP").is_some() {
-        // Snapd exports desktop files as <snap_name>_<desktop_id>.desktop. Align the portal
-        // app-id with that basename so the portal can match the installed desktop file.
-        let snap_name = env::var("SNAP_INSTANCE_NAME")
-            .or_else(|_| env::var("SNAP_NAME"))
-            .unwrap_or_else(|_| "snap".to_string());
-
-        let prefixed = format!("{}_", snap_name);
-        if default_app_id.starts_with(&prefixed) {
-            return default_app_id.to_string();
-        }
-
-        return format!("{}{}", prefixed, default_app_id);
-    }
-
-    default_app_id.to_string()
-}
-
-fn resolve_notification_icon(icon_name: &str) -> gio::Icon {
-    if let Some(icon) = snap_icon(icon_name) {
-        return icon;
-    }
-
-    gio::ThemedIcon::new(icon_name).upcast()
-}
-
-fn snap_icon(icon_name: &str) -> Option<gio::Icon> {
-    let icon_path = snap_icon_path(icon_name)?;
-    let file_icon = gio::FileIcon::new(&gio::File::for_path(icon_path));
-    Some(file_icon.upcast())
-}
-
-fn snap_icon_path(icon_name: &str) -> Option<PathBuf> {
-    let snap_root = env::var_os("SNAP")?;
-    let snap_root = Path::new(&snap_root);
-
-    let candidates = ["svg", "png"].into_iter().map(|ext| {
-        snap_root
-            .join("meta/gui")
-            .join(format!("{}.{}", icon_name, ext))
-    });
-
-    candidates.into_iter().find(|path| path.exists())
 }
 
 #[cfg(test)]
