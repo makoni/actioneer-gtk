@@ -635,3 +635,5 @@ msgstr "{count} দিন আগে"
 msgid "{title} - Logs"
 msgstr "{title} - লগ"
 
+msgid "Donate"
+msgstr "অনুদান দিন"

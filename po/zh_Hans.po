@@ -635,3 +635,5 @@ msgstr "{count}天前"
 msgid "{title} - Logs"
 msgstr "{title} - 日志"
 
+msgid "Donate"
+msgstr "捐赠"

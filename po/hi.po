@@ -635,3 +635,5 @@ msgstr "{count}दि पहले"
 msgid "{title} - Logs"
 msgstr "{title} - लॉग"
 
+msgid "Donate"
+msgstr "दान करें"

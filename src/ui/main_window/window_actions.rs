@@ -1,4 +1,4 @@
-use super::{HOMEPAGE_URL, ISSUE_URL, MainWindow};
+use super::{DONATION_URL, HOMEPAGE_URL, ISSUE_URL, MainWindow};
 use crate::i18n::tr;
 use crate::ui::preferences_window::PreferencesWindow;
 use gtk4::prelude::*;
@@ -39,6 +39,7 @@ impl MainWindow {
             .issue_url(ISSUE_URL)
             .license_type(gtk::License::MitX11)
             .build();
+        about.add_link(tr("Donate").as_str(), DONATION_URL);
         about.present();
     }
 

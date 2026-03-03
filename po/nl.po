@@ -681,3 +681,6 @@ msgstr "{count}d geleden"
 
 msgid "{title} - Logs"
 msgstr "{title} - Logboeken"
+
+msgid "Donate"
+msgstr "Doneren"

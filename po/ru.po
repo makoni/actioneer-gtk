@@ -640,3 +640,6 @@ msgstr "{count}д назад"
 
 msgid "{title} - Logs"
 msgstr "{title} — Логи"
+
+msgid "Donate"
+msgstr "Пожертвовать"

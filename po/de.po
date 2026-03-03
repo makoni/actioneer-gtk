@@ -683,3 +683,6 @@ msgstr "vor {count} Tg."
 
 msgid "{title} - Logs"
 msgstr "{title} - Protokolle"
+
+msgid "Donate"
+msgstr "Spenden"

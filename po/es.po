@@ -635,3 +635,5 @@ msgstr "hace {count} d"
 msgid "{title} - Logs"
 msgstr "{title} - Registros"
 
+msgid "Donate"
+msgstr "Donar"

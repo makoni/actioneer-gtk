@@ -635,3 +635,5 @@ msgstr "{count}d ago"
 msgid "{title} - Logs"
 msgstr "{title} - Logs"
 
+msgid "Donate"
+msgstr "Donate"

@@ -635,3 +635,5 @@ msgstr "قبل {count}ي"
 msgid "{title} - Logs"
 msgstr "{title} - السجلات"
 
+msgid "Donate"
+msgstr "تبرع"

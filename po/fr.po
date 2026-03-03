@@ -635,3 +635,5 @@ msgstr "il y a {count} j"
 msgid "{title} - Logs"
 msgstr "{title} - Journaux"
 
+msgid "Donate"
+msgstr "Faire un don"

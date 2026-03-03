@@ -43,6 +43,7 @@ const MIN_WINDOW_WIDTH: i32 = 860;
 const MIN_WINDOW_HEIGHT: i32 = 520;
 const HOMEPAGE_URL: &str = "https://github.com/makoni/actioneer-gtk";
 const ISSUE_URL: &str = "https://github.com/makoni/actioneer-gtk/issues";
+const DONATION_URL: &str = "https://nowpayments.io/donation/makoni";
 
 #[derive(Clone)]
 pub struct MainWindow {
