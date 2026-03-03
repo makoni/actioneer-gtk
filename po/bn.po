@@ -630,3 +630,12 @@ msgstr "{title} - লগ"
 
 msgid "Donate"
 msgstr "অনুদান দিন"
+
+msgid "No"
+msgstr "না"
+
+msgid "Yes"
+msgstr "হ্যাঁ"
+
+msgid "Failed to open donation page in the browser."
+msgstr "Failed to open donation page in the browser."

@@ -634,3 +634,12 @@ msgstr "{count}g fa"
 
 msgid "{title} - Logs"
 msgstr "{title} - Log"
+
+msgid "No"
+msgstr "No"
+
+msgid "Yes"
+msgstr "Sì"
+
+msgid "Failed to open donation page in the browser."
+msgstr "Failed to open donation page in the browser."

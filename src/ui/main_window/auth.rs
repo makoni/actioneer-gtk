@@ -34,10 +34,15 @@ impl MainWindow {
             Some(&parent),
             gtk::DialogFlags::MODAL,
             gtk::MessageType::Warning,
-            gtk::ButtonsType::YesNo,
+            gtk::ButtonsType::None,
+            "",
+        );
+        dialog.set_text(Some(
             tr("Are you sure you want to sign out?\n\nYou will need to sign in again to continue.")
                 .as_str(),
-        );
+        ));
+        dialog.add_button(tr("No").as_str(), gtk::ResponseType::No);
+        dialog.add_button(tr("Yes").as_str(), gtk::ResponseType::Yes);
 
         dialog.connect_response(move |dialog, response| {
             dialog.close();

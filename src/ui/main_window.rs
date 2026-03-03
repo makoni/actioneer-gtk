@@ -381,6 +381,7 @@ impl MainWindow {
         let sign_out_label = tr("Sign out");
         let report_issue_label = tr("Report Issue");
         let about_label = tr("About Actioneer");
+        let donate_label = tr("Donate");
         let quit_label = tr("Quit");
         menu.append(Some(preferences_label.as_str()), Some("app.preferences"));
         menu.append(Some(shortcuts_label.as_str()), Some("app.shortcuts"));
@@ -395,6 +396,7 @@ impl MainWindow {
         menu.append(Some(sign_out_label.as_str()), Some("win.sign_out"));
         menu.append(Some(report_issue_label.as_str()), Some("app.report_issue"));
         menu.append(Some(about_label.as_str()), Some("app.about"));
+        menu.append(Some(donate_label.as_str()), Some("app.donate"));
         menu.append(Some(quit_label.as_str()), Some("app.quit"));
 
         menu_button.set_menu_model(Some(&menu));
@@ -483,6 +485,15 @@ impl MainWindow {
                 this.open_report_issue();
             });
             replace_action("report_issue", &action);
+        }
+
+        {
+            let this = self.clone();
+            let action = gio::SimpleAction::new("donate", None);
+            action.connect_activate(move |_, _| {
+                this.open_donation_url();
+            });
+            replace_action("donate", &action);
         }
 
         {

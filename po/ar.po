@@ -630,3 +630,12 @@ msgstr "{title} - السجلات"
 
 msgid "Donate"
 msgstr "تبرع"
+
+msgid "No"
+msgstr "لا"
+
+msgid "Yes"
+msgstr "نعم"
+
+msgid "Failed to open donation page in the browser."
+msgstr "Failed to open donation page in the browser."

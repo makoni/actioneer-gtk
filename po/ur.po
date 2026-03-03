@@ -630,3 +630,12 @@ msgstr "{title} - لاگز"
 
 msgid "Donate"
 msgstr "عطیہ دیں"
+
+msgid "No"
+msgstr "نہیں"
+
+msgid "Yes"
+msgstr "ہاں"
+
+msgid "Failed to open donation page in the browser."
+msgstr "Failed to open donation page in the browser."

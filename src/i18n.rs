@@ -46,7 +46,8 @@ pub fn apply_language_preference(preference: LanguagePreference) -> bool {
     let changed = current_effective_language() != effective_language;
 
     set_effective_language(effective_language);
-    let _ = setlocale(LocaleCategory::LcAll, "");
+    let locale = locale_for_setlocale(current_effective_language().as_str()).unwrap_or("");
+    let _ = setlocale(LocaleCategory::LcAll, locale);
     changed
 }
 
@@ -55,6 +56,24 @@ fn set_language_env_for_process(effective_language: &str) {
     unsafe {
         std::env::set_var("LANGUAGE", effective_language);
         std::env::set_var("ACTIONEER_EFFECTIVE_LANG", effective_language);
+    }
+}
+
+fn locale_for_setlocale(language: &str) -> Option<&'static str> {
+    match language {
+        "en" => Some("en_US.UTF-8"),
+        "de" => Some("de_DE.UTF-8"),
+        "nl" => Some("nl_NL.UTF-8"),
+        "zh_Hans" => Some("zh_CN.UTF-8"),
+        "hi" => Some("hi_IN.UTF-8"),
+        "es" => Some("es_ES.UTF-8"),
+        "fr" => Some("fr_FR.UTF-8"),
+        "ar" => Some("ar_SA.UTF-8"),
+        "bn" => Some("bn_BD.UTF-8"),
+        "pt_BR" => Some("pt_BR.UTF-8"),
+        "ru" => Some("ru_RU.UTF-8"),
+        "ur" => Some("ur_PK.UTF-8"),
+        _ => None,
     }
 }
 

@@ -630,3 +630,12 @@ msgstr "{title} - Journaux"
 
 msgid "Donate"
 msgstr "Faire un don"
+
+msgid "No"
+msgstr "Non"
+
+msgid "Yes"
+msgstr "Oui"
+
+msgid "Failed to open donation page in the browser."
+msgstr "Failed to open donation page in the browser."

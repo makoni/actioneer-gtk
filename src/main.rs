@@ -16,6 +16,7 @@ use gtk4::{IconTheme, gdk, glib};
 use i18n::tr;
 use libadwaita as adw;
 use preferences::{PreferencesManager, ThemePreference};
+use std::backtrace::Backtrace;
 use std::borrow::Cow;
 use std::ops::ControlFlow;
 use std::path::Path;
@@ -67,6 +68,7 @@ fn main() -> anyhow::Result<()> {
                 .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
         )
         .init();
+    install_panic_hook();
 
     info!("Starting Actioneer for Linux");
     let runtime_app_id = resolved_app_id();
@@ -169,6 +171,31 @@ fn main() -> anyhow::Result<()> {
     // Run the application
     app.run();
     Ok(())
+}
+
+fn install_panic_hook() {
+    std::panic::set_hook(Box::new(|panic_info| {
+        let location = panic_info
+            .location()
+            .map(|loc| format!("{}:{}:{}", loc.file(), loc.line(), loc.column()))
+            .unwrap_or_else(|| "unknown".to_string());
+        let payload = if let Some(msg) = panic_info.payload().downcast_ref::<&str>() {
+            (*msg).to_string()
+        } else if let Some(msg) = panic_info.payload().downcast_ref::<String>() {
+            msg.clone()
+        } else {
+            "non-string panic payload".to_string()
+        };
+        let backtrace = Backtrace::force_capture();
+
+        tracing::error!(
+            panic_location = %location,
+            panic_payload = %payload,
+            backtrace = %backtrace,
+            "Unhandled panic"
+        );
+        eprintln!("Unhandled panic at {location}: {payload}\nBacktrace:\n{backtrace}");
+    }));
 }
 
 fn parse_cli_locale_arg() -> Option<String> {

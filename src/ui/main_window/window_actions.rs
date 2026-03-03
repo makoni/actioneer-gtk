@@ -39,52 +39,83 @@ impl MainWindow {
             .issue_url(ISSUE_URL)
             .license_type(gtk::License::MitX11)
             .build();
-        about.add_link(tr("Donate").as_str(), DONATION_URL);
         about.present();
     }
 
     pub(super) fn open_shortcuts_window(&self) {
-        let window = gtk::ShortcutsWindow::builder()
-            .transient_for(&self.window)
+        let window = Self::build_shortcuts_window(&self.window);
+        window.present();
+    }
+
+    fn build_shortcuts_window(parent: &adw::ApplicationWindow) -> adw::Window {
+        let window = adw::Window::builder()
+            .title(tr("Keyboard Shortcuts"))
+            .transient_for(parent)
             .modal(true)
             .default_width(460)
             .default_height(340)
             .build();
-        let section = gtk::ShortcutsSection::builder()
-            .title(tr("General"))
-            .build();
-        let group = gtk::ShortcutsGroup::builder()
-            .title(tr("Application"))
-            .build();
 
-        group.append(&Self::shortcut_item(
+        let content = gtk::Box::new(gtk::Orientation::Vertical, 12);
+        content.set_margin_top(18);
+        content.set_margin_bottom(18);
+        content.set_margin_start(18);
+        content.set_margin_end(18);
+
+        content.append(&Self::shortcut_item(
             tr("Refresh repositories").as_str(),
             "F5",
         ));
-        group.append(&Self::shortcut_item(
+        content.append(&Self::shortcut_item(
             tr("Open preferences").as_str(),
-            "<Primary>comma",
+            "Ctrl+,",
         ));
-        group.append(&Self::shortcut_item(
+        content.append(&Self::shortcut_item(
             tr("Show keyboard shortcuts").as_str(),
-            "<Primary>question",
+            "Ctrl+?",
         ));
-        group.append(&Self::shortcut_item(tr("Open help").as_str(), "F1"));
-        group.append(&Self::shortcut_item(
+        content.append(&Self::shortcut_item(tr("Open help").as_str(), "F1"));
+        content.append(&Self::shortcut_item(
             tr("Quit application").as_str(),
-            "<Primary>q",
+            "Ctrl+Q",
         ));
 
-        section.append(&group);
-        window.set_child(Some(&section));
-        window.present();
+        let spacer = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        spacer.set_vexpand(true);
+        content.append(&spacer);
+
+        let button_row = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        let button_spacer = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        button_spacer.set_hexpand(true);
+        button_row.append(&button_spacer);
+
+        let close_button = gtk::Button::with_label(tr("Close").as_str());
+        close_button.add_css_class("suggested-action");
+        let window_for_close = window.clone();
+        close_button.connect_clicked(move |_| {
+            window_for_close.close();
+        });
+        button_row.append(&close_button);
+        content.append(&button_row);
+
+        window.set_content(Some(&content));
+        window
     }
 
-    fn shortcut_item(title: &str, accelerator: &str) -> gtk::ShortcutsShortcut {
-        gtk::ShortcutsShortcut::builder()
-            .title(title)
-            .accelerator(accelerator)
-            .build()
+    fn shortcut_item(title: &str, accelerator: &str) -> gtk::Box {
+        let row = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+
+        let title_label = gtk::Label::new(Some(title));
+        title_label.set_xalign(0.0);
+        title_label.set_hexpand(true);
+
+        let accelerator_label = gtk::Label::new(Some(accelerator));
+        accelerator_label.add_css_class("dim-label");
+        accelerator_label.set_xalign(1.0);
+
+        row.append(&title_label);
+        row.append(&accelerator_label);
+        row
     }
 
     pub(super) fn open_help_window(&self) {
@@ -184,6 +215,22 @@ Troubleshooting\n\
         }
     }
 
+    pub(super) fn open_donation_url(&self) {
+        if let Err(err) = open::that(DONATION_URL) {
+            error!("Failed to open donation URL: {}", err);
+            let open_donation_error = tr("Failed to open donation page in the browser.");
+            let dialog = gtk::MessageDialog::new(
+                Some(&self.window),
+                gtk::DialogFlags::MODAL,
+                gtk::MessageType::Error,
+                gtk::ButtonsType::Ok,
+                open_donation_error.as_str(),
+            );
+            dialog.connect_response(|dialog, _| dialog.close());
+            dialog.present();
+        }
+    }
+
     pub(super) fn dispatch_test_notification(&self) {
         info!("Debug: dispatching test notification action");
         match self.notification_manager.clone() {
@@ -215,5 +262,38 @@ Troubleshooting\n\
                 dialog.present();
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ui::test_helpers::gtk_test_guard;
+    use gtk4::glib;
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn shortcuts_window_builds_and_closes() {
+        let Some(_guard) = gtk_test_guard("shortcuts_window_builds_and_closes") else {
+            return;
+        };
+
+        let app = adw::Application::builder()
+            .application_id("me.spaceinbox.actioneer.tests.shortcuts")
+            .build();
+        let parent = adw::ApplicationWindow::new(&app);
+
+        let window = MainWindow::build_shortcuts_window(&parent);
+        window.present();
+        while glib::MainContext::default().pending() {
+            let _ = glib::MainContext::default().iteration(false);
+        }
+
+        window.close();
+        while glib::MainContext::default().pending() {
+            let _ = glib::MainContext::default().iteration(false);
+        }
+
+        assert!(!window.is_visible());
     }
 }

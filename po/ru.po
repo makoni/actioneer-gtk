@@ -635,3 +635,12 @@ msgstr "{title} — Логи"
 
 msgid "Donate"
 msgstr "Пожертвовать"
+
+msgid "No"
+msgstr "Нет"
+
+msgid "Yes"
+msgstr "Да"
+
+msgid "Failed to open donation page in the browser."
+msgstr "Не удалось открыть страницу пожертвований в браузере."

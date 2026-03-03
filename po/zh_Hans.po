@@ -630,3 +630,12 @@ msgstr "{title} - 日志"
 
 msgid "Donate"
 msgstr "捐赠"
+
+msgid "No"
+msgstr "否"
+
+msgid "Yes"
+msgstr "是"
+
+msgid "Failed to open donation page in the browser."
+msgstr "Failed to open donation page in the browser."

@@ -677,3 +677,12 @@ msgstr "{title} - Protokolle"
 
 msgid "Donate"
 msgstr "Spenden"
+
+msgid "No"
+msgstr "Nein"
+
+msgid "Yes"
+msgstr "Ja"
+
+msgid "Failed to open donation page in the browser."
+msgstr "Failed to open donation page in the browser."

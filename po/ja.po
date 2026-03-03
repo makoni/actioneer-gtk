@@ -632,3 +632,12 @@ msgstr "{count}日前"
 
 msgid "{title} - Logs"
 msgstr "{title} - ログ"
+
+msgid "No"
+msgstr "いいえ"
+
+msgid "Yes"
+msgstr "はい"
+
+msgid "Failed to open donation page in the browser."
+msgstr "Failed to open donation page in the browser."

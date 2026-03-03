@@ -630,3 +630,12 @@ msgstr "{title} - Registros"
 
 msgid "Donate"
 msgstr "Doar"
+
+msgid "No"
+msgstr "Não"
+
+msgid "Yes"
+msgstr "Sim"
+
+msgid "Failed to open donation page in the browser."
+msgstr "Failed to open donation page in the browser."

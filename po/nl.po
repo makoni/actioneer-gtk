@@ -675,3 +675,12 @@ msgstr "{title} - Logboeken"
 
 msgid "Donate"
 msgstr "Doneren"
+
+msgid "No"
+msgstr "Nee"
+
+msgid "Yes"
+msgstr "Ja"
+
+msgid "Failed to open donation page in the browser."
+msgstr "Failed to open donation page in the browser."
