@@ -1,10 +1,12 @@
 use super::{DONATION_URL, HOMEPAGE_URL, ISSUE_URL, MainWindow};
+use crate::crash_report;
 use crate::i18n::tr;
 use crate::ui::preferences_window::PreferencesWindow;
 use gtk4::prelude::*;
 use gtk4::{self as gtk};
 use libadwaita as adw;
 use libadwaita::prelude::*;
+use std::fs;
 use tracing::{error, info, warn};
 
 impl MainWindow {
@@ -200,7 +202,13 @@ Troubleshooting\n\
     }
 
     pub(super) fn open_report_issue(&self) {
-        if let Err(err) = open::that(ISSUE_URL) {
+        let issue_url = crash_report::build_issue_url_for_pending_report()
+            .map(|url| url.unwrap_or_else(|| ISSUE_URL.to_string()))
+            .unwrap_or_else(|err| {
+                warn!("Failed to prefill crash issue URL: {}", err);
+                ISSUE_URL.to_string()
+            });
+        if let Err(err) = open::that(issue_url) {
             error!("Failed to open issue tracker URL: {}", err);
             let open_issue_error = tr("Failed to open issue tracker in the browser.");
             let dialog = gtk::MessageDialog::new(
@@ -213,6 +221,100 @@ Troubleshooting\n\
             dialog.connect_response(|dialog, _| dialog.close());
             dialog.present();
         }
+    }
+
+    pub(super) fn show_pending_crash_report_dialog(&self) {
+        let pending = match crash_report::read_pending_report() {
+            Ok(Some(report)) => report,
+            Ok(None) => return,
+            Err(err) => {
+                error!("Failed to read pending crash report: {}", err);
+                return;
+            }
+        };
+
+        let report_text = match fs::read_to_string(&pending.report_path) {
+            Ok(text) => text,
+            Err(err) => {
+                warn!("Failed to read crash report content: {}", err);
+                format!(
+                    "{}\n{}",
+                    tr("Crash report file:"),
+                    pending.report_path.as_str()
+                )
+            }
+        };
+
+        let popover = gtk::Popover::builder()
+            .autohide(false)
+            .has_arrow(true)
+            .build();
+        popover.set_parent(&self.header_bar);
+
+        let content = gtk::Box::new(gtk::Orientation::Vertical, 8);
+        content.set_margin_top(12);
+        content.set_margin_bottom(12);
+        content.set_margin_start(12);
+        content.set_margin_end(12);
+        content.set_size_request(640, 420);
+
+        let message_label = gtk::Label::new(Some(
+            tr("Actioneer detected a crash report from the previous run. You can report it on GitHub and attach the crash file.")
+                .as_str(),
+        ));
+        message_label.set_wrap(true);
+        message_label.set_xalign(0.0);
+        content.append(&message_label);
+
+        let scrolled = gtk::ScrolledWindow::builder()
+            .hexpand(true)
+            .vexpand(true)
+            .min_content_height(260)
+            .build();
+        let text_view = gtk::TextView::new();
+        text_view.set_editable(false);
+        text_view.set_monospace(true);
+        text_view.set_wrap_mode(gtk::WrapMode::WordChar);
+        text_view.buffer().set_text(report_text.as_str());
+        scrolled.set_child(Some(&text_view));
+        content.append(&scrolled);
+
+        let button_row = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+        let copy_button = gtk::Button::with_label(tr("Copy diagnostics").as_str());
+        let issue_button = gtk::Button::with_label(tr("Report Issue").as_str());
+        let close_button = gtk::Button::with_label(tr("Close").as_str());
+        close_button.add_css_class("suggested-action");
+
+        let report_text_for_copy = report_text.clone();
+        copy_button.connect_clicked(move |_| {
+            if let Some(display) = gtk::gdk::Display::default() {
+                display.clipboard().set_text(report_text_for_copy.as_str());
+            }
+        });
+
+        let this = self.clone();
+        issue_button.connect_clicked(move |_| {
+            this.open_report_issue();
+        });
+
+        let popover_for_close = popover.clone();
+        close_button.connect_clicked(move |_| {
+            if let Err(err) = crash_report::clear_pending_report() {
+                warn!("Failed to clear pending crash report marker: {}", err);
+            }
+            popover_for_close.popdown();
+        });
+
+        button_row.append(&copy_button);
+        button_row.append(&issue_button);
+        let spacer = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        spacer.set_hexpand(true);
+        button_row.append(&spacer);
+        button_row.append(&close_button);
+        content.append(&button_row);
+
+        popover.set_child(Some(&content));
+        popover.popup();
     }
 
     pub(super) fn open_donation_url(&self) {
@@ -262,6 +364,11 @@ Troubleshooting\n\
                 dialog.present();
             }
         }
+    }
+
+    pub(super) fn trigger_test_crash(&self) {
+        let _ = self;
+        panic!("Intentional debug crash triggered from app menu");
     }
 }
 

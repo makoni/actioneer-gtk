@@ -639,3 +639,24 @@ msgstr "Sim"
 
 msgid "Failed to open donation page in the browser."
 msgstr "Failed to open donation page in the browser."
+
+msgid "Debug"
+msgstr "Depuracao"
+
+msgid "Trigger test crash"
+msgstr "Disparar falha de teste"
+
+msgid "Actioneer detected a crash report from the previous run. You can report it on GitHub and attach the crash file."
+msgstr "O Actioneer detectou um relatorio de falha da execucao anterior. Voce pode reportar no GitHub e anexar o arquivo de falha."
+
+msgid "Crash report file:"
+msgstr "Arquivo do relatorio de falha:"
+
+msgid "Copy diagnostics"
+msgstr "Copiar diagnosticos"
+
+msgid "Open crash folder"
+msgstr "Abrir pasta de falhas"
+
+msgid "Dismiss"
+msgstr "Fechar"

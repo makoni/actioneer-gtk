@@ -639,3 +639,24 @@ msgstr "हाँ"
 
 msgid "Failed to open donation page in the browser."
 msgstr "Failed to open donation page in the browser."
+
+msgid "Debug"
+msgstr "डिबग"
+
+msgid "Trigger test crash"
+msgstr "टेस्ट क्रैश ट्रिगर करें"
+
+msgid "Actioneer detected a crash report from the previous run. You can report it on GitHub and attach the crash file."
+msgstr "Actioneer ने पिछले रन से एक क्रैश रिपोर्ट पाई है। आप इसे GitHub पर रिपोर्ट कर सकते हैं और क्रैश फ़ाइल संलग्न कर सकते हैं।"
+
+msgid "Crash report file:"
+msgstr "क्रैश रिपोर्ट फ़ाइल:"
+
+msgid "Copy diagnostics"
+msgstr "डायग्नोस्टिक्स कॉपी करें"
+
+msgid "Open crash folder"
+msgstr "क्रैश फ़ोल्डर खोलें"
+
+msgid "Dismiss"
+msgstr "बंद करें"

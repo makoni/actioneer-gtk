@@ -2,6 +2,7 @@ mod api;
 mod auth;
 mod cache;
 mod config;
+mod crash_report;
 mod demo;
 mod favorites;
 mod i18n;
@@ -23,7 +24,7 @@ use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, OnceLock};
 use tokio::runtime::{Builder, Handle};
-use tracing::info;
+use tracing::{info, warn};
 use ui::{MainWindow, style};
 
 pub const APP_ID: &str = "me.spaceinbox.actioneer";
@@ -33,6 +34,7 @@ const DEV_ICON_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/icons/icons");
 
 // Global runtime handle
 static RUNTIME_HANDLE: OnceLock<Handle> = OnceLock::new();
+static CURRENT_SESSION_ID: OnceLock<String> = OnceLock::new();
 
 pub fn runtime_handle() -> &'static Handle {
     RUNTIME_HANDLE.get().expect("Runtime not initialized")
@@ -68,6 +70,14 @@ fn main() -> anyhow::Result<()> {
                 .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
         )
         .init();
+    match crash_report::initialize_session_lifecycle() {
+        Ok(marker) => {
+            let _ = CURRENT_SESSION_ID.set(marker.session_id);
+        }
+        Err(err) => {
+            warn!("Failed to initialize crash session lifecycle: {}", err);
+        }
+    }
     install_panic_hook();
 
     info!("Starting Actioneer for Linux");
@@ -104,6 +114,13 @@ fn main() -> anyhow::Result<()> {
         .application_id(runtime_app_id.as_ref())
         .flags(ApplicationFlags::NON_UNIQUE)
         .build();
+    app.connect_shutdown(|_| {
+        if let Some(session_id) = CURRENT_SESSION_ID.get()
+            && let Err(err) = crash_report::mark_session_clean(session_id)
+        {
+            warn!("Failed to mark session as clean on shutdown: {}", err);
+        }
+    });
 
     let send_test_notification = Arc::new(AtomicBool::new(false));
     let option_flag = send_test_notification.clone();
@@ -194,6 +211,16 @@ fn install_panic_hook() {
             backtrace = %backtrace,
             "Unhandled panic"
         );
+        let session_id = CURRENT_SESSION_ID.get().map(String::as_str);
+        if let Err(err) = crate::crash_report::persist_panic_report(
+            &location,
+            &payload,
+            &backtrace.to_string(),
+            session_id,
+        ) {
+            tracing::error!("Failed to persist crash report from panic hook: {}", err);
+            eprintln!("Failed to persist crash report from panic hook: {err}");
+        }
         eprintln!("Unhandled panic at {location}: {payload}\nBacktrace:\n{backtrace}");
     }));
 }

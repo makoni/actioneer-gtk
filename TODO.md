@@ -138,6 +138,9 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-03-04 — Replaced startup crash `MessageDialog` with a translated crash-report popover containing a read-only text field with report contents and three actions: “Copy diagnostics”, “Report Issue”, and “Close”; only “Close” dismisses the popover (and clears pending marker).
+- [✅] 2026-03-03 — Implemented full crash-recovery reporting flow: panic hook now persists sanitized crash reports to XDG state, session lifecycle writes/clears markers and generates abnormal-exit reports, next launch shows a recovery dialog (Report Issue / Copy diagnostics / Open crash folder / Dismiss), and GitHub issue links are prefilled from pending crash metadata; validated with fmt, clippy, translation compile, unit tests, and ignored GTK tests.
+- [✅] 2026-03-03 — Added a debug-build-only app-menu Debug group containing “Send test notification” and “Trigger test crash”; wired `win.trigger_test_crash` to an intentional panic path so panic-hook/backtrace logging can be verified end-to-end.
 - [✅] 2026-03-03 — Localized sign-out confirmation button labels across all shipped locale catalogs (`po/LINGUAS`): translated `Yes`/`No` for `de`, `nl`, `zh_Hans`, `hi`, `es`, `fr`, `ar`, `bn`, `pt_BR`, `ru`, and `ur` (plus existing `it`/`ja` catalogs), and revalidated with `scripts/compile-translations.sh`.
 - [✅] 2026-03-03 — Updated menu/dialog UX polish: shortcuts dialog now keeps the Close button anchored at the bottom-right, sign-out confirmation uses localized app strings for Yes/No buttons, and Donate was moved from About details into the app menu (right before Quit) with a dedicated `app.donate` action.
 - [✅] 2026-03-03 — Fixed a crash when closing Keyboard Shortcuts by replacing the `gtk::ShortcutsWindow` composition path with a stable modal `AdwWindow` shortcuts dialog in `src/ui/main_window/window_actions.rs`, and added an ignored GTK regression test (`shortcuts_window_builds_and_closes`) to exercise open/close lifecycle.

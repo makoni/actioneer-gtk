@@ -639,3 +639,24 @@ msgstr "نعم"
 
 msgid "Failed to open donation page in the browser."
 msgstr "Failed to open donation page in the browser."
+
+msgid "Debug"
+msgstr "تصحيح"
+
+msgid "Trigger test crash"
+msgstr "تشغيل تعطل اختباري"
+
+msgid "Actioneer detected a crash report from the previous run. You can report it on GitHub and attach the crash file."
+msgstr "اكتشف Actioneer تقرير تعطل من التشغيل السابق. يمكنك الإبلاغ عنه على GitHub وإرفاق ملف التعطل."
+
+msgid "Crash report file:"
+msgstr "ملف تقرير التعطل:"
+
+msgid "Copy diagnostics"
+msgstr "نسخ بيانات التشخيص"
+
+msgid "Open crash folder"
+msgstr "فتح مجلد التعطل"
+
+msgid "Dismiss"
+msgstr "إغلاق"

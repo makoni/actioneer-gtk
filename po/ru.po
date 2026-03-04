@@ -644,3 +644,24 @@ msgstr "Да"
 
 msgid "Failed to open donation page in the browser."
 msgstr "Не удалось открыть страницу пожертвований в браузере."
+
+msgid "Debug"
+msgstr "Отладка"
+
+msgid "Trigger test crash"
+msgstr "Вызвать тестовый сбой"
+
+msgid "Actioneer detected a crash report from the previous run. You can report it on GitHub and attach the crash file."
+msgstr "Actioneer обнаружил отчёт о сбое из предыдущего запуска. Вы можете сообщить об этом на GitHub и приложить файл сбоя."
+
+msgid "Crash report file:"
+msgstr "Файл отчёта о сбое:"
+
+msgid "Copy diagnostics"
+msgstr "Скопировать диагностику"
+
+msgid "Open crash folder"
+msgstr "Открыть папку со сбоями"
+
+msgid "Dismiss"
+msgstr "Закрыть"

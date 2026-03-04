@@ -382,16 +382,24 @@ impl MainWindow {
         let report_issue_label = tr("Report Issue");
         let about_label = tr("About Actioneer");
         let donate_label = tr("Donate");
+        let debug_label = tr("Debug");
         let quit_label = tr("Quit");
         menu.append(Some(preferences_label.as_str()), Some("app.preferences"));
         menu.append(Some(shortcuts_label.as_str()), Some("app.shortcuts"));
         menu.append(Some(help_label.as_str()), Some("app.help"));
         if cfg!(debug_assertions) {
+            let debug_menu = Menu::new();
             let test_notification_label = tr("Send test notification");
-            menu.append(
+            let trigger_test_crash_label = tr("Trigger test crash");
+            debug_menu.append(
                 Some(test_notification_label.as_str()),
                 Some("win.send_test_notification"),
             );
+            debug_menu.append(
+                Some(trigger_test_crash_label.as_str()),
+                Some("win.trigger_test_crash"),
+            );
+            menu.append_submenu(Some(debug_label.as_str()), &debug_menu);
         }
         menu.append(Some(sign_out_label.as_str()), Some("win.sign_out"));
         menu.append(Some(report_issue_label.as_str()), Some("app.report_issue"));
@@ -429,6 +437,15 @@ impl MainWindow {
             let action = gio::SimpleAction::new("send_test_notification", None);
             action.connect_activate(move |_, _| {
                 this.dispatch_test_notification();
+            });
+            window.add_action(&action);
+        }
+
+        if cfg!(debug_assertions) && window.lookup_action("trigger_test_crash").is_none() {
+            let this = self.clone();
+            let action = gio::SimpleAction::new("trigger_test_crash", None);
+            action.connect_activate(move |_, _| {
+                this.trigger_test_crash();
             });
             window.add_action(&action);
         }
@@ -726,6 +743,10 @@ impl MainWindow {
 
     pub fn present(&self) {
         self.window.present();
+        let this = self.clone();
+        glib::idle_add_local_once(move || {
+            this.show_pending_crash_report_dialog();
+        });
     }
 
     fn reload_window_for_language_change(&self) {

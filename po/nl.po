@@ -684,3 +684,24 @@ msgstr "Ja"
 
 msgid "Failed to open donation page in the browser."
 msgstr "Failed to open donation page in the browser."
+
+msgid "Debug"
+msgstr "Debug"
+
+msgid "Trigger test crash"
+msgstr "Testcrash uitvoeren"
+
+msgid "Actioneer detected a crash report from the previous run. You can report it on GitHub and attach the crash file."
+msgstr "Actioneer heeft een crashrapport van de vorige sessie gedetecteerd. Je kunt dit op GitHub melden en het crashbestand bijvoegen."
+
+msgid "Crash report file:"
+msgstr "Crashrapportbestand:"
+
+msgid "Copy diagnostics"
+msgstr "Diagnostiek kopieren"
+
+msgid "Open crash folder"
+msgstr "Crashmap openen"
+
+msgid "Dismiss"
+msgstr "Sluiten"

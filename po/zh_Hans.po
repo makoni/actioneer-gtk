@@ -639,3 +639,24 @@ msgstr "是"
 
 msgid "Failed to open donation page in the browser."
 msgstr "Failed to open donation page in the browser."
+
+msgid "Debug"
+msgstr "调试"
+
+msgid "Trigger test crash"
+msgstr "触发测试崩溃"
+
+msgid "Actioneer detected a crash report from the previous run. You can report it on GitHub and attach the crash file."
+msgstr "Actioneer 检测到上一次运行的崩溃报告。您可以在 GitHub 上反馈并附上崩溃文件。"
+
+msgid "Crash report file:"
+msgstr "崩溃报告文件："
+
+msgid "Copy diagnostics"
+msgstr "复制诊断信息"
+
+msgid "Open crash folder"
+msgstr "打开崩溃文件夹"
+
+msgid "Dismiss"
+msgstr "关闭"
