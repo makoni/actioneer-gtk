@@ -8,6 +8,7 @@ use crate::ui::utils::widget_data::get_data_clone;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
+use parking_lot::Mutex;
 use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -27,6 +28,85 @@ fn should_skip_silent_workflow_refresh(last_refresh: Option<Instant>, now: Insta
 
 fn should_refresh_workflow_runs_in_background(expander_expanded: bool, is_active: bool) -> bool {
     expander_expanded || is_active
+}
+
+fn cancel_auto_refresh_timer_slot(auto_refresh_source: &Arc<Mutex<Option<glib::SourceId>>>) {
+    if let Some(source_id) = auto_refresh_source.lock().take() {
+        source_id.remove();
+    }
+}
+
+fn configure_auto_refresh_timer_slot(
+    auto_refresh_source: &Arc<Mutex<Option<glib::SourceId>>>,
+    list_context: &WorkflowListContext,
+    repo_full_name: &str,
+    refresh_interval_secs: u64,
+) {
+    cancel_auto_refresh_timer_slot(auto_refresh_source);
+
+    if refresh_interval_secs == 0 {
+        info!(
+            "Auto-refresh disabled for {} (interval = 0)",
+            repo_full_name
+        );
+        return;
+    }
+
+    let client = list_context.client.clone();
+    let owner = list_context.owner.clone();
+    let repo_name = list_context.repo.clone();
+    let repo_model = list_context.repo_model.clone();
+    let parent_window = list_context.parent_window.clone();
+    let list_store = list_context.store.clone();
+    let workflows_with_active = list_context.workflows_with_active_runs.clone();
+    let job_contexts = list_context.job_contexts.clone();
+    let toast_overlay = list_context.toast_overlay.clone();
+    let run_digests = list_context.run_digests.clone();
+    let notification_manager = list_context.notification_manager.clone();
+    let preferences_manager = list_context.preferences_manager.clone();
+    let workflows_loading_runs = list_context.workflows_loading_runs.clone();
+    let workflows_last_loaded = list_context.workflows_last_loaded.clone();
+    let run_filters = list_context.run_filters.clone();
+    let run_load_service = list_context.run_load_service.clone();
+
+    info!(
+        "Starting auto-refresh timer with interval: {} seconds",
+        refresh_interval_secs
+    );
+
+    let source_id = glib::timeout_add_seconds_local(refresh_interval_secs as u32, move || {
+        if !parent_window.is_visible() {
+            info!("Skipping auto-refresh while window is hidden");
+            return glib::ControlFlow::Continue;
+        }
+
+        info!("Auto-refreshing workflow runs in background");
+
+        let background_context = WorkflowListContext {
+            store: list_store.clone(),
+            client: client.clone(),
+            owner: owner.clone(),
+            repo: repo_name.clone(),
+            repo_model: repo_model.clone(),
+            parent_window: parent_window.clone(),
+            toast_overlay: toast_overlay.clone(),
+            job_contexts: job_contexts.clone(),
+            workflows_with_active_runs: workflows_with_active.clone(),
+            workflows_last_loaded: workflows_last_loaded.clone(),
+            workflows_loading_runs: workflows_loading_runs.clone(),
+            run_digests: run_digests.clone(),
+            notification_manager: notification_manager.clone(),
+            preferences_manager: preferences_manager.clone(),
+            run_filters: run_filters.clone(),
+            run_load_service: run_load_service.clone(),
+        };
+
+        RepoDetailPane::refresh_runs_background(&background_context);
+
+        glib::ControlFlow::Continue
+    });
+
+    *auto_refresh_source.lock() = Some(source_id);
 }
 
 impl RepoDetailPane {
@@ -359,99 +439,55 @@ impl RepoDetailPane {
     }
 
     pub(super) fn start_auto_refresh(&self) {
+        let auto_refresh_source = self.auto_refresh_source.clone();
+        let list_context = self.workflow_list_context();
+        let repo_full_name = self.repo.full_name.clone();
+
         if let Some(prefs_mgr) = &self.preferences_manager {
-            let pane = self.clone();
+            let workflow_view_weak = self.workflow_view.downgrade();
             let (sender, receiver) =
                 glib::MainContext::default().channel::<u64>(glib::Priority::default());
 
             receiver.attach(None, move |interval| {
-                pane.configure_auto_refresh_timer(interval);
-                glib::ControlFlow::Break
+                if workflow_view_weak.upgrade().is_none() {
+                    cancel_auto_refresh_timer_slot(&auto_refresh_source);
+                    return glib::ControlFlow::Break;
+                }
+
+                configure_auto_refresh_timer_slot(
+                    &auto_refresh_source,
+                    &list_context,
+                    &repo_full_name,
+                    interval,
+                );
+                glib::ControlFlow::Continue
             });
 
             let prefs_mgr = prefs_mgr.clone();
             crate::runtime_handle().spawn(async move {
-                let refresh_interval = prefs_mgr.get().await.refresh_interval;
-                let _ = sender.send(refresh_interval);
+                let mut updates = prefs_mgr.subscribe();
+                if sender.send(updates.borrow().refresh_interval).is_err() {
+                    return;
+                }
+
+                while updates.changed().await.is_ok() {
+                    if sender.send(updates.borrow().refresh_interval).is_err() {
+                        break;
+                    }
+                }
             });
         } else {
-            self.configure_auto_refresh_timer(DEFAULT_AUTO_REFRESH_INTERVAL_SECS);
-        }
-    }
-
-    fn configure_auto_refresh_timer(&self, refresh_interval_secs: u64) {
-        self.cancel_auto_refresh_timer();
-
-        if refresh_interval_secs == 0 {
-            info!(
-                "Auto-refresh disabled for {} (interval = 0)",
-                self.repo.full_name
+            configure_auto_refresh_timer_slot(
+                &auto_refresh_source,
+                &list_context,
+                &repo_full_name,
+                DEFAULT_AUTO_REFRESH_INTERVAL_SECS,
             );
-            return;
         }
-
-        let list_context = self.workflow_list_context();
-        let client = list_context.client.clone();
-        let owner = list_context.owner.clone();
-        let repo_name = list_context.repo.clone();
-        let repo_model = list_context.repo_model.clone();
-        let parent_window = list_context.parent_window.clone();
-        let list_store = list_context.store.clone();
-        let workflows_with_active = list_context.workflows_with_active_runs.clone();
-        let job_contexts = list_context.job_contexts.clone();
-        let toast_overlay = list_context.toast_overlay.clone();
-        let run_digests = list_context.run_digests.clone();
-        let notification_manager = list_context.notification_manager.clone();
-        let preferences_manager = list_context.preferences_manager.clone();
-        let workflows_loading_runs = list_context.workflows_loading_runs.clone();
-        let workflows_last_loaded = list_context.workflows_last_loaded.clone();
-        let run_filters = list_context.run_filters.clone();
-        let run_load_service = list_context.run_load_service.clone();
-
-        info!(
-            "Starting auto-refresh timer with interval: {} seconds",
-            refresh_interval_secs
-        );
-
-        let source_id = glib::timeout_add_seconds_local(refresh_interval_secs as u32, move || {
-            if !parent_window.is_visible() {
-                info!("Skipping auto-refresh while window is hidden");
-                return glib::ControlFlow::Continue;
-            }
-
-            info!("Auto-refreshing workflow runs in background");
-
-            let background_context = WorkflowListContext {
-                store: list_store.clone(),
-                client: client.clone(),
-                owner: owner.clone(),
-                repo: repo_name.clone(),
-                repo_model: repo_model.clone(),
-                parent_window: parent_window.clone(),
-                toast_overlay: toast_overlay.clone(),
-                job_contexts: job_contexts.clone(),
-                workflows_with_active_runs: workflows_with_active.clone(),
-                workflows_last_loaded: workflows_last_loaded.clone(),
-                workflows_loading_runs: workflows_loading_runs.clone(),
-                run_digests: run_digests.clone(),
-                notification_manager: notification_manager.clone(),
-                preferences_manager: preferences_manager.clone(),
-                run_filters: run_filters.clone(),
-                run_load_service: run_load_service.clone(),
-            };
-
-            Self::refresh_runs_background(&background_context);
-
-            glib::ControlFlow::Continue
-        });
-
-        *self.auto_refresh_source.lock() = Some(source_id);
     }
 
     fn cancel_auto_refresh_timer(&self) {
-        if let Some(source_id) = self.auto_refresh_source.lock().take() {
-            source_id.remove();
-        }
+        cancel_auto_refresh_timer_slot(&self.auto_refresh_source);
     }
 
     pub(super) fn teardown_refresh_timers(&self) {

@@ -318,6 +318,7 @@ impl DemoData {
                     started_at: Some("2025-10-28T07:20:05Z".to_string()),
                     completed_at: Some("2025-10-28T07:22:40Z".to_string()),
                     name: Some("Build".to_string()),
+                    steps: Vec::new(),
                     html_url: Some(
                         "https://github.com/demo-org/actioneer-demo-app/runs/43001".to_string(),
                     ),
@@ -330,6 +331,7 @@ impl DemoData {
                     started_at: Some("2025-10-28T07:22:45Z".to_string()),
                     completed_at: Some("2025-10-28T07:25:00Z".to_string()),
                     name: Some("Tests".to_string()),
+                    steps: Vec::new(),
                     html_url: Some(
                         "https://github.com/demo-org/actioneer-demo-app/runs/43002".to_string(),
                     ),
@@ -347,6 +349,7 @@ impl DemoData {
                 started_at: Some("2025-10-27T18:12:10Z".to_string()),
                 completed_at: Some("2025-10-27T18:18:00Z".to_string()),
                 name: Some("Lint & unit tests".to_string()),
+                steps: Vec::new(),
                 html_url: Some(
                     "https://github.com/demo-org/actioneer-demo-app/runs/43011".to_string(),
                 ),
@@ -363,6 +366,7 @@ impl DemoData {
                 started_at: Some("2026-01-24T10:30:05Z".to_string()),
                 completed_at: Some("2026-01-24T10:33:40Z".to_string()),
                 name: Some("Build & package".to_string()),
+                steps: Vec::new(),
                 html_url: Some(
                     "https://github.com/demo-org/actioneer-demo-app/runs/43031".to_string(),
                 ),
@@ -379,6 +383,7 @@ impl DemoData {
                 started_at: Some("2026-01-24T10:41:10Z".to_string()),
                 completed_at: Some("2026-01-24T10:42:10Z".to_string()),
                 name: Some("Test suite".to_string()),
+                steps: Vec::new(),
                 html_url: Some(
                     "https://github.com/demo-org/actioneer-demo-app/runs/43041".to_string(),
                 ),
@@ -395,6 +400,7 @@ impl DemoData {
                 started_at: None,
                 completed_at: None,
                 name: Some("Queue build".to_string()),
+                steps: Vec::new(),
                 html_url: Some(
                     "https://github.com/demo-org/actioneer-demo-app/runs/43051".to_string(),
                 ),
@@ -411,6 +417,7 @@ impl DemoData {
                 started_at: None,
                 completed_at: None,
                 name: Some("Queue tests".to_string()),
+                steps: Vec::new(),
                 html_url: Some(
                     "https://github.com/demo-org/actioneer-demo-app/runs/43061".to_string(),
                 ),
@@ -427,6 +434,7 @@ impl DemoData {
                 started_at: Some("2026-01-24T11:20:05Z".to_string()),
                 completed_at: None,
                 name: Some("Integration tests".to_string()),
+                steps: Vec::new(),
                 html_url: Some(
                     "https://github.com/demo-org/actioneer-demo-app/runs/43071".to_string(),
                 ),
@@ -443,6 +451,7 @@ impl DemoData {
                 started_at: Some("2026-01-24T12:10:05Z".to_string()),
                 completed_at: None,
                 name: Some("Lint".to_string()),
+                steps: Vec::new(),
                 html_url: Some(
                     "https://github.com/demo-org/actioneer-demo-app/runs/43081".to_string(),
                 ),
@@ -459,6 +468,7 @@ impl DemoData {
                 started_at: None,
                 completed_at: None,
                 name: Some("Publish artifacts".to_string()),
+                steps: Vec::new(),
                 html_url: Some(
                     "https://github.com/demo-org/actioneer-demo-app/runs/43021".to_string(),
                 ),
@@ -506,6 +516,7 @@ impl DemoData {
                 started_at: Some("2025-10-26T15:00:10Z".to_string()),
                 completed_at: Some("2025-10-26T15:04:00Z".to_string()),
                 name: Some("Terraform plan".to_string()),
+                steps: Vec::new(),
                 html_url: Some("https://github.com/demo-labs/workflow-lab/runs/44001".to_string()),
             }],
         );
@@ -552,6 +563,7 @@ impl DemoData {
                     started_at: Some("2025-10-27T02:00:05Z".to_string()),
                     completed_at: Some("2025-10-27T02:03:30Z".to_string()),
                     name: Some("Collect metrics".to_string()),
+                    steps: Vec::new(),
                     html_url: Some(
                         "https://github.com/demo-team/device-edge/runs/42001".to_string(),
                     ),
@@ -564,6 +576,7 @@ impl DemoData {
                     started_at: Some("2025-10-27T02:03:35Z".to_string()),
                     completed_at: Some("2025-10-27T02:06:20Z".to_string()),
                     name: Some("Aggregate diagnostics".to_string()),
+                    steps: Vec::new(),
                     html_url: Some(
                         "https://github.com/demo-team/device-edge/runs/42002".to_string(),
                     ),
@@ -716,6 +729,7 @@ impl DemoData {
             started_at: None,
             completed_at: None,
             name: Some("Queued job".to_string()),
+            steps: Vec::new(),
             html_url: None,
         };
         self.jobs.insert(run_id, vec![job]);

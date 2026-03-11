@@ -15,6 +15,7 @@ pub(crate) struct JobRefreshContext {
     repo: String,
     workflow_id: i64,
     run_id: i64,
+    expander: gtk::Expander,
     jobs_box: gtk::Box,
     badges_box: Option<gtk::Box>,
     parent_window: gtk::Window,
@@ -29,6 +30,7 @@ pub(crate) struct JobRefreshContextParams {
     pub repo: String,
     pub workflow_id: i64,
     pub run_id: i64,
+    pub expander: gtk::Expander,
     pub jobs_box: gtk::Box,
     pub badges_box: Option<gtk::Box>,
     pub parent_window: gtk::Window,
@@ -45,6 +47,7 @@ impl JobRefreshContext {
             repo: params.repo,
             workflow_id: params.workflow_id,
             run_id: params.run_id,
+            expander: params.expander,
             jobs_box: params.jobs_box,
             badges_box: params.badges_box,
             parent_window: params.parent_window,
@@ -60,6 +63,14 @@ impl JobRefreshContext {
 
     pub(crate) fn run_id(&self) -> i64 {
         self.run_id
+    }
+
+    pub(crate) fn expander(&self) -> gtk::Expander {
+        self.expander.clone()
+    }
+
+    pub(crate) fn matches_expander(&self, expander: &gtk::Expander) -> bool {
+        self.expander == *expander
     }
 
     pub(crate) fn client(&self) -> Arc<Mutex<GitHubClient>> {

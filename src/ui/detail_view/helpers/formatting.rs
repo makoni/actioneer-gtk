@@ -265,6 +265,7 @@ mod tests {
             started_at: None,
             completed_at: None,
             name: None,
+            steps: Vec::new(),
             html_url: None,
         };
 
@@ -305,6 +306,7 @@ mod tests {
                 started_at: None,
                 completed_at: None,
                 name: None,
+                steps: Vec::new(),
                 html_url: None,
             },
             Job {
@@ -315,6 +317,7 @@ mod tests {
                 started_at: None,
                 completed_at: None,
                 name: None,
+                steps: Vec::new(),
                 html_url: None,
             },
         ];

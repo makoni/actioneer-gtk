@@ -101,7 +101,7 @@ impl ResponseHandler {
                     ));
                 };
 
-                let Some(entry) = self.active_cache_entry(cache_key) else {
+                let Some(entry) = self.cached_entry(cache_key) else {
                     return Err(GitHubError::ApiError(
                         "Received 304 Not Modified without a cached response body".to_string(),
                     ));
@@ -180,6 +180,14 @@ impl ResponseHandler {
             cache.remove(cache_key);
             None
         }
+    }
+
+    fn cached_entry(&self, cache_key: &str) -> Option<CachedResponse> {
+        let Ok(cache) = self.cache.lock() else {
+            return None;
+        };
+
+        cache.get(cache_key).cloned()
     }
 }
 
@@ -328,5 +336,60 @@ mod tests {
             .await
             .expect("reuse cached body");
         assert_eq!(cached, TestPayload { value: 42 });
+    }
+
+    #[tokio::test]
+    async fn handle_response_reuses_cached_body_after_ttl_expiry_if_server_returns_304() {
+        let server = MockServer::start().await;
+        let key = "workflows:demo/repo";
+
+        Mock::given(method("GET"))
+            .and(path("/ttl-race"))
+            .and(match_header("if-none-match", "\"etag-race\""))
+            .respond_with(ResponseTemplate::new(304))
+            .mount(&server)
+            .await;
+
+        let handler = handler();
+        handler.cache.lock().unwrap().insert(
+            key.into(),
+            CachedResponse {
+                etag: "\"etag-race\"".into(),
+                body: br#"{"value":7}"#.to_vec(),
+                stored_at: Instant::now(),
+            },
+        );
+
+        let client = Client::new();
+        let request = handler
+            .apply_cache_headers(client.get(format!("{}/ttl-race", server.uri())), Some(key))
+            .build()
+            .expect("build request");
+        assert_eq!(
+            request
+                .headers()
+                .get(header::IF_NONE_MATCH)
+                .expect("if-none-match header"),
+            "\"etag-race\""
+        );
+
+        handler.cache.lock().unwrap().insert(
+            key.into(),
+            CachedResponse {
+                etag: "\"etag-race\"".into(),
+                body: br#"{"value":7}"#.to_vec(),
+                stored_at: Instant::now() - Duration::from_secs(61),
+            },
+        );
+
+        let response = client
+            .execute(request)
+            .await
+            .expect("send conditional request");
+        let cached: TestPayload = handler
+            .handle_response(response, Some(key))
+            .await
+            .expect("reuse cached body after ttl expiry");
+        assert_eq!(cached, TestPayload { value: 7 });
     }
 }

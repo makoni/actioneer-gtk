@@ -162,7 +162,19 @@ pub struct Job {
     pub started_at: Option<String>,
     pub completed_at: Option<String>,
     pub name: Option<String>,
+    #[serde(default)]
+    pub steps: Vec<JobStep>,
     pub html_url: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct JobStep {
+    pub name: Option<String>,
+    pub status: Option<String>,
+    pub conclusion: Option<String>,
+    pub number: Option<i64>,
+    pub started_at: Option<String>,
+    pub completed_at: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -354,6 +366,32 @@ fn relative_time_from_iso(iso_string: &str) -> String {
     }
 }
 
+fn duration_string_from_bounds(
+    started: Option<&String>,
+    completed: Option<&String>,
+) -> Option<String> {
+    let started = started?;
+    let completed = completed?;
+
+    let start_time = chrono::DateTime::parse_from_rfc3339(started).ok()?;
+    let end_time = chrono::DateTime::parse_from_rfc3339(completed).ok()?;
+
+    let duration = end_time.signed_duration_since(start_time);
+    let seconds = duration.num_seconds();
+
+    if seconds < 60 {
+        Some(format!("{}s", seconds))
+    } else if seconds < 3600 {
+        let minutes = seconds / 60;
+        let secs = seconds % 60;
+        Some(format!("{}m {}s", minutes, secs))
+    } else {
+        let hours = seconds / 3600;
+        let minutes = (seconds % 3600) / 60;
+        Some(format!("{}h {}m", hours, minutes))
+    }
+}
+
 impl Job {
     /// Returns a human-readable status string
     pub fn friendly_status(&self) -> String {
@@ -398,27 +436,52 @@ impl Job {
 
     /// Returns a formatted duration string (e.g., "2m 34s")
     pub fn duration_string(&self) -> Option<String> {
-        let started = self.started_at.as_ref()?;
-        let completed = self.completed_at.as_ref()?;
+        duration_string_from_bounds(self.started_at.as_ref(), self.completed_at.as_ref())
+    }
+}
 
-        // Parse ISO 8601 timestamps
-        let start_time = chrono::DateTime::parse_from_rfc3339(started).ok()?;
-        let end_time = chrono::DateTime::parse_from_rfc3339(completed).ok()?;
-
-        let duration = end_time.signed_duration_since(start_time);
-        let seconds = duration.num_seconds();
-
-        if seconds < 60 {
-            Some(format!("{}s", seconds))
-        } else if seconds < 3600 {
-            let minutes = seconds / 60;
-            let secs = seconds % 60;
-            Some(format!("{}m {}s", minutes, secs))
+impl JobStep {
+    pub fn friendly_status(&self) -> String {
+        if let Some(status) = &self.status {
+            match status.to_lowercase().as_str() {
+                "queued" => tr("Queued"),
+                "in_progress" => tr("In Progress"),
+                "completed" => {
+                    if self.conclusion.is_some() {
+                        self.friendly_conclusion()
+                    } else {
+                        tr("Completed")
+                    }
+                }
+                "waiting" => tr("Waiting"),
+                "requested" => tr("Requested"),
+                "pending" => tr("Pending"),
+                _ => status.replace('_', " "),
+            }
         } else {
-            let hours = seconds / 3600;
-            let minutes = (seconds % 3600) / 60;
-            Some(format!("{}h {}m", hours, minutes))
+            tr("Unknown")
         }
+    }
+
+    pub fn friendly_conclusion(&self) -> String {
+        if let Some(conclusion) = &self.conclusion {
+            match conclusion.to_lowercase().as_str() {
+                "success" => tr("Success"),
+                "failure" => tr("Failed"),
+                "cancelled" => tr("Cancelled"),
+                "skipped" => tr("Skipped"),
+                "timed_out" => tr("Timed Out"),
+                "action_required" => tr("Action Required"),
+                "neutral" => tr("Neutral"),
+                _ => conclusion.replace('_', " "),
+            }
+        } else {
+            String::new()
+        }
+    }
+
+    pub fn duration_string(&self) -> Option<String> {
+        duration_string_from_bounds(self.started_at.as_ref(), self.completed_at.as_ref())
     }
 }
 
@@ -497,6 +560,39 @@ mod tests {
         let run_without_workflow_id: WorkflowRun =
             serde_json::from_str(json_without_workflow_id).unwrap();
         assert_eq!(run_without_workflow_id.workflow_id, None);
+    }
+
+    #[test]
+    fn test_job_deserialization_includes_steps() {
+        let json = r#"{
+            "id": 1,
+            "run_id": 2,
+            "status": "in_progress",
+            "name": "build",
+            "steps": [
+                {
+                    "name": "Checkout",
+                    "status": "completed",
+                    "conclusion": "success",
+                    "number": 1,
+                    "started_at": "2024-01-01T00:00:00Z",
+                    "completed_at": "2024-01-01T00:00:10Z"
+                },
+                {
+                    "name": "Test",
+                    "status": "in_progress",
+                    "conclusion": null,
+                    "number": 2,
+                    "started_at": "2024-01-01T00:00:10Z",
+                    "completed_at": null
+                }
+            ]
+        }"#;
+
+        let job: Job = serde_json::from_str(json).unwrap();
+        assert_eq!(job.steps.len(), 2);
+        assert_eq!(job.steps[0].name.as_deref(), Some("Checkout"));
+        assert_eq!(job.steps[1].friendly_status(), "In Progress");
     }
 
     #[test]

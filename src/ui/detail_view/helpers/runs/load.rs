@@ -1,4 +1,4 @@
-use super::super::context::JobContextMap;
+use super::super::context::{JobContextMap, current_job_context_run_ids};
 use super::super::formatting::update_workflow_status_badge;
 use super::digest::{RunDigestMap, RunDigestStore, update_digest_and_collect_notifications};
 use super::filters::summarize_visible_runs;
@@ -139,7 +139,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
     let workflows_loading_for_ui = workflows_loading.clone();
 
     receiver.attach(None, move |result| {
-        let expanded_run_ids_for_ui = expanded_run_ids.clone();
+        let requested_expanded_run_ids = expanded_run_ids.clone();
         let expander_expanded = expander.is_expanded();
 
         match result {
@@ -243,6 +243,15 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                 if should_render_run_list(background_for_ui, expander_expanded, changed) {
                     let filters_snapshot = run_filters.lock().clone();
                     let summary = summarize_visible_runs(runs.as_ref(), &filters_snapshot);
+                    let current_expanded_run_ids = task_run_list.expanded_run_ids();
+                    let current_job_context_ids =
+                        current_job_context_run_ids(&job_contexts, workflow_id);
+                    let preserved_expanded_run_ids = resolve_preserved_expanded_run_ids(
+                        requested_expanded_run_ids.as_ref(),
+                        &current_expanded_run_ids,
+                        &current_job_context_ids,
+                        runs.as_ref(),
+                    );
 
                     if summary.visible_runs.is_empty() {
                         task_run_list.show_filtered_placeholder();
@@ -252,7 +261,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                             summary.filtered_total,
                             runs.len(),
                             &summary.visible_runs,
-                            &expanded_run_ids_for_ui,
+                            &preserved_expanded_run_ids,
                         );
                     }
                 }
@@ -317,6 +326,23 @@ fn prune_stale_job_contexts(job_contexts: &JobContextMap, workflow_id: i64, runs
         }
         active_run_ids.contains(&ctx.run_id())
     });
+}
+
+fn resolve_preserved_expanded_run_ids(
+    requested_expanded_run_ids: &HashSet<i64>,
+    current_expanded_run_ids: &HashSet<i64>,
+    current_job_context_ids: &[i64],
+    runs: &[WorkflowRun],
+) -> HashSet<i64> {
+    let valid_run_ids: HashSet<i64> = runs.iter().map(|run| run.id).collect();
+
+    requested_expanded_run_ids
+        .iter()
+        .copied()
+        .chain(current_expanded_run_ids.iter().copied())
+        .chain(current_job_context_ids.iter().copied())
+        .filter(|run_id| valid_run_ids.contains(run_id))
+        .collect()
 }
 
 fn should_render_run_list(
@@ -416,7 +442,27 @@ fn show_error_state(error: GitHubError, workflow_id: i64, context: RunErrorConte
 
 #[cfg(test)]
 mod tests {
-    use super::should_render_run_list;
+    use super::{resolve_preserved_expanded_run_ids, should_render_run_list};
+    use crate::api::models::WorkflowRun;
+    use std::collections::HashSet;
+
+    fn run_stub(id: i64) -> WorkflowRun {
+        WorkflowRun {
+            id,
+            run_number: Some(id),
+            workflow_id: Some(1),
+            name: Some(format!("Run {id}")),
+            display_title: None,
+            head_branch: Some("main".into()),
+            status: Some("in_progress".into()),
+            conclusion: None,
+            run_started_at: None,
+            event: None,
+            created_at: None,
+            updated_at: None,
+            html_url: None,
+        }
+    }
 
     #[test]
     fn background_refresh_updates_collapsed_rows_when_data_changes() {
@@ -436,5 +482,29 @@ mod tests {
     #[test]
     fn foreground_refresh_always_updates() {
         assert!(should_render_run_list(false, false, false));
+    }
+
+    #[test]
+    fn preserved_expanded_runs_use_current_ui_state_and_job_contexts() {
+        let requested = HashSet::from([10]);
+        let current = HashSet::from([20]);
+        let contexts = vec![30];
+        let runs = vec![run_stub(20), run_stub(30), run_stub(40)];
+
+        let preserved = resolve_preserved_expanded_run_ids(&requested, &current, &contexts, &runs);
+
+        assert_eq!(preserved, HashSet::from([20, 30]));
+    }
+
+    #[test]
+    fn preserved_expanded_runs_keep_requested_ids_when_still_valid() {
+        let requested = HashSet::from([10]);
+        let current = HashSet::new();
+        let contexts = Vec::new();
+        let runs = vec![run_stub(10), run_stub(20)];
+
+        let preserved = resolve_preserved_expanded_run_ids(&requested, &current, &contexts, &runs);
+
+        assert_eq!(preserved, HashSet::from([10]));
     }
 }

@@ -1,4 +1,4 @@
-use super::super::context::JobContextMap;
+use super::super::context::{JobContextMap, JobRefreshContext, JobRefreshContextParams};
 use super::super::formatting::{
     format_run_subtitle, format_run_title, get_run_status_class, get_run_status_icon,
 };
@@ -89,6 +89,25 @@ pub(crate) fn create_run_expander_row(
     expander.set_child(Some(&jobs_box));
 
     let parent_window_for_jobs: gtk::Window = context.parent_window.clone().upcast();
+    if expand_jobs {
+        rebind_preserved_job_context(
+            &context.job_contexts,
+            JobRefreshContextParams {
+                client: context.client.clone(),
+                owner: context.owner.clone(),
+                repo: context.repo.clone(),
+                workflow_id: context.workflow_id,
+                run_id: run.id,
+                expander: expander.clone(),
+                jobs_box: jobs_box.clone(),
+                badges_box: Some(badges_box.clone()),
+                parent_window: parent_window_for_jobs.clone(),
+                repo_model: context.repo_model.clone(),
+                branch: run.head_branch.clone(),
+                run_title: run_title.clone(),
+            },
+        );
+    }
     attach_job_loader(
         &expander,
         jobs_box,
@@ -221,7 +240,18 @@ fn attach_job_loader(
 
     expander.connect_expanded_notify(move |exp| {
         if !exp.is_expanded() {
-            job_contexts_for_remove.borrow_mut().remove(&run_id);
+            let expander = exp.clone();
+            let job_contexts = job_contexts_for_remove.clone();
+            glib::idle_add_local_once(move || {
+                if expander.is_expanded()
+                    || expander.parent().is_none()
+                    || expander.root().is_none()
+                {
+                    return;
+                }
+
+                remove_job_context_if_current(&job_contexts, run_id, &expander);
+            });
             return;
         }
 
@@ -233,6 +263,7 @@ fn attach_job_loader(
                 owner: owner.clone(),
                 repo: repo.clone(),
                 run_id,
+                expander: exp.clone(),
                 jobs_box: jobs_box.clone(),
                 badges_box: Some(badges_box_for_load.clone()),
                 workflow_id,
@@ -245,4 +276,140 @@ fn attach_job_loader(
             });
         }
     });
+}
+
+fn rebind_preserved_job_context(job_contexts: &JobContextMap, params: JobRefreshContextParams) {
+    let already_loaded = params
+        .jobs_box
+        .first_child()
+        .is_some_and(|child| !child.is::<gtk::Label>());
+
+    if !already_loaded {
+        return;
+    }
+
+    job_contexts
+        .borrow_mut()
+        .insert(params.run_id, JobRefreshContext::from_params(params));
+}
+
+fn remove_job_context_if_current(
+    job_contexts: &JobContextMap,
+    run_id: i64,
+    expander: &gtk::Expander,
+) {
+    let should_remove = {
+        let contexts = job_contexts.borrow();
+        contexts
+            .get(&run_id)
+            .is_some_and(|context| context.matches_expander(expander))
+    };
+
+    if should_remove {
+        job_contexts.borrow_mut().remove(&run_id);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::api::client::GitHubClient;
+    use crate::api::models::{Repo, User};
+    use crate::ui::test_helpers::gtk_test_guard;
+    use parking_lot::Mutex;
+    use std::cell::RefCell;
+    use std::collections::HashMap;
+    use std::rc::Rc;
+    use std::sync::Arc;
+
+    fn repo_stub() -> Repo {
+        Repo {
+            id: 1,
+            name: "actioneer".into(),
+            full_name: "mak/actioneer".into(),
+            owner: User {
+                login: "mak".into(),
+            },
+            is_private: false,
+            permissions: None,
+            default_branch: Some("main".into()),
+        }
+    }
+
+    fn client_stub() -> Arc<Mutex<GitHubClient>> {
+        Arc::new(Mutex::new(
+            GitHubClient::new(None).expect("client stub should build"),
+        ))
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn remove_job_context_only_removes_matching_expander() {
+        let Some(_guard) = gtk_test_guard("remove_job_context_only_removes_matching_expander")
+        else {
+            return;
+        };
+
+        let old_expander = gtk::Expander::new(None);
+        let new_expander = gtk::Expander::new(None);
+        let jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        jobs_box.append(&gtk::Spinner::new());
+        let job_contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
+
+        job_contexts.borrow_mut().insert(
+            42,
+            JobRefreshContext::from_params(JobRefreshContextParams {
+                client: client_stub(),
+                owner: "mak".into(),
+                repo: "actioneer".into(),
+                workflow_id: 7,
+                run_id: 42,
+                expander: new_expander.clone(),
+                jobs_box: jobs_box.clone(),
+                badges_box: None,
+                parent_window: gtk::Window::new(),
+                repo_model: repo_stub(),
+                branch: Some("main".into()),
+                run_title: "CI".into(),
+            }),
+        );
+
+        remove_job_context_if_current(&job_contexts, 42, &old_expander);
+        assert!(job_contexts.borrow().contains_key(&42));
+
+        remove_job_context_if_current(&job_contexts, 42, &new_expander);
+        assert!(!job_contexts.borrow().contains_key(&42));
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn rebind_preserved_job_context_skips_placeholders() {
+        let Some(_guard) = gtk_test_guard("rebind_preserved_job_context_skips_placeholders") else {
+            return;
+        };
+
+        let job_contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
+        let jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        jobs_box.append(&gtk::Label::new(Some("placeholder")));
+
+        rebind_preserved_job_context(
+            &job_contexts,
+            JobRefreshContextParams {
+                client: client_stub(),
+                owner: "mak".into(),
+                repo: "actioneer".into(),
+                workflow_id: 7,
+                run_id: 42,
+                expander: gtk::Expander::new(None),
+                jobs_box,
+                badges_box: None,
+                parent_window: gtk::Window::new(),
+                repo_model: repo_stub(),
+                branch: Some("main".into()),
+                run_title: "CI".into(),
+            },
+        );
+
+        assert!(job_contexts.borrow().is_empty());
+    }
 }

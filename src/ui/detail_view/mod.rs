@@ -55,6 +55,7 @@ pub struct RepoDetailPane {
     notification_manager: Option<NotificationManager>,
     workflows_loading_runs: Arc<Mutex<HashSet<i64>>>, // Track in-flight run loads
     run_load_service: RunLoadService,
+    lifecycle_token: Rc<()>,
 }
 
 #[derive(Clone)]
@@ -125,8 +126,14 @@ impl From<RunFilters> for RunFilterPreferences {
 
 impl Drop for RepoDetailPane {
     fn drop(&mut self) {
-        self.teardown_refresh_timers();
+        if should_teardown_refresh_timers(&self.lifecycle_token) {
+            self.teardown_refresh_timers();
+        }
     }
+}
+
+fn should_teardown_refresh_timers(lifecycle_token: &Rc<()>) -> bool {
+    Rc::strong_count(lifecycle_token) == 1
 }
 
 impl RepoDetailPane {
@@ -259,6 +266,7 @@ impl RepoDetailPane {
             run_digests: run_digests.clone(),
             run_load_service: run_load_service.clone(),
             notification_manager: notification_manager.clone(),
+            lifecycle_token: Rc::new(()),
         };
 
         pane.build_ui();
@@ -345,5 +353,23 @@ impl RepoDetailPane {
     fn connect_workflow_selected(&self) {
         // Workflows are now expanded in-place, no need to open a window
         // The row activation will be handled by the expander widget
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::should_teardown_refresh_timers;
+    use std::rc::Rc;
+
+    #[test]
+    fn teardown_only_runs_for_last_pane_clone() {
+        let token = Rc::new(());
+        let cloned = token.clone();
+
+        assert!(!should_teardown_refresh_timers(&token));
+
+        drop(cloned);
+
+        assert!(should_teardown_refresh_timers(&token));
     }
 }
