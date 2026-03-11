@@ -138,6 +138,7 @@ Notes
 ---
 
 -Recent Updates
+- [✅] 2026-03-11 — Fixed untranslated workflow status badges near workflow headers: the UI now reuses existing localized status strings (`Success`, `Failed`, `In Progress`, `Queued`, `Cancelled`, `Unknown`) across all supported languages, with regression coverage.
 - [✅] 2026-03-04 — Replaced startup crash `MessageDialog` with a translated crash-report popover containing a read-only text field with report contents and three actions: “Copy diagnostics”, “Report Issue”, and “Close”; only “Close” dismisses the popover (and clears pending marker).
 - [✅] 2026-03-03 — Implemented full crash-recovery reporting flow: panic hook now persists sanitized crash reports to XDG state, session lifecycle writes/clears markers and generates abnormal-exit reports, next launch shows a recovery dialog (Report Issue / Copy diagnostics / Open crash folder / Dismiss), and GitHub issue links are prefilled from pending crash metadata; validated with fmt, clippy, translation compile, unit tests, and ignored GTK tests.
 - [✅] 2026-03-03 — Added a debug-build-only app-menu Debug group containing “Send test notification” and “Trigger test crash”; wired `win.trigger_test_crash` to an intentional panic path so panic-hook/backtrace logging can be verified end-to-end.

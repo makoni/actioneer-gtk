@@ -179,20 +179,24 @@ fn create_job_badge(icon_name: &str, count: &str, css_class: &str) -> gtk::Box {
     badge
 }
 
-pub(crate) fn update_workflow_status_badge(badge: &gtk::Label, latest_run: &WorkflowRun) {
-    let (text, css_class) = match (
+fn workflow_status_badge_content(latest_run: &WorkflowRun) -> (String, &'static str) {
+    match (
         latest_run.status.as_deref(),
         latest_run.conclusion.as_deref(),
     ) {
-        (Some("completed"), Some("success")) => ("passing", "success"),
-        (Some("completed"), Some("failure")) => ("failing", "error"),
-        (Some("completed"), Some("cancelled")) => ("cancelled", "warning"),
-        (Some("in_progress"), _) => ("running", "accent"),
-        (Some("queued"), _) | (Some("waiting"), _) => ("queued", "warning"),
-        _ => ("unknown", "dim-label"),
-    };
+        (Some("completed"), Some("success")) => (tr("Success"), "success"),
+        (Some("completed"), Some("failure")) => (tr("Failed"), "error"),
+        (Some("completed"), Some("cancelled")) => (tr("Cancelled"), "warning"),
+        (Some("in_progress"), _) => (tr("In Progress"), "accent"),
+        (Some("queued"), _) | (Some("waiting"), _) => (tr("Queued"), "warning"),
+        _ => (tr("Unknown"), "dim-label"),
+    }
+}
 
-    badge.set_text(text);
+pub(crate) fn update_workflow_status_badge(badge: &gtk::Label, latest_run: &WorkflowRun) {
+    let (text, css_class) = workflow_status_badge_content(latest_run);
+
+    badge.set_text(&text);
 
     let classes = ["success", "error", "warning", "accent", "dim-label"];
     for class in classes {
@@ -207,6 +211,8 @@ pub(crate) fn update_workflow_status_badge(badge: &gtk::Label, latest_run: &Work
 mod tests {
     use super::*;
     use crate::api::models::{Job, WorkflowRun};
+    use crate::i18n::{apply_language_preference, i18n_test_guard, init};
+    use crate::preferences::LanguagePreference;
     use crate::ui::test_helpers::gtk_test_guard;
 
     fn run_stub() -> WorkflowRun {
@@ -262,6 +268,23 @@ mod tests {
         };
 
         assert_eq!(get_job_status_icon(&job), "dialog-question-symbolic");
+    }
+
+    #[test]
+    fn workflow_status_badge_content_is_localized() {
+        let _guard = i18n_test_guard();
+        init(None);
+
+        let mut run = run_stub();
+        run.status = Some("completed".into());
+        run.conclusion = Some("failure".into());
+
+        let _ = apply_language_preference(LanguagePreference::De);
+        let (text, css_class) = workflow_status_badge_content(&run);
+        assert_eq!(text, "Fehlgeschlagen");
+        assert_eq!(css_class, "error");
+
+        let _ = apply_language_preference(LanguagePreference::En);
     }
 
     #[test]
@@ -322,7 +345,7 @@ mod tests {
         let badge = gtk::Label::new(None);
         update_workflow_status_badge(&badge, &run);
 
-        assert_eq!(badge.text().as_str(), "failing");
+        assert_eq!(badge.text().as_str(), "Failed");
         assert!(badge.style_context().has_class("error"));
     }
 }
