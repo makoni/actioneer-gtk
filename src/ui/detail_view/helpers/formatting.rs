@@ -219,6 +219,7 @@ mod tests {
         WorkflowRun {
             id: 1,
             run_number: None,
+            workflow_id: None,
             name: None,
             display_title: None,
             head_branch: None,

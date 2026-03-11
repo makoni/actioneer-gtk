@@ -5,6 +5,8 @@ use crate::api::models::{WorkflowRun, WorkflowRunsResponse};
 use reqwest::Client;
 use tracing::{debug, info};
 
+const REPOSITORY_RUNS_PAGE_SIZE: usize = 100;
+
 /// List workflow runs
 pub async fn list_runs(
     client: &Client,
@@ -30,9 +32,35 @@ pub async fn list_runs(
     let request = add_auth_header(request, token);
     // Runs are highly dynamic; always fetch fresh data rather than relying on
     // cached ETags.
-    let request = response_handler.apply_cache_headers(request);
+    let request = response_handler.apply_cache_headers(request, None);
     let response = request.send().await?;
-    let runs_response: WorkflowRunsResponse = response_handler.handle_response(response).await?;
+    let runs_response: WorkflowRunsResponse =
+        response_handler.handle_response(response, None).await?;
+    Ok(runs_response.workflow_runs)
+}
+
+/// List recent workflow runs for a repository
+pub async fn list_repository_runs(
+    client: &Client,
+    token: &Option<String>,
+    response_handler: &ResponseHandler,
+    owner: &str,
+    repo: &str,
+) -> Result<Vec<WorkflowRun>, GitHubError> {
+    info!("Fetching repository runs for {}/{}", owner, repo);
+
+    let request = client
+        .get(format!(
+            "{}/repos/{}/{}/actions/runs",
+            GITHUB_API_BASE, owner, repo
+        ))
+        .query(&[("per_page", REPOSITORY_RUNS_PAGE_SIZE.to_string())]);
+
+    let request = add_auth_header(request, token);
+    let request = response_handler.apply_cache_headers(request, None);
+    let response = request.send().await?;
+    let runs_response: WorkflowRunsResponse =
+        response_handler.handle_response(response, None).await?;
     Ok(runs_response.workflow_runs)
 }
 

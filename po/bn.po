@@ -402,6 +402,9 @@ msgstr "প্রিয় তালিকা উপলভ্য নয়"
 msgid "Loading workflows..."
 msgstr "ওয়ার্কফ্লো লোড হচ্ছে..."
 
+msgid "Failed to load workflows: {error}"
+msgstr "ওয়ার্কফ্লো লোড করতে ব্যর্থ: {error}"
+
 msgid "Refresh workflows"
 msgstr "ওয়ার্কফ্লো রিফ্রেশ করুন"
 

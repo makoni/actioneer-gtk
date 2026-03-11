@@ -402,6 +402,9 @@ msgstr "पसंदीदा उपलब्ध नहीं"
 msgid "Loading workflows..."
 msgstr "वर्कफ़्लो लोड हो रहे हैं..."
 
+msgid "Failed to load workflows: {error}"
+msgstr "वर्कफ़्लो लोड करने में विफल: {error}"
+
 msgid "Refresh workflows"
 msgstr "वर्कफ़्लो रीफ़्रेश करें"
 

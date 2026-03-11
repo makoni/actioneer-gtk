@@ -24,7 +24,7 @@ pub async fn list_jobs(
 
     let request = add_auth_header(request, token);
     let response = request.send().await?;
-    let jobs_response: JobsResponse = response_handler.handle_response(response).await?;
+    let jobs_response: JobsResponse = response_handler.handle_response(response, None).await?;
     Ok(jobs_response.jobs)
 }
 

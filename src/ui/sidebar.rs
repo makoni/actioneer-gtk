@@ -13,6 +13,7 @@ use std::time::Instant;
 use tracing::{debug, warn};
 
 const MAX_WORKFLOWS_PER_REPO: usize = 3;
+const REPO_WIDE_RUNS_PAGE_SIZE: usize = 100;
 
 #[derive(Clone)]
 pub struct RepoListRenderContext {
@@ -473,26 +474,64 @@ pub async fn gather_workflow_status_counts(
 ) -> Result<WorkflowStatusCounts, crate::api::GitHubError> {
     use crate::ui::utils::{is_run_active, is_run_failure};
 
-    let workflows = client.list_workflows(owner, repo).await?;
+    let workflows: Vec<_> = client
+        .list_workflows(owner, repo)
+        .await?
+        .into_iter()
+        .take(MAX_WORKFLOWS_PER_REPO)
+        .collect();
+
+    if workflows.is_empty() {
+        return Ok(WorkflowStatusCounts::default());
+    }
+
+    let workflow_ids: Vec<i64> = workflows.iter().map(|workflow| workflow.id).collect();
+    let repo_runs_result = client.list_repository_runs(owner, repo).await;
+    let repo_runs_truncated = repo_runs_result
+        .as_ref()
+        .map(|runs| runs.len() >= REPO_WIDE_RUNS_PAGE_SIZE)
+        .unwrap_or(false);
+    let (mut latest_runs, fallback_ids) = match repo_runs_result {
+        Ok(repo_runs) => {
+            select_latest_runs_for_workflows(&workflow_ids, &repo_runs, repo_runs_truncated)
+        }
+        Err(error) => {
+            warn!(
+                "Failed to list repository runs for {}/{}: {}; falling back to per-workflow requests",
+                owner, repo, error
+            );
+            (HashMap::new(), workflow_ids.clone())
+        }
+    };
+
+    for workflow_id in fallback_ids {
+        let runs_result = client.list_runs(owner, repo, workflow_id).await;
+        match runs_result {
+            Ok(runs) => {
+                if let Some(latest) = runs.first() {
+                    latest_runs
+                        .entry(workflow_id)
+                        .or_insert_with(|| latest.clone());
+                }
+            }
+            Err(e) => {
+                warn!("Failed to list runs for workflow {}: {}", workflow_id, e);
+            }
+        }
+    }
 
     let mut active_count = 0;
     let mut failed_count = 0;
 
-    for workflow in workflows.into_iter().take(MAX_WORKFLOWS_PER_REPO) {
-        let runs_result = client.list_runs(owner, repo, workflow.id).await;
-        match runs_result {
-            Ok(runs) => {
-                if let Some(latest) = runs.first() {
-                    if is_run_active(latest) {
-                        active_count += 1;
-                    } else if is_run_failure(latest) {
-                        failed_count += 1;
-                    }
-                }
-            }
-            Err(e) => {
-                warn!("Failed to list runs for workflow {}: {}", workflow.id, e);
-            }
+    for workflow in workflows {
+        let Some(latest) = latest_runs.get(&workflow.id) else {
+            continue;
+        };
+
+        if is_run_active(latest) {
+            active_count += 1;
+        } else if is_run_failure(latest) {
+            failed_count += 1;
         }
     }
 
@@ -500,4 +539,100 @@ pub async fn gather_workflow_status_counts(
         active: active_count,
         failed: failed_count,
     })
+}
+
+fn select_latest_runs_for_workflows(
+    workflow_ids: &[i64],
+    repo_runs: &[crate::api::models::WorkflowRun],
+    repo_runs_truncated: bool,
+) -> (HashMap<i64, crate::api::models::WorkflowRun>, Vec<i64>) {
+    let selected_ids: HashSet<i64> = workflow_ids.iter().copied().collect();
+    let mut latest_runs = HashMap::new();
+
+    for run in repo_runs {
+        let Some(workflow_id) = run.workflow_id else {
+            continue;
+        };
+
+        if !selected_ids.contains(&workflow_id) || latest_runs.contains_key(&workflow_id) {
+            continue;
+        }
+
+        latest_runs.insert(workflow_id, run.clone());
+
+        if latest_runs.len() == selected_ids.len() {
+            break;
+        }
+    }
+
+    let missing = if repo_runs_truncated {
+        workflow_ids
+            .iter()
+            .copied()
+            .filter(|workflow_id| !latest_runs.contains_key(workflow_id))
+            .collect()
+    } else {
+        Vec::new()
+    };
+
+    (latest_runs, missing)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::api::models::WorkflowRun;
+
+    fn run(id: i64, workflow_id: Option<i64>) -> WorkflowRun {
+        WorkflowRun {
+            id,
+            run_number: Some(id),
+            workflow_id,
+            name: Some(format!("Run {id}")),
+            display_title: Some(format!("Run {id}")),
+            head_branch: Some("main".to_string()),
+            status: Some("completed".to_string()),
+            conclusion: Some("success".to_string()),
+            run_started_at: None,
+            event: None,
+            created_at: None,
+            updated_at: None,
+            html_url: None,
+        }
+    }
+
+    #[test]
+    fn select_latest_runs_keeps_first_repo_run_per_workflow() {
+        let (latest, missing) = select_latest_runs_for_workflows(
+            &[11, 22],
+            &[
+                run(200, Some(22)),
+                run(199, Some(22)),
+                run(150, None),
+                run(100, Some(11)),
+            ],
+            false,
+        );
+
+        assert_eq!(latest.get(&22).map(|run| run.id), Some(200));
+        assert_eq!(latest.get(&11).map(|run| run.id), Some(100));
+        assert!(
+            missing.is_empty(),
+            "non-truncated responses should not trigger fallback"
+        );
+    }
+
+    #[test]
+    fn select_latest_runs_requests_fallback_only_for_truncated_missing_workflows() {
+        let (_, missing_without_truncation) =
+            select_latest_runs_for_workflows(&[11, 22, 33], &[run(300, Some(11))], false);
+        assert!(
+            missing_without_truncation.is_empty(),
+            "missing workflows should be treated as having no runs when the repo-wide page is complete"
+        );
+
+        let (_, missing_with_truncation) =
+            select_latest_runs_for_workflows(&[11, 22, 33], &[run(300, Some(11))], true);
+        assert_eq!(missing_with_truncation, vec![22, 33]);
+    }
 }

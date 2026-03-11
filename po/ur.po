@@ -402,6 +402,9 @@ msgstr "پسندیدہ دستیاب نہیں"
 msgid "Loading workflows..."
 msgstr "ورک فلو لوڈ ہو رہے ہیں..."
 
+msgid "Failed to load workflows: {error}"
+msgstr "ورک فلوز لوڈ کرنے میں ناکامی: {error}"
+
 msgid "Refresh workflows"
 msgstr "ورک فلو تازہ کریں"
 

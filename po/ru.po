@@ -406,6 +406,9 @@ msgstr "Избранное недоступно"
 msgid "Loading workflows..."
 msgstr "Загрузка workflow..."
 
+msgid "Failed to load workflows: {error}"
+msgstr "Не удалось загрузить рабочие процессы: {error}"
+
 msgid "Refresh workflows"
 msgstr "Обновить workflow"
 

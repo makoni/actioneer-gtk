@@ -441,6 +441,9 @@ msgstr "Favoriten nicht verfügbar"
 msgid "Loading workflows..."
 msgstr "Workflows werden geladen..."
 
+msgid "Failed to load workflows: {error}"
+msgstr "Fehler beim Laden der Workflows: {error}"
+
 msgid "Refresh workflows"
 msgstr "Workflows aktualisieren"
 

@@ -75,6 +75,7 @@ mod tests {
         WorkflowRun {
             id,
             run_number: Some(id),
+            workflow_id: None,
             name: Some("Run".into()),
             display_title: Some("Run".into()),
             head_branch: Some("main".into()),

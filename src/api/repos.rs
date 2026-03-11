@@ -17,6 +17,9 @@ pub async fn list_repos(
     let mut all_repos = Vec::new();
 
     loop {
+        let cache_key = format!(
+            "repos:user:page={page}:affiliation=owner,collaborator,organization_member:sort=updated"
+        );
         let request = client
             .get(format!("{}/user/repos", GITHUB_API_BASE))
             .query(&[
@@ -27,8 +30,11 @@ pub async fn list_repos(
             ]);
 
         let request = add_auth_header(request, token);
+        let request = response_handler.apply_cache_headers(request, Some(cache_key.as_str()));
         let response = request.send().await?;
-        let repos_page: Vec<Repo> = response_handler.handle_response(response).await?;
+        let repos_page: Vec<Repo> = response_handler
+            .handle_response(response, Some(cache_key.as_str()))
+            .await?;
         let count = repos_page.len();
         all_repos.extend(repos_page);
 
@@ -113,6 +119,7 @@ pub async fn list_branches(
     repo: &str,
 ) -> Result<Vec<Branch>, GitHubError> {
     info!("Fetching branches for {}/{}", owner, repo);
+    let cache_key = format!("branches:{owner}/{repo}:per_page=100");
 
     let request = client
         .get(format!(
@@ -122,9 +129,12 @@ pub async fn list_branches(
         .query(&[("per_page", "100")]);
 
     let request = add_auth_header(request, token);
+    let request = response_handler.apply_cache_headers(request, Some(cache_key.as_str()));
     let response = request.send().await?;
 
-    let branches: Vec<Branch> = response_handler.handle_response(response).await?;
+    let branches: Vec<Branch> = response_handler
+        .handle_response(response, Some(cache_key.as_str()))
+        .await?;
 
     Ok(branches)
 }

@@ -10,12 +10,24 @@ use gtk4::{self as gtk, glib};
 use libadwaita as adw;
 use std::collections::HashSet;
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 use tracing::{error, info, warn};
 
 mod scan;
 use scan::{union_active_workflows, visit_expanders};
 
 const DEFAULT_AUTO_REFRESH_INTERVAL_SECS: u64 = 10;
+const SILENT_WORKFLOW_REFRESH_TTL: Duration = Duration::from_secs(30);
+
+fn should_skip_silent_workflow_refresh(last_refresh: Option<Instant>, now: Instant) -> bool {
+    last_refresh
+        .map(|previous| now.duration_since(previous) < SILENT_WORKFLOW_REFRESH_TTL)
+        .unwrap_or(false)
+}
+
+fn should_refresh_workflow_runs_in_background(expander_expanded: bool, is_active: bool) -> bool {
+    expander_expanded || is_active
+}
 
 impl RepoDetailPane {
     pub(super) fn load_workflows(&self) {
@@ -93,7 +105,8 @@ impl RepoDetailPane {
                     error!("Failed to load workflows: {}", e);
                     *workflows.lock() = Arc::new(Vec::new());
                     super::workflow_list::update_workflows_list(&ui_context, &[]);
-                    let message = format!("Failed to load workflows: {}", e);
+                    let message = tr("Failed to load workflows: {error}")
+                        .replace("{error}", e.to_string().as_str());
                     let overlay = toast_overlay.clone();
                     glib::MainContext::default().spawn_local(async move {
                         let toast = adw::Toast::new(&message);
@@ -116,12 +129,26 @@ impl RepoDetailPane {
     }
 
     pub fn refresh_workflows_silent(&self) {
+        if *self.loading.lock() {
+            info!("Already loading workflows, skipping silent refresh");
+            return;
+        }
+
+        let now = Instant::now();
         {
-            let mut loading_guard = self.loading.lock();
-            if *loading_guard {
-                info!("Already loading workflows, skipping silent refresh");
+            let mut last_refresh = self.workflows_last_silent_refresh.lock();
+            if should_skip_silent_workflow_refresh(*last_refresh, now) {
+                info!(
+                    "Skipping silent workflow refresh for {} due to TTL",
+                    self.repo.full_name
+                );
                 return;
             }
+            *last_refresh = Some(now);
+        }
+
+        {
+            let mut loading_guard = self.loading.lock();
             *loading_guard = true;
         }
 
@@ -387,6 +414,11 @@ impl RepoDetailPane {
         );
 
         let source_id = glib::timeout_add_seconds_local(refresh_interval_secs as u32, move || {
+            if !parent_window.is_visible() {
+                info!("Skipping auto-refresh while window is hidden");
+                return glib::ControlFlow::Continue;
+            }
+
             info!("Auto-refreshing workflow runs in background");
 
             let background_context = WorkflowListContext {
@@ -451,6 +483,10 @@ impl RepoDetailPane {
             visit_expanders(&row, &mut |expander, workflow_id, is_active| {
                 if is_active {
                     observed_active.insert(workflow_id);
+                }
+
+                if !should_refresh_workflow_runs_in_background(expander.is_expanded(), is_active) {
+                    return;
                 }
 
                 if let Some(run_list) = run_list_for_expander(expander) {
@@ -565,6 +601,36 @@ impl RepoDetailPane {
                 refresh_button.set_visible(true);
             }
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        SILENT_WORKFLOW_REFRESH_TTL, should_refresh_workflow_runs_in_background,
+        should_skip_silent_workflow_refresh,
+    };
+    use std::time::Instant;
+
+    #[test]
+    fn silent_workflow_refresh_honors_ttl() {
+        let now = Instant::now();
+        assert!(!should_skip_silent_workflow_refresh(None, now));
+        assert!(should_skip_silent_workflow_refresh(
+            Some(now - SILENT_WORKFLOW_REFRESH_TTL + std::time::Duration::from_secs(1)),
+            now
+        ));
+        assert!(!should_skip_silent_workflow_refresh(
+            Some(now - SILENT_WORKFLOW_REFRESH_TTL - std::time::Duration::from_secs(1)),
+            now
+        ));
+    }
+
+    #[test]
+    fn background_run_refresh_skips_collapsed_inactive_workflows() {
+        assert!(should_refresh_workflow_runs_in_background(true, false));
+        assert!(should_refresh_workflow_runs_in_background(false, true));
+        assert!(!should_refresh_workflow_runs_in_background(false, false));
     }
 }
 

@@ -146,6 +146,7 @@ mod tests {
         WorkflowRun {
             id,
             run_number: Some(id),
+            workflow_id: None,
             name: Some(format!("Run {id}")),
             display_title: Some(format!("Run {id}")),
             head_branch: Some("main".to_string()),

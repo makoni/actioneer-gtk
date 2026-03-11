@@ -402,6 +402,9 @@ msgstr "Favoritos indisponíveis"
 msgid "Loading workflows..."
 msgstr "Carregando fluxos de trabalho..."
 
+msgid "Failed to load workflows: {error}"
+msgstr "Falha ao carregar workflows: {error}"
+
 msgid "Refresh workflows"
 msgstr "Atualizar fluxos de trabalho"
 

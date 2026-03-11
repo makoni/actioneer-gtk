@@ -3,12 +3,13 @@ use super::error::GitHubError;
 use super::http::{GITHUB_API_BASE, ResponseHandler, add_auth_header};
 use crate::api::models::{
     Workflow, WorkflowDispatchInput, WorkflowDispatchInputType, WorkflowDispatchInputValue,
-    WorkflowsResponse,
+    WorkflowRun, WorkflowsResponse,
 };
 use base64::Engine;
+use chrono::Utc;
 use reqwest::{Client, StatusCode};
 use serde_yaml::Value as YamlValue;
-use tracing::info;
+use tracing::{info, warn};
 
 /// List workflows for a repository
 pub async fn list_workflows(
@@ -19,6 +20,7 @@ pub async fn list_workflows(
     repo: &str,
 ) -> Result<Vec<Workflow>, GitHubError> {
     info!("Fetching workflows for {}/{}", owner, repo);
+    let cache_key = format!("workflows:{owner}/{repo}");
 
     let request = client.get(format!(
         "{}/repos/{}/{}/actions/workflows",
@@ -26,8 +28,11 @@ pub async fn list_workflows(
     ));
 
     let request = add_auth_header(request, token);
+    let request = response_handler.apply_cache_headers(request, Some(cache_key.as_str()));
     let response = request.send().await?;
-    let workflows_response: WorkflowsResponse = response_handler.handle_response(response).await?;
+    let workflows_response: WorkflowsResponse = response_handler
+        .handle_response(response, Some(cache_key.as_str()))
+        .await?;
     Ok(workflows_response.workflows)
 }
 
@@ -35,6 +40,12 @@ pub async fn list_workflows(
 struct WorkflowContentsResponse {
     content: String,
     encoding: Option<String>,
+}
+
+#[derive(serde::Deserialize)]
+struct WorkflowDispatchResponse {
+    workflow_run_id: i64,
+    html_url: Option<String>,
 }
 
 /// Fetch workflow_dispatch inputs from a workflow file
@@ -47,6 +58,10 @@ pub async fn get_workflow_dispatch_inputs(
     workflow_path: &str,
     reference: Option<&str>,
 ) -> Result<Vec<WorkflowDispatchInput>, GitHubError> {
+    let cache_key = format!(
+        "workflow-contents:{owner}/{repo}:{workflow_path}:ref={}",
+        reference.unwrap_or_default()
+    );
     let mut request = client.get(format!(
         "{}/repos/{}/{}/contents/{}",
         GITHUB_API_BASE, owner, repo, workflow_path
@@ -57,8 +72,11 @@ pub async fn get_workflow_dispatch_inputs(
     }
 
     let request = add_auth_header(request, token);
+    let request = response_handler.apply_cache_headers(request, Some(cache_key.as_str()));
     let response = request.send().await?;
-    let contents: WorkflowContentsResponse = response_handler.handle_response(response).await?;
+    let contents: WorkflowContentsResponse = response_handler
+        .handle_response(response, Some(cache_key.as_str()))
+        .await?;
 
     let encoding = contents.encoding.unwrap_or_else(|| "base64".to_string());
     if encoding != "base64" {
@@ -90,11 +108,12 @@ pub async fn dispatch_workflow(
     workflow_id: &str,
     ref_name: &str,
     inputs: Option<serde_json::Value>,
-) -> Result<(), GitHubError> {
+) -> Result<Option<WorkflowRun>, GitHubError> {
     info!("Dispatching workflow {} on ref {}", workflow_id, ref_name);
 
     let mut body = serde_json::json!({
-        "ref": ref_name
+        "ref": ref_name,
+        "return_run_details": true
     });
 
     if let Some(inputs) = inputs {
@@ -110,17 +129,62 @@ pub async fn dispatch_workflow(
 
     let request = add_auth_header(request, token);
     let response = request.send().await?;
+    let status = response.status();
 
-    if response.status() == StatusCode::NO_CONTENT {
+    if status == StatusCode::NO_CONTENT || status == StatusCode::OK {
         info!("Workflow dispatched successfully");
-        Ok(())
+        let body = response.bytes().await?;
+        parse_dispatch_run_details(status, body.as_ref(), workflow_id, ref_name)
     } else {
         // For error cases, try to parse as JSON error
         Err(GitHubError::ApiError(format!(
             "Failed to dispatch workflow: {}",
-            response.status()
+            status
         )))
     }
+}
+
+fn parse_dispatch_run_details(
+    status: StatusCode,
+    body: &[u8],
+    workflow_id: &str,
+    ref_name: &str,
+) -> Result<Option<WorkflowRun>, GitHubError> {
+    if status != StatusCode::OK && status != StatusCode::NO_CONTENT {
+        return Err(GitHubError::ApiError(format!(
+            "Unexpected dispatch response status: {}",
+            status
+        )));
+    }
+
+    if body.is_empty() {
+        return Ok(None);
+    }
+
+    let details: WorkflowDispatchResponse = match serde_json::from_slice(body) {
+        Ok(details) => details,
+        Err(error) => {
+            warn!("Failed to parse dispatch response details: {}", error);
+            return Ok(None);
+        }
+    };
+
+    let now = Utc::now().to_rfc3339();
+    Ok(Some(WorkflowRun {
+        id: details.workflow_run_id,
+        run_number: None,
+        workflow_id: workflow_id.parse::<i64>().ok(),
+        name: None,
+        display_title: None,
+        head_branch: Some(ref_name.to_string()),
+        status: Some("queued".to_string()),
+        conclusion: None,
+        run_started_at: Some(now.clone()),
+        event: Some("workflow_dispatch".to_string()),
+        created_at: Some(now.clone()),
+        updated_at: Some(now),
+        html_url: details.html_url,
+    }))
 }
 
 fn parse_workflow_dispatch_inputs(yaml: &str) -> Result<Vec<WorkflowDispatchInput>, GitHubError> {
@@ -329,5 +393,34 @@ on:
         let target = inputs.iter().find(|input| input.name == "target").unwrap();
         assert_eq!(target.input_type, WorkflowDispatchInputType::Environment);
         assert!(target.required);
+    }
+
+    #[test]
+    fn parse_dispatch_response_returns_provisional_run() {
+        let body = br#"{
+            "workflow_run_id": 4242,
+            "run_url": "https://api.github.com/repos/octo/repo/actions/runs/4242",
+            "html_url": "https://github.com/octo/repo/actions/runs/4242"
+        }"#;
+
+        let run = parse_dispatch_run_details(StatusCode::OK, body, "21001", "main")
+            .expect("parse dispatch response")
+            .expect("provisional run");
+
+        assert_eq!(run.id, 4242);
+        assert_eq!(run.workflow_id, Some(21001));
+        assert_eq!(run.status.as_deref(), Some("queued"));
+        assert_eq!(run.head_branch.as_deref(), Some("main"));
+        assert_eq!(
+            run.html_url.as_deref(),
+            Some("https://github.com/octo/repo/actions/runs/4242")
+        );
+    }
+
+    #[test]
+    fn parse_dispatch_response_accepts_legacy_empty_success_body() {
+        let run = parse_dispatch_run_details(StatusCode::NO_CONTENT, b"", "21001", "main")
+            .expect("legacy success should still pass");
+        assert!(run.is_none());
     }
 }

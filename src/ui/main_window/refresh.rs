@@ -2,6 +2,7 @@ use super::MainWindow;
 use crate::api::models::{RateLimitInfo, Repo};
 use crate::ui::utils::{MainContextChannelExt, update_rate_limit_label};
 use gtk4::glib;
+use gtk4::prelude::WidgetExt;
 use tokio::time::{Duration, sleep};
 
 fn refresh_delay_for_interval(interval: u64) -> Option<Duration> {
@@ -21,11 +22,16 @@ impl MainWindow {
         let active_detail = self.active_detail.clone();
         let selected_repo_id = repo.id;
         let rate_limit_label = self.rate_limit_label.clone();
+        let window = self.window.clone();
 
         let (sender, receiver) =
             glib::MainContext::default().channel::<()>(glib::Priority::default());
 
         receiver.attach(None, move |_| {
+            if !window.is_visible() {
+                return glib::ControlFlow::Continue;
+            }
+
             if let Some(pane) = active_detail.borrow().as_ref()
                 && pane.repo().id == selected_repo_id
             {

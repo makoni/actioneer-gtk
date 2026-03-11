@@ -133,6 +133,8 @@ pub struct WorkflowsResponse {
 pub struct WorkflowRun {
     pub id: i64,
     pub run_number: Option<i64>,
+    #[serde(default)]
+    pub workflow_id: Option<i64>,
     pub name: Option<String>,
     pub display_title: Option<String>,
     pub head_branch: Option<String>,
@@ -471,6 +473,30 @@ mod tests {
         let workflow: Workflow = serde_json::from_str(json).unwrap();
         assert_eq!(workflow.id, 456);
         assert_eq!(workflow.name, "CI");
+    }
+
+    #[test]
+    fn test_workflow_run_deserialization_with_optional_workflow_id() {
+        let json = r#"{
+            "id": 789,
+            "run_number": 12,
+            "workflow_id": 456,
+            "status": "completed",
+            "conclusion": "success"
+        }"#;
+
+        let run: WorkflowRun = serde_json::from_str(json).unwrap();
+        assert_eq!(run.id, 789);
+        assert_eq!(run.workflow_id, Some(456));
+
+        let json_without_workflow_id = r#"{
+            "id": 790,
+            "run_number": 13,
+            "status": "queued"
+        }"#;
+        let run_without_workflow_id: WorkflowRun =
+            serde_json::from_str(json_without_workflow_id).unwrap();
+        assert_eq!(run_without_workflow_id.workflow_id, None);
     }
 
     #[test]

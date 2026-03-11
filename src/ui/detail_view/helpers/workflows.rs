@@ -5,7 +5,7 @@ use super::workflow_follow_up::{FollowUpRefreshParams, schedule_follow_up_refres
 use crate::api::GitHubClient;
 use crate::api::models::{
     Repo, Workflow, WorkflowDispatchInput, WorkflowDispatchInputType, WorkflowDispatchInputValue,
-    build_dispatch_inputs_payload,
+    WorkflowRun, build_dispatch_inputs_payload,
 };
 use crate::i18n::tr;
 use crate::notifications::NotificationManager;
@@ -694,7 +694,7 @@ pub(crate) fn create_workflow_expander_row(
                 };
 
                 let (sender, receiver) = glib::MainContext::default()
-                    .channel::<Result<String, String>>(glib::Priority::default());
+                    .channel::<Result<(String, Option<WorkflowRun>), String>>(glib::Priority::default());
 
                 crate::runtime_handle().spawn(async move {
                     let client_guard = client.lock().clone();
@@ -709,8 +709,8 @@ pub(crate) fn create_workflow_expander_row(
                         .await;
 
                     match dispatch_result {
-                        Ok(_) => {
-                            let _ = sender.send(Ok(branch));
+                        Ok(run) => {
+                            let _ = sender.send(Ok((branch, run)));
                         }
                         Err(e) => {
                             let _ = sender
@@ -756,8 +756,14 @@ pub(crate) fn create_workflow_expander_row(
                     let run_load_service_for_idle = run_load_service_for_closure.clone();
                     let run_load_service_for_follow_up = run_load_service_for_closure.clone();
                     match result {
-                        Ok(branch_name) => {
+                        Ok((branch_name, dispatched_run)) => {
                             info!("Workflow triggered successfully on branch: {}", branch_name);
+
+                            if let Some(run) = dispatched_run.clone() {
+                                let filters = run_filters_for_reload.lock().clone();
+                                run_list_for_reload.prepend_run(run, &filters);
+                                workflows_with_active.lock().insert(workflow_id);
+                            }
 
                             let expander = expander.clone();
                             let client_for_reload = client.clone();

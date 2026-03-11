@@ -145,6 +145,7 @@ impl DemoData {
             WorkflowRun {
                 id: 30_108,
                 run_number: Some(134),
+                workflow_id: None,
                 name: Some("CI".to_string()),
                 display_title: Some("CI • main".to_string()),
                 head_branch: Some("main".to_string()),
@@ -161,6 +162,7 @@ impl DemoData {
             WorkflowRun {
                 id: 30_107,
                 run_number: Some(133),
+                workflow_id: None,
                 name: Some("CI".to_string()),
                 display_title: Some("CI • feature/refactor".to_string()),
                 head_branch: Some("feature/refactor".to_string()),
@@ -177,6 +179,7 @@ impl DemoData {
             WorkflowRun {
                 id: 30_106,
                 run_number: Some(132),
+                workflow_id: None,
                 name: Some("CI".to_string()),
                 display_title: Some("CI • main".to_string()),
                 head_branch: Some("main".to_string()),
@@ -193,6 +196,7 @@ impl DemoData {
             WorkflowRun {
                 id: 30_105,
                 run_number: Some(131),
+                workflow_id: None,
                 name: Some("CI".to_string()),
                 display_title: Some("CI • release/hotfix".to_string()),
                 head_branch: Some("release/hotfix".to_string()),
@@ -209,6 +213,7 @@ impl DemoData {
             WorkflowRun {
                 id: 30_103,
                 run_number: Some(130),
+                workflow_id: None,
                 name: Some("CI".to_string()),
                 display_title: Some("CI • main".to_string()),
                 head_branch: Some("main".to_string()),
@@ -225,6 +230,7 @@ impl DemoData {
             WorkflowRun {
                 id: 30_104,
                 run_number: Some(129),
+                workflow_id: None,
                 name: Some("CI".to_string()),
                 display_title: Some("CI • feature/login".to_string()),
                 head_branch: Some("feature/login".to_string()),
@@ -241,6 +247,7 @@ impl DemoData {
             WorkflowRun {
                 id: 30_101,
                 run_number: Some(128),
+                workflow_id: None,
                 name: Some("CI".to_string()),
                 display_title: Some("CI • main".to_string()),
                 head_branch: Some("main".to_string()),
@@ -257,6 +264,7 @@ impl DemoData {
             WorkflowRun {
                 id: 30_102,
                 run_number: Some(127),
+                workflow_id: None,
                 name: Some("CI".to_string()),
                 display_title: Some("CI • feature/login".to_string()),
                 head_branch: Some("feature/login".to_string()),
@@ -275,6 +283,7 @@ impl DemoData {
         let runs_release = vec![WorkflowRun {
             id: 30_201,
             run_number: Some(46),
+            workflow_id: None,
             name: Some("Release".to_string()),
             display_title: Some("Release • v1.0.0".to_string()),
             head_branch: Some("main".to_string()),
@@ -467,6 +476,7 @@ impl DemoData {
         let runs_infra = vec![WorkflowRun {
             id: 31_001,
             run_number: Some(210),
+            workflow_id: None,
             name: Some("Infrastructure".to_string()),
             display_title: Some("Infra • terraform plan".to_string()),
             head_branch: Some("main".to_string()),
@@ -511,6 +521,7 @@ impl DemoData {
         let runs_edge = vec![WorkflowRun {
             id: 32_101,
             run_number: Some(12),
+            workflow_id: None,
             name: Some("Edge Diagnostics".to_string()),
             display_title: Some("Edge Diagnostics • nightly".to_string()),
             head_branch: Some("main".to_string()),
@@ -623,6 +634,30 @@ impl DemoData {
         self.runs.get(&key).cloned().unwrap_or_default()
     }
 
+    pub(super) fn clone_repo_runs(&self, owner: &str, repo: &str) -> Vec<WorkflowRun> {
+        let repo_key = Self::repo_key(owner, repo);
+        let mut runs = self
+            .runs
+            .iter()
+            .filter(|(workflow_key, _)| workflow_key.repo == repo_key)
+            .flat_map(|(workflow_key, workflow_runs)| {
+                workflow_runs.iter().cloned().map(move |mut run| {
+                    run.workflow_id = Some(workflow_key.workflow_id);
+                    run
+                })
+            })
+            .collect::<Vec<_>>();
+
+        runs.sort_by(|left, right| {
+            right
+                .created_at
+                .cmp(&left.created_at)
+                .then_with(|| right.id.cmp(&left.id))
+        });
+
+        runs
+    }
+
     pub(super) fn clone_jobs(&self, run_id: i64) -> Vec<Job> {
         self.jobs.get(&run_id).cloned().unwrap_or_default()
     }
@@ -637,7 +672,7 @@ impl DemoData {
         name: &str,
         workflow_id: i64,
         reference: &str,
-    ) -> GitHubErrorResult<()> {
+    ) -> GitHubErrorResult<WorkflowRun> {
         let workflow_key = Self::workflow_key(owner, name, workflow_id);
 
         let runs = self
@@ -653,6 +688,7 @@ impl DemoData {
         let new_run = WorkflowRun {
             id: run_id,
             run_number: Some(run_number),
+            workflow_id: None,
             name: Some("Manual Dispatch".to_string()),
             display_title: Some(format!("{} • {}", reference, reference)),
             head_branch: Some(reference.to_string()),
@@ -668,7 +704,7 @@ impl DemoData {
             )),
         };
 
-        runs.insert(0, new_run);
+        runs.insert(0, new_run.clone());
 
         self.next_job_id += 1;
         let job_id = self.next_job_id;
@@ -696,7 +732,7 @@ impl DemoData {
                 protected: false,
             });
 
-        Ok(())
+        Ok(new_run)
     }
 
     pub(super) fn update_run_status(
@@ -756,10 +792,12 @@ mod tests {
                 .any(|run| run.display_title.as_deref() == Some("CI • main"))
         );
 
-        data.add_manual_run(owner, repo, workflow_id, "demo-branch")
+        let created_run = data
+            .add_manual_run(owner, repo, workflow_id, "demo-branch")
             .expect("manual run creation should succeed");
 
         let runs = data.clone_runs(owner, repo, workflow_id);
+        assert_eq!(created_run.head_branch.as_deref(), Some("demo-branch"));
         assert!(
             runs.iter()
                 .any(|run| run.head_branch.as_deref() == Some("demo-branch"))

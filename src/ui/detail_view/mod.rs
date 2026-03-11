@@ -49,6 +49,7 @@ pub struct RepoDetailPane {
     auto_refresh_source: Arc<Mutex<Option<glib::SourceId>>>, // Auto-refresh timer
     workflows_with_active_runs: Arc<Mutex<HashSet<i64>>>, // Track workflows needing refresh
     workflows_last_loaded: Arc<Mutex<HashMap<i64, std::time::Instant>>>, // Debounce per-workflow loads
+    workflows_last_silent_refresh: Arc<Mutex<Option<std::time::Instant>>>, // Throttle silent workflow refreshes
     job_contexts: JobContextMap,
     run_digests: Arc<Mutex<RunDigestStore>>,
     notification_manager: Option<NotificationManager>,
@@ -209,6 +210,7 @@ impl RepoDetailPane {
         let run_digests = Arc::new(Mutex::new(HashMap::new()));
         let run_filters = Arc::new(Mutex::new(RunFilters::default()));
         let workflows_last_loaded = Arc::new(Mutex::new(HashMap::new()));
+        let workflows_last_silent_refresh = Arc::new(Mutex::new(None));
         let workflows_loading_runs = Arc::new(Mutex::new(HashSet::new()));
         let filter_guard = Rc::new(Cell::new(false));
         let notification_manager = deps
@@ -252,6 +254,7 @@ impl RepoDetailPane {
             workflows_with_active_runs: Arc::new(Mutex::new(HashSet::new())),
             workflows_loading_runs: workflows_loading_runs.clone(),
             workflows_last_loaded: workflows_last_loaded.clone(),
+            workflows_last_silent_refresh: workflows_last_silent_refresh.clone(),
             job_contexts: job_contexts.clone(),
             run_digests: run_digests.clone(),
             run_load_service: run_load_service.clone(),

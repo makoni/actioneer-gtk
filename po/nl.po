@@ -438,6 +438,9 @@ msgstr "Favorieten niet beschikbaar"
 msgid "Loading workflows..."
 msgstr "Workflows laden..."
 
+msgid "Failed to load workflows: {error}"
+msgstr "Laden van workflows mislukt: {error}"
+
 msgid "Refresh workflows"
 msgstr "Workflows vernieuwen"
 

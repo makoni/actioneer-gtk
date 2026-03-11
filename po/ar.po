@@ -402,6 +402,9 @@ msgstr "المفضلة غير متاحة"
 msgid "Loading workflows..."
 msgstr "جارٍ تحميل سير العمل..."
 
+msgid "Failed to load workflows: {error}"
+msgstr "تعذر تحميل سير العمل: {error}"
+
 msgid "Refresh workflows"
 msgstr "تحديث سير العمل"
 

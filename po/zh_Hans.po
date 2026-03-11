@@ -402,6 +402,9 @@ msgstr "收藏不可用"
 msgid "Loading workflows..."
 msgstr "正在加载工作流..."
 
+msgid "Failed to load workflows: {error}"
+msgstr "加载工作流失败：{error}"
+
 msgid "Refresh workflows"
 msgstr "刷新工作流"
 

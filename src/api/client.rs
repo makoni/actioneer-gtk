@@ -106,13 +106,12 @@ impl GitHubClient {
         workflow_id: &str,
         ref_name: &str,
         inputs: Option<serde_json::Value>,
-    ) -> Result<(), GitHubError> {
+    ) -> Result<Option<WorkflowRun>, GitHubError> {
         if let Ok(id) = workflow_id.parse::<i64>()
             && demo::is_active()
         {
             // Demo inputs are ignored; simulate dispatch immediately
-            demo::dispatch_workflow(owner, repo, id, ref_name)?;
-            return Ok(());
+            return demo::dispatch_workflow(owner, repo, id, ref_name).map(Some);
         }
 
         workflows::dispatch_workflow(
@@ -168,6 +167,25 @@ impl GitHubClient {
             owner,
             repo,
             workflow_id,
+        )
+        .await
+    }
+
+    pub async fn list_repository_runs(
+        &self,
+        owner: &str,
+        repo: &str,
+    ) -> Result<Vec<WorkflowRun>, GitHubError> {
+        if let Some(runs) = demo::list_repository_runs(owner, repo) {
+            return Ok(runs);
+        }
+
+        runs::list_repository_runs(
+            &self.client,
+            &self.token,
+            &self.response_handler,
+            owner,
+            repo,
         )
         .await
     }

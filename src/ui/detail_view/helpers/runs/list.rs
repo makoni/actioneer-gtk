@@ -243,6 +243,22 @@ impl WorkflowRunListModel {
         self.has_loaded.set(true);
     }
 
+    pub(crate) fn prepend_run(&self, run: WorkflowRun, filters: &RunFilters) {
+        let run_id = run.id;
+        let mut merged = vec![run];
+        merged.extend(
+            self.last_runs
+                .borrow()
+                .iter()
+                .filter(|existing| existing.id != run_id)
+                .cloned(),
+        );
+
+        self.set_runs(Arc::new(merged));
+        let expanded = self.expanded_run_ids();
+        let _ = self.reapply_filters(filters, &expanded);
+    }
+
     pub(crate) fn reapply_filters(
         &self,
         filters: &RunFilters,
@@ -574,6 +590,7 @@ mod tests {
             WorkflowRun {
                 id: 1,
                 run_number: Some(1),
+                workflow_id: None,
                 name: Some("Run 1".into()),
                 display_title: Some("Run 1".into()),
                 head_branch: Some("main".into()),
@@ -588,6 +605,7 @@ mod tests {
             WorkflowRun {
                 id: 2,
                 run_number: Some(2),
+                workflow_id: None,
                 name: Some("Run 2".into()),
                 display_title: Some("Run 2".into()),
                 head_branch: Some("main".into()),
@@ -619,5 +637,44 @@ mod tests {
             1,
             "only failed run should remain"
         );
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn prepend_run_deduplicates_cached_runs() {
+        let Some(_guard) = gtk_test_guard("prepend_run_deduplicates_cached_runs") else {
+            return;
+        };
+
+        let model = test_run_list_model();
+        let existing = WorkflowRun {
+            id: 2,
+            run_number: Some(2),
+            workflow_id: None,
+            name: Some("Existing".into()),
+            display_title: Some("Existing".into()),
+            head_branch: Some("main".into()),
+            status: Some("completed".into()),
+            conclusion: Some("success".into()),
+            run_started_at: None,
+            event: None,
+            created_at: None,
+            updated_at: None,
+            html_url: None,
+        };
+        model.set_runs(std::sync::Arc::new(vec![existing.clone()]));
+
+        let replacement = WorkflowRun {
+            id: 2,
+            status: Some("queued".into()),
+            conclusion: None,
+            ..existing
+        };
+
+        model.prepend_run(replacement, &RunFilters::default());
+
+        let cached = model.last_runs.borrow().clone();
+        assert_eq!(cached.len(), 1);
+        assert_eq!(cached[0].status.as_deref(), Some("queued"));
     }
 }

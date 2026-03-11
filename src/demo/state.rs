@@ -70,6 +70,10 @@ pub(crate) fn list_runs(owner: &str, repo: &str, workflow_id: i64) -> Option<Vec
     with_data(|data| data.clone_runs(owner, repo, workflow_id))
 }
 
+pub(crate) fn list_repository_runs(owner: &str, repo: &str) -> Option<Vec<WorkflowRun>> {
+    with_data(|data| data.clone_repo_runs(owner, repo))
+}
+
 pub(crate) fn list_jobs(_owner: &str, _repo: &str, run_id: i64) -> Option<Vec<Job>> {
     with_data(|data| data.clone_jobs(run_id))
 }
@@ -83,7 +87,7 @@ pub(crate) fn dispatch_workflow(
     repo: &str,
     workflow_id: i64,
     reference: &str,
-) -> GitHubErrorResult<()> {
+) -> GitHubErrorResult<WorkflowRun> {
     with_data_mut(|data| data.add_manual_run(owner, repo, workflow_id, reference))
         .unwrap_or(Err(GitHubError::NotFound))
 }

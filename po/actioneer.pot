@@ -403,6 +403,9 @@ msgstr ""
 msgid "Loading workflows..."
 msgstr ""
 
+msgid "Failed to load workflows: {error}"
+msgstr ""
+
 msgid "Refresh workflows"
 msgstr ""
 
