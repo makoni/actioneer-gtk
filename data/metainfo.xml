@@ -256,6 +256,60 @@
   </screenshots>
 
   <releases>
+    <release version="1.0.8" date="2026-03-12">
+      <description>
+        <ul>
+          <li>In-progress workflow runs now stay up to date, so jobs and steps refresh while a run is still active.</li>
+          <li xml:lang="de">Laufende Workflow-Ausfuehrungen bleiben jetzt aktuell, sodass Jobs und Schritte aktualisiert werden, waehrend ein Lauf noch aktiv ist.</li>
+          <li xml:lang="nl">Lopende workflow-uitvoeringen blijven nu actueel, zodat jobs en stappen worden vernieuwd terwijl een run nog actief is.</li>
+          <li xml:lang="zh-Hans">进行中的工作流运行现在会持续保持最新状态，因此作业和步骤会在运行期间实时刷新。</li>
+          <li xml:lang="hi">अब चल रहे workflow runs अपडेट रहते हैं, इसलिए run सक्रिय रहते समय jobs और steps भी रिफ्रेश होते रहते हैं।</li>
+          <li xml:lang="es">Las ejecuciones de workflow en curso ahora se mantienen actualizadas, por lo que los jobs y pasos se refrescan mientras la ejecución sigue activa.</li>
+          <li xml:lang="fr">Les exécutions de workflow en cours restent désormais à jour, de sorte que les jobs et les étapes se rafraîchissent pendant qu’un run est encore actif.</li>
+          <li xml:lang="ar">أصبحت عمليات سير العمل الجارية تبقى محدّثة، لذلك يتم تحديث المهام والخطوات أثناء استمرار التشغيل.</li>
+          <li xml:lang="bn">চলমান ওয়ার্কফ্লো রান এখন আপডেট থাকে, তাই রান সক্রিয় থাকতেই জব ও ধাপগুলো রিফ্রেশ হয়।</li>
+          <li xml:lang="pt-BR">As execuções de workflow em andamento agora permanecem atualizadas, então jobs e etapas são atualizados enquanto a execução ainda está ativa.</li>
+          <li xml:lang="ru">Запущенные workflow теперь обновляются прямо во время выполнения, поэтому задания и шаги видны в актуальном состоянии до завершения запуска.</li>
+          <li xml:lang="ur">چلتے ہوئے ورک فلو رنز اب تازہ رہتے ہیں، اس لیے رن کے جاری رہنے کے دوران جابز اور مراحل بھی اپ ڈیٹ ہوتے رہتے ہیں۔</li>
+          <li>Expanded run details are more stable and easier to follow, with clearer job badges and step numbering.</li>
+          <li xml:lang="de">Die Details erweiterter Laeufe sind jetzt stabiler und leichter zu verfolgen, mit klareren Job-Badges und einer verstaendlicheren Schrittnummerierung.</li>
+          <li xml:lang="nl">Details van uitgeklapte runs zijn nu stabieler en makkelijker te volgen, met duidelijkere jobbadges en stapnummering.</li>
+          <li xml:lang="zh-Hans">展开的运行详情现在更加稳定、也更易读，作业徽章和步骤编号更加清晰。</li>
+          <li xml:lang="hi">खुले हुए run details अब ज़्यादा स्थिर और समझने में आसान हैं, जिनमें job badges और step numbering अधिक स्पष्ट है।</li>
+          <li xml:lang="es">Los detalles de las ejecuciones expandidas ahora son más estables y fáciles de seguir, con indicadores de jobs y numeración de pasos más claros.</li>
+          <li xml:lang="fr">Les détails des runs ouverts sont désormais plus stables et plus faciles à suivre, avec des badges de job et une numérotation des étapes plus claires.</li>
+          <li xml:lang="ar">أصبحت تفاصيل التشغيل الموسّعة أكثر استقرارًا وأسهل في المتابعة، مع شارات مهام وترقيم خطوات أوضح.</li>
+          <li xml:lang="bn">প্রসারিত রান ডিটেইলস এখন আরও স্থিতিশীল ও অনুসরণ করা সহজ, যেখানে জব ব্যাজ ও ধাপ নম্বর আরও পরিষ্কার।</li>
+          <li xml:lang="pt-BR">Os detalhes das execucoes expandidas agora estao mais estaveis e faceis de acompanhar, com badges de jobs e numeracao de etapas mais claros.</li>
+          <li xml:lang="ru">Детали раскрытых запусков стали стабильнее и понятнее: бейджи заданий и нумерация шагов читаются лучше.</li>
+          <li xml:lang="ur">پھیلے ہوئے رن کی تفصیلات اب زیادہ مستحکم اور سمجھنے میں آسان ہیں، واضح جاب بیجز اور مرحلہ نمبرنگ کے ساتھ۔</li>
+          <li>Workflow status badges are now translated more consistently across the app.</li>
+          <li xml:lang="de">Workflow-Status-Badges sind jetzt in der gesamten App einheitlicher uebersetzt.</li>
+          <li xml:lang="nl">Workflow-statusbadges zijn nu consistenter vertaald in de hele app.</li>
+          <li xml:lang="zh-Hans">整个应用中的工作流状态徽章现在拥有更一致的翻译。</li>
+          <li xml:lang="hi">पूरे ऐप में workflow status badges का अनुवाद अब अधिक एकरूप है।</li>
+          <li xml:lang="es">Los indicadores de estado de workflows ahora están traducidos de forma más consistente en toda la app.</li>
+          <li xml:lang="fr">Les badges d’état des workflows sont désormais traduits de manière plus cohérente dans toute l’application.</li>
+          <li xml:lang="ar">أصبحت شارات حالة سير العمل مترجمة بشكل أكثر اتساقًا في جميع أنحاء التطبيق.</li>
+          <li xml:lang="bn">এখন পুরো অ্যাপজুড়ে ওয়ার্কফ্লো স্ট্যাটাস ব্যাজগুলোর অনুবাদ আরও সামঞ্জস্যপূর্ণ।</li>
+          <li xml:lang="pt-BR">Os badges de status dos workflows agora têm traduções mais consistentes em todo o app.</li>
+          <li xml:lang="ru">Статусы workflow теперь переведены более последовательно по всему приложению.</li>
+          <li xml:lang="ur">پوری ایپ میں ورک فلو اسٹیٹس بیجز کے تراجم اب زیادہ یکساں ہیں۔</li>
+          <li>Background refresh is lighter on the GitHub API, which helps preserve your rate limit.</li>
+          <li xml:lang="de">Hintergrundaktualisierungen belasten die GitHub-API jetzt weniger, was beim Schonen des Rate Limits hilft.</li>
+          <li xml:lang="nl">Achtergrondverversingen belasten de GitHub-API nu minder, wat helpt om je rate limit te sparen.</li>
+          <li xml:lang="zh-Hans">后台刷新现在对 GitHub API 的占用更少，有助于保留你的速率限制额度。</li>
+          <li xml:lang="hi">बैकग्राउंड रिफ्रेश अब GitHub API पर कम दबाव डालता है, जिससे आपका rate limit बचाने में मदद मिलती है।</li>
+          <li xml:lang="es">La actualización en segundo plano ahora consume menos de la API de GitHub, lo que ayuda a conservar tu límite de uso.</li>
+          <li xml:lang="fr">Les actualisations en arrière-plan sollicitent moins l’API GitHub, ce qui aide à préserver votre quota.</li>
+          <li xml:lang="ar">أصبحت التحديثات في الخلفية أخف على واجهة GitHub API، مما يساعد في الحفاظ على حد المعدل.</li>
+          <li xml:lang="bn">ব্যাকগ্রাউন্ড রিফ্রেশ এখন GitHub API-তে কম চাপ ফেলে, ফলে আপনার rate limit বেশি সময় টিকে থাকে।</li>
+          <li xml:lang="pt-BR">As atualizações em segundo plano agora exigem menos da API do GitHub, o que ajuda a preservar seu limite de uso.</li>
+          <li xml:lang="ru">Фоновые обновления теперь меньше нагружают GitHub API, что помогает экономнее расходовать лимит запросов.</li>
+          <li xml:lang="ur">بیک گراؤنڈ ریفریش اب GitHub API پر کم بوجھ ڈالتا ہے، جس سے آپ کا ریٹ لمٹ بچانے میں مدد ملتی ہے۔</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.7" date="2026-03-03">
       <description>
         <ul>

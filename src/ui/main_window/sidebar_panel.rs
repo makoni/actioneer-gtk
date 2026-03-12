@@ -13,7 +13,6 @@ use std::rc::Rc;
 pub struct SidebarPanel {
     clamp: adw::Clamp,
     search_entry: gtk::SearchEntry,
-    #[cfg(test)]
     repo_view: gtk::ListView,
     repo_store: gio::ListStore,
     filter_model: gtk::FilterListModel,
@@ -111,7 +110,6 @@ impl SidebarPanel {
         Self {
             clamp,
             search_entry,
-            #[cfg(test)]
             repo_view,
             repo_store,
             filter_model,
@@ -129,7 +127,6 @@ impl SidebarPanel {
         self.search_entry.clone()
     }
 
-    #[cfg(test)]
     pub fn repo_list(&self) -> gtk::ListView {
         self.repo_view.clone()
     }

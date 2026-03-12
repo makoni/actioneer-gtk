@@ -327,6 +327,7 @@ impl MainWindow {
         self.connect_refresh_button(&refresh_button);
         self.connect_search();
         self.connect_repo_selection();
+        self.connect_repo_activation();
     }
 
     fn restore_preferences(&self) {
