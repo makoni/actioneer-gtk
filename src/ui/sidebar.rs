@@ -14,6 +14,11 @@ use tracing::{debug, warn};
 
 const MAX_WORKFLOWS_PER_REPO: usize = 3;
 const REPO_WIDE_RUNS_PAGE_SIZE: usize = 100;
+const REPO_ID_KEY: &str = "actioneer-repo-id";
+const REPO_FULL_NAME_KEY: &str = "actioneer-repo-full-name";
+const REPO_MODEL_KEY: &str = "actioneer-repo-model";
+const SELECTABLE_KEY: &str = "actioneer-sidebar-selectable";
+const ACTIVATABLE_KEY: &str = "actioneer-sidebar-activatable";
 
 #[derive(Clone)]
 pub struct RepoListRenderContext {
@@ -133,16 +138,14 @@ pub fn rebuild_repo_list(store: gio::ListStore, context: RepoListRenderContext) 
     }
 }
 
-pub fn row_matches_query(row: &gtk::ListBoxRow, query: &str) -> bool {
+pub fn row_matches_query(row: &gtk::Widget, query: &str) -> bool {
     let query = query.trim();
 
     if query.is_empty() {
         return true;
     }
 
-    if let Some(child) = row.child()
-        && let Some(label) = find_label_by_name(&child, "repo-name-label")
-    {
+    if let Some(label) = find_label_by_name(row, "repo-name-label") {
         return label.text().to_lowercase().contains(query);
     }
 
@@ -171,18 +174,16 @@ fn build_repo_row(
     workflow_counts: WorkflowStatusCounts,
     favorites_arc: Arc<Mutex<HashSet<i64>>>,
     favorites_manager: Option<Arc<FavoritesManager>>,
-) -> gtk::ListBoxRow {
-    let row = gtk::ListBoxRow::new();
-    row.set_activatable(true);
-    row.set_selectable(true);
-
+) -> gtk::Box {
+    let row = gtk::Box::new(gtk::Orientation::Horizontal, 12);
     let repo_id = repo.id;
-
-    let wrapper = gtk::Box::new(gtk::Orientation::Horizontal, 12);
-    wrapper.set_margin_top(12);
-    wrapper.set_margin_bottom(12);
-    wrapper.set_margin_start(12);
-    wrapper.set_margin_end(12);
+    row.set_margin_top(12);
+    row.set_margin_bottom(12);
+    row.set_margin_start(12);
+    row.set_margin_end(12);
+    row.set_hexpand(true);
+    row.set_can_focus(false);
+    row.add_css_class("activatable");
 
     let favorite_button = gtk::ToggleButton::new();
     favorite_button.add_css_class("flat");
@@ -275,13 +276,13 @@ fn build_repo_row(
         }
     });
 
-    wrapper.append(&favorite_button);
+    row.append(&favorite_button);
 
     let icon = gtk::Image::from_icon_name("folder-symbolic");
     icon.set_pixel_size(24);
     icon.set_valign(gtk::Align::Center);
     icon.set_halign(gtk::Align::Center);
-    wrapper.append(&icon);
+    row.append(&icon);
 
     let content_box = gtk::Box::new(gtk::Orientation::Vertical, 6);
 
@@ -321,33 +322,43 @@ fn build_repo_row(
         content_box.append(&meta_box);
     }
 
-    wrapper.append(&content_box);
+    row.append(&content_box);
 
-    row.set_child(Some(&wrapper));
-
-    set_data(&row, "actioneer-repo-id", repo_id);
-    set_data(&row, "actioneer-repo-full-name", repo.full_name.clone());
-    set_data(&row, "actioneer-repo-model", repo);
+    set_data(&row, REPO_ID_KEY, repo_id);
+    set_data(&row, REPO_FULL_NAME_KEY, repo.full_name.clone());
+    set_data(&row, REPO_MODEL_KEY, repo);
+    set_data(&row, SELECTABLE_KEY, true);
+    set_data(&row, ACTIVATABLE_KEY, true);
 
     row
 }
 
-fn repo_from_row(row: &gtk::ListBoxRow) -> Option<Repo> {
-    get_data_clone(row, "actioneer-repo-model")
+fn repo_from_row(row: &gtk::Widget) -> Option<Repo> {
+    get_data_clone(row, REPO_MODEL_KEY)
 }
 
 pub fn repo_from_object(obj: &glib::Object) -> Option<Repo> {
-    obj.downcast_ref::<gtk::ListBoxRow>()
-        .and_then(repo_from_row)
+    obj.downcast_ref::<gtk::Widget>().and_then(repo_from_row)
 }
 
-fn repo_id_from_row(row: &gtk::ListBoxRow) -> Option<i64> {
-    get_data_copy(row, "actioneer-repo-id")
+fn repo_id_from_row(row: &gtk::Widget) -> Option<i64> {
+    get_data_copy(row, REPO_ID_KEY)
 }
 
 pub fn repo_id_from_object(obj: &glib::Object) -> Option<i64> {
-    obj.downcast_ref::<gtk::ListBoxRow>()
-        .and_then(repo_id_from_row)
+    obj.downcast_ref::<gtk::Widget>().and_then(repo_id_from_row)
+}
+
+pub fn row_selectable_from_object(obj: &glib::Object) -> bool {
+    obj.downcast_ref::<gtk::Widget>()
+        .and_then(|row| get_data_copy(row, SELECTABLE_KEY))
+        .unwrap_or(false)
+}
+
+pub fn row_activatable_from_object(obj: &glib::Object) -> bool {
+    obj.downcast_ref::<gtk::Widget>()
+        .and_then(|row| get_data_copy(row, ACTIVATABLE_KEY))
+        .unwrap_or(false)
 }
 
 pub fn find_repo_index(model: &gtk::FilterListModel, repo_id: i64) -> Option<u32> {
@@ -373,24 +384,22 @@ pub fn find_first_repo_index(model: &gtk::FilterListModel) -> Option<u32> {
     None
 }
 
-fn create_section_header(title: &str, icon_name: &str) -> gtk::ListBoxRow {
-    let row = gtk::ListBoxRow::new();
-    row.set_selectable(false);
-    row.set_activatable(false);
+fn create_section_header(title: &str, icon_name: &str) -> gtk::Box {
+    let row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     row.set_can_focus(false);
     row.set_can_target(false);
     row.add_css_class("section-header");
     row.add_css_class("hoverless-row");
-
-    let container = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-    container.set_margin_top(18);
-    container.set_margin_bottom(6);
-    container.set_margin_start(12);
-    container.set_margin_end(12);
+    row.set_margin_top(18);
+    row.set_margin_bottom(6);
+    row.set_margin_start(12);
+    row.set_margin_end(12);
+    set_data(&row, SELECTABLE_KEY, false);
+    set_data(&row, ACTIVATABLE_KEY, false);
 
     let icon = gtk::Image::from_icon_name(icon_name);
     icon.set_pixel_size(16);
-    container.append(&icon);
+    row.append(&icon);
 
     let label = gtk::Label::new(Some(title));
     label.set_halign(gtk::Align::Start);
@@ -398,34 +407,29 @@ fn create_section_header(title: &str, icon_name: &str) -> gtk::ListBoxRow {
     label.add_css_class("dim-label");
     label.add_css_class("heading");
 
-    container.append(&label);
-    row.set_child(Some(&container));
+    row.append(&label);
 
     row
 }
 
-fn create_owner_header(owner: &str) -> gtk::ListBoxRow {
-    let row = gtk::ListBoxRow::new();
-    row.set_selectable(false);
-    row.set_activatable(false);
+fn create_owner_header(owner: &str) -> gtk::Box {
+    let row = gtk::Box::new(gtk::Orientation::Horizontal, 0);
     row.set_can_focus(false);
     row.set_can_target(false);
     row.add_css_class("owner-header");
     row.add_css_class("hoverless-row");
-
-    let container = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-    container.set_margin_top(4);
-    container.set_margin_bottom(4);
-    container.set_margin_start(28);
-    container.set_margin_end(12);
+    row.set_margin_top(4);
+    row.set_margin_bottom(4);
+    row.set_margin_start(28);
+    row.set_margin_end(12);
+    set_data(&row, SELECTABLE_KEY, false);
+    set_data(&row, ACTIVATABLE_KEY, false);
 
     let label = gtk::Label::new(Some(owner));
     label.set_halign(gtk::Align::Start);
     label.add_css_class("caption");
     label.add_css_class("dim-label");
-    container.append(&label);
-
-    row.set_child(Some(&container));
+    row.append(&label);
     row
 }
 
@@ -581,7 +585,13 @@ fn select_latest_runs_for_workflows(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::models::WorkflowRun;
+    use crate::api::models::{Repo, User, WorkflowRun};
+    use crate::ui::state::WorkflowStatusCounts;
+    use crate::ui::test_helpers::gtk_test_guard;
+    use gtk4::{self as gtk, gio};
+    use parking_lot::Mutex;
+    use std::collections::{HashMap, HashSet};
+    use std::sync::Arc;
 
     fn run(id: i64, workflow_id: Option<i64>) -> WorkflowRun {
         WorkflowRun {
@@ -634,5 +644,54 @@ mod tests {
         let (_, missing_with_truncation) =
             select_latest_runs_for_workflows(&[11, 22, 33], &[run(300, Some(11))], true);
         assert_eq!(missing_with_truncation, vec![22, 33]);
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn repo_rows_use_widget_metadata_without_listbox_rows() {
+        let Some(_guard) = gtk_test_guard("repo_rows_use_widget_metadata_without_listbox_rows")
+        else {
+            return;
+        };
+
+        let store = gio::ListStore::new::<gtk::Widget>();
+        let repo = Repo {
+            id: 42,
+            name: "actioneer".into(),
+            full_name: "mak/actioneer".into(),
+            owner: User {
+                login: "mak".into(),
+            },
+            is_private: false,
+            permissions: None,
+            default_branch: Some("main".into()),
+        };
+
+        rebuild_repo_list(
+            store.clone(),
+            RepoListRenderContext {
+                repos: vec![repo.clone()],
+                favorites_snapshot: HashSet::new(),
+                actions_snapshot: HashMap::new(),
+                workflow_snapshot: HashMap::from([(repo.id, WorkflowStatusCounts::default())]),
+                favorites_state: Arc::new(Mutex::new(HashSet::new())),
+                favorites_manager: None,
+            },
+        );
+
+        let repo_obj = (0..store.n_items())
+            .find_map(|idx| {
+                store
+                    .item(idx)
+                    .filter(|obj| repo_from_object(obj).is_some())
+            })
+            .expect("repo item should exist");
+
+        assert!(repo_obj.downcast_ref::<gtk::ListBoxRow>().is_none());
+        assert_eq!(
+            repo_from_object(&repo_obj).map(|item| item.id),
+            Some(repo.id)
+        );
+        assert!(row_selectable_from_object(repo_obj.as_ref()));
     }
 }

@@ -11,7 +11,10 @@ use parking_lot::Mutex;
 use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
-use std::sync::Arc;
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
 use tracing::info;
 
 mod content;
@@ -47,6 +50,7 @@ pub struct RepoDetailPane {
     filter_guard: Rc<Cell<bool>>,
     loading: Arc<Mutex<bool>>, // Guard against re-entrant loads
     auto_refresh_source: Arc<Mutex<Option<glib::SourceId>>>, // Auto-refresh timer
+    auto_refresh_interval: Arc<Mutex<Option<u64>>>, // Last configured interval
     workflows_with_active_runs: Arc<Mutex<HashSet<i64>>>, // Track workflows needing refresh
     workflows_last_loaded: Arc<Mutex<HashMap<i64, std::time::Instant>>>, // Debounce per-workflow loads
     workflows_last_silent_refresh: Arc<Mutex<Option<std::time::Instant>>>, // Throttle silent workflow refreshes
@@ -56,6 +60,7 @@ pub struct RepoDetailPane {
     workflows_loading_runs: Arc<Mutex<HashSet<i64>>>, // Track in-flight run loads
     run_load_service: RunLoadService,
     lifecycle_token: Rc<()>,
+    refresh_active: Arc<AtomicBool>,
 }
 
 #[derive(Clone)]
@@ -258,6 +263,7 @@ impl RepoDetailPane {
             filter_guard: filter_guard.clone(),
             loading: Arc::new(Mutex::new(false)),
             auto_refresh_source: Arc::new(Mutex::new(None)),
+            auto_refresh_interval: Arc::new(Mutex::new(None)),
             workflows_with_active_runs: Arc::new(Mutex::new(HashSet::new())),
             workflows_loading_runs: workflows_loading_runs.clone(),
             workflows_last_loaded: workflows_last_loaded.clone(),
@@ -267,6 +273,7 @@ impl RepoDetailPane {
             run_load_service: run_load_service.clone(),
             notification_manager: notification_manager.clone(),
             lifecycle_token: Rc::new(()),
+            refresh_active: Arc::new(AtomicBool::new(true)),
         };
 
         pane.build_ui();
@@ -294,6 +301,15 @@ impl RepoDetailPane {
 
     pub fn repo(&self) -> &Repo {
         &self.repo
+    }
+
+    pub(crate) fn same_instance(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.refresh_active, &other.refresh_active)
+    }
+
+    pub(crate) fn deactivate(&self) {
+        self.refresh_active.store(false, Ordering::Relaxed);
+        self.teardown_refresh_timers();
     }
 
     fn build_ui(&self) {
@@ -360,6 +376,7 @@ impl RepoDetailPane {
 mod tests {
     use super::should_teardown_refresh_timers;
     use std::rc::Rc;
+    use std::sync::{Arc, atomic::AtomicBool};
 
     #[test]
     fn teardown_only_runs_for_last_pane_clone() {
@@ -371,5 +388,15 @@ mod tests {
         drop(cloned);
 
         assert!(should_teardown_refresh_timers(&token));
+    }
+
+    #[test]
+    fn pane_instance_identity_uses_shared_refresh_state() {
+        let token = Arc::new(AtomicBool::new(true));
+        let same = token.clone();
+        let other = Arc::new(AtomicBool::new(true));
+
+        assert!(Arc::ptr_eq(&token, &same));
+        assert!(!Arc::ptr_eq(&token, &other));
     }
 }

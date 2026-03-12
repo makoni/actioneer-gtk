@@ -1,5 +1,5 @@
 use crate::api::GitHubClient;
-use crate::api::models::Repo;
+use crate::api::models::{Job, Repo};
 use gtk4::{self as gtk};
 use parking_lot::Mutex;
 use std::cell::RefCell;
@@ -22,6 +22,7 @@ pub(crate) struct JobRefreshContext {
     repo_model: Repo,
     branch: Option<String>,
     run_title: String,
+    jobs: Arc<Vec<Job>>,
 }
 
 pub(crate) struct JobRefreshContextParams {
@@ -37,6 +38,7 @@ pub(crate) struct JobRefreshContextParams {
     pub repo_model: Repo,
     pub branch: Option<String>,
     pub run_title: String,
+    pub jobs: Arc<Vec<Job>>,
 }
 
 impl JobRefreshContext {
@@ -54,6 +56,7 @@ impl JobRefreshContext {
             repo_model: params.repo_model,
             branch: params.branch,
             run_title: params.run_title,
+            jobs: params.jobs,
         }
     }
 
@@ -107,6 +110,10 @@ impl JobRefreshContext {
 
     pub(crate) fn run_title(&self) -> String {
         self.run_title.clone()
+    }
+
+    pub(crate) fn jobs(&self) -> Arc<Vec<Job>> {
+        self.jobs.clone()
     }
 }
 

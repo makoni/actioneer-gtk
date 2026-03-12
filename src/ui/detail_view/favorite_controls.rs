@@ -76,12 +76,15 @@ pub(super) fn observe_favorites(
 ) {
     if let Some(manager) = favorites_manager {
         let receiver = manager.subscribe();
-        let button = button.clone();
+        let button_weak = button.downgrade();
 
         let (sender, receiver_channel) =
             glib::MainContext::default().channel::<bool>(glib::Priority::default());
 
         receiver_channel.attach(None, move |is_favorite| {
+            let Some(button) = button_weak.upgrade() else {
+                return glib::ControlFlow::Break;
+            };
             if button.is_active() != is_favorite {
                 button.set_active(is_favorite);
             }

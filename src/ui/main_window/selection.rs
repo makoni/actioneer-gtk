@@ -130,7 +130,9 @@ impl MainWindow {
                 stack.remove(&detail_child);
             }
             stack.set_visible_child_name("placeholder");
-            active_detail.borrow_mut().take();
+            if let Some(detail) = active_detail.borrow_mut().take() {
+                detail.deactivate();
+            }
         });
 
         schedule_actions_disabled_page(status_page, repo);
@@ -175,10 +177,20 @@ impl MainWindow {
                 {
                     // Mark the active pane immediately so concurrent selections skip
                     let mut active = active_detail.borrow_mut();
-                    active.replace(pane.clone());
+                    if let Some(previous) = active.replace(pane.clone()) {
+                        previous.deactivate();
+                    }
                 }
 
                 glib::idle_add_local_once(move || {
+                    let still_active = active_detail
+                        .borrow()
+                        .as_ref()
+                        .is_some_and(|active| active.same_instance(&pane));
+                    if !still_active {
+                        return;
+                    }
+
                     if let Some(existing_child) = stack.child_by_name("detail") {
                         stack.remove(&existing_child);
                     }
@@ -186,7 +198,6 @@ impl MainWindow {
                     let widget = pane.widget();
                     stack.add_named(&widget, Some("detail"));
                     stack.set_visible_child_name("detail");
-                    active_detail.borrow_mut().replace(pane);
                 });
             }
             None => {
@@ -206,7 +217,9 @@ impl MainWindow {
                 stack.remove(&detail_child);
             }
             stack.set_visible_child_name("placeholder");
-            active_detail.borrow_mut().take();
+            if let Some(detail) = active_detail.borrow_mut().take() {
+                detail.deactivate();
+            }
         });
 
         schedule_status_page_update(status_page, None);

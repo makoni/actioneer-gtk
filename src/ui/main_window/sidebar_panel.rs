@@ -1,5 +1,7 @@
 use crate::i18n::tr;
-use crate::ui::sidebar::row_matches_query;
+use crate::ui::sidebar::{
+    row_activatable_from_object, row_matches_query, row_selectable_from_object,
+};
 use crate::ui::utils::create_sidebar_clamp;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, gio};
@@ -22,13 +24,13 @@ pub struct SidebarPanel {
 
 impl SidebarPanel {
     pub fn new() -> Self {
-        let repo_store = gio::ListStore::new::<gtk::ListBoxRow>();
+        let repo_store = gio::ListStore::new::<gtk::Widget>();
 
         let filter_query = Rc::new(RefCell::new(String::new()));
         let filter = gtk::CustomFilter::new({
             let query = filter_query.clone();
             move |obj| {
-                let Some(row) = obj.downcast_ref::<gtk::ListBoxRow>() else {
+                let Some(row) = obj.downcast_ref::<gtk::Widget>() else {
                     return true;
                 };
                 row_matches_query(row, &query.borrow())
@@ -43,10 +45,8 @@ impl SidebarPanel {
             .build();
 
         selection.connect_selection_changed(|sel, _, _| {
-            if let Some(item) = sel
-                .selected_item()
-                .and_then(|obj| obj.downcast::<gtk::ListBoxRow>().ok())
-                && !item.is_selectable()
+            if let Some(item) = sel.selected_item()
+                && !row_selectable_from_object(item.as_ref())
             {
                 sel.set_selected(gtk::INVALID_LIST_POSITION);
             }
@@ -56,14 +56,14 @@ impl SidebarPanel {
         factory.connect_bind(|_, list_item| {
             let Some(row) = list_item
                 .item()
-                .and_then(|obj| obj.downcast::<gtk::ListBoxRow>().ok())
+                .and_then(|obj| obj.downcast::<gtk::Widget>().ok())
             else {
                 return;
             };
             row.unparent();
             list_item.set_child(Some(&row));
-            list_item.set_selectable(row.is_selectable());
-            list_item.set_activatable(row.is_activatable());
+            list_item.set_selectable(row_selectable_from_object(row.as_ref()));
+            list_item.set_activatable(row_activatable_from_object(row.as_ref()));
         });
         factory.connect_unbind(|_, list_item| {
             if let Some(child) = list_item.child() {

@@ -10,7 +10,11 @@ use gtk4::{self as gtk, glib};
 use libadwaita as adw;
 use parking_lot::Mutex;
 use std::collections::HashSet;
-use std::sync::Arc;
+use std::rc::Rc;
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
 use std::time::{Duration, Instant};
 use tracing::{error, info, warn};
 
@@ -19,6 +23,13 @@ use scan::{union_active_workflows, visit_expanders};
 
 const DEFAULT_AUTO_REFRESH_INTERVAL_SECS: u64 = 10;
 const SILENT_WORKFLOW_REFRESH_TTL: Duration = Duration::from_secs(30);
+
+#[derive(Clone)]
+struct SilentWorkflowRefreshState {
+    workflows: Arc<Mutex<Arc<Vec<Workflow>>>>,
+    loading: Arc<Mutex<bool>>,
+    workflows_last_silent_refresh: Arc<Mutex<Option<Instant>>>,
+}
 
 fn should_skip_silent_workflow_refresh(last_refresh: Option<Instant>, now: Instant) -> bool {
     last_refresh
@@ -30,21 +41,64 @@ fn should_refresh_workflow_runs_in_background(expander_expanded: bool, is_active
     expander_expanded || is_active
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum AutoRefreshTick {
+    Stop,
+    Skip,
+    Refresh,
+}
+
+fn auto_refresh_tick(window_visible: bool, refresh_active: bool) -> AutoRefreshTick {
+    if !refresh_active {
+        AutoRefreshTick::Stop
+    } else if !window_visible {
+        AutoRefreshTick::Skip
+    } else {
+        AutoRefreshTick::Refresh
+    }
+}
+
+fn should_listen_for_refresh_updates(
+    workflow_view_alive: bool,
+    lifecycle_alive: bool,
+    refresh_active: bool,
+) -> bool {
+    workflow_view_alive && lifecycle_alive && refresh_active
+}
+
 fn cancel_auto_refresh_timer_slot(auto_refresh_source: &Arc<Mutex<Option<glib::SourceId>>>) {
     if let Some(source_id) = auto_refresh_source.lock().take() {
         source_id.remove();
     }
 }
 
+fn should_reconfigure_auto_refresh(
+    current_interval: Option<u64>,
+    has_timer: bool,
+    requested_interval: u64,
+) -> bool {
+    current_interval != Some(requested_interval) || !has_timer
+}
+
 fn configure_auto_refresh_timer_slot(
     auto_refresh_source: &Arc<Mutex<Option<glib::SourceId>>>,
+    auto_refresh_interval: &Arc<Mutex<Option<u64>>>,
+    refresh_active: &Arc<AtomicBool>,
+    silent_refresh: &SilentWorkflowRefreshState,
     list_context: &WorkflowListContext,
     repo_full_name: &str,
     refresh_interval_secs: u64,
 ) {
+    let has_timer = auto_refresh_source.lock().is_some();
+    let current_interval = *auto_refresh_interval.lock();
+    if !should_reconfigure_auto_refresh(current_interval, has_timer, refresh_interval_secs) {
+        return;
+    }
+
     cancel_auto_refresh_timer_slot(auto_refresh_source);
 
     if refresh_interval_secs == 0 {
+        *auto_refresh_interval.lock() = Some(0);
         info!(
             "Auto-refresh disabled for {} (interval = 0)",
             repo_full_name
@@ -68,6 +122,9 @@ fn configure_auto_refresh_timer_slot(
     let workflows_last_loaded = list_context.workflows_last_loaded.clone();
     let run_filters = list_context.run_filters.clone();
     let run_load_service = list_context.run_load_service.clone();
+    let silent_refresh = silent_refresh.clone();
+    let repo_full_name = repo_full_name.to_string();
+    let refresh_active = refresh_active.clone();
 
     info!(
         "Starting auto-refresh timer with interval: {} seconds",
@@ -75,9 +132,19 @@ fn configure_auto_refresh_timer_slot(
     );
 
     let source_id = glib::timeout_add_seconds_local(refresh_interval_secs as u32, move || {
-        if !parent_window.is_visible() {
-            info!("Skipping auto-refresh while window is hidden");
-            return glib::ControlFlow::Continue;
+        match auto_refresh_tick(
+            parent_window.is_visible(),
+            refresh_active.load(Ordering::Relaxed),
+        ) {
+            AutoRefreshTick::Stop => {
+                info!("Stopping auto-refresh for inactive pane");
+                return glib::ControlFlow::Break;
+            }
+            AutoRefreshTick::Skip => {
+                info!("Skipping auto-refresh while window is hidden");
+                return glib::ControlFlow::Continue;
+            }
+            AutoRefreshTick::Refresh => {}
         }
 
         info!("Auto-refreshing workflow runs in background");
@@ -101,12 +168,131 @@ fn configure_auto_refresh_timer_slot(
             run_load_service: run_load_service.clone(),
         };
 
+        refresh_workflows_silent_with_state(
+            silent_refresh.loading.clone(),
+            silent_refresh.workflows_last_silent_refresh.clone(),
+            silent_refresh.workflows.clone(),
+            background_context.clone(),
+            repo_full_name.clone(),
+        );
         RepoDetailPane::refresh_runs_background(&background_context);
 
         glib::ControlFlow::Continue
     });
 
     *auto_refresh_source.lock() = Some(source_id);
+    *auto_refresh_interval.lock() = Some(refresh_interval_secs);
+}
+
+fn refresh_workflows_silent_with_state(
+    loading: Arc<Mutex<bool>>,
+    workflows_last_silent_refresh: Arc<Mutex<Option<Instant>>>,
+    workflows: Arc<Mutex<Arc<Vec<Workflow>>>>,
+    context: WorkflowListContext,
+    repo_full_name: String,
+) {
+    if *loading.lock() {
+        info!("Already loading workflows, skipping silent refresh");
+        return;
+    }
+
+    let now = Instant::now();
+    {
+        let mut last_refresh = workflows_last_silent_refresh.lock();
+        if should_skip_silent_workflow_refresh(*last_refresh, now) {
+            info!(
+                "Skipping silent workflow refresh for {} due to TTL",
+                repo_full_name
+            );
+            return;
+        }
+        *last_refresh = Some(now);
+    }
+
+    {
+        let mut loading_guard = loading.lock();
+        *loading_guard = true;
+    }
+
+    let run_filters = context.run_filters.clone();
+    let client = context.client.clone();
+    let owner = context.owner.clone();
+    let repo_name = context.repo.clone();
+    let list_store = context.store.clone();
+    let parent_window = context.parent_window.clone();
+    let loading_guard = loading.clone();
+    let toast_overlay = context.toast_overlay.clone();
+    let job_contexts = context.job_contexts.clone();
+    let workflows_with_active_runs = context.workflows_with_active_runs.clone();
+    let workflows_last_loaded = context.workflows_last_loaded.clone();
+    let workflows_loading_runs = context.workflows_loading_runs.clone();
+    let run_digests = context.run_digests.clone();
+    let notification_manager = context.notification_manager.clone();
+    let preferences_manager = context.preferences_manager.clone();
+    let repo_model = context.repo_model.clone();
+
+    let (sender, receiver) = glib::MainContext::default()
+        .channel::<Result<Arc<Vec<Workflow>>, GitHubError>>(glib::Priority::default());
+
+    let client_for_spawn = client.clone();
+    let owner_for_spawn = owner.clone();
+    let repo_name_for_spawn = repo_name.clone();
+
+    let run_filters_for_ui = run_filters.clone();
+    receiver.attach(None, move |result| {
+        let run_digests = run_digests.clone();
+        let notification_manager_handle = notification_manager.clone();
+        let preferences_manager_handle = preferences_manager.clone();
+        let repo_model_for_ui = repo_model.clone();
+        *loading_guard.lock() = false;
+
+        let notification_manager_for_ui = notification_manager_handle.clone();
+        let preferences_manager_for_ui = preferences_manager_handle.clone();
+        let ui_context = WorkflowListContext {
+            store: list_store.clone(),
+            client: client.clone(),
+            owner: owner.clone(),
+            repo: repo_name.clone(),
+            repo_model: repo_model_for_ui.clone(),
+            parent_window: parent_window.clone(),
+            toast_overlay: toast_overlay.clone(),
+            job_contexts: job_contexts.clone(),
+            workflows_with_active_runs: workflows_with_active_runs.clone(),
+            workflows_last_loaded: workflows_last_loaded.clone(),
+            workflows_loading_runs: workflows_loading_runs.clone(),
+            run_digests: run_digests.clone(),
+            notification_manager: notification_manager_for_ui.clone(),
+            preferences_manager: preferences_manager_for_ui.clone(),
+            run_filters: run_filters_for_ui.clone(),
+            run_load_service: context.run_load_service.clone(),
+        };
+
+        match result {
+            Ok(wf_list) => {
+                let current = workflows.lock().clone();
+                if super::workflow_list::workflows_differ(current.as_ref(), wf_list.as_ref()) {
+                    info!("Silent refresh detected workflow changes");
+                    *workflows.lock() = wf_list.clone();
+                    super::workflow_list::update_workflows_list(&ui_context, wf_list.as_ref());
+                }
+            }
+            Err(e) => {
+                if !matches!(e, GitHubError::ApiError(ref msg) if msg.contains("Not modified")) {
+                    warn!("Silent workflow refresh failed: {}", e);
+                }
+            }
+        }
+
+        glib::ControlFlow::Break
+    });
+
+    crate::runtime_handle().spawn(async move {
+        let client_clone = client_for_spawn.lock().clone();
+        let result = fetch_workflows(&client_clone, &owner_for_spawn, &repo_name_for_spawn)
+            .await
+            .map(Arc::new);
+        let _ = sender.send(result);
+    });
 }
 
 impl RepoDetailPane {
@@ -193,114 +379,6 @@ impl RepoDetailPane {
                         toast.set_timeout(5);
                         overlay.add_toast(toast);
                     });
-                }
-            }
-
-            glib::ControlFlow::Break
-        });
-
-        crate::runtime_handle().spawn(async move {
-            let client_clone = client_for_spawn.lock().clone();
-            let result = fetch_workflows(&client_clone, &owner_for_spawn, &repo_name_for_spawn)
-                .await
-                .map(Arc::new);
-            let _ = sender.send(result);
-        });
-    }
-
-    pub fn refresh_workflows_silent(&self) {
-        if *self.loading.lock() {
-            info!("Already loading workflows, skipping silent refresh");
-            return;
-        }
-
-        let now = Instant::now();
-        {
-            let mut last_refresh = self.workflows_last_silent_refresh.lock();
-            if should_skip_silent_workflow_refresh(*last_refresh, now) {
-                info!(
-                    "Skipping silent workflow refresh for {} due to TTL",
-                    self.repo.full_name
-                );
-                return;
-            }
-            *last_refresh = Some(now);
-        }
-
-        {
-            let mut loading_guard = self.loading.lock();
-            *loading_guard = true;
-        }
-
-        let context = self.workflow_list_context();
-        let run_filters = context.run_filters.clone();
-        let client = context.client.clone();
-        let workflows = self.workflows.clone();
-        let owner = context.owner.clone();
-        let repo_name = context.repo.clone();
-        let list_store = context.store.clone();
-        let parent_window = context.parent_window.clone();
-        let loading_guard = self.loading.clone();
-        let toast_overlay = context.toast_overlay.clone();
-        let job_contexts = context.job_contexts.clone();
-        let workflows_with_active_runs = context.workflows_with_active_runs.clone();
-        let workflows_last_loaded = context.workflows_last_loaded.clone();
-        let workflows_loading_runs = context.workflows_loading_runs.clone();
-        let run_digests = context.run_digests.clone();
-        let notification_manager = context.notification_manager.clone();
-        let preferences_manager = context.preferences_manager.clone();
-        let repo_model = context.repo_model.clone();
-
-        let (sender, receiver) = glib::MainContext::default()
-            .channel::<Result<Arc<Vec<Workflow>>, GitHubError>>(glib::Priority::default());
-
-        let client_for_spawn = client.clone();
-        let owner_for_spawn = owner.clone();
-        let repo_name_for_spawn = repo_name.clone();
-
-        let run_filters_for_ui = run_filters.clone();
-        receiver.attach(None, move |result| {
-            let run_digests = run_digests.clone();
-            let notification_manager_handle = notification_manager.clone();
-            let preferences_manager_handle = preferences_manager.clone();
-            let repo_model_for_ui = repo_model.clone();
-            *loading_guard.lock() = false;
-
-            let notification_manager_for_ui = notification_manager_handle.clone();
-            let preferences_manager_for_ui = preferences_manager_handle.clone();
-            let ui_context = WorkflowListContext {
-                store: list_store.clone(),
-                client: client.clone(),
-                owner: owner.clone(),
-                repo: repo_name.clone(),
-                repo_model: repo_model_for_ui.clone(),
-                parent_window: parent_window.clone(),
-                toast_overlay: toast_overlay.clone(),
-                job_contexts: job_contexts.clone(),
-                workflows_with_active_runs: workflows_with_active_runs.clone(),
-                workflows_last_loaded: workflows_last_loaded.clone(),
-                workflows_loading_runs: workflows_loading_runs.clone(),
-                run_digests: run_digests.clone(),
-                notification_manager: notification_manager_for_ui.clone(),
-                preferences_manager: preferences_manager_for_ui.clone(),
-                run_filters: run_filters_for_ui.clone(),
-                run_load_service: context.run_load_service.clone(),
-            };
-
-            match result {
-                Ok(wf_list) => {
-                    let current = workflows.lock().clone();
-                    if super::workflow_list::workflows_differ(current.as_ref(), wf_list.as_ref()) {
-                        info!("Silent refresh detected workflow changes");
-                        *workflows.lock() = wf_list.clone();
-                        super::workflow_list::update_workflows_list(&ui_context, wf_list.as_ref());
-                    }
-                }
-                Err(e) => {
-                    if !matches!(e, GitHubError::ApiError(ref msg) if msg.contains("Not modified"))
-                    {
-                        warn!("Silent workflow refresh failed: {}", e);
-                    }
                 }
             }
 
@@ -440,8 +518,16 @@ impl RepoDetailPane {
 
     pub(super) fn start_auto_refresh(&self) {
         let auto_refresh_source = self.auto_refresh_source.clone();
+        let auto_refresh_interval = self.auto_refresh_interval.clone();
+        let refresh_active = self.refresh_active.clone();
         let list_context = self.workflow_list_context();
         let repo_full_name = self.repo.full_name.clone();
+        let lifecycle_token = Rc::downgrade(&self.lifecycle_token);
+        let silent_refresh = SilentWorkflowRefreshState {
+            workflows: self.workflows.clone(),
+            loading: self.loading.clone(),
+            workflows_last_silent_refresh: self.workflows_last_silent_refresh.clone(),
+        };
 
         if let Some(prefs_mgr) = &self.preferences_manager {
             let workflow_view_weak = self.workflow_view.downgrade();
@@ -449,13 +535,21 @@ impl RepoDetailPane {
                 glib::MainContext::default().channel::<u64>(glib::Priority::default());
 
             receiver.attach(None, move |interval| {
-                if workflow_view_weak.upgrade().is_none() {
+                if !should_listen_for_refresh_updates(
+                    workflow_view_weak.upgrade().is_some(),
+                    lifecycle_token.upgrade().is_some(),
+                    refresh_active.load(Ordering::Relaxed),
+                ) {
                     cancel_auto_refresh_timer_slot(&auto_refresh_source);
+                    *auto_refresh_interval.lock() = None;
                     return glib::ControlFlow::Break;
                 }
 
                 configure_auto_refresh_timer_slot(
                     &auto_refresh_source,
+                    &auto_refresh_interval,
+                    &refresh_active,
+                    &silent_refresh,
                     &list_context,
                     &repo_full_name,
                     interval,
@@ -479,6 +573,9 @@ impl RepoDetailPane {
         } else {
             configure_auto_refresh_timer_slot(
                 &auto_refresh_source,
+                &auto_refresh_interval,
+                &self.refresh_active,
+                &silent_refresh,
                 &list_context,
                 &repo_full_name,
                 DEFAULT_AUTO_REFRESH_INTERVAL_SECS,
@@ -492,6 +589,7 @@ impl RepoDetailPane {
 
     pub(super) fn teardown_refresh_timers(&self) {
         self.cancel_auto_refresh_timer();
+        *self.auto_refresh_interval.lock() = None;
         super::helpers::clear_follow_up_refresh_timers(&self.workflow_store);
     }
 
@@ -643,8 +741,9 @@ impl RepoDetailPane {
 #[cfg(test)]
 mod tests {
     use super::{
-        SILENT_WORKFLOW_REFRESH_TTL, should_refresh_workflow_runs_in_background,
-        should_skip_silent_workflow_refresh,
+        AutoRefreshTick, SILENT_WORKFLOW_REFRESH_TTL, auto_refresh_tick,
+        should_listen_for_refresh_updates, should_reconfigure_auto_refresh,
+        should_refresh_workflow_runs_in_background, should_skip_silent_workflow_refresh,
     };
     use std::time::Instant;
 
@@ -667,6 +766,29 @@ mod tests {
         assert!(should_refresh_workflow_runs_in_background(true, false));
         assert!(should_refresh_workflow_runs_in_background(false, true));
         assert!(!should_refresh_workflow_runs_in_background(false, false));
+    }
+
+    #[test]
+    fn auto_refresh_reconfigure_skips_matching_live_timer() {
+        assert!(!should_reconfigure_auto_refresh(Some(10), true, 10));
+        assert!(should_reconfigure_auto_refresh(Some(30), true, 10));
+        assert!(should_reconfigure_auto_refresh(Some(10), false, 10));
+    }
+
+    #[test]
+    fn auto_refresh_tick_respects_inactive_panes() {
+        assert_eq!(auto_refresh_tick(true, false), AutoRefreshTick::Stop);
+        assert_eq!(auto_refresh_tick(false, false), AutoRefreshTick::Stop);
+        assert_eq!(auto_refresh_tick(false, true), AutoRefreshTick::Skip);
+        assert_eq!(auto_refresh_tick(true, true), AutoRefreshTick::Refresh);
+    }
+
+    #[test]
+    fn refresh_updates_require_live_active_pane() {
+        assert!(should_listen_for_refresh_updates(true, true, true));
+        assert!(!should_listen_for_refresh_updates(false, true, true));
+        assert!(!should_listen_for_refresh_updates(true, false, true));
+        assert!(!should_listen_for_refresh_updates(true, true, false));
     }
 }
 

@@ -98,7 +98,11 @@ impl MainWindow {
             *info_guard = rate_info.clone();
         }
 
-        self.refresh_repo_status_summaries(&repos);
+        if let Some(selected_repo) =
+            selected_repo_for_status_refresh(&repos, *self.selected_repo_id.lock())
+        {
+            self.refresh_repo_status_summaries(std::slice::from_ref(&selected_repo));
+        }
         self.schedule_repo_list_refresh();
         self.update_rate_limit_display(rate_info);
         self.ensure_detail_matches_selection();
@@ -143,7 +147,6 @@ impl MainWindow {
         let workflow_state = self.workflow_counts.clone();
         let checked_state = self.actions_checked_at.clone();
         let this = self.clone();
-        let selected_repo = *self.selected_repo_id.lock();
 
         repo_status::spawn_repo_status_tasks(
             due_repos,
@@ -151,7 +154,6 @@ impl MainWindow {
             actions_state,
             workflow_state,
             checked_state,
-            selected_repo,
             move || this.schedule_repo_list_refresh(),
         );
     }
@@ -197,9 +199,32 @@ fn determine_actions_state(permissions: Option<&RepoPermissions>) -> RepoActions
     }
 }
 
+fn selected_repo_for_status_refresh(repos: &[Repo], selected_repo_id: Option<i64>) -> Option<Repo> {
+    let selected_repo_id = selected_repo_id?;
+    repos
+        .iter()
+        .find(|repo| repo.id == selected_repo_id)
+        .cloned()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::api::models::User;
+
+    fn repo(id: i64, name: &str) -> Repo {
+        Repo {
+            id,
+            name: name.into(),
+            full_name: format!("mak/{name}"),
+            owner: User {
+                login: "mak".into(),
+            },
+            is_private: false,
+            permissions: None,
+            default_branch: Some("main".into()),
+        }
+    }
 
     #[test]
     fn determine_actions_state_prefers_push_or_admin() {
@@ -240,5 +265,18 @@ mod tests {
     #[test]
     fn determine_actions_state_unknown_without_permissions() {
         assert_eq!(determine_actions_state(None), RepoActionsState::Unknown);
+    }
+
+    #[test]
+    fn selected_repo_status_refresh_targets_only_selected_repo() {
+        let repos = vec![repo(1, "one"), repo(2, "two")];
+        assert_eq!(
+            selected_repo_for_status_refresh(&repos, Some(2))
+                .as_ref()
+                .map(|repo| repo.id),
+            Some(2)
+        );
+        assert!(selected_repo_for_status_refresh(&repos, Some(99)).is_none());
+        assert!(selected_repo_for_status_refresh(&repos, None).is_none());
     }
 }

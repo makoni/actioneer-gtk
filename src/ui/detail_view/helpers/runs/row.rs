@@ -1,6 +1,7 @@
 use super::super::context::{JobContextMap, JobRefreshContext, JobRefreshContextParams};
 use super::super::formatting::{
     format_run_subtitle, format_run_title, get_run_status_class, get_run_status_icon,
+    update_job_summary_badges,
 };
 use super::super::jobs::{LoadJobsParams, load_run_jobs};
 use super::actions::{RunActionContext, create_actions_box};
@@ -105,6 +106,7 @@ pub(crate) fn create_run_expander_row(
                 repo_model: context.repo_model.clone(),
                 branch: run.head_branch.clone(),
                 run_title: run_title.clone(),
+                jobs: std::sync::Arc::new(Vec::new()),
             },
         );
     }
@@ -288,6 +290,21 @@ fn rebind_preserved_job_context(job_contexts: &JobContextMap, params: JobRefresh
         return;
     }
 
+    let previous_jobs = {
+        let contexts = job_contexts.borrow();
+        contexts
+            .get(&params.run_id)
+            .map(|context| context.jobs())
+            .unwrap_or_else(|| std::sync::Arc::new(Vec::new()))
+    };
+
+    if let Some(ref badges_box) = params.badges_box {
+        update_job_summary_badges(badges_box, previous_jobs.as_ref());
+    }
+
+    let mut params = params;
+    params.jobs = previous_jobs;
+
     job_contexts
         .borrow_mut()
         .insert(params.run_id, JobRefreshContext::from_params(params));
@@ -314,7 +331,7 @@ fn remove_job_context_if_current(
 mod tests {
     use super::*;
     use crate::api::client::GitHubClient;
-    use crate::api::models::{Repo, User};
+    use crate::api::models::{Job, Repo, User};
     use crate::ui::test_helpers::gtk_test_guard;
     use parking_lot::Mutex;
     use std::cell::RefCell;
@@ -371,6 +388,7 @@ mod tests {
                 repo_model: repo_stub(),
                 branch: Some("main".into()),
                 run_title: "CI".into(),
+                jobs: std::sync::Arc::new(Vec::new()),
             }),
         );
 
@@ -407,9 +425,82 @@ mod tests {
                 repo_model: repo_stub(),
                 branch: Some("main".into()),
                 run_title: "CI".into(),
+                jobs: std::sync::Arc::new(Vec::new()),
             },
         );
 
         assert!(job_contexts.borrow().is_empty());
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn rebind_preserved_job_context_restores_badges_from_cached_jobs() {
+        let Some(_guard) =
+            gtk_test_guard("rebind_preserved_job_context_restores_badges_from_cached_jobs")
+        else {
+            return;
+        };
+
+        let job_contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
+        let old_expander = gtk::Expander::new(None);
+        let new_expander = gtk::Expander::new(None);
+        let old_jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        old_jobs_box.append(&gtk::Spinner::new());
+
+        let cached_jobs = std::sync::Arc::new(vec![Job {
+            id: 1,
+            run_id: 42,
+            status: Some("in_progress".into()),
+            conclusion: None,
+            started_at: None,
+            completed_at: None,
+            name: Some("Build".into()),
+            steps: Vec::new(),
+            html_url: None,
+        }]);
+
+        job_contexts.borrow_mut().insert(
+            42,
+            JobRefreshContext::from_params(JobRefreshContextParams {
+                client: client_stub(),
+                owner: "mak".into(),
+                repo: "actioneer".into(),
+                workflow_id: 7,
+                run_id: 42,
+                expander: old_expander,
+                jobs_box: old_jobs_box,
+                badges_box: None,
+                parent_window: gtk::Window::new(),
+                repo_model: repo_stub(),
+                branch: Some("main".into()),
+                run_title: "CI".into(),
+                jobs: cached_jobs,
+            }),
+        );
+
+        let new_jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        new_jobs_box.append(&gtk::Spinner::new());
+        let new_badges_box = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+
+        rebind_preserved_job_context(
+            &job_contexts,
+            JobRefreshContextParams {
+                client: client_stub(),
+                owner: "mak".into(),
+                repo: "actioneer".into(),
+                workflow_id: 7,
+                run_id: 42,
+                expander: new_expander,
+                jobs_box: new_jobs_box,
+                badges_box: Some(new_badges_box.clone()),
+                parent_window: gtk::Window::new(),
+                repo_model: repo_stub(),
+                branch: Some("main".into()),
+                run_title: "CI".into(),
+                jobs: std::sync::Arc::new(Vec::new()),
+            },
+        );
+
+        assert!(new_badges_box.first_child().is_some());
     }
 }

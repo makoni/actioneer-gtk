@@ -7,12 +7,15 @@ use crate::api::{GitHubClient, GitHubError};
 use crate::i18n::tr;
 use crate::ui::job_logs_window::JobLogsWindow;
 use crate::ui::utils::MainContextChannelExt;
+use crate::ui::utils::widget_data::{get_data_copy, set_data};
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use parking_lot::Mutex;
 use std::collections::HashSet;
 use std::sync::Arc;
 use tracing::error;
+
+const JOB_LOAD_IN_FLIGHT_KEY: &str = "actioneer-job-load-in-flight";
 
 pub(super) struct LoadJobsParams {
     pub(super) client: Arc<Mutex<GitHubClient>>,
@@ -155,8 +158,8 @@ pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -
         steps_box.set_margin_bottom(4);
         steps_box.set_hexpand(true);
 
-        for step in &job.steps {
-            steps_box.append(&create_job_step_row(step));
+        for (index, step) in job.steps.iter().enumerate() {
+            steps_box.append(&create_job_step_row(step, index + 1));
         }
 
         job_box.append(&steps_box);
@@ -165,7 +168,14 @@ pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -
     job_box
 }
 
-fn create_job_step_row(step: &JobStep) -> gtk::Box {
+fn format_step_title(step: &JobStep, display_number: usize) -> String {
+    match step.name.as_deref() {
+        Some(name) => format!("{display_number}. {name}"),
+        None => format!("#{display_number}"),
+    }
+}
+
+fn create_job_step_row(step: &JobStep, display_number: usize) -> gtk::Box {
     let row = gtk::Box::new(gtk::Orientation::Horizontal, 8);
     row.set_hexpand(true);
     row.add_css_class("caption");
@@ -178,12 +188,7 @@ fn create_job_step_row(step: &JobStep) -> gtk::Box {
     icon.set_valign(gtk::Align::Center);
     row.append(&icon);
 
-    let title = match (step.number, step.name.as_deref()) {
-        (Some(number), Some(name)) => format!("{number}. {name}"),
-        (_, Some(name)) => name.to_string(),
-        (Some(number), None) => format!("#{number}"),
-        (None, None) => tr("Unknown"),
-    };
+    let title = format_step_title(step, display_number);
     let name_label = gtk::Label::new(Some(&title));
     name_label.add_css_class("dim-label");
     name_label.set_halign(gtk::Align::Start);
@@ -242,6 +247,64 @@ fn step_status_class(step: &JobStep) -> &'static str {
     ""
 }
 
+fn try_begin_job_load(expander: &gtk::Expander) -> bool {
+    if get_data_copy::<bool, _>(expander, JOB_LOAD_IN_FLIGHT_KEY).unwrap_or(false) {
+        return false;
+    }
+
+    set_data(expander, JOB_LOAD_IN_FLIGHT_KEY, true);
+    true
+}
+
+fn finish_job_load(expander: &gtk::Expander) {
+    set_data(expander, JOB_LOAD_IN_FLIGHT_KEY, false);
+}
+
+fn cached_jobs_for_run(job_contexts: &JobContextMap, run_id: i64) -> Arc<Vec<Job>> {
+    let contexts = job_contexts.borrow();
+    contexts
+        .get(&run_id)
+        .map(|context| context.jobs())
+        .unwrap_or_else(|| Arc::new(Vec::new()))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn store_job_refresh_context(
+    job_contexts: &JobContextMap,
+    client: Arc<Mutex<GitHubClient>>,
+    owner: String,
+    repo: String,
+    workflow_id: i64,
+    run_id: i64,
+    expander: gtk::Expander,
+    jobs_box: gtk::Box,
+    badges_box: Option<gtk::Box>,
+    parent_window: gtk::Window,
+    repo_model: Repo,
+    run_branch: Option<String>,
+    run_title: String,
+    jobs: Arc<Vec<Job>>,
+) {
+    job_contexts.borrow_mut().insert(
+        run_id,
+        JobRefreshContext::from_params(JobRefreshContextParams {
+            client,
+            owner,
+            repo,
+            workflow_id,
+            run_id,
+            expander,
+            jobs_box,
+            badges_box,
+            parent_window,
+            repo_model,
+            branch: run_branch,
+            run_title,
+            jobs,
+        }),
+    );
+}
+
 pub(super) fn load_run_jobs(params: LoadJobsParams) {
     let LoadJobsParams {
         client,
@@ -260,6 +323,10 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
         run_title,
     } = params;
 
+    if !try_begin_job_load(&expander) {
+        return;
+    }
+
     if !background {
         loop {
             let child_opt = jobs_box.first_child();
@@ -274,6 +341,23 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
         jobs_box.append(&spinner);
     }
 
+    store_job_refresh_context(
+        &job_contexts,
+        client.clone(),
+        owner.clone(),
+        repo.clone(),
+        workflow_id,
+        run_id,
+        expander.clone(),
+        jobs_box.clone(),
+        badges_box.clone(),
+        parent_window.clone(),
+        repo_model.clone(),
+        run_branch.clone(),
+        run_title.clone(),
+        cached_jobs_for_run(&job_contexts, run_id),
+    );
+
     let (sender, receiver) = glib::MainContext::default()
         .channel::<Result<Arc<Vec<Job>>, GitHubError>>(glib::Priority::default());
 
@@ -284,8 +368,10 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
     let client_for_api = client.clone();
     let owner_for_api = owner.clone();
     let repo_for_api = repo.clone();
+    let expander_for_receiver = expander.clone();
 
     receiver.attach(None, move |result| {
+        finish_job_load(&expander_for_receiver);
         let should_clear = result.as_ref().is_ok() || !background;
         if should_clear {
             loop {
@@ -312,24 +398,22 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
                     update_job_summary_badges(badges, jobs.as_ref());
                 }
 
-                let context = JobRefreshContext::from_params(JobRefreshContextParams {
-                    client: client.clone(),
-                    owner: owner.clone(),
-                    repo: repo.clone(),
+                store_job_refresh_context(
+                    &job_contexts,
+                    client.clone(),
+                    owner.clone(),
+                    repo.clone(),
                     workflow_id,
                     run_id,
-                    expander: expander.clone(),
-                    jobs_box: jobs_box.clone(),
-                    badges_box: badges_box.clone(),
-                    parent_window: parent_window.clone(),
-                    repo_model: repo_model.clone(),
-                    branch: run_branch.clone(),
-                    run_title: run_title.clone(),
-                });
-                {
-                    let mut contexts = job_contexts.borrow_mut();
-                    contexts.insert(run_id, context);
-                }
+                    expander.clone(),
+                    jobs_box.clone(),
+                    badges_box.clone(),
+                    parent_window.clone(),
+                    repo_model.clone(),
+                    run_branch.clone(),
+                    run_title.clone(),
+                    jobs.clone(),
+                );
 
                 let total_jobs = jobs.len();
                 let row_context = JobRowContext {
@@ -481,8 +565,11 @@ pub(crate) fn refresh_jobs_for_workflows(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::models::JobStep;
+    use crate::api::models::{JobStep, User};
     use crate::ui::test_helpers::gtk_test_guard;
+    use std::cell::RefCell;
+    use std::collections::HashMap;
+    use std::rc::Rc;
 
     #[test]
     #[ignore = "requires GTK display"]
@@ -543,6 +630,99 @@ mod tests {
         assert!(has_job_name);
         assert!(has_right_box);
         assert_eq!(child_count, 1);
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn in_flight_job_load_flag_blocks_duplicate_start() {
+        let Some(_guard) = gtk_test_guard("in_flight_job_load_flag_blocks_duplicate_start") else {
+            return;
+        };
+
+        let expander = gtk::Expander::new(None::<&str>);
+        assert!(try_begin_job_load(&expander));
+        assert!(!try_begin_job_load(&expander));
+        finish_job_load(&expander);
+        assert!(try_begin_job_load(&expander));
+    }
+
+    #[test]
+    fn step_titles_use_contiguous_display_numbers() {
+        let named = JobStep {
+            name: Some("Compile".into()),
+            status: Some("completed".into()),
+            conclusion: Some("success".into()),
+            number: Some(16),
+            started_at: None,
+            completed_at: None,
+        };
+        assert_eq!(format_step_title(&named, 10), "10. Compile");
+
+        let unnamed = JobStep {
+            name: None,
+            status: Some("queued".into()),
+            conclusion: None,
+            number: Some(99),
+            started_at: None,
+            completed_at: None,
+        };
+        assert_eq!(format_step_title(&unnamed, 3), "#3");
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn provisional_context_preserves_cached_jobs() {
+        let Some(_guard) = gtk_test_guard("provisional_context_preserves_cached_jobs") else {
+            return;
+        };
+
+        let client = Arc::new(Mutex::new(
+            GitHubClient::new(None).expect("client should build"),
+        ));
+        let repo = Repo {
+            id: 1,
+            name: "actioneer".into(),
+            full_name: "mak/actioneer".into(),
+            owner: User {
+                login: "mak".into(),
+            },
+            default_branch: Some("main".into()),
+            is_private: false,
+            permissions: None,
+        };
+        let job_contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
+        let cached_jobs = Arc::new(vec![Job {
+            id: 10,
+            run_id: 42,
+            status: Some("in_progress".into()),
+            conclusion: None,
+            started_at: None,
+            completed_at: None,
+            name: Some("Build".into()),
+            steps: Vec::new(),
+            html_url: None,
+        }]);
+
+        store_job_refresh_context(
+            &job_contexts,
+            client.clone(),
+            "mak".into(),
+            "actioneer".into(),
+            7,
+            42,
+            gtk::Expander::new(None::<&str>),
+            gtk::Box::new(gtk::Orientation::Vertical, 0),
+            None,
+            gtk::Window::new(),
+            repo.clone(),
+            Some("main".into()),
+            "CI".into(),
+            cached_jobs.clone(),
+        );
+
+        let preserved = cached_jobs_for_run(&job_contexts, 42);
+        assert_eq!(preserved.len(), 1);
+        assert_eq!(preserved[0].id, 10);
     }
 
     #[test]
