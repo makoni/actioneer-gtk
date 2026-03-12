@@ -39,9 +39,10 @@ jobs:
           sudo apt-get install -y build-essential pkg-config libglib2.0-dev libgtk-4-dev libadwaita-1-dev desktop-file-utils
 
       - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1.15.3
         with:
           toolchain: stable
+          cache: false
 
       - name: Build release binary
         run: |

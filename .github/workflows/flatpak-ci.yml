@@ -37,9 +37,10 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v1.15.3
         with:
           toolchain: stable
+          cache: false
 
       - name: Vendor Rust dependencies
         shell: bash
