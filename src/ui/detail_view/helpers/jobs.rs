@@ -1,8 +1,10 @@
-use super::context::{JobContextMap, JobRefreshContext, JobRefreshContextParams};
+use super::context::{
+    JobContextMap, JobRefreshContext, JobRefreshContextParams, RunBadgeSummaryMap,
+};
 use super::formatting::{
     format_job_status, get_job_status_class, get_job_status_icon, update_job_summary_badges,
 };
-use crate::api::models::{Job, JobStep, Repo};
+use crate::api::models::{Job, JobStep, JobSummary, Repo};
 use crate::api::{GitHubClient, GitHubError};
 use crate::i18n::tr;
 use crate::ui::job_logs_window::JobLogsWindow;
@@ -30,6 +32,7 @@ pub(super) struct LoadJobsParams {
     pub(super) repo_model: Repo,
     pub(super) background: bool,
     pub(super) job_contexts: JobContextMap,
+    pub(super) job_summaries: RunBadgeSummaryMap,
     pub(super) run_branch: Option<String>,
     pub(super) run_title: String,
 }
@@ -268,6 +271,25 @@ fn cached_jobs_for_run(job_contexts: &JobContextMap, run_id: i64) -> Arc<Vec<Job
         .unwrap_or_else(|| Arc::new(Vec::new()))
 }
 
+fn current_retry_widgets(
+    job_contexts: &JobContextMap,
+    run_id: i64,
+    fallback_expander: &gtk::Expander,
+    fallback_jobs_box: &gtk::Box,
+    fallback_badges_box: &Option<gtk::Box>,
+) -> (gtk::Expander, gtk::Box, Option<gtk::Box>) {
+    let contexts = job_contexts.borrow();
+    if let Some(context) = contexts.get(&run_id) {
+        (context.expander(), context.jobs_box(), context.badges_box())
+    } else {
+        (
+            fallback_expander.clone(),
+            fallback_jobs_box.clone(),
+            fallback_badges_box.clone(),
+        )
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 fn store_job_refresh_context(
     job_contexts: &JobContextMap,
@@ -284,6 +306,7 @@ fn store_job_refresh_context(
     run_branch: Option<String>,
     run_title: String,
     jobs: Arc<Vec<Job>>,
+    job_summaries: RunBadgeSummaryMap,
 ) {
     job_contexts.borrow_mut().insert(
         run_id,
@@ -301,6 +324,7 @@ fn store_job_refresh_context(
             branch: run_branch,
             run_title,
             jobs,
+            job_summaries,
         }),
     );
 }
@@ -319,6 +343,7 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
         repo_model,
         background,
         job_contexts,
+        job_summaries,
         run_branch,
         run_title,
     } = params;
@@ -356,6 +381,7 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
         run_branch.clone(),
         run_title.clone(),
         cached_jobs_for_run(&job_contexts, run_id),
+        job_summaries.clone(),
     );
 
     let (sender, receiver) = glib::MainContext::default()
@@ -385,6 +411,7 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
 
         match result {
             Ok(jobs) if jobs.is_empty() => {
+                job_summaries.borrow_mut().remove(&run_id);
                 if !background {
                     let no_jobs = tr("No jobs found");
                     let label = gtk::Label::new(Some(no_jobs.as_str()));
@@ -394,6 +421,13 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
                 }
             }
             Ok(jobs) => {
+                let summary = JobSummary::from_jobs(jobs.as_ref());
+                if summary.is_empty() {
+                    job_summaries.borrow_mut().remove(&run_id);
+                } else {
+                    job_summaries.borrow_mut().insert(run_id, summary);
+                }
+
                 if let Some(ref badges) = badges_box {
                     update_job_summary_badges(badges, jobs.as_ref());
                 }
@@ -413,6 +447,7 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
                     run_branch.clone(),
                     run_title.clone(),
                     jobs.clone(),
+                    job_summaries.clone(),
                 );
 
                 let total_jobs = jobs.len();
@@ -480,31 +515,42 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
                     let badges_box_retry = badges_box.clone();
                     let parent_window_retry = parent_window.clone();
                     let repo_model_retry = repo_model.clone();
+                    let job_summaries_retry = job_summaries.clone();
                     let run_branch_retry = run_branch.clone();
                     let run_title_retry = run_title.clone();
                     let expander_retry = expander.clone();
 
                     retry_button.connect_clicked(move |_| {
+                        let (current_expander, current_jobs_box, current_badges_box) =
+                            current_retry_widgets(
+                                &job_contexts_retry,
+                                run_id,
+                                &expander_retry,
+                                &jobs_box_retry,
+                                &badges_box_retry,
+                            );
+
                         loop {
-                            let child_opt = jobs_box_retry.first_child();
+                            let child_opt = current_jobs_box.first_child();
                             let Some(child) = child_opt else {
                                 break;
                             };
-                            jobs_box_retry.remove(&child);
+                            current_jobs_box.remove(&child);
                         }
                         load_run_jobs(LoadJobsParams {
                             client: client_retry.clone(),
                             owner: owner_retry.clone(),
                             repo: repo_retry.clone(),
                             run_id,
-                            expander: expander_retry.clone(),
-                            jobs_box: jobs_box_retry.clone(),
-                            badges_box: badges_box_retry.clone(),
+                            expander: current_expander,
+                            jobs_box: current_jobs_box,
+                            badges_box: current_badges_box,
                             workflow_id,
                             parent_window: parent_window_retry.clone(),
                             repo_model: repo_model_retry.clone(),
                             background: false,
                             job_contexts: job_contexts_retry.clone(),
+                            job_summaries: job_summaries_retry.clone(),
                             run_branch: run_branch_retry.clone(),
                             run_title: run_title_retry.clone(),
                         });
@@ -556,6 +602,7 @@ pub(crate) fn refresh_jobs_for_workflows(
             repo_model: context.repo_model(),
             background: true,
             job_contexts: job_contexts.clone(),
+            job_summaries: context.job_summaries(),
             run_branch: context.branch(),
             run_title: context.run_title(),
         });
@@ -691,6 +738,7 @@ mod tests {
             permissions: None,
         };
         let job_contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
+        let job_summaries: RunBadgeSummaryMap = Rc::new(RefCell::new(HashMap::new()));
         let cached_jobs = Arc::new(vec![Job {
             id: 10,
             run_id: 42,
@@ -718,11 +766,74 @@ mod tests {
             Some("main".into()),
             "CI".into(),
             cached_jobs.clone(),
+            job_summaries,
         );
 
         let preserved = cached_jobs_for_run(&job_contexts, 42);
         assert_eq!(preserved.len(), 1);
         assert_eq!(preserved[0].id, 10);
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn retry_uses_current_context_widgets_when_available() {
+        let Some(_guard) = gtk_test_guard("retry_uses_current_context_widgets_when_available")
+        else {
+            return;
+        };
+
+        let fallback_expander = gtk::Expander::new(None::<&str>);
+        let fallback_jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        let fallback_badges_box = Some(gtk::Box::new(gtk::Orientation::Horizontal, 0));
+
+        let current_expander = gtk::Expander::new(None::<&str>);
+        let current_jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        let current_badges_box = Some(gtk::Box::new(gtk::Orientation::Horizontal, 0));
+
+        let job_contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
+        job_contexts.borrow_mut().insert(
+            42,
+            JobRefreshContext::from_params(JobRefreshContextParams {
+                client: Arc::new(Mutex::new(
+                    GitHubClient::new(None).expect("client should build"),
+                )),
+                owner: "mak".into(),
+                repo: "actioneer".into(),
+                workflow_id: 7,
+                run_id: 42,
+                expander: current_expander.clone(),
+                jobs_box: current_jobs_box.clone(),
+                badges_box: current_badges_box.clone(),
+                parent_window: gtk::Window::new(),
+                repo_model: Repo {
+                    id: 1,
+                    name: "actioneer".into(),
+                    full_name: "mak/actioneer".into(),
+                    owner: User {
+                        login: "mak".into(),
+                    },
+                    default_branch: Some("main".into()),
+                    is_private: false,
+                    permissions: None,
+                },
+                branch: Some("main".into()),
+                run_title: "CI".into(),
+                jobs: Arc::new(Vec::new()),
+                job_summaries: Rc::new(RefCell::new(HashMap::new())),
+            }),
+        );
+
+        let (resolved_expander, resolved_jobs_box, resolved_badges_box) = current_retry_widgets(
+            &job_contexts,
+            42,
+            &fallback_expander,
+            &fallback_jobs_box,
+            &fallback_badges_box,
+        );
+
+        assert_eq!(resolved_expander, current_expander);
+        assert_eq!(resolved_jobs_box, current_jobs_box);
+        assert_eq!(resolved_badges_box, current_badges_box);
     }
 
     #[test]

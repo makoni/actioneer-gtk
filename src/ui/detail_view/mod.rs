@@ -26,7 +26,7 @@ mod workflow_list;
 mod workflow_refresh;
 use favorite_controls::{observe_favorites, setup_favorite_button};
 use filter_controls::{FilterChips, FilterControls};
-use helpers::{JobContextMap, RunDigestStore, RunLoadService};
+use helpers::{JobContextMap, RunBadgeSummaryMap, RunDigestStore, RunLoadService};
 
 #[derive(Clone)]
 pub struct RepoDetailPane {
@@ -55,6 +55,7 @@ pub struct RepoDetailPane {
     workflows_last_loaded: Arc<Mutex<HashMap<i64, std::time::Instant>>>, // Debounce per-workflow loads
     workflows_last_silent_refresh: Arc<Mutex<Option<std::time::Instant>>>, // Throttle silent workflow refreshes
     job_contexts: JobContextMap,
+    run_badge_summaries: RunBadgeSummaryMap,
     run_digests: Arc<Mutex<RunDigestStore>>,
     notification_manager: Option<NotificationManager>,
     workflows_loading_runs: Arc<Mutex<HashSet<i64>>>, // Track in-flight run loads
@@ -81,6 +82,7 @@ struct WorkflowListContext {
     parent_window: adw::ApplicationWindow,
     toast_overlay: adw::ToastOverlay,
     job_contexts: JobContextMap,
+    run_badge_summaries: RunBadgeSummaryMap,
     workflows_with_active_runs: Arc<Mutex<HashSet<i64>>>,
     workflows_last_loaded: Arc<Mutex<HashMap<i64, std::time::Instant>>>,
     run_digests: Arc<Mutex<RunDigestStore>>,
@@ -151,6 +153,7 @@ impl RepoDetailPane {
         info!("Creating RepoDetailPane for: {}", repo.full_name);
         let workflows = Arc::new(Mutex::new(Arc::new(Vec::new())));
         let job_contexts = Rc::new(RefCell::new(HashMap::new()));
+        let run_badge_summaries = Rc::new(RefCell::new(HashMap::new()));
 
         let favorite_button = gtk::ToggleButton::new();
         favorite_button.set_icon_name("emblem-favorite-symbolic");
@@ -269,6 +272,7 @@ impl RepoDetailPane {
             workflows_last_loaded: workflows_last_loaded.clone(),
             workflows_last_silent_refresh: workflows_last_silent_refresh.clone(),
             job_contexts: job_contexts.clone(),
+            run_badge_summaries: run_badge_summaries.clone(),
             run_digests: run_digests.clone(),
             run_load_service: run_load_service.clone(),
             notification_manager: notification_manager.clone(),

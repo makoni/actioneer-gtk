@@ -1,7 +1,9 @@
-use super::super::context::{JobContextMap, JobRefreshContext, JobRefreshContextParams};
+use super::super::context::{
+    JobContextMap, JobRefreshContext, JobRefreshContextParams, RunBadgeSummaryMap,
+};
 use super::super::formatting::{
     format_run_subtitle, format_run_title, get_run_status_class, get_run_status_icon,
-    update_job_summary_badges,
+    update_job_summary_badges, update_job_summary_badges_from_summary,
 };
 use super::super::jobs::{LoadJobsParams, load_run_jobs};
 use super::actions::{RunActionContext, create_actions_box};
@@ -24,6 +26,7 @@ pub(crate) struct RunRowContext {
     pub(super) workflow_id: i64,
     pub(super) toast_overlay: adw::ToastOverlay,
     pub(super) job_contexts: JobContextMap,
+    pub(super) job_summaries: RunBadgeSummaryMap,
 }
 
 impl RunRowContext {
@@ -37,6 +40,7 @@ impl RunRowContext {
         workflow_id: i64,
         toast_overlay: adw::ToastOverlay,
         job_contexts: JobContextMap,
+        job_summaries: RunBadgeSummaryMap,
     ) -> Self {
         Self {
             client,
@@ -47,6 +51,7 @@ impl RunRowContext {
             workflow_id,
             toast_overlay,
             job_contexts,
+            job_summaries,
         }
     }
 
@@ -76,6 +81,10 @@ pub(crate) fn create_run_expander_row(
     };
     let (expander, badges_box) = build_expander(run, &run_title);
     let actions_box = create_actions_box(run, &context.actions_context());
+
+    if let Some(summary) = context.job_summaries.borrow().get(&run.id).cloned() {
+        update_job_summary_badges_from_summary(&badges_box, &summary);
+    }
 
     row_container.append(&expander);
     row_container.append(&actions_box);
@@ -107,6 +116,7 @@ pub(crate) fn create_run_expander_row(
                 branch: run.head_branch.clone(),
                 run_title: run_title.clone(),
                 jobs: std::sync::Arc::new(Vec::new()),
+                job_summaries: context.job_summaries.clone(),
             },
         );
     }
@@ -237,6 +247,7 @@ fn attach_job_loader(
     let job_contexts_for_remove = context.job_contexts.clone();
     let repo_model = context.repo_model.clone();
     let badges_box_for_load = badges_box.clone();
+    let job_summaries_for_load = context.job_summaries.clone();
     let parent_window_for_load = parent_window.clone();
     let run_title_for_load = run_title.clone();
 
@@ -245,10 +256,7 @@ fn attach_job_loader(
             let expander = exp.clone();
             let job_contexts = job_contexts_for_remove.clone();
             glib::idle_add_local_once(move || {
-                if expander.is_expanded()
-                    || expander.parent().is_none()
-                    || expander.root().is_none()
-                {
+                if expander.is_expanded() {
                     return;
                 }
 
@@ -273,6 +281,7 @@ fn attach_job_loader(
                 repo_model: repo_model.clone(),
                 background: false,
                 job_contexts: job_contexts_for_load.clone(),
+                job_summaries: job_summaries_for_load.clone(),
                 run_branch: run_branch.clone(),
                 run_title: run_title_for_load.clone(),
             });
@@ -389,6 +398,7 @@ mod tests {
                 branch: Some("main".into()),
                 run_title: "CI".into(),
                 jobs: std::sync::Arc::new(Vec::new()),
+                job_summaries: Rc::new(RefCell::new(HashMap::new())),
             }),
         );
 
@@ -426,6 +436,7 @@ mod tests {
                 branch: Some("main".into()),
                 run_title: "CI".into(),
                 jobs: std::sync::Arc::new(Vec::new()),
+                job_summaries: Rc::new(RefCell::new(HashMap::new())),
             },
         );
 
@@ -475,6 +486,7 @@ mod tests {
                 branch: Some("main".into()),
                 run_title: "CI".into(),
                 jobs: cached_jobs,
+                job_summaries: Rc::new(RefCell::new(HashMap::new())),
             }),
         );
 
@@ -498,9 +510,77 @@ mod tests {
                 branch: Some("main".into()),
                 run_title: "CI".into(),
                 jobs: std::sync::Arc::new(Vec::new()),
+                job_summaries: Rc::new(RefCell::new(HashMap::new())),
             },
         );
 
         assert!(new_badges_box.first_child().is_some());
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn create_run_expander_row_restores_cached_badges_without_job_context() {
+        let Some(_guard) =
+            gtk_test_guard("create_run_expander_row_restores_cached_badges_without_job_context")
+        else {
+            return;
+        };
+
+        let run = WorkflowRun {
+            id: 42,
+            run_number: Some(1),
+            workflow_id: Some(7),
+            name: Some("CI".into()),
+            display_title: Some("CI".into()),
+            head_branch: Some("main".into()),
+            status: Some("in_progress".into()),
+            conclusion: None,
+            run_started_at: None,
+            event: None,
+            created_at: None,
+            updated_at: None,
+            html_url: None,
+        };
+        let job_summaries = Rc::new(RefCell::new(HashMap::new()));
+        job_summaries.borrow_mut().insert(
+            42,
+            crate::api::models::JobSummary {
+                queued: 1,
+                running: 2,
+                completed: 3,
+            },
+        );
+
+        let context = RunRowContext::new(
+            client_stub(),
+            "mak".into(),
+            "actioneer".into(),
+            repo_stub(),
+            adw::ApplicationWindow::builder().build(),
+            7,
+            adw::ToastOverlay::new(),
+            Rc::new(RefCell::new(HashMap::new())),
+            job_summaries,
+        );
+
+        let row = create_run_expander_row(&run, &context, false);
+        let row_container = row
+            .first_child()
+            .and_then(|child| child.downcast::<gtk::Box>().ok())
+            .expect("row container");
+        let expander = row_container
+            .first_child()
+            .and_then(|child| child.downcast::<gtk::Expander>().ok())
+            .expect("expander");
+        let header = expander
+            .label_widget()
+            .and_then(|child| child.downcast::<gtk::Box>().ok())
+            .expect("header box");
+        let badges_box = header
+            .last_child()
+            .and_then(|child| child.downcast::<gtk::Box>().ok())
+            .expect("badges box");
+
+        assert!(badges_box.first_child().is_some());
     }
 }

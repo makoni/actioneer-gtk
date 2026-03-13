@@ -1,7 +1,8 @@
 use futures::StreamExt;
 use futures::channel::mpsc::{self, Receiver as BoundedReceiver, Sender as BoundedSender};
 use gtk4::glib::{ControlFlow, MainContext, Priority};
-use std::sync::{Arc, Mutex};
+use parking_lot::Mutex;
+use std::sync::Arc;
 
 const UI_CHANNEL_CAPACITY: usize = 1024;
 
@@ -22,7 +23,7 @@ impl MainContextChannelExt for MainContext {
 
 impl<T: Send + 'static> Sender<T> {
     pub fn send(&self, value: T) -> Result<(), mpsc::TrySendError<T>> {
-        let mut sender = self.0.lock().expect("ui channel sender poisoned");
+        let mut sender = self.0.lock();
         sender.try_send(value)
     }
 }

@@ -1,5 +1,5 @@
 use super::RunLoadService;
-use super::context::JobContextMap;
+use super::context::{JobContextMap, RunBadgeSummaryMap};
 use super::runs::{LoadRunsParams, RunDigestStore, RunRowContext, WorkflowRunListModel};
 use super::workflow_follow_up::{FollowUpRefreshParams, schedule_follow_up_refresh};
 use crate::api::GitHubClient;
@@ -33,6 +33,7 @@ pub(crate) struct WorkflowRowContext {
     pub parent_window: adw::ApplicationWindow,
     pub toast_overlay: adw::ToastOverlay,
     pub job_contexts: JobContextMap,
+    pub run_badge_summaries: RunBadgeSummaryMap,
     pub workflows_with_active_runs: Arc<Mutex<HashSet<i64>>>,
     pub workflows_last_loaded: Arc<Mutex<std::collections::HashMap<i64, std::time::Instant>>>,
     pub workflows_loading_runs: Arc<Mutex<HashSet<i64>>>,
@@ -166,6 +167,7 @@ pub(crate) fn create_workflow_expander_row(
         workflow.id,
         toast_overlay.clone(),
         job_contexts.clone(),
+        context.run_badge_summaries.clone(),
     );
     let run_list = WorkflowRunListModel::new(run_row_context);
     expander.set_child(Some(&run_list.widget()));
@@ -203,6 +205,7 @@ pub(crate) fn create_workflow_expander_row(
     let run_list_shared = run_list.clone();
     let parent_window_shared = parent_window.clone();
     let status_badge_shared = status_badge.clone();
+    let status_badge_for_reload = status_badge_shared.clone();
     let toast_overlay_shared = toast_overlay.clone();
     let repo_model_shared = repo_model.clone();
     let repo_model_for_signal = repo_model.clone();
@@ -651,6 +654,7 @@ pub(crate) fn create_workflow_expander_row(
         let run_filters_for_response = run_filters_for_dialog.clone();
         let run_load_service_handle = run_load_service_for_response.clone();
         let input_fields_for_dialog = input_fields.clone();
+        let status_badge_for_dialog = status_badge_for_reload.clone();
         dialog.connect_response(move |dialog, response| {
             if response == gtk::ResponseType::Accept {
                 let selected_branch = branch_dropdown
@@ -742,7 +746,9 @@ pub(crate) fn create_workflow_expander_row(
 
                 let run_filters_for_reload = run_filters_for_response.clone();
                 let run_load_service_for_closure = run_load_service_handle.clone();
+                let status_badge_for_response = status_badge_for_dialog.clone();
                 receiver.attach(None, move |result| {
+                    let status_badge_for_receiver = status_badge_for_response.clone();
                     let workflows_loading_for_runs = workflows_loading_for_receiver.clone();
                     let workflows_loading_for_idle = workflows_loading_for_runs.clone();
                     let workflows_loading_for_follow_up = workflows_loading_for_runs.clone();
@@ -800,6 +806,7 @@ pub(crate) fn create_workflow_expander_row(
                             let run_filters_for_idle = run_filters_for_reload.clone();
                             let run_list_handle = run_list_for_reload.clone();
                             let expander_for_idle = expander.clone();
+                            let status_badge_for_idle = status_badge_for_receiver.clone();
                             glib::idle_add_local_once(move || {
                                 let workflows_with_active = workflows_with_active_idle.clone();
                                 if expander_for_idle.is_expanded() {
@@ -826,7 +833,7 @@ pub(crate) fn create_workflow_expander_row(
                                         workflow_name: workflow_display_for_runs,
                                         run_list: run_list_handle.clone(),
                                         parent_window: parent_window_for_idle.clone(),
-                                        status_badge: None,
+                                        status_badge: Some(status_badge_for_idle.clone()),
                                         expander: expander_for_idle.clone(),
                                         toast_overlay: toast_overlay_for_idle.clone(),
                                         job_contexts: job_contexts_for_idle.clone(),
@@ -852,7 +859,7 @@ pub(crate) fn create_workflow_expander_row(
                                 workflow_name: workflow_display_for_reload.clone(),
                                 run_list: run_list_for_reload.clone(),
                                 parent_window: parent_window_for_reload.clone(),
-                                status_badge: None,
+                                status_badge: Some(status_badge_for_receiver.clone()),
                                 expander: expander.downgrade(),
                                 toast_overlay: toast_overlay_for_reload.clone(),
                                 job_contexts: job_contexts_for_reload.clone(),
@@ -864,6 +871,7 @@ pub(crate) fn create_workflow_expander_row(
                                 preferences_manager: preferences_manager_for_reload.clone(),
                                 run_filters: run_filters_for_reload.clone(),
                                 run_load_service: run_load_service_for_follow_up.clone(),
+                                dispatched_run_id: dispatched_run.as_ref().map(|run| run.id),
                             };
                             schedule_follow_up_refresh(follow_up_params);
 

@@ -22,6 +22,7 @@ impl RepoDetailPane {
             parent_window: self.parent.clone(),
             toast_overlay: self.toast_overlay.clone(),
             job_contexts: self.job_contexts.clone(),
+            run_badge_summaries: self.run_badge_summaries.clone(),
             workflows_with_active_runs: self.workflows_with_active_runs.clone(),
             workflows_last_loaded: self.workflows_last_loaded.clone(),
             workflows_loading_runs: self.workflows_loading_runs.clone(),
@@ -91,6 +92,7 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
         parent_window: context.parent_window.clone(),
         toast_overlay: context.toast_overlay.clone(),
         job_contexts: context.job_contexts.clone(),
+        run_badge_summaries: context.run_badge_summaries.clone(),
         workflows_with_active_runs: context.workflows_with_active_runs.clone(),
         workflows_last_loaded: context.workflows_last_loaded.clone(),
         workflows_loading_runs: context.workflows_loading_runs.clone(),
@@ -149,16 +151,11 @@ pub(super) fn collect_workflow_rows(store: &gio::ListStore) -> Vec<gtk::Widget> 
 fn capture_expanded_workflows(widget: &gtk::Widget, expanded_ids: &mut HashSet<i64>) {
     if let Some(expander) = widget.downcast_ref::<gtk::Expander>()
         && expander.is_expanded()
+        && let Some((workflow_id, _)) =
+            super::workflow_refresh::parse_expander_widget_name(expander.widget_name().as_str())
     {
-        let name = expander.widget_name();
-        if let Some(id) = name
-            .as_str()
-            .strip_prefix("workflow_")
-            .and_then(|id_str| id_str.parse::<i64>().ok())
-        {
-            info!("Preserving expansion for workflow ID {}", id);
-            expanded_ids.insert(id);
-        }
+        info!("Preserving expansion for workflow ID {}", workflow_id);
+        expanded_ids.insert(workflow_id);
     }
 
     let mut child = widget.first_child();

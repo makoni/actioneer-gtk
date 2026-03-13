@@ -8,6 +8,9 @@ pub enum GitHubError {
     #[error("Authentication failed")]
     AuthenticationFailed,
 
+    #[error("Forbidden: {0}")]
+    Forbidden(String),
+
     #[error("API error: {0}")]
     ApiError(String),
 

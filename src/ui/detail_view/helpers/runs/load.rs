@@ -246,8 +246,17 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                     let current_expanded_run_ids = task_run_list.expanded_run_ids();
                     let current_job_context_ids =
                         current_job_context_run_ids(&job_contexts, workflow_id);
+                    // For background refreshes the live UI state is authoritative —
+                    // the list was never cleared so current_expanded + job_contexts
+                    // are accurate. Using the stale dispatch-time snapshot would
+                    // re-expand rows the user collapsed between dispatch and response.
+                    let requested = if background_for_ui {
+                        &HashSet::new()
+                    } else {
+                        requested_expanded_run_ids.as_ref()
+                    };
                     let preserved_expanded_run_ids = resolve_preserved_expanded_run_ids(
-                        requested_expanded_run_ids.as_ref(),
+                        requested,
                         &current_expanded_run_ids,
                         &current_job_context_ids,
                         runs.as_ref(),

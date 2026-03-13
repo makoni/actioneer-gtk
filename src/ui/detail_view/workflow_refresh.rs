@@ -3,8 +3,9 @@ use super::{RepoDetailPane, WorkflowListContext};
 use crate::api::models::Workflow;
 use crate::api::{GitHubClient, GitHubError};
 use crate::i18n::tr;
-use crate::ui::utils::MainContextChannelExt;
+use crate::ui::utils::channel::Sender as UiChannelSender;
 use crate::ui::utils::widget_data::get_data_clone;
+use crate::ui::utils::{MainContextChannelExt, try_remove_source};
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
@@ -31,6 +32,37 @@ struct SilentWorkflowRefreshState {
     workflows_last_silent_refresh: Arc<Mutex<Option<Instant>>>,
 }
 
+enum WorkflowLoadMessage {
+    Finished(Result<Arc<Vec<Workflow>>, GitHubError>),
+    Dropped,
+}
+
+struct WorkflowLoadNotifier {
+    sender: Option<UiChannelSender<WorkflowLoadMessage>>,
+}
+
+impl WorkflowLoadNotifier {
+    fn new(sender: UiChannelSender<WorkflowLoadMessage>) -> Self {
+        Self {
+            sender: Some(sender),
+        }
+    }
+
+    fn finish(mut self, result: Result<Arc<Vec<Workflow>>, GitHubError>) {
+        if let Some(sender) = self.sender.take() {
+            let _ = sender.send(WorkflowLoadMessage::Finished(result));
+        }
+    }
+}
+
+impl Drop for WorkflowLoadNotifier {
+    fn drop(&mut self) {
+        if let Some(sender) = self.sender.take() {
+            let _ = sender.send(WorkflowLoadMessage::Dropped);
+        }
+    }
+}
+
 fn should_skip_silent_workflow_refresh(last_refresh: Option<Instant>, now: Instant) -> bool {
     last_refresh
         .map(|previous| now.duration_since(previous) < SILENT_WORKFLOW_REFRESH_TTL)
@@ -39,6 +71,20 @@ fn should_skip_silent_workflow_refresh(last_refresh: Option<Instant>, now: Insta
 
 fn should_refresh_workflow_runs_in_background(expander_expanded: bool, is_active: bool) -> bool {
     expander_expanded || is_active
+}
+
+fn workflow_load_task_dropped_error(task_name: &str) -> GitHubError {
+    GitHubError::ApiError(format!("{task_name} ended without returning a result"))
+}
+
+fn workflow_load_result(
+    message: WorkflowLoadMessage,
+    task_name: &str,
+) -> Result<Arc<Vec<Workflow>>, GitHubError> {
+    match message {
+        WorkflowLoadMessage::Finished(result) => result,
+        WorkflowLoadMessage::Dropped => Err(workflow_load_task_dropped_error(task_name)),
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -68,7 +114,7 @@ fn should_listen_for_refresh_updates(
 
 fn cancel_auto_refresh_timer_slot(auto_refresh_source: &Arc<Mutex<Option<glib::SourceId>>>) {
     if let Some(source_id) = auto_refresh_source.lock().take() {
-        source_id.remove();
+        let _ = try_remove_source(source_id);
     }
 }
 
@@ -114,6 +160,7 @@ fn configure_auto_refresh_timer_slot(
     let list_store = list_context.store.clone();
     let workflows_with_active = list_context.workflows_with_active_runs.clone();
     let job_contexts = list_context.job_contexts.clone();
+    let run_badge_summaries = list_context.run_badge_summaries.clone();
     let toast_overlay = list_context.toast_overlay.clone();
     let run_digests = list_context.run_digests.clone();
     let notification_manager = list_context.notification_manager.clone();
@@ -158,6 +205,7 @@ fn configure_auto_refresh_timer_slot(
             parent_window: parent_window.clone(),
             toast_overlay: toast_overlay.clone(),
             job_contexts: job_contexts.clone(),
+            run_badge_summaries: run_badge_summaries.clone(),
             workflows_with_active_runs: workflows_with_active.clone(),
             workflows_last_loaded: workflows_last_loaded.clone(),
             workflows_loading_runs: workflows_loading_runs.clone(),
@@ -231,20 +279,31 @@ fn refresh_workflows_silent_with_state(
     let preferences_manager = context.preferences_manager.clone();
     let repo_model = context.repo_model.clone();
 
-    let (sender, receiver) = glib::MainContext::default()
-        .channel::<Result<Arc<Vec<Workflow>>, GitHubError>>(glib::Priority::default());
+    let (sender, receiver) = MainContextChannelExt::channel::<WorkflowLoadMessage>(
+        &glib::MainContext::default(),
+        glib::Priority::default(),
+    );
 
     let client_for_spawn = client.clone();
     let owner_for_spawn = owner.clone();
     let repo_name_for_spawn = repo_name.clone();
 
     let run_filters_for_ui = run_filters.clone();
-    receiver.attach(None, move |result| {
+    let workflows_last_silent_refresh_for_ui = workflows_last_silent_refresh.clone();
+    receiver.attach(None, move |message| {
         let run_digests = run_digests.clone();
         let notification_manager_handle = notification_manager.clone();
         let preferences_manager_handle = preferences_manager.clone();
         let repo_model_for_ui = repo_model.clone();
         *loading_guard.lock() = false;
+
+        let result = match message {
+            WorkflowLoadMessage::Finished(result) => result,
+            WorkflowLoadMessage::Dropped => {
+                *workflows_last_silent_refresh_for_ui.lock() = None;
+                Err(workflow_load_task_dropped_error("Silent workflow refresh"))
+            }
+        };
 
         let notification_manager_for_ui = notification_manager_handle.clone();
         let preferences_manager_for_ui = preferences_manager_handle.clone();
@@ -257,6 +316,7 @@ fn refresh_workflows_silent_with_state(
             parent_window: parent_window.clone(),
             toast_overlay: toast_overlay.clone(),
             job_contexts: job_contexts.clone(),
+            run_badge_summaries: context.run_badge_summaries.clone(),
             workflows_with_active_runs: workflows_with_active_runs.clone(),
             workflows_last_loaded: workflows_last_loaded.clone(),
             workflows_loading_runs: workflows_loading_runs.clone(),
@@ -287,11 +347,12 @@ fn refresh_workflows_silent_with_state(
     });
 
     crate::runtime_handle().spawn(async move {
+        let notifier = WorkflowLoadNotifier::new(sender);
         let client_clone = client_for_spawn.lock().clone();
         let result = fetch_workflows(&client_clone, &owner_for_spawn, &repo_name_for_spawn)
             .await
             .map(Arc::new);
-        let _ = sender.send(result);
+        notifier.finish(result);
     });
 }
 
@@ -328,16 +389,20 @@ impl RepoDetailPane {
         self.show_loading(true);
         let callback_refs = self.clone_for_callbacks();
 
-        let (sender, receiver) = glib::MainContext::default()
-            .channel::<Result<Arc<Vec<Workflow>>, GitHubError>>(glib::Priority::default());
+        let (sender, receiver) = MainContextChannelExt::channel::<WorkflowLoadMessage>(
+            &glib::MainContext::default(),
+            glib::Priority::default(),
+        );
 
         let client_for_spawn = client.clone();
         let owner_for_spawn = owner.clone();
         let repo_name_for_spawn = repo_name.clone();
         let run_filters_for_ui = run_filters.clone();
-        receiver.attach(None, move |result| {
+        receiver.attach(None, move |message| {
             callback_refs.show_loading(false);
             *loading_guard.lock() = false;
+
+            let result = workflow_load_result(message, "Workflow load");
 
             let notification_manager_for_ui = notification_manager.clone();
             let preferences_manager_for_ui = preferences_manager.clone();
@@ -350,6 +415,7 @@ impl RepoDetailPane {
                 parent_window: parent_window.clone(),
                 toast_overlay: toast_overlay.clone(),
                 job_contexts: job_contexts.clone(),
+                run_badge_summaries: context.run_badge_summaries.clone(),
                 workflows_with_active_runs: workflows_with_active_runs.clone(),
                 workflows_last_loaded: workflows_last_loaded.clone(),
                 workflows_loading_runs: workflows_loading_runs.clone(),
@@ -369,8 +435,6 @@ impl RepoDetailPane {
                 }
                 Err(e) => {
                     error!("Failed to load workflows: {}", e);
-                    *workflows.lock() = Arc::new(Vec::new());
-                    super::workflow_list::update_workflows_list(&ui_context, &[]);
                     let message = tr("Failed to load workflows: {error}")
                         .replace("{error}", e.to_string().as_str());
                     let overlay = toast_overlay.clone();
@@ -386,11 +450,12 @@ impl RepoDetailPane {
         });
 
         crate::runtime_handle().spawn(async move {
+            let notifier = WorkflowLoadNotifier::new(sender);
             let client_clone = client_for_spawn.lock().clone();
             let result = fetch_workflows(&client_clone, &owner_for_spawn, &repo_name_for_spawn)
                 .await
                 .map(Arc::new);
-            let _ = sender.send(result);
+            notifier.finish(result);
         });
     }
 
@@ -414,6 +479,7 @@ impl RepoDetailPane {
         let notification_manager = context.notification_manager.clone();
         let preferences_manager = context.preferences_manager.clone();
         let repo_model = context.repo_model.clone();
+        let run_badge_summaries = context.run_badge_summaries.clone();
         let run_filters_for_button = run_filters.clone();
 
         button.connect_clicked(move |_| {
@@ -445,9 +511,10 @@ impl RepoDetailPane {
 
             callback_refs.show_loading(true);
 
-            let (sender, receiver) =
-                glib::MainContext::default()
-                    .channel::<Result<Arc<Vec<Workflow>>, GitHubError>>(glib::Priority::default());
+            let (sender, receiver) = MainContextChannelExt::channel::<WorkflowLoadMessage>(
+                &glib::MainContext::default(),
+                glib::Priority::default(),
+            );
             let list_store_for_ui = store.clone();
             let run_filters_for_ui = run_filters_for_button.clone();
             let workflows_for_ui = workflows.clone();
@@ -464,10 +531,13 @@ impl RepoDetailPane {
             let notification_manager_for_ui = notification_manager_handle.clone();
             let preferences_manager_for_ui = preferences_manager_handle.clone();
             let run_load_service_for_ui = context.run_load_service.clone();
+            let run_badge_summaries_for_ui = run_badge_summaries.clone();
 
-            receiver.attach(None, move |result| {
+            receiver.attach(None, move |message| {
                 callback_refs_for_ui.show_loading(false);
                 *loading_guard.lock() = false;
+
+                let result = workflow_load_result(message, "Workflow refresh");
 
                 match result {
                     Ok(wf_list) => {
@@ -483,6 +553,7 @@ impl RepoDetailPane {
                             parent_window: parent_window_for_ui.clone(),
                             toast_overlay: toast_overlay_for_ui.clone(),
                             job_contexts: job_contexts_for_ui.clone(),
+                            run_badge_summaries: run_badge_summaries_for_ui.clone(),
                             workflows_with_active_runs: workflows_with_active_runs_for_ui.clone(),
                             workflows_last_loaded: workflows_last_loaded.clone(),
                             workflows_loading_runs: workflows_loading_runs.clone(),
@@ -507,11 +578,12 @@ impl RepoDetailPane {
             let owner_for_spawn = owner.clone();
             let repo_name_for_spawn = repo_name.clone();
             crate::runtime_handle().spawn(async move {
+                let notifier = WorkflowLoadNotifier::new(sender);
                 let client_clone = client_for_spawn.lock().clone();
                 let result = fetch_workflows(&client_clone, &owner_for_spawn, &repo_name_for_spawn)
                     .await
                     .map(Arc::new);
-                let _ = sender.send(result);
+                notifier.finish(result);
             });
         });
     }
@@ -741,10 +813,13 @@ impl RepoDetailPane {
 #[cfg(test)]
 mod tests {
     use super::{
-        AutoRefreshTick, SILENT_WORKFLOW_REFRESH_TTL, auto_refresh_tick,
+        AutoRefreshTick, SILENT_WORKFLOW_REFRESH_TTL, WorkflowLoadMessage, auto_refresh_tick,
         should_listen_for_refresh_updates, should_reconfigure_auto_refresh,
         should_refresh_workflow_runs_in_background, should_skip_silent_workflow_refresh,
+        workflow_load_result, workflow_load_task_dropped_error,
     };
+    use crate::api::models::Workflow;
+    use std::sync::Arc;
     use std::time::Instant;
 
     #[test]
@@ -789,6 +864,33 @@ mod tests {
         assert!(!should_listen_for_refresh_updates(false, true, true));
         assert!(!should_listen_for_refresh_updates(true, false, true));
         assert!(!should_listen_for_refresh_updates(true, true, false));
+    }
+
+    #[test]
+    fn dropped_workflow_load_becomes_api_error() {
+        let error = workflow_load_result(WorkflowLoadMessage::Dropped, "Workflow load")
+            .expect_err("dropped task should fail");
+
+        assert_eq!(
+            error.to_string(),
+            workflow_load_task_dropped_error("Workflow load").to_string()
+        );
+    }
+
+    #[test]
+    fn finished_workflow_load_returns_payload() {
+        let workflows = Arc::new(vec![Workflow {
+            id: 1,
+            name: "CI".to_string(),
+            path: ".github/workflows/ci.yml".to_string(),
+        }]);
+        let result = workflow_load_result(
+            WorkflowLoadMessage::Finished(Ok(workflows.clone())),
+            "Workflow load",
+        )
+        .expect("finished task should succeed");
+
+        assert_eq!(result.len(), 1);
     }
 }
 

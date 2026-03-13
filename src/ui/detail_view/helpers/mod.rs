@@ -6,7 +6,7 @@ mod runs;
 mod workflow_follow_up;
 mod workflows;
 
-pub(crate) use context::{JobContextMap, current_job_context_run_ids};
+pub(crate) use context::{JobContextMap, RunBadgeSummaryMap, current_job_context_run_ids};
 pub(crate) use jobs::refresh_jobs_for_workflows;
 pub(crate) use run_loader::RunLoadService;
 pub(crate) use runs::{LoadRunsParams, RunDigestStore, WorkflowRunListModel};

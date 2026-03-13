@@ -243,6 +243,22 @@ impl WorkflowRunListModel {
         self.has_loaded.set(true);
     }
 
+    pub(crate) fn has_loaded_runs(&self) -> bool {
+        self.has_loaded.get()
+    }
+
+    pub(crate) fn has_active_runs(&self) -> bool {
+        self.last_runs.borrow().iter().any(WorkflowRun::is_active)
+    }
+
+    pub(crate) fn run_completed(&self, run_id: i64) -> bool {
+        self.last_runs
+            .borrow()
+            .iter()
+            .find(|run| run.id == run_id)
+            .is_some_and(|run| !run.is_active())
+    }
+
     pub(crate) fn prepend_run(&self, run: WorkflowRun, filters: &RunFilters) {
         let run_id = run.id;
         let mut merged = vec![run];

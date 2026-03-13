@@ -112,12 +112,10 @@ impl RunLoadService {
         if !ready.is_empty() {
             for mut params in ready.into_iter() {
                 // Refresh expanded run state at dispatch time so queued requests don't
-                // collapse rows the user expanded after the request was enqueued.
+                // reopen or collapse rows based on stale queued state.
                 let latest_expanded: std::collections::HashSet<i64> =
                     params.run_list.expanded_run_ids();
-                if !latest_expanded.is_empty() {
-                    params.expanded_run_ids = latest_expanded.into_iter().collect();
-                }
+                params.expanded_run_ids = latest_expanded.into_iter().collect();
 
                 debug!(
                     workflow_id = params.workflow_id,

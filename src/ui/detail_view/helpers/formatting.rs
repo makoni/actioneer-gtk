@@ -123,6 +123,10 @@ pub(crate) fn get_job_status_class(job: &Job) -> &'static str {
 }
 
 pub(crate) fn update_job_summary_badges(badges_box: &gtk::Box, jobs: &[Job]) {
+    update_job_summary_badges_from_summary(badges_box, &JobSummary::from_jobs(jobs));
+}
+
+pub(crate) fn update_job_summary_badges_from_summary(badges_box: &gtk::Box, summary: &JobSummary) {
     loop {
         let child_opt = badges_box.first_child();
         let Some(child) = child_opt else {
@@ -130,8 +134,6 @@ pub(crate) fn update_job_summary_badges(badges_box: &gtk::Box, jobs: &[Job]) {
         };
         badges_box.remove(&child);
     }
-
-    let summary = JobSummary::from_jobs(jobs);
 
     if summary.is_empty() {
         return;

@@ -109,9 +109,13 @@ impl ResponseHandler {
 
                 self.deserialize_json(entry.body.as_ref())
             }
-            StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN => {
+            StatusCode::UNAUTHORIZED => {
                 warn!("Authentication failed with status: {}", status);
                 Err(GitHubError::AuthenticationFailed)
+            }
+            StatusCode::FORBIDDEN => {
+                let text = response.text().await.unwrap_or_default();
+                Err(classify_forbidden_response(&headers, &text))
             }
             StatusCode::NOT_FOUND => {
                 warn!("Resource not found");
@@ -188,6 +192,40 @@ impl ResponseHandler {
         };
 
         cache.get(cache_key).cloned()
+    }
+}
+
+fn classify_forbidden_response(headers: &header::HeaderMap, body: &str) -> GitHubError {
+    if is_rate_limit_forbidden(headers, body) {
+        warn!("Forbidden response classified as rate limit");
+        GitHubError::RateLimitExceeded
+    } else {
+        let message = forbidden_message(body);
+        warn!("Forbidden response: {}", message);
+        GitHubError::Forbidden(message)
+    }
+}
+
+fn is_rate_limit_forbidden(headers: &header::HeaderMap, body: &str) -> bool {
+    headers
+        .get("x-ratelimit-remaining")
+        .and_then(|value| value.to_str().ok())
+        == Some("0")
+        || body_contains_rate_limit_message(body)
+}
+
+fn body_contains_rate_limit_message(body: &str) -> bool {
+    let body = body.to_ascii_lowercase();
+    body.contains("secondary rate limit")
+        || (body.contains("rate limit") && body.contains("exceeded"))
+}
+
+fn forbidden_message(body: &str) -> String {
+    let message = body.trim();
+    if message.is_empty() {
+        "Access denied".to_string()
+    } else {
+        message.to_string()
     }
 }
 
@@ -391,5 +429,86 @@ mod tests {
             .await
             .expect("reuse cached body after ttl expiry");
         assert_eq!(cached, TestPayload { value: 7 });
+    }
+
+    #[tokio::test]
+    async fn handle_response_returns_auth_failed_for_401() {
+        let server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/auth"))
+            .respond_with(ResponseTemplate::new(401).set_body_string("bad credentials"))
+            .mount(&server)
+            .await;
+
+        let response = Client::new()
+            .get(format!("{}/auth", server.uri()))
+            .send()
+            .await
+            .expect("send request");
+
+        let error = handler()
+            .handle_response::<TestPayload>(response, None)
+            .await
+            .expect_err("401 should fail");
+
+        assert!(matches!(error, GitHubError::AuthenticationFailed));
+    }
+
+    #[tokio::test]
+    async fn handle_response_returns_forbidden_for_403_without_signout_semantics() {
+        let server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/forbidden"))
+            .respond_with(ResponseTemplate::new(403).set_body_string("insufficient permissions"))
+            .mount(&server)
+            .await;
+
+        let response = Client::new()
+            .get(format!("{}/forbidden", server.uri()))
+            .send()
+            .await
+            .expect("send request");
+
+        let error = handler()
+            .handle_response::<TestPayload>(response, None)
+            .await
+            .expect_err("403 should fail");
+
+        match error {
+            GitHubError::Forbidden(message) => assert_eq!(message, "insufficient permissions"),
+            other => panic!("expected forbidden error, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn handle_response_treats_rate_limited_403_as_rate_limit() {
+        let server = MockServer::start().await;
+
+        Mock::given(method("GET"))
+            .and(path("/limited"))
+            .respond_with(
+                ResponseTemplate::new(403)
+                    .insert_header("x-ratelimit-limit", "5000")
+                    .insert_header("x-ratelimit-remaining", "0")
+                    .insert_header("x-ratelimit-reset", "123456")
+                    .set_body_string("API rate limit exceeded"),
+            )
+            .mount(&server)
+            .await;
+
+        let response = Client::new()
+            .get(format!("{}/limited", server.uri()))
+            .send()
+            .await
+            .expect("send request");
+
+        let error = handler()
+            .handle_response::<TestPayload>(response, None)
+            .await
+            .expect_err("403 rate limit should fail");
+
+        assert!(matches!(error, GitHubError::RateLimitExceeded));
     }
 }

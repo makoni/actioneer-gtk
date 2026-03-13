@@ -522,9 +522,15 @@ struct NotificationCommand {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::i18n::{apply_language_preference, i18n_test_guard, init};
+    use crate::preferences::LanguagePreference;
 
     #[test]
     fn test_conclusion_text() {
+        let _guard = i18n_test_guard();
+        init(None);
+        let _ = apply_language_preference(LanguagePreference::En);
+
         let manager = NotificationManager::new("test");
 
         assert!(!manager.conclusion_text(Some("success")).is_empty());
