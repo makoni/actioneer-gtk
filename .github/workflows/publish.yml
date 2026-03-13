@@ -33,21 +33,21 @@ jobs:
       - uses: actions/checkout@v5.0.0
 
       - name: Download Flatpak artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: artifacts/flatpak
           github-token: ${{ secrets.RELEASES_PERSONAL_TOKEN }}
           run-id: ${{ needs.flatpak.outputs.run-id }}
 
       - name: Download Snap artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: artifacts/snap
           github-token: ${{ secrets.RELEASES_PERSONAL_TOKEN }}
           run-id: ${{ needs.snap.outputs.run-id }}
 
       - name: Download AppImage artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: artifacts/appimage
           github-token: ${{ secrets.RELEASES_PERSONAL_TOKEN }}

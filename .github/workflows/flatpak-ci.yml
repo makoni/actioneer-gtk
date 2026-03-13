@@ -110,7 +110,7 @@ jobs:
           echo "bundle_path=$dest" >> "$GITHUB_OUTPUT"
 
       - name: Upload Flatpak artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: actioneer-${{ steps.get_version.outputs.version }}-${{ matrix.arch }}.flatpak
           path: ${{ steps.collect-bundle.outputs.bundle_path }}
