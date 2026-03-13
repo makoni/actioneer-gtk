@@ -36,7 +36,7 @@ pub async fn list_workflows(
     Ok(workflows_response.workflows)
 }
 
-#[derive(serde::Deserialize)]
+#[derive(Debug, serde::Deserialize)]
 struct WorkflowContentsResponse {
     content: String,
     encoding: Option<String>,
@@ -74,9 +74,10 @@ pub async fn get_workflow_dispatch_inputs(
     let request = add_auth_header(request, token);
     let request = response_handler.apply_cache_headers(request, Some(cache_key.as_str()));
     let response = request.send().await?;
-    let contents: WorkflowContentsResponse = response_handler
+    let contents_payload: serde_json::Value = response_handler
         .handle_response(response, Some(cache_key.as_str()))
         .await?;
+    let contents = parse_workflow_contents_response(contents_payload, workflow_path)?;
 
     let encoding = contents.encoding.unwrap_or_else(|| "base64".to_string());
     if encoding != "base64" {
@@ -97,6 +98,42 @@ pub async fn get_workflow_dispatch_inputs(
     })?;
 
     parse_workflow_dispatch_inputs(&yaml)
+}
+
+fn parse_workflow_contents_response(
+    value: serde_json::Value,
+    workflow_path: &str,
+) -> Result<WorkflowContentsResponse, GitHubError> {
+    match value {
+        serde_json::Value::Array(_) => Err(GitHubError::ApiError(format!(
+            "Workflow path '{}' resolved to a directory listing instead of a workflow file",
+            workflow_path
+        ))),
+        serde_json::Value::Object(map) => {
+            let entry_type = map.get("type").and_then(serde_json::Value::as_str);
+            if matches!(
+                entry_type,
+                Some("dir") | Some("submodule") | Some("symlink")
+            ) || !map.contains_key("content")
+            {
+                return Err(GitHubError::ApiError(format!(
+                    "Workflow path '{}' did not resolve to a regular file response",
+                    workflow_path
+                )));
+            }
+
+            serde_json::from_value(serde_json::Value::Object(map)).map_err(|error| {
+                GitHubError::ApiError(format!(
+                    "Failed to parse workflow file response for '{}': {}",
+                    workflow_path, error
+                ))
+            })
+        }
+        other => Err(GitHubError::ApiError(format!(
+            "Workflow path '{}' returned an unexpected contents payload: {}",
+            workflow_path, other
+        ))),
+    }
 }
 
 /// Dispatch a workflow
@@ -335,6 +372,7 @@ fn yaml_value_as_string(value: &YamlValue) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::api::models::WorkflowRunsResponse;
 
     #[test]
     fn parse_publish_workflow_inputs() {
@@ -422,5 +460,58 @@ on:
         let run = parse_dispatch_run_details(StatusCode::NO_CONTENT, b"", "21001", "main")
             .expect("legacy success should still pass");
         assert!(run.is_none());
+    }
+
+    #[test]
+    fn parse_workflow_contents_response_accepts_file_payload() {
+        let payload = serde_json::json!({
+            "type": "file",
+            "encoding": "base64",
+            "content": "bmFtZTogQ0kK"
+        });
+
+        let parsed =
+            parse_workflow_contents_response(payload, ".github/workflows/ci.yml").expect("file");
+
+        assert_eq!(parsed.encoding.as_deref(), Some("base64"));
+        assert_eq!(parsed.content, "bmFtZTogQ0kK");
+    }
+
+    #[test]
+    fn parse_workflow_contents_response_rejects_directory_listing() {
+        let payload = serde_json::json!([
+            { "type": "file", "path": ".github/workflows/ci.yml" }
+        ]);
+
+        let error = parse_workflow_contents_response(payload, ".github/workflows")
+            .expect_err("directory listing should fail");
+
+        assert!(
+            error
+                .to_string()
+                .contains("resolved to a directory listing instead of a workflow file")
+        );
+    }
+
+    #[test]
+    fn workflow_runs_response_deserializes_with_trimmed_schema() {
+        let json = serde_json::json!({
+            "total_count": 1,
+            "workflow_runs": [
+                {
+                    "id": 42,
+                    "run_number": 7,
+                    "workflow_id": 9,
+                    "status": "queued",
+                    "conclusion": null
+                }
+            ]
+        });
+
+        let response: WorkflowRunsResponse =
+            serde_json::from_value(json).expect("workflow runs response");
+        assert_eq!(response.total_count, 1);
+        assert_eq!(response.workflow_runs[0].id, 42);
+        assert_eq!(response.workflow_runs[0].workflow_id, Some(9));
     }
 }

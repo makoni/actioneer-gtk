@@ -526,6 +526,24 @@ mod tests {
     }
 
     #[test]
+    fn test_repo_deserialization_without_deprecated_repository_fields() {
+        let json = r#"{
+            "id": 124,
+            "name": "trimmed-repo",
+            "full_name": "owner/trimmed-repo",
+            "owner": { "login": "owner" },
+            "private": false,
+            "permissions": { "admin": false, "push": true, "pull": true },
+            "default_branch": "main"
+        }"#;
+
+        let repo: Repo = serde_json::from_str(json).expect("repo");
+        assert_eq!(repo.id, 124);
+        assert_eq!(repo.default_branch.as_deref(), Some("main"));
+        assert!(!repo.is_private);
+    }
+
+    #[test]
     fn test_workflow_deserialization() {
         let json = r#"{
             "id": 456,

@@ -5,8 +5,16 @@ use crate::api::models::*;
 use crate::demo;
 use anyhow::Result;
 use reqwest::Client;
+use reqwest::header::{ACCEPT, HeaderMap, HeaderName, HeaderValue};
+use std::env;
 use std::sync::{Arc, Mutex as StdMutex};
 use std::time::Duration;
+use tracing::info;
+
+const DEFAULT_GITHUB_API_VERSION: &str = "2026-03-10";
+const GITHUB_API_VERSION_HEADER: &str = "x-github-api-version";
+const GITHUB_ACCEPT_HEADER: &str = "application/vnd.github+json";
+const GITHUB_API_VERSION_ENV: &str = "ACTIONEER_GITHUB_API_VERSION";
 
 #[derive(Clone)]
 pub struct GitHubClient {
@@ -17,13 +25,20 @@ pub struct GitHubClient {
 
 impl GitHubClient {
     pub fn new(token: Option<String>) -> Result<Self> {
+        let api_version = github_api_version_from_env();
         let client = Client::builder()
             .user_agent("Actioneer-Linux/0.1.0")
+            .default_headers(github_default_headers(&api_version)?)
             .timeout(Duration::from_secs(30))
             .build()?;
 
         let rate_limit = Arc::new(StdMutex::new(None));
         let response_handler = Arc::new(ResponseHandler::new(rate_limit));
+
+        info!(
+            api_version = %api_version,
+            "Configured GitHub REST API client"
+        );
 
         Ok(Self {
             client,
@@ -276,9 +291,30 @@ impl GitHubClient {
     }
 }
 
+fn github_api_version_from_env() -> String {
+    env::var(GITHUB_API_VERSION_ENV)
+        .ok()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| DEFAULT_GITHUB_API_VERSION.to_string())
+}
+
+fn github_default_headers(api_version: &str) -> Result<HeaderMap> {
+    let mut headers = HeaderMap::new();
+    headers.insert(ACCEPT, HeaderValue::from_static(GITHUB_ACCEPT_HEADER));
+    headers.insert(
+        HeaderName::from_static(GITHUB_API_VERSION_HEADER),
+        HeaderValue::from_str(api_version)?,
+    );
+    Ok(headers)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use reqwest::header::HeaderValue;
+    use wiremock::matchers::{header, method, path};
+    use wiremock::{Mock, MockServer, ResponseTemplate};
 
     #[test]
     fn test_client_creation() {
@@ -290,5 +326,42 @@ mod tests {
     fn test_client_without_token() {
         let client = GitHubClient::new(None);
         assert!(client.is_ok());
+    }
+
+    #[test]
+    fn test_github_default_headers_include_accept_and_api_version() {
+        let headers = github_default_headers("2026-03-10").expect("headers");
+
+        assert_eq!(
+            headers.get(ACCEPT),
+            Some(&HeaderValue::from_static(GITHUB_ACCEPT_HEADER))
+        );
+        assert_eq!(
+            headers.get(HeaderName::from_static(GITHUB_API_VERSION_HEADER)),
+            Some(&HeaderValue::from_static("2026-03-10"))
+        );
+    }
+
+    #[tokio::test]
+    async fn test_client_requests_use_versioned_default_headers() {
+        let server = MockServer::start().await;
+        let client = Client::builder()
+            .default_headers(github_default_headers("2026-03-10").expect("headers"))
+            .build()
+            .expect("client");
+
+        Mock::given(method("GET"))
+            .and(path("/headers"))
+            .and(header("accept", GITHUB_ACCEPT_HEADER))
+            .and(header(GITHUB_API_VERSION_HEADER, "2026-03-10"))
+            .respond_with(ResponseTemplate::new(200))
+            .mount(&server)
+            .await;
+
+        client
+            .get(format!("{}/headers", server.uri()))
+            .send()
+            .await
+            .expect("request");
     }
 }
