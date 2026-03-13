@@ -31,6 +31,12 @@ pub const APP_ID: &str = "me.spaceinbox.actioneer";
 pub const APP_ICON_NAME: &str = APP_ID;
 
 const DEV_ICON_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/icons/icons");
+const DEFAULT_TOKIO_WORKER_THREADS: usize = 4;
+const TOKIO_WORKER_THREADS_ENV: &str = "ACTIONEER_TOKIO_WORKER_THREADS";
+#[cfg(unix)]
+const SIGINT_SIGNAL: i32 = 2;
+#[cfg(unix)]
+const SIGTERM_SIGNAL: i32 = 15;
 
 // Global runtime handle
 static RUNTIME_HANDLE: OnceLock<Handle> = OnceLock::new();
@@ -59,6 +65,73 @@ pub fn resolved_app_id() -> Cow<'static, str> {
     }
 }
 
+fn available_parallelism_count() -> usize {
+    std::thread::available_parallelism()
+        .map(usize::from)
+        .unwrap_or(DEFAULT_TOKIO_WORKER_THREADS)
+}
+
+fn default_tokio_worker_threads_for(available_parallelism: usize) -> usize {
+    available_parallelism.clamp(1, DEFAULT_TOKIO_WORKER_THREADS)
+}
+
+fn parse_tokio_worker_threads_override(value: &str) -> Option<usize> {
+    value
+        .trim()
+        .parse::<usize>()
+        .ok()
+        .filter(|threads| *threads > 0)
+}
+
+fn tokio_worker_threads() -> usize {
+    let default_workers = default_tokio_worker_threads_for(available_parallelism_count());
+    match std::env::var(TOKIO_WORKER_THREADS_ENV) {
+        Ok(value) => parse_tokio_worker_threads_override(&value).unwrap_or_else(|| {
+            warn!(
+                env_var = TOKIO_WORKER_THREADS_ENV,
+                value = %value,
+                default_workers,
+                "Ignoring invalid Tokio worker thread override"
+            );
+            default_workers
+        }),
+        Err(_) => default_workers,
+    }
+}
+
+fn mark_current_session_clean(reason: &str) {
+    if let Some(session_id) = CURRENT_SESSION_ID.get()
+        && let Err(err) = crash_report::mark_session_clean(session_id)
+    {
+        warn!(
+            reason,
+            session_id,
+            error = %err,
+            "Failed to mark session as clean"
+        );
+    }
+}
+
+#[cfg(unix)]
+fn install_unix_signal_handlers(app: &adw::Application) {
+    install_unix_signal_handler(app, SIGINT_SIGNAL, "SIGINT");
+    install_unix_signal_handler(app, SIGTERM_SIGNAL, "SIGTERM");
+}
+
+#[cfg(unix)]
+fn install_unix_signal_handler(app: &adw::Application, signum: i32, signal_name: &'static str) {
+    let app = app.clone();
+    glib::source::unix_signal_add_local(signum, move || {
+        info!(
+            signal = signal_name,
+            "Received termination signal, quitting cleanly"
+        );
+        mark_current_session_clean(signal_name);
+        app.quit();
+        glib::ControlFlow::Break
+    });
+}
+
 fn main() -> anyhow::Result<()> {
     let cli_locale = parse_cli_locale_arg().and_then(|locale| i18n::parse_locale_string(&locale));
     i18n::init(cli_locale.as_deref());
@@ -83,10 +156,21 @@ fn main() -> anyhow::Result<()> {
     info!("Starting Actioneer for Linux");
     let runtime_app_id = resolved_app_id();
     notifications::initialize_portal_env(runtime_app_id.as_ref());
+    let available_parallelism = available_parallelism_count();
+    let default_runtime_workers = default_tokio_worker_threads_for(available_parallelism);
+    let runtime_worker_threads = tokio_worker_threads();
+    info!(
+        available_parallelism,
+        default_runtime_workers,
+        runtime_worker_threads,
+        env_var = TOKIO_WORKER_THREADS_ENV,
+        "Configuring Tokio runtime"
+    );
 
     // Start tokio runtime in background thread and keep it alive
-    std::thread::spawn(|| {
+    std::thread::spawn(move || {
         let rt = Builder::new_multi_thread()
+            .worker_threads(runtime_worker_threads)
             .enable_all()
             .build()
             .expect("Failed to create Tokio runtime");
@@ -114,12 +198,10 @@ fn main() -> anyhow::Result<()> {
         .application_id(runtime_app_id.as_ref())
         .flags(ApplicationFlags::NON_UNIQUE)
         .build();
+    #[cfg(unix)]
+    install_unix_signal_handlers(&app);
     app.connect_shutdown(|_| {
-        if let Some(session_id) = CURRENT_SESSION_ID.get()
-            && let Err(err) = crash_report::mark_session_clean(session_id)
-        {
-            warn!("Failed to mark session as clean on shutdown: {}", err);
-        }
+        mark_current_session_clean("shutdown");
     });
 
     let send_test_notification = Arc::new(AtomicBool::new(false));
@@ -294,7 +376,10 @@ fn register_icon_theme_paths() {
 
 #[cfg(test)]
 mod tests {
-    use super::extract_cli_locale_arg;
+    use super::{
+        default_tokio_worker_threads_for, extract_cli_locale_arg,
+        parse_tokio_worker_threads_override,
+    };
 
     #[test]
     fn extracts_locale_from_long_option_with_value() {
@@ -318,5 +403,29 @@ mod tests {
     fn returns_none_when_locale_is_missing() {
         let args = vec!["--locale"];
         assert_eq!(extract_cli_locale_arg(args), None);
+    }
+
+    #[test]
+    fn caps_default_tokio_workers_for_high_parallelism_hosts() {
+        assert_eq!(default_tokio_worker_threads_for(24), 4);
+    }
+
+    #[test]
+    fn keeps_small_parallelism_for_default_tokio_workers() {
+        assert_eq!(default_tokio_worker_threads_for(2), 2);
+        assert_eq!(default_tokio_worker_threads_for(1), 1);
+    }
+
+    #[test]
+    fn rejects_invalid_tokio_worker_override_values() {
+        assert_eq!(parse_tokio_worker_threads_override("0"), None);
+        assert_eq!(parse_tokio_worker_threads_override("abc"), None);
+        assert_eq!(parse_tokio_worker_threads_override(" "), None);
+    }
+
+    #[test]
+    fn parses_valid_tokio_worker_override_values() {
+        assert_eq!(parse_tokio_worker_threads_override("6"), Some(6));
+        assert_eq!(parse_tokio_worker_threads_override(" 3 "), Some(3));
     }
 }
