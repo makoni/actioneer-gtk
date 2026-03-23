@@ -1,6 +1,6 @@
 ---
 name: bump-actioneer
-description: Bump Actioneer to a new release version, update all required release files, generate multilingual AppStream release notes from changes since the latest git tag, and run the required release scripts.
+description: Bump Actioneer to a new release version, update all required release files, generate multilingual AppStream release notes from changes since the latest git tag, generate technical GitHub release notes, and run the required release scripts.
 license: MIT
 ---
 
@@ -13,6 +13,10 @@ Use this skill when the user wants to release a new Actioneer version and expect
 This skill requires one argument:
 
 - `version`: the new application version in `X.Y.Z` format, for example `1.0.9`
+
+Optional input:
+
+- `release_kind`: one of `normal`, `maintenance`, or `security`
 
 Typical invocations:
 
@@ -27,8 +31,9 @@ Given a target version, this skill must:
 2. Regenerate lock / packaging metadata that depends on the version or lockfile.
 3. Add a new user-friendly release entry to `data/metainfo.xml`.
 4. Generate AppStream release notes in **all supported application languages**.
-5. Run the required scripts from `scripts/`.
-6. Validate the result and summarize what changed.
+5. Generate technical GitHub release notes in `RELEASE.md`.
+6. Run the required scripts from `scripts/`.
+7. Validate the result and summarize what changed.
 
 Use `release-context.md` in this directory as the canonical companion reference for file targets, locale mapping, script selection, and release-note conventions.
 
@@ -47,7 +52,11 @@ Before editing:
    ```bash
    git --no-pager log --oneline <last-tag>..HEAD
    ```
-4. Inspect the touched files if the commit subjects are too vague to build accurate release notes.
+4. Collect a diff summary:
+   ```bash
+   git --no-pager diff --stat <last-tag>..HEAD
+   ```
+5. Inspect the touched files if the commit subjects are too vague to build accurate release notes.
 
 Do **not** invent changelog bullets from commit titles alone if the code tells a different story. Prefer grouping several technical commits into a smaller set of user-facing improvements.
 
@@ -63,6 +72,7 @@ At minimum, that currently includes:
 - `docs/flatpak.md`
 - `src/demo/logs/job-43021.log`
 - `TODO.md` (Recent Updates entry)
+- `RELEASE.md`
 
 If the repo later adds new release-version surfaces, update `release-context.md` and include them in the bump as well.
 
@@ -90,6 +100,8 @@ Rules:
   - describe improvements in terms of user-visible behavior
   - avoid raw implementation details, refactor notes, and dependency-noise unless it clearly benefits users
   - merge related technical changes into broader product-facing bullets
+- If `release_kind` is `maintenance` or `security`, prefer a short and simple changelog instead of stretching minor technical work into feature-style bullets.
+- For security-only or dependency-only releases, it is acceptable for AppStream notes to say that the release includes an important security update and refreshed bundled components, as long as the wording stays user-friendly.
 
 ### 5. Generate release notes for all supported languages
 
@@ -106,7 +118,23 @@ For each bullet:
 
 If the repository gains or removes supported locales, update `release-context.md` to match.
 
-### 6. Run the required scripts from `scripts/`
+### 6. Generate `RELEASE.md`
+
+Write or update `RELEASE.md` for the GitHub release body.
+
+Rules:
+
+- `RELEASE.md` may be more technical than the AppStream changelog.
+- Include:
+  - a short summary
+  - what changed
+  - security or dependency notes when relevant
+  - the commit list since the baseline tag
+  - user impact / compatibility notes
+- For dependency-only releases, explicitly say that there are no feature changes.
+- Keep `RELEASE.md` aligned with the actual git range used for the release.
+
+### 7. Run the required scripts from `scripts/`
 
 For a normal Actioneer version bump, always run the release-related scripts documented in `release-context.md`.
 
@@ -122,7 +150,7 @@ Additionally:
 - Run `scripts/compile-translations.sh` only if the bump also changed gettext catalogs under `po/`.
 - Do **not** run unrelated helper scripts such as icon maintenance or local packaging build helpers unless the task explicitly changed those assets or packaging flows.
 
-### 7. Validate
+### 8. Validate
 
 Unless the user explicitly narrows validation, run the repository-standard checks after the bump:
 
@@ -138,12 +166,13 @@ If the change is documentation-only and you deliberately skip some validation, s
 
 ## AppStream changelog quality bar
 
-When generating the new release entry:
+When generating the new AppStream release entry:
 
 - Prefer 3-6 bullets.
 - Summarize by theme, not by commit count.
 - Mention translations only when they are user-visible and material to the release.
 - Do not expose internal bug names, module names, or vague items like “various fixes”.
+- Exception: for `maintenance` or `security` releases with little user-visible surface area, 1-2 simple bullets are preferred over forcing extra filler.
 
 Good examples:
 
@@ -163,7 +192,8 @@ At the end, report:
 2. Which files were updated.
 3. Which scripts were run.
 4. Which validation commands were run.
-5. Any follow-up that still requires a human, if applicable.
+5. Which release kind was used, if relevant.
+6. Any follow-up that still requires a human, if applicable.
 
 ## Maintenance note
 

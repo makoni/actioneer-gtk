@@ -12,6 +12,7 @@ Update these files for every Actioneer release bump:
 - `docs/flatpak.md` — example release tag
 - `src/demo/logs/job-43021.log` — example `gh release create vX.Y.Z ...` command if present
 - `TODO.md` — add a `Recent Updates` entry documenting the release bump work
+- `RELEASE.md` — GitHub release notes / draft body
 
 ## AppStream release target
 
@@ -25,6 +26,11 @@ Rules:
 - Keep all previous entries unchanged.
 - Use user-friendly bullets derived from the code/commits since the latest reachable git tag.
 - Match the existing XML formatting style.
+- For maintenance/security-only releases, keep AppStream notes intentionally simple and non-technical.
+- For dependency/security-only releases with no visible feature work, preferred AppStream themes are:
+  - important security update
+  - refreshed bundled components
+  - more reliable / up-to-date experience
 
 ## Supported locales
 
@@ -94,9 +100,22 @@ Always build the new release notes from the latest reachable tag:
 ```bash
 git describe --tags --abbrev=0
 git --no-pager log --oneline <last-tag>..HEAD
+git --no-pager diff --stat <last-tag>..HEAD
 ```
 
 If commit subjects are too technical, inspect the relevant diffs/files and collapse them into a smaller set of user-facing improvements.
+
+## GitHub release notes target
+
+Write or update:
+
+- `RELEASE.md`
+
+Guidance:
+
+- `RELEASE.md` is allowed to be more technical than `data/metainfo.xml`.
+- Include summary, change details, commit list, and user impact.
+- For dependency-only releases, explicitly note that there are no feature changes.
 
 ## Validation default
 
