@@ -256,6 +256,36 @@
   </screenshots>
 
   <releases>
+    <release version="1.0.10" date="2026-03-23">
+      <description>
+        <ul>
+          <li>This release includes an important security update to help keep Actioneer safer to use.</li>
+          <li xml:lang="de">Dieses Release enthaelt ein wichtiges Sicherheitsupdate, damit Actioneer sicherer nutzbar bleibt.</li>
+          <li xml:lang="nl">Deze release bevat een belangrijke beveiligingsupdate om Actioneer veiliger in gebruik te houden.</li>
+          <li xml:lang="zh-Hans">此版本包含一项重要的安全更新，帮助让 Actioneer 使用起来更安全。</li>
+          <li xml:lang="hi">इस रिलीज़ में एक महत्वपूर्ण सुरक्षा अपडेट शामिल है, जिससे Actioneer का उपयोग और सुरक्षित रहता है।</li>
+          <li xml:lang="es">Esta version incluye una importante actualizacion de seguridad para ayudar a que Actioneer siga siendo mas seguro de usar.</li>
+          <li xml:lang="fr">Cette version inclut une importante mise a jour de securite afin de rendre Actioneer plus sur a l'usage.</li>
+          <li xml:lang="ar">يتضمن هذا الإصدار تحديثًا أمنيًا مهمًا للمساعدة في جعل استخدام Actioneer أكثر أمانًا.</li>
+          <li xml:lang="bn">এই রিলিজে একটি গুরুত্বপূর্ণ নিরাপত্তা আপডেট রয়েছে, যা Actioneer-কে আরও নিরাপদভাবে ব্যবহার করতে সাহায্য করে।</li>
+          <li xml:lang="pt-BR">Esta versao inclui uma importante atualizacao de seguranca para ajudar a manter o Actioneer mais seguro de usar.</li>
+          <li xml:lang="ru">Этот выпуск включает важное обновление безопасности, которое помогает сделать использование Actioneer более безопасным.</li>
+          <li xml:lang="ur">اس ریلیز میں ایک اہم سیکیورٹی اپ ڈیٹ شامل ہے تاکہ Actioneer کا استعمال زیادہ محفوظ رہے۔</li>
+          <li>Bundled components have been refreshed for a more reliable and up-to-date experience.</li>
+          <li xml:lang="de">Gebuendelte Komponenten wurden fuer ein zuverlaessigeres und aktuelleres Nutzungserlebnis aktualisiert.</li>
+          <li xml:lang="nl">Meegeleverde componenten zijn vernieuwd voor een betrouwbaardere en actuelere ervaring.</li>
+          <li xml:lang="zh-Hans">随附组件已完成更新，带来更可靠、更新鲜的使用体验。</li>
+          <li xml:lang="hi">साथ में आने वाले components को रिफ्रेश किया गया है, ताकि अनुभव अधिक भरोसेमंद और अपडेटेड रहे।</li>
+          <li xml:lang="es">Los componentes incluidos se han actualizado para ofrecer una experiencia mas fiable y al dia.</li>
+          <li xml:lang="fr">Les composants integres ont ete actualises pour offrir une experience plus fiable et plus a jour.</li>
+          <li xml:lang="ar">تم تحديث المكونات المضمنة لتقديم تجربة أكثر موثوقية وحداثة.</li>
+          <li xml:lang="bn">অন্তর্ভুক্ত কম্পোনেন্টগুলো নতুন করে আপডেট করা হয়েছে, যাতে অভিজ্ঞতা আরও নির্ভরযোগ্য ও আধুনিক থাকে।</li>
+          <li xml:lang="pt-BR">Os componentes incluidos foram atualizados para oferecer uma experiencia mais confiavel e atual.</li>
+          <li xml:lang="ru">Встроенные компоненты были обновлены, чтобы сделать работу приложения более надёжной и актуальной.</li>
+          <li xml:lang="ur">شامل اجزا کو تازہ کیا گیا ہے تاکہ استعمال کا تجربہ زیادہ قابلِ اعتماد اور جدید رہے۔</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.9" date="2026-03-13">
       <description>
         <ul>

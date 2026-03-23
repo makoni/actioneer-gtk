@@ -1,6 +1,6 @@
 [package]
 name = "actioneer"
-version = "1.0.9"
+version = "1.0.10"
 edition = "2024"
 authors = ["Sergey Armodin"]
 description = "GitHub Actions client for Linux (GNOME)"

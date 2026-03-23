@@ -45,7 +45,7 @@ High-level plan (steps)
        sources:
          - type: git
            url: https://github.com/makoni/Actioneer-gtk
-           tag: v1.0.9 # set to the release tag or branch for builds
+           tag: v1.0.10 # set to the release tag or branch for builds
    ```
 
   - For Rust projects it's common to use a small build helper that installs Rust toolchain inside the SDK or use the `org.freedesktop.Sdk.Extension.rust` extension if available; check the SDK docs for the current recommended approach. When targeting the GNOME SDK, keep the `org.freedesktop.Sdk.Extension.rust` extension listed in `sdk-extensions` to ensure cargo/rustup are available inside the build environment.
