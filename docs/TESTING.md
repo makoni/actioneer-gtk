@@ -59,8 +59,22 @@ GTK4 UI testing faces several challenges:
 Given these limitations, we use a **hybrid testing approach**:
 
 1. **Logic Tests** - Test all business logic, state management, and helper functions without GTK
-2. **Manual UI Testing** - UI behavior is verified through manual testing with the running application
-3. **Future: E2E Tests** - Could add end-to-end tests using tools like `ldtp` or `dogtail` for automated UI testing
+2. **Ignored GTK Unit Tests** - Widget-construction tests marked `#[ignore = "requires GTK display"]` run via `cargo test -- --ignored` under Xvfb + D-Bus
+3. **Smoke Tests** - Black-box accessibility-tree checks under Xvfb that launch the release binary and verify user-facing elements (see `tests/smoke/`)
+4. **Manual UI Testing** - UI behavior is verified through manual testing with the running application
+
+### Smoke Tests (`tests/smoke/`)
+
+The smoke suite launches the actual release binary under `Xvfb` + `dbus-run-session` + AT-SPI, then uses `pyatspi` (Python bindings) to inspect the accessibility tree. Requires `xvfb`, `dbus-x11`, `at-spi2-core`, and `python3-pyatspi`.
+
+Run locally:
+
+```bash
+cargo build --release
+dbus-run-session -- bash tests/smoke/run_smoke.sh
+```
+
+The default scenario (`tests/smoke/welcome_screen.py`) verifies that the welcome screen renders with its signed-out CTAs. Additional scripts can be passed as `bash tests/smoke/run_smoke.sh path/to/script.py`.
 
 ## Manual UI Test Checklist
 

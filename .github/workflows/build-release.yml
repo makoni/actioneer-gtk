@@ -1,0 +1,80 @@
+name: Build release binary
+
+# Reusable workflow that produces per-arch release binaries (+ compiled
+# translations) and uploads them as artifacts. Packaging workflows that can
+# consume a prebuilt binary (currently AppImage) depend on this so we only
+# run `cargo build --release` once per arch per release run. Flatpak and Snap
+# keep their in-sandbox builds because their runtimes/libraries diverge from
+# the host toolchain.
+
+on:
+  workflow_call:
+    outputs:
+      artifact-prefix:
+        description: Prefix of uploaded binary artifacts (e.g. "actioneer-release-bin")
+        value: actioneer-release-bin
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build release (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v5.0.0
+
+      - name: Install system packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-4-dev libadwaita-1-dev libglib2.0-dev \
+            pkg-config build-essential gettext
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1.15.3
+        with:
+          toolchain: stable
+          cache: false
+
+      - name: Cache cargo (target + registry)
+        uses: actions/cache@v5.0.3
+        with:
+          path: |
+            target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-${{ matrix.arch }}-cargo-release-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.arch }}-cargo-release-
+
+      - name: Compile translation catalogs
+        run: bash scripts/compile-translations.sh
+
+      - name: Build release binary
+        run: cargo build --release --locked --bin actioneer
+
+      - name: Stage release payload
+        run: |
+          set -euo pipefail
+          rm -rf dist/release-payload
+          mkdir -p dist/release-payload/bin dist/release-payload/locale
+          install -Dm755 target/release/actioneer dist/release-payload/bin/actioneer
+          if [ -d po/locale ]; then
+            cp -r po/locale/. dist/release-payload/locale/
+          fi
+
+      - name: Upload release binary artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: actioneer-release-bin-${{ matrix.arch }}
+          path: dist/release-payload
+          if-no-files-found: error
+          retention-days: 7

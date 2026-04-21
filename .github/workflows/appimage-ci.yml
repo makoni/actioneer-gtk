@@ -6,15 +6,19 @@ on:
     outputs:
       run-id:
         description: GitHub run id that produced the AppImage artifacts
-        value: ${{ jobs.build.outputs.run-id }}
+        value: ${{ jobs.package.outputs.run-id }}
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-    name: Build AppImage
+  build-release:
+    uses: ./.github/workflows/build-release.yml
+
+  package:
+    name: Package AppImage (${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
+    needs: build-release
     strategy:
       fail-fast: false
       matrix:
@@ -36,18 +40,27 @@ jobs:
       - name: Install system packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential pkg-config libglib2.0-dev libgtk-4-dev libadwaita-1-dev desktop-file-utils
+          sudo apt-get install -y pkg-config libglib2.0-dev libgtk-4-dev libadwaita-1-dev desktop-file-utils gettext
 
-      - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1.15.3
+      - name: Download prebuilt release binary
+        uses: actions/download-artifact@v7
         with:
-          toolchain: stable
-          cache: false
+          name: actioneer-release-bin-${{ matrix.arch }}
+          path: dist/release-payload
 
-      - name: Build release binary
+      - name: Restore release layout
         run: |
-          cargo build --release --locked --bin actioneer
+          set -euo pipefail
+          mkdir -p target/release po
+          install -Dm755 dist/release-payload/bin/actioneer target/release/actioneer
+          if [ -d dist/release-payload/locale ]; then
+            rm -rf po/locale
+            mkdir -p po/locale
+            cp -r dist/release-payload/locale/. po/locale/
+          fi
 
+      - name: Render AppStream metainfo
+        run: msgfmt --xml -L MetaInfo --template=data/metainfo.xml.in -d po -o data/metainfo.xml
 
       - name: Get app version
         id: get_version
