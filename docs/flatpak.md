@@ -85,6 +85,13 @@ flatpak remote-info flathub org.gnome.Sdk
      - Optionally runs `flatpak run --command=me.spaceinbox.actioneer --filesystem=host build-dir` (or equivalent) in an integration environment.
    - Ensure the workflow publishes build artifacts (bundle or repo) as needed for manual testing.
 
+Manifest templating
+
+- The Flatpak manifest is generated from `flatpak/me.spaceinbox.actioneer.yaml.in` by `scripts/render-flatpak-manifest.sh`. The rendered `flatpak/me.spaceinbox.actioneer.yaml` is not committed — always edit the `.yaml.in` template instead.
+- Local / CI mode (default): `scripts/render-flatpak-manifest.sh` produces a manifest with `type: dir` sources pointing at the repo.
+- Flathub mode: `scripts/render-flatpak-manifest.sh --mode flathub --commit <sha>` produces the variant used in the `flathub/me.spaceinbox.actioneer` repo (pinned `type: git` + `commit`). Use this when opening an update PR on Flathub.
+- Run the render script before `flatpak-builder` or `scripts/flathub-build.sh`. The GitHub Actions workflow renders the manifest automatically before building.
+
 6. Local testing
   - Add Flathub remote if not present:
 
@@ -95,12 +102,14 @@ flatpak remote-info flathub org.gnome.Sdk
    - Build locally with `flatpak-builder`:
 
      ```bash
+     scripts/render-flatpak-manifest.sh --mode local
      flatpak-builder --force-clean --install --user build-dir flatpak/me.spaceinbox.actioneer.yaml
      ```
 
      On systems where `rofiles-fuse` is unavailable (common in virtualised hosts), use the helper script which forwards all arguments to `flathub-build` while adding `--disable-rofiles-fuse`:
 
      ```bash
+     scripts/render-flatpak-manifest.sh --mode local
      scripts/flathub-build.sh --install flatpak/me.spaceinbox.actioneer.yaml
      ```
 

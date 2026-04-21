@@ -46,6 +46,4 @@ modules:
       - cp -a icons/icons/hicolor/* /app/share/icons/hicolor/
       - find /app/share/icons/hicolor -type f -name 'actioneer.*' -delete
     sources:
-      - type: dir
-        path: ..
-      - me.spaceinbox.actioneer.cargo-sources.json
+@SOURCES@

@@ -83,6 +83,10 @@ jobs:
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      - name: Render Flatpak manifest
+        shell: bash
+        run: scripts/render-flatpak-manifest.sh --mode local
+
       - name: Build Flatpak
         uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:

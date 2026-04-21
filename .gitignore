@@ -45,3 +45,6 @@ flatpak/source
 # Flatpak bundles and local repos
 *.flatpak
 flatpak/*.flatpak
+
+# Flatpak manifest is generated from .yaml.in by scripts/render-flatpak-manifest.sh
+flatpak/me.spaceinbox.actioneer.yaml
