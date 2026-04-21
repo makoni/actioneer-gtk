@@ -16,7 +16,7 @@ High-level plan (steps)
 1. Choose an application ID and manifest format
    - Use the existing desktop id as the Flatpak application id: `me.spaceinbox.actioneer`.
    - Create a Flatpak build manifest in YAML or JSON. We recommend YAML, named `flatpak/me.spaceinbox.actioneer.yaml`.
-  - Select an SDK/runtime. Prefer a recent, non-EOL runtime. For GNOME/libadwaita apps the recommended approach is to target the latest supported `org.gnome.Platform` branch (for example `49` at time of writing) and the matching `org.gnome.Sdk` SDK. Pin the `runtime-version` in the manifest (for example `runtime-version: "49"`) and update it periodically when a new GNOME branch is released.
+  - Select an SDK/runtime. Prefer a recent, non-EOL runtime. For GNOME/libadwaita apps the recommended approach is to target the latest supported `org.gnome.Platform` branch (for example `50` at time of writing) and the matching `org.gnome.Sdk` SDK. Pin the `runtime-version` in the manifest (for example `runtime-version: "50"`) and update it periodically when a new GNOME branch is released.
 
 2. Create a Flatpak manifest
    - The manifest should declare:
@@ -34,7 +34,7 @@ High-level plan (steps)
    app-id: me.spaceinbox.actioneer
    # For a GNOME/libadwaita app target the GNOME runtime and matching SDK
    runtime: org.gnome.Platform
-   runtime-version: "49"
+   runtime-version: "50"
    sdk: org.gnome.Sdk
    command: me.spaceinbox.actioneer
    modules:
@@ -74,7 +74,7 @@ flatpak remote-info flathub org.gnome.Platform
 flatpak remote-info flathub org.gnome.Sdk
 ```
 
-- Use the newest supported GNOME runtime (for example `49` at the time this document was updated) for GNOME/libadwaita apps. Pin the `runtime-version` in your manifest to a specific branch (do not use an unpinned/latest string). When a new GNOME runtime is released, update the manifest, run a local build and re-run AppStream validation.
+- Use the newest supported GNOME runtime (for example `50` at the time this document was updated) for GNOME/libadwaita apps. Pin the `runtime-version` in your manifest to a specific branch (do not use an unpinned/latest string). When a new GNOME runtime is released, update the manifest, run a local build and re-run AppStream validation.
 
 
 5. CI: automated flatpak builds & checks

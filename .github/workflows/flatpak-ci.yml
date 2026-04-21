@@ -26,7 +26,7 @@ jobs:
     outputs:
       run-id: ${{ steps.expose-run-id.outputs.run_id }}
     container:
-      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-49
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-50
       options: --privileged
     steps:
       - uses: actions/checkout@v5.0.0
