@@ -444,7 +444,7 @@ fn group_repos_by_owner(repos: Vec<Repo>) -> BTreeMap<String, Vec<Repo>> {
     }
 
     for repos in grouped.values_mut() {
-        repos.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+        repos.sort_by_key(|repo| repo.name.to_lowercase());
     }
 
     grouped
