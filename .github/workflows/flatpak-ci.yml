@@ -69,7 +69,7 @@ jobs:
       - name: Validate AppStream metadata
         shell: bash
         run: |
-          flatpak run --command=appstreamcli org.flatpak.Builder validate data/metainfo.xml
+          flatpak run --command=appstreamcli org.flatpak.Builder validate --strict data/metainfo.xml
 
       - name: Get app version
         id: get_version
