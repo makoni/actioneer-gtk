@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<component type="desktop">
+<component type="desktop-application">
   <!-- AppStream metainfo for Actioneer GTK -->
   <id>me.spaceinbox.actioneer</id>
   <metadata_license>MIT</metadata_license>
@@ -189,6 +189,24 @@
 
   <launchable type="desktop-id">me.spaceinbox.actioneer.desktop</launchable>
 
+  <branding>
+    <color type="primary" scheme_preference="light">#2F81F7</color>
+    <color type="primary" scheme_preference="dark">#58A6FF</color>
+  </branding>
+
+  <keywords>
+    <keyword>GitHub</keyword>
+    <keyword>Actions</keyword>
+    <keyword>CI</keyword>
+    <keyword>workflow</keyword>
+    <keyword>automation</keyword>
+    <keyword>DevOps</keyword>
+  </keywords>
+
+  <provides>
+    <binary>actioneer</binary>
+  </provides>
+
   <!-- Icons and screenshots: include icon names that match files in the icons/ directory.
        Add screenshot entries when screenshots are available in data/screenshots/ or icons/preview. -->
   <screenshots>
@@ -206,7 +224,7 @@
       <caption xml:lang="pt-BR">Navegue pelos workflows do Actions.</caption>
       <caption xml:lang="ru">Просматривайте workflows в Actions.</caption>
       <caption xml:lang="ur">Actions ورک فلوز براؤز کریں۔</caption>
-      <image type="source">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-1.png</image>
+      <image type="source" width="2246" height="1404">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-1.png</image>
     </screenshot>
     <screenshot type="detail">
       <caption>Inspect workflow runs and drill into job details quickly.</caption>
@@ -221,7 +239,7 @@
       <caption xml:lang="pt-BR">Inspecione execuções de workflow e aprofunde-se rapidamente nos detalhes dos jobs.</caption>
       <caption xml:lang="ru">Проверяйте запуски workflow и быстро переходите к деталям заданий.</caption>
       <caption xml:lang="ur">ورک فلو رنز دیکھیں اور جلدی سے جاب کی تفصیلات میں جائیں۔</caption>
-      <image type="source">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-2.png</image>
+      <image type="source" width="2880" height="1800">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-2.png</image>
     </screenshot>
     <screenshot type="detail">
       <caption>Review job logs inline without leaving the app.</caption>
@@ -236,7 +254,7 @@
       <caption xml:lang="pt-BR">Revise logs de jobs no próprio app, sem sair dele.</caption>
       <caption xml:lang="ru">Просматривайте логи заданий прямо в приложении.</caption>
       <caption xml:lang="ur">ایپ چھوڑے بغیر جاب لاگز یہیں دیکھیں۔</caption>
-      <image type="source">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-3.png</image>
+      <image type="source" width="2880" height="1800">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-3.png</image>
     </screenshot>
     <screenshot type="detail">
       <caption>Run a job on any branch.</caption>
@@ -251,7 +269,7 @@
       <caption xml:lang="pt-BR">Execute um job em qualquer branch.</caption>
       <caption xml:lang="ru">Запускайте задание на любой ветке.</caption>
       <caption xml:lang="ur">کسی بھی برانچ پر جاب چلائیں۔</caption>
-      <image type="source">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-4.png</image>
+      <image type="source" width="2880" height="1800">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-4.png</image>
     </screenshot>
   </screenshots>
 
