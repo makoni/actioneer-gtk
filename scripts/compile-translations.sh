@@ -16,3 +16,7 @@ while read -r lang; do
   msgfmt "po/$lang.po" -o "$out_dir/actioneer.mo"
   echo "Compiled $lang"
 done < po/LINGUAS
+
+# Render AppStream metainfo.xml from metainfo.xml.in + po translations.
+msgfmt --xml -L MetaInfo --template=data/metainfo.xml.in -d po -o data/metainfo.xml
+echo "Rendered data/metainfo.xml"

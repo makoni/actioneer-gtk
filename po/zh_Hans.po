@@ -663,3 +663,147 @@ msgstr "打开崩溃文件夹"
 
 msgid "Dismiss"
 msgstr "关闭"
+
+msgid "Track GitHub Actions runs"
+msgstr "跟踪 GitHub Actions 运行"
+
+msgid "Actioneer lets you browse GitHub repositories, inspect workflow runs, check job logs, and refresh status without leaving your desktop."
+msgstr "Actioneer 让你浏览 GitHub 仓库、检查工作流运行、查看作业日志，并在不离开桌面的情况下刷新状态。"
+
+msgid "Key features"
+msgstr "主要功能"
+
+msgid "This package contains the desktop application, icons and AppStream metadata required for distribution via Flatpak/Flathub. See the project repository for source code, contribution guidelines, and additional documentation."
+msgstr "此软件包包含通过 Flatpak/Flathub 分发所需的桌面应用、图标和 AppStream 元数据。源代码、贡献指南和更多文档请见项目仓库。"
+
+msgid "Browse your GitHub repositories and view Actions workflows and recent runs quickly."
+msgstr "快速浏览你的 GitHub 仓库，查看 Actions 工作流和最近运行。"
+
+msgid "Inspect run status (success, failure, queued, in progress) with clear badges and counts."
+msgstr "通过清晰的徽章和计数查看运行状态（成功、失败、排队、进行中）。"
+
+msgid "Filter runs and focus on what matters most."
+msgstr "筛选运行记录，专注最重要的内容。"
+
+msgid "View job logs: download and preview run logs for quick troubleshooting."
+msgstr "查看作业日志：下载并预览运行日志，快速排查问题。"
+
+msgid "Dispatch workflows, cancel running workflows, and re-run failed runs directly from the app."
+msgstr "可直接在应用中触发工作流、取消进行中的工作流，并重新运行失败的运行。"
+
+msgid "Favorites and quick search let you focus on the repositories and workflows that matter most."
+msgstr "收藏与快速搜索可帮助你聚焦最重要的仓库和工作流。"
+
+msgid "Desktop notifications for run completions and failures so you never miss important results."
+msgstr "提供运行完成与失败的桌面通知，不错过关键结果。"
+
+msgid "Keep recent workflow data available offline."
+msgstr "最近的工作流数据可离线访问。"
+
+msgid "Fast refreshes that keep the interface responsive."
+msgstr "快速刷新，保持界面响应。"
+
+msgid "Browse Actions workflows."
+msgstr "浏览 Actions 工作流。"
+
+msgid "Inspect workflow runs and drill into job details quickly."
+msgstr "检查工作流运行并快速查看作业详情。"
+
+msgid "Review job logs inline without leaving the app."
+msgstr "在应用内直接查看作业日志，无需离开应用。"
+
+msgid "Run a job on any branch."
+msgstr "在任意分支上运行作业。"
+
+msgid "This release includes an important security update to help keep Actioneer safer to use."
+msgstr "此版本包含一项重要的安全更新，帮助让 Actioneer 使用起来更安全。"
+
+msgid "Bundled components have been refreshed for a more reliable and up-to-date experience."
+msgstr "随附组件已完成更新，带来更可靠、更新鲜的使用体验。"
+
+msgid "Workflow runs and expanded details are now more stable during background refreshes, with badges and job summaries preserved while results update."
+msgstr "工作流运行及其展开详情在后台刷新时现在更稳定，更新结果时会保留徽章和作业摘要。"
+
+msgid "Completed runs now stay collapsed when you close them, and run detail actions recover more reliably after temporary loading hiccups."
+msgstr "已完成的运行在你手动收起后现在会保持折叠，运行详情中的操作在短暂加载异常后也能更可靠地恢复。"
+
+msgid "GitHub connectivity is more resilient to API and permission-related responses, helping keep repository and workflow data visible instead of unexpectedly signing you out."
+msgstr "应用现在能更稳健地处理 GitHub API 和权限相关响应，帮助你继续看到仓库与工作流数据，而不是意外退出登录。"
+
+msgid "In-progress workflow runs now stay up to date, so jobs and steps refresh while a run is still active."
+msgstr "进行中的工作流运行现在会持续保持最新状态，因此作业和步骤会在运行期间实时刷新。"
+
+msgid "Expanded run details are more stable and easier to follow, with clearer job badges and step numbering."
+msgstr "展开的运行详情现在更加稳定、也更易读，作业徽章和步骤编号更加清晰。"
+
+msgid "Workflow status badges are now translated more consistently across the app."
+msgstr "整个应用中的工作流状态徽章现在拥有更一致的翻译。"
+
+msgid "Background refresh is lighter on the GitHub API, which helps preserve your rate limit."
+msgstr "后台刷新现在对 GitHub API 的占用更少，有助于保留你的速率限制额度。"
+
+msgid "The app now feels faster and smoother during sign-in, refreshes, and everyday navigation."
+msgstr "应用在登录、刷新和日常浏览时更快、更流畅。"
+
+msgid "Notifications and background updates are more reliable, so important run results are less likely to be missed."
+msgstr "通知和后台更新更加可靠，因此不容易错过重要的运行结果。"
+
+msgid "German and Dutch translations are now available across the app and listing metadata."
+msgstr "现已新增德语和荷兰语翻译，覆盖应用界面和应用条目元数据。"
+
+msgid "Actioneer is now localized in English, German, Dutch, Simplified Chinese, Hindi, Spanish, French, Arabic, Bengali, Brazilian Portuguese, Russian, and Urdu."
+msgstr "Actioneer 现已支持以下语言：英语、简体中文、印地语、西班牙语、法语、阿拉伯语、孟加拉语、巴西葡萄牙语、俄语和乌尔都语。"
+
+msgid "Added Help and Shortcuts to make in-app guidance and keyboard workflows easier."
+msgstr "新增“帮助”和“快捷键”，让应用内指引和键盘操作更便捷。"
+
+msgid "Improved GitHub request stability with client-side timeouts."
+msgstr "通过客户端超时机制提升了 GitHub 请求稳定性。"
+
+msgid "Manual workflow triggers now support workflow_dispatch inputs with dynamic parameter fields."
+msgstr "手动触发工作流现已支持带动态参数字段的 workflow_dispatch 输入。"
+
+msgid "Dependency updates for ryu, unicode-ident, and zmij."
+msgstr "更新了 ryu、unicode-ident 和 zmij 依赖。"
+
+msgid "Handle expired job logs (HTTP 410) with clearer messaging instead of a broken view."
+msgstr "处理过期作业日志（HTTP 410）时改为更清晰的提示，而不是显示损坏视图。"
+
+msgid "Strip BOM markers in job logs so first-line timestamps render correctly."
+msgstr "去除日志中的 BOM 标记，确保首行时间戳正确渲染。"
+
+msgid "Job logs now render ANSI colors, grouped workflow sections, and clearer command/output formatting."
+msgstr "日志现在支持 ANSI 颜色、分组工作流区段以及更清晰的命令/输出格式。"
+
+msgid "Aligned timestamps and command prefixes improve scanability, with stronger error highlighting."
+msgstr "对齐的时间戳和命令前缀提升了可读性，并增强了错误高亮。"
+
+msgid "Packaging CI refreshed with multi-arch updates for AppImage/Snap/Flatpak builds."
+msgstr "打包 CI 已更新，包含 AppImage/Snap/Flatpak 的多架构构建改进。"
+
+msgid "Dependency updates and demo log refreshes for improved accuracy."
+msgstr "依赖更新并刷新了演示日志以提高准确性。"
+
+msgid "Faster and smoother UI with refreshed repo/workflow lists and improved scrolling behavior."
+msgstr "更快更流畅的界面：仓库/工作流列表已刷新，滚动体验改进。"
+
+msgid "New run filtering controls with better caching, so switching filters is instant and doesn't reload data."
+msgstr "新增运行过滤控件并改进缓存，切换过滤条件即时生效且无需重新加载数据。"
+
+msgid "Better workflow auto-refresh and run status updates, including fewer duplicate fetches."
+msgstr "改进工作流自动刷新与运行状态更新，减少重复请求。"
+
+msgid "Notifications are more reliable across Snap/Flatpak, with improved icon handling and fallbacks."
+msgstr "在 Snap/Flatpak 上通知更可靠，图标处理与回退机制改进。"
+
+msgid "Improved sandboxed credential storage using the secret portal for Snap/Flatpak."
+msgstr "改进了 Snap/Flatpak 沙箱下的凭据存储，使用 Secret Portal。"
+
+msgid "Offline-friendly cache persistence for workflows, runs, and jobs."
+msgstr "工作流、运行和任务的缓存持久化更适合离线使用。"
+
+msgid "Packaging and CI updates across Snap, Flatpak, and AppImage for better compatibility."
+msgstr "更新了 Snap、Flatpak 和 AppImage 的打包与 CI，提升兼容性。"
+
+msgid "Dependency updates and stability fixes."
+msgstr "依赖更新和稳定性修复。"

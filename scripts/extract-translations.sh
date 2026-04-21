@@ -4,19 +4,34 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$repo_root"
 
-if ! command -v xgettext >/dev/null 2>&1; then
-  echo "xgettext is required (install gettext package)." >&2
-  exit 1
-fi
+for tool in xtr xgettext msgcat; do
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    echo "$tool is required. Install with: cargo install xtr (for xtr) or apt install gettext (for xgettext/msgcat)." >&2
+    exit 1
+  fi
+done
 
 mkdir -p po
 
+src_pot=po/actioneer-src.pot
+meta_pot=po/actioneer-metainfo.pot
+
+xtr \
+  --default-domain=actioneer \
+  --keywords=tr \
+  --output="$src_pot" \
+  src/main.rs
+echo "Extracted Rust strings"
+
 xgettext \
-  --language=Rust \
   --from-code=UTF-8 \
-  --keyword=tr \
-  --sort-output \
-  --output=po/actioneer.pot \
-  $(find src -name '*.rs' -print)
+  --its=/usr/share/gettext/its/metainfo.its \
+  --omit-header \
+  --output="$meta_pot" \
+  data/metainfo.xml.in
+echo "Extracted metainfo strings"
+
+msgcat --use-first "$src_pot" "$meta_pot" -o po/actioneer.pot
+rm -f "$src_pot" "$meta_pot"
 
 echo "Updated po/actioneer.pot"

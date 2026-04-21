@@ -48,3 +48,6 @@ flatpak/*.flatpak
 
 # Flatpak manifest is generated from .yaml.in by scripts/render-flatpak-manifest.sh
 flatpak/me.spaceinbox.actioneer.yaml
+
+# AppStream metainfo is generated from metainfo.xml.in + po/*.po by msgfmt --xml
+data/metainfo.xml

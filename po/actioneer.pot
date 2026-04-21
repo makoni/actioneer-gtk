@@ -1,108 +1,686 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: actioneer\n"
-"Report-Msgid-Bugs-To: https://github.com/makoni/actioneer-gtk/issues\n"
-"POT-Creation-Date: 2026-02-14 00:00+0000\n"
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-04-21 10:51+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "Send a test notification when the app starts"
+#: src/api/models.rs:219 src/api/models.rs:400 src/api/models.rs:447
+#: src/ui/detail_view/helpers/formatting.rs:193
+msgid "Queued"
 msgstr ""
 
-msgid "Preferences"
+#: src/api/models.rs:220 src/api/models.rs:401 src/api/models.rs:448
+#: src/ui/detail_view/helpers/formatting.rs:192
+msgid "In Progress"
 msgstr ""
 
-msgid "Refresh"
+#: src/api/models.rs:225 src/api/models.rs:406 src/api/models.rs:453
+#: src/notifications.rs:225
+msgid "Completed"
 msgstr ""
 
-msgid "2 seconds"
+#: src/api/models.rs:228 src/api/models.rs:409 src/api/models.rs:456
+msgid "Waiting"
 msgstr ""
 
-msgid "5 seconds"
+#: src/api/models.rs:229 src/api/models.rs:410 src/api/models.rs:457
+msgid "Requested"
 msgstr ""
 
-msgid "10 seconds"
+#: src/api/models.rs:230 src/api/models.rs:411 src/api/models.rs:458
+msgid "Pending"
 msgstr ""
 
-msgid "30 seconds"
+#: src/api/models.rs:234 src/api/models.rs:415 src/api/models.rs:462
+#: src/ui/detail_view/helpers/formatting.rs:194
+msgid "Unknown"
 msgstr ""
 
-msgid "Auto-refresh interval"
+#: src/api/models.rs:242 src/api/models.rs:423 src/api/models.rs:469
+#: src/ui/detail_view/helpers/formatting.rs:189
+msgid "Success"
 msgstr ""
 
-msgid "How often to check for workflow run updates"
+#: src/api/models.rs:243 src/api/models.rs:424 src/api/models.rs:470
+#: src/ui/detail_view/helpers/formatting.rs:190
+msgid "Failed"
 msgstr ""
 
-msgid "Notifications"
+#: src/api/models.rs:244 src/api/models.rs:425 src/api/models.rs:471
+#: src/notifications.rs:208 src/ui/detail_view/helpers/formatting.rs:191
+msgid "Cancelled"
 msgstr ""
 
-msgid "Desktop Notifications"
+#: src/api/models.rs:245 src/api/models.rs:426 src/api/models.rs:472
+#: src/notifications.rs:209
+msgid "Skipped"
 msgstr ""
 
-msgid "Show a notification when a workflow run finishes"
+#: src/api/models.rs:246 src/api/models.rs:427 src/api/models.rs:473
+#: src/notifications.rs:210
+msgid "Timed Out"
 msgstr ""
 
+#: src/api/models.rs:247 src/api/models.rs:428 src/api/models.rs:474
+#: src/notifications.rs:211 src/notifications.rs:542
+msgid "Action Required"
+msgstr ""
+
+#: src/api/models.rs:248 src/api/models.rs:429 src/api/models.rs:475
+#: src/notifications.rs:212
+msgid "Neutral"
+msgstr ""
+
+#: src/api/models.rs:249
+msgid "Stale"
+msgstr ""
+
+#: src/api/models.rs:346
+msgid "Just now"
+msgstr ""
+
+#: src/api/models.rs:349
+msgid "{count}m ago"
+msgstr ""
+
+#: src/api/models.rs:352
+msgid "{count}h ago"
+msgstr ""
+
+#: src/api/models.rs:356
+msgid "Yesterday"
+msgstr ""
+
+#: src/api/models.rs:358
+msgid "{count}d ago"
+msgstr ""
+
+#. Welcome title
+#: src/i18n.rs:522 src/ui/welcome_screen.rs:32
+msgid "Welcome to Actioneer"
+msgstr ""
+
+#: src/notifications.rs:127
+msgid "Workflow Completed: {workflow}"
+msgstr ""
+
+#: src/notifications.rs:128
+msgid "{run} - {status}"
+msgstr ""
+
+#: src/notifications.rs:206
+msgid "Success ✓"
+msgstr ""
+
+#: src/notifications.rs:207
+msgid "Failed ✗"
+msgstr ""
+
+#: src/ui/detail_placeholder.rs:17
+msgid "Workflows and runs will load in the detail pane."
+msgstr ""
+
+#: src/ui/detail_placeholder.rs:25 src/ui/main_window.rs:122
 msgid "Select a repository"
 msgstr ""
 
-msgid "Choose a repository from the sidebar to browse its workflows and runs here."
+#: src/ui/detail_placeholder.rs:27 src/ui/main_window.rs:124
+msgid ""
+"Choose a repository from the sidebar to browse its workflows and runs here."
 msgstr ""
 
-msgid "Application menu"
+#: src/ui/detail_placeholder.rs:39
+msgid ""
+"GitHub Actions is disabled for this repository. Enable Actions to view "
+"workflows and runs."
 msgstr ""
 
-msgid "Keyboard Shortcuts"
+#: src/ui/detail_view/favorite_controls.rs:19 src/ui/detail_view/mod.rs:161
+#: src/ui/sidebar.rs:192
+msgid "Toggle favorite"
 msgstr ""
 
-msgid "Help"
+#: src/ui/detail_view/favorite_controls.rs:67
+msgid "Favorites unavailable"
 msgstr ""
 
-msgid "Sign out"
+#: src/ui/detail_view/filter_controls.rs:24
+msgid "Show successful runs"
 msgstr ""
 
-msgid "Report Issue"
+#: src/ui/detail_view/filter_controls.rs:26
+msgid "Show failed runs"
 msgstr ""
 
-msgid "About Actioneer"
+#: src/ui/detail_view/filter_controls.rs:29
+msgid "Show running/queued runs"
 msgstr ""
 
+#: src/ui/detail_view/helpers/formatting.rs:7
+msgid "Workflow Run"
+msgstr ""
+
+#: src/ui/detail_view/helpers/jobs.rs:69
+msgid "Unnamed job"
+msgstr ""
+
+#: src/ui/detail_view/helpers/jobs.rs:111
+msgid "View logs"
+msgstr ""
+
+#: src/ui/detail_view/helpers/jobs.rs:138
+msgid "Open job in GitHub"
+msgstr ""
+
+#: src/ui/detail_view/helpers/jobs.rs:416
+msgid "No jobs found"
+msgstr ""
+
+#: src/ui/detail_view/helpers/jobs.rs:468
+msgid "Showing {count} jobs"
+msgstr ""
+
+#: src/ui/detail_view/helpers/jobs.rs:489
+msgid "Unable to load jobs"
+msgstr ""
+
+#: src/ui/detail_view/helpers/jobs.rs:495
+#: src/ui/detail_view/helpers/runs/load.rs:423 src/ui/auth_window.rs:395
+#: src/ui/auth_window.rs:437
+msgid "Error: {message}"
+msgstr ""
+
+#: src/ui/detail_view/helpers/jobs.rs:504
+#: src/ui/detail_view/helpers/runs/list.rs:427
+msgid "Retry"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/actions.rs:48
+msgid "Open in GitHub"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/actions.rs:65
+msgid "Re-run workflow"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/actions.rs:85
+msgid "Do you want to re-run \"{run}\"?"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/actions.rs:87
+msgid "Re-run Workflow"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/actions.rs:116
+msgid "✓ Re-running '{run}'"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/actions.rs:121
+msgid "✗ Failed to re-run workflow"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/actions.rs:148
+msgid "Re-run failed jobs"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/actions.rs:168
+msgid "Do you want to re-run all failed jobs in \"{run}\"?"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/actions.rs:171
+msgid "Re-run Failed Jobs"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/actions.rs:199
+msgid "✓ Re-running failed jobs for '{run}'"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/actions.rs:201
+msgid "✗ Failed to re-run failed jobs"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/actions.rs:229
+msgid "Cancel run"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/actions.rs:249
+msgid ""
+"Do you want to cancel the in-progress run \"{run}\"?\n"
+"\n"
+"This action cannot be undone."
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/actions.rs:252
+msgid "Cancel Workflow Run"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/actions.rs:280
+msgid "✓ Cancelled run '{run}'"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/actions.rs:282
+msgid "✗ Failed to cancel run"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/list.rs:366
+msgid "Click to load runs..."
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/list.rs:378
+msgid "No recent runs"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/list.rs:384
+msgid "Triggered runs may take 10-30 seconds to appear"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/list.rs:397
+msgid "No runs match the current filters"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/list.rs:403
+msgid "Adjust the status chips above to see more runs."
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/list.rs:416
+msgid "Unable to load workflow runs"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/list.rs:446
+#: src/ui/detail_view/helpers/runs/list.rs:551
+msgid "Recent runs (showing {visible} of {overall})"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/list.rs:450
+#: src/ui/detail_view/helpers/runs/list.rs:575
+msgid "Recent runs ({overall})"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/list.rs:453
+#: src/ui/detail_view/helpers/runs/list.rs:563
+msgid "Recent runs (showing {visible} of {filtered} matching filters)"
+msgstr ""
+
+#: src/ui/detail_view/helpers/runs/row.rs:222
+msgid "Click to load jobs..."
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:92
+msgid "{description} (required)"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:95
+msgid "Required"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:141
+msgid "Trigger workflow"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:358
+msgid "Trigger Workflow"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:362 src/ui/auth_window.rs:226
+#: src/ui/job_logs_window.rs:354
+msgid "Cancel"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:363
+msgid "Trigger"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:378
+msgid "This will trigger the \"{workflow}\" workflow."
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:380
+msgid "Triggered runs typically appear within 10-30 seconds."
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:387
+msgid "Branch or ref:"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:391
+msgid "Loading branches..."
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:398
+msgid "Loading workflow inputs..."
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:403
+msgid "Inputs"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:514
+msgid "No inputs defined for this workflow."
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:585
+msgid "Workflow inputs could not be loaded."
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:592
+msgid "✗ Failed to load workflow inputs: {error}"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:626
+msgid "Failed to load workflow inputs: {error}"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:692
+msgid "✗ {error}"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:722
+msgid "Failed to trigger workflow: {error}"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:883
+msgid ""
+"✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear "
+"once GitHub reports it."
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:899
+msgid "✗ Failed to trigger workflow: {error}"
+msgstr ""
+
+#: src/ui/detail_view/workflow_list.rs:71
+msgid "No workflows found."
+msgstr ""
+
+#: src/ui/detail_view/workflow_refresh.rs:438
+msgid "Failed to load workflows: {error}"
+msgstr ""
+
+#: src/ui/detail_view/workflow_refresh.rs:792
+#: src/ui/detail_view/workflow_refresh.rs:923
+msgid "Loading workflows..."
+msgstr ""
+
+#: src/ui/detail_view/mod.rs:164
+msgid "Refresh workflows"
+msgstr ""
+
+#: src/ui/detail_view/mod.rs:344
+msgid "Private Repository"
+msgstr ""
+
+#: src/ui/sidebar.rs:113
+msgid "Favorites"
+msgstr ""
+
+#: src/ui/sidebar.rs:119
+msgid "Actions Enabled"
+msgstr ""
+
+#: src/ui/sidebar.rs:125
+msgid "Actions Disabled"
+msgstr ""
+
+#: src/ui/sidebar.rs:296
+msgid "Private"
+msgstr ""
+
+#: src/ui/sidebar.rs:299
+msgid "Public"
+msgstr ""
+
+#: src/ui/sidebar.rs:308
+msgid "Active runs: {count}"
+msgstr ""
+
+#: src/ui/sidebar.rs:315
+msgid "Failures: {count}"
+msgstr ""
+
+#: src/ui/welcome_screen.rs:39
+msgid "Manage your GitHub Actions workflows with ease"
+msgstr ""
+
+#: src/ui/welcome_screen.rs:53
+msgid "Trigger workflows instantly"
+msgstr ""
+
+#: src/ui/welcome_screen.rs:59
+msgid "Monitor runs in real-time"
+msgstr ""
+
+#: src/ui/welcome_screen.rs:65
+msgid "View detailed logs"
+msgstr ""
+
+#: src/ui/welcome_screen.rs:89
+msgid "Sign in with GitHub"
+msgstr ""
+
+#: src/ui/welcome_screen.rs:97
+msgid "Try Demo Mode"
+msgstr ""
+
+#: src/ui/welcome_screen.rs:100
+msgid "Explore Actioneer with sample data"
+msgstr ""
+
+#: src/ui/welcome_screen.rs:119 src/ui/main_window.rs:387
 msgid "Quit"
 msgstr ""
 
-msgid "Send test notification"
+#: src/ui/auth_window.rs:76 src/ui/auth_window.rs:157
+msgid "Sign in to GitHub"
 msgstr ""
 
-msgid "Preferences are currently unavailable."
+#: src/ui/auth_window.rs:165 src/ui/auth_window.rs:255
+msgid "Initializing authentication..."
 msgstr ""
 
-msgid "General"
+#: src/ui/auth_window.rs:179
+msgid "Enter this code on GitHub:"
 msgstr ""
 
-msgid "Application"
+#: src/ui/auth_window.rs:192
+msgid "Copy code to clipboard"
 msgstr ""
 
+#: src/ui/auth_window.rs:220
+msgid "Open GitHub in Browser"
+msgstr ""
+
+#: src/ui/auth_window.rs:314
+msgid "Open GitHub in your browser and enter the code."
+msgstr ""
+
+#: src/ui/auth_window.rs:329 src/ui/auth_window.rs:361
+msgid "Authentication timeout"
+msgstr ""
+
+#: src/ui/auth_window.rs:368
+msgid "Access denied"
+msgstr ""
+
+#: src/ui/auth_window.rs:389
+msgid "Waiting for authorization..."
+msgstr ""
+
+#: src/ui/auth_window.rs:407
+msgid "Saving token..."
+msgstr ""
+
+#: src/ui/auth_window.rs:448
+msgid "Signed in successfully"
+msgstr ""
+
+#: src/ui/auth_window.rs:455
+msgid "Error saving token: {message}"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:44
+msgid "Job"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:52
+msgid "{title} - Logs"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:70
+msgid "Fetching logs..."
+msgstr ""
+
+#: src/ui/job_logs_window.rs:115
+msgid "Refresh logs"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:120
+msgid "Copy logs to clipboard"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:125
+msgid "Save logs to file"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:194 src/ui/job_logs_window.rs:265
+msgid ""
+"Logs are not yet available for this job. GitHub only provides logs once the "
+"job starts streaming output or completes. Try refreshing in a few moments."
+msgstr ""
+
+#: src/ui/job_logs_window.rs:202 src/ui/job_logs_window.rs:273
+msgid "The logs for this run have expired and are no longer available."
+msgstr ""
+
+#: src/ui/job_logs_window.rs:212 src/ui/job_logs_window.rs:283
+msgid ""
+"Unable to load logs right now. Please try again later.\n"
+"\n"
+"Details: {error}"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:318
+msgid "Logs are empty; nothing to copy"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:329
+msgid "Logs copied to clipboard"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:335
+msgid "Clipboard unavailable on this system"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:352
+msgid "Save Logs"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:353
+msgid "Save"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:378
+msgid "Logs are empty; nothing saved"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:396
+msgid "Logs saved"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:402
+msgid "Failed to save logs: {error}"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:419
+msgid "Unable to determine save location"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:425
+msgid "No file selected"
+msgstr ""
+
+#: src/ui/main_window/auth.rs:41
+msgid ""
+"Are you sure you want to sign out?\n"
+"\n"
+"You will need to sign in again to continue."
+msgstr ""
+
+#: src/ui/main_window/auth.rs:44
+msgid "No"
+msgstr ""
+
+#: src/ui/main_window/auth.rs:45
+msgid "Yes"
+msgstr ""
+
+#: src/ui/main_window/header_controls.rs:18
+#: src/ui/main_window/header_controls.rs:63
+#: src/ui/main_window/window_actions.rs:68
 msgid "Refresh repositories"
 msgstr ""
 
+#: src/ui/main_window/header_controls.rs:21
+#: src/ui/main_window/header_controls.rs:72 src/ui/utils/rate_limit.rs:40
+msgid "Rate limit: –"
+msgstr ""
+
+#: src/ui/main_window/selection.rs:245
+msgid "Loading repositories..."
+msgstr ""
+
+#: src/ui/main_window/sidebar_panel.rs:83
+#: src/ui/main_window/sidebar_panel.rs:164
+msgid "Search repositories..."
+msgstr ""
+
+#: src/ui/main_window/window_actions.rs:20
+msgid "Preferences are currently unavailable."
+msgstr ""
+
+#: src/ui/main_window/window_actions.rs:54 src/ui/main_window.rs:380
+msgid "Keyboard Shortcuts"
+msgstr ""
+
+#: src/ui/main_window/window_actions.rs:72
 msgid "Open preferences"
 msgstr ""
 
+#: src/ui/main_window/window_actions.rs:76
 msgid "Show keyboard shortcuts"
 msgstr ""
 
+#: src/ui/main_window/window_actions.rs:79
 msgid "Open help"
 msgstr ""
 
+#: src/ui/main_window/window_actions.rs:81
 msgid "Quit application"
 msgstr ""
 
+#: src/ui/main_window/window_actions.rs:94
+#: src/ui/main_window/window_actions.rs:191
+#: src/ui/main_window/window_actions.rs:285
+msgid "Close"
+msgstr ""
+
+#: src/ui/main_window/window_actions.rs:125
 msgid "Actioneer Help"
 msgstr ""
 
+#: src/ui/main_window/window_actions.rs:143
 msgid ""
 "Actioneer Help\n"
 "\n"
@@ -123,510 +701,479 @@ msgid ""
 "- Use Report Issue from the menu to send diagnostics and steps."
 msgstr ""
 
+#: src/ui/main_window/window_actions.rs:165
 msgid "Need more help? Use “Report Issue” in the app menu or visit:"
 msgstr ""
 
-msgid "Close"
-msgstr ""
-
+#: src/ui/main_window/window_actions.rs:213
 msgid "Failed to open issue tracker in the browser."
 msgstr ""
 
-msgid ""
-"Are you sure you want to sign out?\n"
-"\n"
-"You will need to sign in again to continue."
+#: src/ui/main_window/window_actions.rs:242
+msgid "Crash report file:"
 msgstr ""
 
+#: src/ui/main_window/window_actions.rs:262
+msgid ""
+"Actioneer detected a crash report from the previous run. You can report it "
+"on GitHub and attach the crash file."
+msgstr ""
+
+#: src/ui/main_window/window_actions.rs:283
+msgid "Copy diagnostics"
+msgstr ""
+
+#: src/ui/main_window/window_actions.rs:284 src/ui/main_window.rs:383
+msgid "Report Issue"
+msgstr ""
+
+#: src/ui/main_window/window_actions.rs:323
+msgid "Failed to open donation page in the browser."
+msgstr ""
+
+#: src/ui/main_window/window_actions.rs:343 src/ui/main_window.rs:732
 msgid "Actioneer notification test"
 msgstr ""
 
+#: src/ui/main_window/window_actions.rs:344
 msgid "If you can read this, GNOME notifications are working."
 msgstr ""
 
+#: src/ui/main_window/window_actions.rs:355
 msgid "Notifications are currently unavailable."
 msgstr ""
 
+#: src/ui/main_window.rs:374
+msgid "Application menu"
+msgstr ""
+
+#: src/ui/main_window.rs:379 src/ui/preferences_window.rs:21
+msgid "Preferences"
+msgstr ""
+
+#: src/ui/main_window.rs:381
+msgid "Help"
+msgstr ""
+
+#: src/ui/main_window.rs:382
+msgid "Sign out"
+msgstr ""
+
+#: src/ui/main_window.rs:384
+msgid "About Actioneer"
+msgstr ""
+
+#: src/ui/main_window.rs:385
+msgid "Donate"
+msgstr ""
+
+#: src/ui/main_window.rs:386
+msgid "Debug"
+msgstr ""
+
+#: src/ui/main_window.rs:393
+msgid "Send test notification"
+msgstr ""
+
+#: src/ui/main_window.rs:394
+msgid "Trigger test crash"
+msgstr ""
+
+#: src/ui/main_window.rs:733
 msgid "If you see this, notifications are working."
 msgstr ""
 
-msgid "Workflow Completed: {workflow}"
+#: src/ui/preferences_window.rs:31
+msgid "Refresh"
 msgstr ""
 
-msgid "{run} - {status}"
+#: src/ui/preferences_window.rs:34
+msgid "2 seconds"
 msgstr ""
 
-msgid "Success ✓"
+#: src/ui/preferences_window.rs:35
+msgid "5 seconds"
 msgstr ""
 
-msgid "Failed ✗"
+#: src/ui/preferences_window.rs:36
+msgid "10 seconds"
 msgstr ""
 
-msgid "Cancelled"
+#: src/ui/preferences_window.rs:37
+msgid "30 seconds"
 msgstr ""
 
-msgid "Skipped"
+#: src/ui/preferences_window.rs:46
+msgid "Auto-refresh interval"
 msgstr ""
 
-msgid "Timed Out"
+#: src/ui/preferences_window.rs:47
+msgid "How often to check for workflow run updates"
 msgstr ""
 
-msgid "Action Required"
+#: src/ui/preferences_window.rs:53
+msgid "Notifications"
 msgstr ""
 
-msgid "Neutral"
+#: src/ui/preferences_window.rs:57
+msgid "Desktop Notifications"
 msgstr ""
 
-msgid "Completed"
+#: src/ui/preferences_window.rs:58
+msgid "Show a notification when a workflow run finishes"
 msgstr ""
 
+#: src/ui/preferences_window.rs:70
 msgid "Appearance"
 msgstr ""
 
+#: src/ui/preferences_window.rs:72
 msgid "System"
 msgstr ""
 
+#: src/ui/preferences_window.rs:73
 msgid "Light"
 msgstr ""
 
+#: src/ui/preferences_window.rs:74
 msgid "Dark"
 msgstr ""
 
+#: src/ui/preferences_window.rs:81
 msgid "Theme"
 msgstr ""
 
+#: src/ui/preferences_window.rs:82
 msgid "Select application theme"
 msgstr ""
 
+#: src/ui/preferences_window.rs:88
 msgid "Language"
 msgstr ""
 
+#: src/ui/preferences_window.rs:90
 msgid "System language (fallback: English)"
 msgstr ""
 
+#: src/ui/preferences_window.rs:107
 msgid "Application language"
 msgstr ""
 
+#: src/ui/preferences_window.rs:108
 msgid "Switch language instantly"
 msgstr ""
 
-msgid "Sign in to GitHub"
-msgstr ""
-
-msgid "Initializing authentication..."
-msgstr ""
-
-msgid "Enter this code on GitHub:"
-msgstr ""
-
-msgid "Copy code to clipboard"
-msgstr ""
-
-msgid "Open GitHub in Browser"
-msgstr ""
-
-msgid "Cancel"
-msgstr ""
-
-msgid "Open GitHub in your browser and enter the code."
-msgstr ""
-
-msgid "Authentication timeout"
-msgstr ""
-
-msgid "Access denied"
-msgstr ""
-
-msgid "Waiting for authorization..."
-msgstr ""
-
-msgid "Error: {message}"
-msgstr ""
-
-msgid "Signed in successfully"
-msgstr ""
-
-msgid "Error saving token: {message}"
-msgstr ""
-
-msgid "Welcome to Actioneer"
-msgstr ""
-
-msgid "Manage your GitHub Actions workflows with ease"
-msgstr ""
-
-msgid "Trigger workflows instantly"
-msgstr ""
-
-msgid "Monitor runs in real-time"
-msgstr ""
-
-msgid "View detailed logs"
-msgstr ""
-
-msgid "Sign in with GitHub"
-msgstr ""
-
-msgid "Try Demo Mode"
-msgstr ""
-
-msgid "Explore Actioneer with sample data"
-msgstr ""
-
-msgid "Workflow Run"
-msgstr ""
-
-msgid "{title} - Jobs"
-msgstr ""
-
-msgid "Refresh jobs"
-msgstr ""
-
-msgid "Cancel run"
-msgstr ""
-
-msgid "Run cancellation requested successfully."
-msgstr ""
-
-msgid "Failed to cancel run: {error}"
-msgstr ""
-
-msgid "Job"
-msgstr ""
-
-msgid "Unknown"
-msgstr ""
-
-msgid "Workflows and runs will load in the detail pane."
-msgstr ""
-
-msgid "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs."
-msgstr ""
-
-msgid "Favorites"
-msgstr ""
-
-msgid "Actions Enabled"
-msgstr ""
-
-msgid "Actions Disabled"
-msgstr ""
-
-msgid "Toggle favorite"
-msgstr ""
-
-msgid "Private"
-msgstr ""
-
-msgid "Public"
-msgstr ""
-
-msgid "Active runs: {count}"
-msgstr ""
-
-msgid "Failures: {count}"
-msgstr ""
-
-msgid "Fetching logs..."
-msgstr ""
-
-msgid "Refresh logs"
-msgstr ""
-
-msgid "Copy logs to clipboard"
-msgstr ""
-
-msgid "Save logs to file"
-msgstr ""
-
-msgid "Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments."
-msgstr ""
-
-msgid "The logs for this run have expired and are no longer available."
-msgstr ""
-
-msgid "Unable to load logs right now. Please try again later.\n"
-"\n"
-"Details: {error}"
-msgstr ""
-
-msgid "Logs are empty; nothing to copy"
-msgstr ""
-
-msgid "Logs copied to clipboard"
-msgstr ""
-
-msgid "Clipboard unavailable on this system"
-msgstr ""
-
-msgid "Save Logs"
-msgstr ""
-
-msgid "Save"
-msgstr ""
-
-msgid "Logs are empty; nothing saved"
-msgstr ""
-
-msgid "Logs saved"
-msgstr ""
-
-msgid "Failed to save logs: {error}"
-msgstr ""
-
-msgid "Unable to determine save location"
-msgstr ""
-
-msgid "No file selected"
-msgstr ""
-
-msgid "Are you sure you want to sign out?\n"
-"\n"
-"You will need to sign in again to continue."
-msgstr ""
-
-msgid "Loading repositories..."
-msgstr ""
-
-msgid "Search repositories..."
-msgstr ""
-
-msgid "Rate limit: –"
-msgstr ""
-
-msgid "No workflows found."
-msgstr ""
-
-msgid "Favorites unavailable"
-msgstr ""
-
-msgid "Loading workflows..."
-msgstr ""
-
-msgid "Failed to load workflows: {error}"
-msgstr ""
-
-msgid "Refresh workflows"
-msgstr ""
-
-msgid "Private Repository"
-msgstr ""
-
-msgid "Show successful runs"
-msgstr ""
-
-msgid "Show failed runs"
-msgstr ""
-
-msgid "Show running/queued runs"
-msgstr ""
-
+#: src/ui/utils/rate_limit.rs:16
 msgid "now"
 msgstr ""
 
+#: src/ui/utils/rate_limit.rs:26
 msgid "Rate limit (low)"
 msgstr ""
 
+#: src/ui/utils/rate_limit.rs:28
 msgid "Rate limit"
 msgstr ""
 
+#: src/ui/utils/rate_limit.rs:32
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr ""
 
-msgid "Unnamed job"
+#: src/main.rs:210
+msgid "Send a test notification when the app starts"
 msgstr ""
 
-msgid "View logs"
+#: src/main.rs:211
+msgid "Set the application language (e.g., ru, en, zh_Hans)"
 msgstr ""
 
-msgid "Open job in GitHub"
+#: data/metainfo.xml.in:6
+msgid "Actioneer"
 msgstr ""
 
-msgid "No jobs found"
+#: data/metainfo.xml.in:7
+msgid "Track GitHub Actions runs"
 msgstr ""
 
-msgid "Showing {count} jobs"
+#: data/metainfo.xml.in:9
+msgid ""
+"Actioneer lets you browse GitHub repositories, inspect workflow runs, check "
+"job logs, and refresh status without leaving your desktop."
 msgstr ""
 
-msgid "Unable to load jobs"
+#: data/metainfo.xml.in:11
+msgid "Key features"
 msgstr ""
 
-msgid "Retry"
+#: data/metainfo.xml.in:13
+msgid ""
+"Browse your GitHub repositories and view Actions workflows and recent runs "
+"quickly."
 msgstr ""
 
-msgid "{description} (required)"
+#: data/metainfo.xml.in:14
+msgid ""
+"Inspect run status (success, failure, queued, in progress) with clear badges "
+"and counts."
 msgstr ""
 
-msgid "Required"
+#: data/metainfo.xml.in:15
+msgid "Filter runs and focus on what matters most."
 msgstr ""
 
-msgid "Trigger workflow"
+#: data/metainfo.xml.in:16
+msgid "View job logs: download and preview run logs for quick troubleshooting."
 msgstr ""
 
-msgid "Trigger Workflow"
+#: data/metainfo.xml.in:17
+msgid ""
+"Dispatch workflows, cancel running workflows, and re-run failed runs "
+"directly from the app."
 msgstr ""
 
-msgid "Trigger"
+#: data/metainfo.xml.in:18
+msgid ""
+"Favorites and quick search let you focus on the repositories and workflows "
+"that matter most."
 msgstr ""
 
-msgid "This will trigger the \"{workflow}\" workflow."
+#: data/metainfo.xml.in:19
+msgid ""
+"Desktop notifications for run completions and failures so you never miss "
+"important results."
 msgstr ""
 
-msgid "Triggered runs typically appear within 10-30 seconds."
+#: data/metainfo.xml.in:20
+msgid "Keep recent workflow data available offline."
 msgstr ""
 
-msgid "Branch or ref:"
+#: data/metainfo.xml.in:21
+msgid "Fast refreshes that keep the interface responsive."
 msgstr ""
 
-msgid "Loading branches..."
+#: data/metainfo.xml.in:24
+msgid ""
+"This package contains the desktop application, icons and AppStream metadata "
+"required for distribution via Flatpak/Flathub. See the project repository "
+"for source code, contribution guidelines, and additional documentation."
 msgstr ""
 
-msgid "Loading workflow inputs..."
+#: data/metainfo.xml.in:33
+msgid "Sergey Armodin"
 msgstr ""
 
-msgid "Inputs"
+#: data/metainfo.xml.in:52
+msgid "GitHub"
 msgstr ""
 
-msgid "No inputs defined for this workflow."
+#: data/metainfo.xml.in:53
+msgid "Actions"
 msgstr ""
 
-msgid "Workflow inputs could not be loaded."
+#: data/metainfo.xml.in:54
+msgid "CI"
 msgstr ""
 
-msgid "✗ Failed to load workflow inputs: {error}"
+#: data/metainfo.xml.in:55
+msgid "workflow"
 msgstr ""
 
-msgid "Failed to load workflow inputs: {error}"
+#: data/metainfo.xml.in:56
+msgid "automation"
 msgstr ""
 
-msgid "✗ {error}"
+#: data/metainfo.xml.in:57
+msgid "DevOps"
 msgstr ""
 
-msgid "Failed to trigger workflow: {error}"
+#: data/metainfo.xml.in:69
+msgid "Browse Actions workflows."
 msgstr ""
 
-msgid "✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear once GitHub reports it."
+#: data/metainfo.xml.in:73
+msgid "Inspect workflow runs and drill into job details quickly."
 msgstr ""
 
-msgid "✗ Failed to trigger workflow: {error}"
+#: data/metainfo.xml.in:77
+msgid "Review job logs inline without leaving the app."
 msgstr ""
 
-msgid "Open in GitHub"
+#: data/metainfo.xml.in:81
+msgid "Run a job on any branch."
 msgstr ""
 
-msgid "Re-run workflow"
+#: data/metainfo.xml.in:90
+msgid ""
+"This release includes an important security update to help keep Actioneer "
+"safer to use."
 msgstr ""
 
-msgid "Do you want to re-run \"{run}\"?"
+#: data/metainfo.xml.in:91
+msgid ""
+"Bundled components have been refreshed for a more reliable and up-to-date "
+"experience."
 msgstr ""
 
-msgid "Re-run Workflow"
+#: data/metainfo.xml.in:98
+msgid ""
+"Workflow runs and expanded details are now more stable during background "
+"refreshes, with badges and job summaries preserved while results update."
 msgstr ""
 
-msgid "✓ Re-running '{run}'"
+#: data/metainfo.xml.in:99
+msgid ""
+"Completed runs now stay collapsed when you close them, and run detail "
+"actions recover more reliably after temporary loading hiccups."
 msgstr ""
 
-msgid "✗ Failed to re-run workflow"
+#: data/metainfo.xml.in:100
+msgid ""
+"GitHub connectivity is more resilient to API and permission-related "
+"responses, helping keep repository and workflow data visible instead of "
+"unexpectedly signing you out."
 msgstr ""
 
-msgid "Re-run failed jobs"
+#: data/metainfo.xml.in:107
+msgid ""
+"In-progress workflow runs now stay up to date, so jobs and steps refresh "
+"while a run is still active."
 msgstr ""
 
-msgid "Do you want to re-run all failed jobs in \"{run}\"?"
+#: data/metainfo.xml.in:108
+msgid ""
+"Expanded run details are more stable and easier to follow, with clearer job "
+"badges and step numbering."
 msgstr ""
 
-msgid "Re-run Failed Jobs"
+#: data/metainfo.xml.in:109
+msgid ""
+"Workflow status badges are now translated more consistently across the app."
 msgstr ""
 
-msgid "✓ Re-running failed jobs for '{run}'"
+#: data/metainfo.xml.in:110
+msgid ""
+"Background refresh is lighter on the GitHub API, which helps preserve your "
+"rate limit."
 msgstr ""
 
-msgid "✗ Failed to re-run failed jobs"
+#: data/metainfo.xml.in:117
+msgid ""
+"The app now feels faster and smoother during sign-in, refreshes, and "
+"everyday navigation."
 msgstr ""
 
-msgid "Do you want to cancel the in-progress run \"{run}\"?\n"
-"\n"
-"This action cannot be undone."
+#: data/metainfo.xml.in:118
+msgid ""
+"Notifications and background updates are more reliable, so important run "
+"results are less likely to be missed."
 msgstr ""
 
-msgid "Cancel Workflow Run"
+#: data/metainfo.xml.in:119
+msgid ""
+"German and Dutch translations are now available across the app and listing "
+"metadata."
 msgstr ""
 
-msgid "✓ Cancelled run '{run}'"
+#: data/metainfo.xml.in:126
+msgid ""
+"Actioneer is now localized in English, German, Dutch, Simplified Chinese, "
+"Hindi, Spanish, French, Arabic, Bengali, Brazilian Portuguese, Russian, and "
+"Urdu."
 msgstr ""
 
-msgid "✗ Failed to cancel run"
+#: data/metainfo.xml.in:127
+msgid ""
+"Added Help and Shortcuts to make in-app guidance and keyboard workflows "
+"easier."
 msgstr ""
 
-msgid "Click to load jobs..."
+#: data/metainfo.xml.in:128
+msgid "Improved GitHub request stability with client-side timeouts."
 msgstr ""
 
-msgid "Click to load runs..."
+#: data/metainfo.xml.in:135
+msgid ""
+"Manual workflow triggers now support workflow_dispatch inputs with dynamic "
+"parameter fields."
 msgstr ""
 
-msgid "No recent runs"
+#: data/metainfo.xml.in:136
+msgid "Dependency updates for ryu, unicode-ident, and zmij."
 msgstr ""
 
-msgid "Triggered runs may take 10-30 seconds to appear"
+#: data/metainfo.xml.in:143
+msgid ""
+"Handle expired job logs (HTTP 410) with clearer messaging instead of a "
+"broken view."
 msgstr ""
 
-msgid "No runs match the current filters"
+#: data/metainfo.xml.in:144
+msgid ""
+"Strip BOM markers in job logs so first-line timestamps render correctly."
 msgstr ""
 
-msgid "Adjust the status chips above to see more runs."
+#: data/metainfo.xml.in:151
+msgid ""
+"Job logs now render ANSI colors, grouped workflow sections, and clearer "
+"command/output formatting."
 msgstr ""
 
-msgid "Unable to load workflow runs"
+#: data/metainfo.xml.in:152
+msgid ""
+"Aligned timestamps and command prefixes improve scanability, with stronger "
+"error highlighting."
 msgstr ""
 
-msgid "Recent runs (showing {visible} of {overall})"
+#: data/metainfo.xml.in:153
+msgid ""
+"Packaging CI refreshed with multi-arch updates for AppImage/Snap/Flatpak "
+"builds."
 msgstr ""
 
-msgid "Recent runs ({overall})"
+#: data/metainfo.xml.in:154
+msgid "Dependency updates and demo log refreshes for improved accuracy."
 msgstr ""
 
-msgid "Recent runs (showing {visible} of {filtered} matching filters)"
+#: data/metainfo.xml.in:161 data/metainfo.xml.in:175
+msgid ""
+"Faster and smoother UI with refreshed repo/workflow lists and improved "
+"scrolling behavior."
 msgstr ""
 
-msgid "Queued"
+#: data/metainfo.xml.in:162 data/metainfo.xml.in:176
+msgid ""
+"New run filtering controls with better caching, so switching filters is "
+"instant and doesn't reload data."
 msgstr ""
 
-msgid "In Progress"
+#: data/metainfo.xml.in:163 data/metainfo.xml.in:177
+msgid ""
+"Better workflow auto-refresh and run status updates, including fewer "
+"duplicate fetches."
 msgstr ""
 
-msgid "Waiting"
+#: data/metainfo.xml.in:164 data/metainfo.xml.in:178
+msgid ""
+"Notifications are more reliable across Snap/Flatpak, with improved icon "
+"handling and fallbacks."
 msgstr ""
 
-msgid "Requested"
+#: data/metainfo.xml.in:165 data/metainfo.xml.in:179
+msgid ""
+"Improved sandboxed credential storage using the secret portal for Snap/"
+"Flatpak."
 msgstr ""
 
-msgid "Pending"
+#: data/metainfo.xml.in:166 data/metainfo.xml.in:180
+msgid "Offline-friendly cache persistence for workflows, runs, and jobs."
 msgstr ""
 
-msgid "Success"
+#: data/metainfo.xml.in:167 data/metainfo.xml.in:181
+msgid ""
+"Packaging and CI updates across Snap, Flatpak, and AppImage for better "
+"compatibility."
 msgstr ""
 
-msgid "Failed"
+#: data/metainfo.xml.in:168 data/metainfo.xml.in:182
+msgid "Dependency updates and stability fixes."
 msgstr ""
-
-msgid "Stale"
-msgstr ""
-
-msgid "Just now"
-msgstr ""
-
-msgid "Yesterday"
-msgstr ""
-
-msgid "{count}m ago"
-msgstr ""
-
-msgid "{count}h ago"
-msgstr ""
-
-msgid "{count}d ago"
-msgstr ""
-
-msgid "{title} - Logs"
-msgstr ""
-

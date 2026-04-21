@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <!-- AppStream metainfo for Actioneer GTK -->
+  <id>me.spaceinbox.actioneer</id>
+  <metadata_license>MIT</metadata_license>
+  <name>Actioneer</name>
+  <summary>Track GitHub Actions runs</summary>
+  <description>
+    <p>Actioneer lets you browse GitHub repositories, inspect workflow runs, check job logs, and refresh status without leaving your desktop.</p>
+
+    <p>Key features</p>
+    <ul>
+      <li>Browse your GitHub repositories and view Actions workflows and recent runs quickly.</li>
+      <li>Inspect run status (success, failure, queued, in progress) with clear badges and counts.</li>
+      <li>Filter runs and focus on what matters most.</li>
+      <li>View job logs: download and preview run logs for quick troubleshooting.</li>
+      <li>Dispatch workflows, cancel running workflows, and re-run failed runs directly from the app.</li>
+      <li>Favorites and quick search let you focus on the repositories and workflows that matter most.</li>
+      <li>Desktop notifications for run completions and failures so you never miss important results.</li>
+      <li>Keep recent workflow data available offline.</li>
+      <li>Fast refreshes that keep the interface responsive.</li>
+    </ul>
+
+    <p>This package contains the desktop application, icons and AppStream metadata required for distribution via Flatpak/Flathub. See the project repository for source code, contribution guidelines, and additional documentation.</p>
+  </description>
+
+  <project_license>MIT</project_license>
+  <url type="homepage">https://github.com/makoni/actioneer-gtk</url>
+  <url type="donation">https://nowpayments.io/donation/makoni</url>
+  <url type="bugtracker">https://github.com/makoni/actioneer-gtk/issues</url>
+  <url type="vcs-browser">https://github.com/makoni/actioneer-gtk</url>
+  <developer id="com.spaceinbox">
+    <name>Sergey Armodin</name>
+    <url>https://spaceinbox.com</url>
+  </developer>
+
+  <!-- Content rating and categories -->
+  <content_rating type="oars-1.1" />
+  <categories>
+    <category>Development</category>
+    <category>Utility</category>
+  </categories>
+
+  <launchable type="desktop-id">me.spaceinbox.actioneer.desktop</launchable>
+
+  <branding>
+    <color type="primary" scheme_preference="light">#2F81F7</color>
+    <color type="primary" scheme_preference="dark">#58A6FF</color>
+  </branding>
+
+  <keywords>
+    <keyword>GitHub</keyword>
+    <keyword>Actions</keyword>
+    <keyword>CI</keyword>
+    <keyword>workflow</keyword>
+    <keyword>automation</keyword>
+    <keyword>DevOps</keyword>
+  </keywords>
+
+  <provides>
+    <binary>actioneer</binary>
+  </provides>
+
+  <!-- Icons and screenshots: include icon names that match files in the icons/ directory.
+       Add screenshot entries when screenshots are available in data/screenshots/ or icons/preview. -->
+  <screenshots>
+    <!-- Referencing screenshots added under data/screenshots/ -->
+    <screenshot type="default">
+      <caption>Browse Actions workflows.</caption>
+      <image type="source" width="2246" height="1404">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-1.png</image>
+    </screenshot>
+    <screenshot type="detail">
+      <caption>Inspect workflow runs and drill into job details quickly.</caption>
+      <image type="source" width="2880" height="1800">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-2.png</image>
+    </screenshot>
+    <screenshot type="detail">
+      <caption>Review job logs inline without leaving the app.</caption>
+      <image type="source" width="2880" height="1800">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-3.png</image>
+    </screenshot>
+    <screenshot type="detail">
+      <caption>Run a job on any branch.</caption>
+      <image type="source" width="2880" height="1800">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-4.png</image>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+    <release version="1.0.10" date="2026-03-23">
+      <description>
+        <ul>
+          <li>This release includes an important security update to help keep Actioneer safer to use.</li>
+          <li>Bundled components have been refreshed for a more reliable and up-to-date experience.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.9" date="2026-03-13">
+      <description>
+        <ul>
+          <li>Workflow runs and expanded details are now more stable during background refreshes, with badges and job summaries preserved while results update.</li>
+          <li>Completed runs now stay collapsed when you close them, and run detail actions recover more reliably after temporary loading hiccups.</li>
+          <li>GitHub connectivity is more resilient to API and permission-related responses, helping keep repository and workflow data visible instead of unexpectedly signing you out.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.8" date="2026-03-12">
+      <description>
+        <ul>
+          <li>In-progress workflow runs now stay up to date, so jobs and steps refresh while a run is still active.</li>
+          <li>Expanded run details are more stable and easier to follow, with clearer job badges and step numbering.</li>
+          <li>Workflow status badges are now translated more consistently across the app.</li>
+          <li>Background refresh is lighter on the GitHub API, which helps preserve your rate limit.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.7" date="2026-03-03">
+      <description>
+        <ul>
+          <li>The app now feels faster and smoother during sign-in, refreshes, and everyday navigation.</li>
+          <li>Notifications and background updates are more reliable, so important run results are less likely to be missed.</li>
+          <li>German and Dutch translations are now available across the app and listing metadata.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.6" date="2026-02-27">
+      <description>
+        <ul>
+          <li>Actioneer is now localized in English, German, Dutch, Simplified Chinese, Hindi, Spanish, French, Arabic, Bengali, Brazilian Portuguese, Russian, and Urdu.</li>
+          <li>Added Help and Shortcuts to make in-app guidance and keyboard workflows easier.</li>
+          <li>Improved GitHub request stability with client-side timeouts.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.5" date="2026-02-09">
+      <description>
+        <ul>
+          <li>Manual workflow triggers now support workflow_dispatch inputs with dynamic parameter fields.</li>
+          <li>Dependency updates for ryu, unicode-ident, and zmij.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.4" date="2026-02-06">
+      <description>
+        <ul>
+          <li>Handle expired job logs (HTTP 410) with clearer messaging instead of a broken view.</li>
+          <li>Strip BOM markers in job logs so first-line timestamps render correctly.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.3" date="2026-02-04">
+      <description>
+        <ul>
+          <li>Job logs now render ANSI colors, grouped workflow sections, and clearer command/output formatting.</li>
+          <li>Aligned timestamps and command prefixes improve scanability, with stronger error highlighting.</li>
+          <li>Packaging CI refreshed with multi-arch updates for AppImage/Snap/Flatpak builds.</li>
+          <li>Dependency updates and demo log refreshes for improved accuracy.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.2" date="2026-01-19">
+      <description>
+        <ul>
+          <li>Faster and smoother UI with refreshed repo/workflow lists and improved scrolling behavior.</li>
+          <li>New run filtering controls with better caching, so switching filters is instant and doesn't reload data.</li>
+          <li>Better workflow auto-refresh and run status updates, including fewer duplicate fetches.</li>
+          <li>Notifications are more reliable across Snap/Flatpak, with improved icon handling and fallbacks.</li>
+          <li>Improved sandboxed credential storage using the secret portal for Snap/Flatpak.</li>
+          <li>Offline-friendly cache persistence for workflows, runs, and jobs.</li>
+          <li>Packaging and CI updates across Snap, Flatpak, and AppImage for better compatibility.</li>
+          <li>Dependency updates and stability fixes.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.1" date="2026-01-18">
+      <description>
+        <ul>
+          <li>Faster and smoother UI with refreshed repo/workflow lists and improved scrolling behavior.</li>
+          <li>New run filtering controls with better caching, so switching filters is instant and doesn't reload data.</li>
+          <li>Better workflow auto-refresh and run status updates, including fewer duplicate fetches.</li>
+          <li>Notifications are more reliable across Snap/Flatpak, with improved icon handling and fallbacks.</li>
+          <li>Improved sandboxed credential storage using the secret portal for Snap/Flatpak.</li>
+          <li>Offline-friendly cache persistence for workflows, runs, and jobs.</li>
+          <li>Packaging and CI updates across Snap, Flatpak, and AppImage for better compatibility.</li>
+          <li>Dependency updates and stability fixes.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="1.0.0" date="2025-11-06" />
+  </releases>
+</component>

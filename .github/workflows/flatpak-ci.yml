@@ -66,6 +66,11 @@ jobs:
           flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
           flatpak install --noninteractive flathub org.flatpak.Builder
 
+      - name: Render AppStream metainfo
+        shell: bash
+        run: |
+          msgfmt --xml -L MetaInfo --template=data/metainfo.xml.in -d po -o data/metainfo.xml
+
       - name: Validate AppStream metadata
         shell: bash
         run: |

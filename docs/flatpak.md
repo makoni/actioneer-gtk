@@ -92,6 +92,13 @@ Manifest templating
 - Flathub mode: `scripts/render-flatpak-manifest.sh --mode flathub --commit <sha>` produces the variant used in the `flathub/me.spaceinbox.actioneer` repo (pinned `type: git` + `commit`). Use this when opening an update PR on Flathub.
 - Run the render script before `flatpak-builder` or `scripts/flathub-build.sh`. The GitHub Actions workflow renders the manifest automatically before building.
 
+AppStream metainfo and translations
+
+- `data/metainfo.xml` is generated from `data/metainfo.xml.in` + `po/*.po` by `msgfmt --xml -L MetaInfo`. The `.in` template holds only the English source strings; translations live in the shared `po/` gettext catalogs alongside the application strings.
+- The Flatpak build runs `msgfmt --xml` automatically. For local development, `scripts/compile-translations.sh` also generates `data/metainfo.xml` so tooling like `appstreamcli validate` has a file to inspect.
+- To extract new strings from both Rust sources and `metainfo.xml.in`, run `scripts/extract-translations.sh`. The metainfo extraction uses the system ITS rules at `/usr/share/gettext/its/metainfo.its` (package `gettext`).
+- `data/metainfo.xml` is `.gitignore`d — edit `data/metainfo.xml.in` and the relevant `po/<lang>.po` files, never the generated file.
+
 6. Local testing
   - Add Flathub remote if not present:
 

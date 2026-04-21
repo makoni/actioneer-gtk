@@ -710,3 +710,99 @@ msgstr "Absturzordner oeffnen"
 
 msgid "Dismiss"
 msgstr "Schliessen"
+
+msgid "Track GitHub Actions runs"
+msgstr "GitHub-Actions-Ausführungen verfolgen"
+
+msgid "Actioneer lets you browse GitHub repositories, inspect workflow runs, check job logs, and refresh status without leaving your desktop."
+msgstr "Actioneer ermöglicht es Ihnen, GitHub-Repositories zu durchsuchen, Workflow-Ausführungen zu prüfen, Job-Protokolle einzusehen und den Status zu aktualisieren, ohne den Desktop zu verlassen."
+
+msgid "Key features"
+msgstr "Hauptfunktionen"
+
+msgid "This package contains the desktop application, icons and AppStream metadata required for distribution via Flatpak/Flathub. See the project repository for source code, contribution guidelines, and additional documentation."
+msgstr "Dieses Paket enthält die Desktop-Anwendung, Symbole und AppStream-Metadaten, die für die Verteilung über Flatpak/Flathub erforderlich sind. Quellcode, Beitragsrichtlinien und weitere Dokumentation finden Sie im Projekt-Repository."
+
+msgid "Browse your GitHub repositories and view Actions workflows and recent runs quickly."
+msgstr "Durchsuchen Sie Ihre GitHub-Repositories und sehen Sie schnell Actions-Workflows und aktuelle Ausführungen."
+
+msgid "Inspect run status (success, failure, queued, in progress) with clear badges and counts."
+msgstr "Prüfen Sie den Ausführungsstatus (erfolgreich, fehlgeschlagen, in Warteschlange, in Ausführung) mit klaren Badges und Zählern."
+
+msgid "Filter runs and focus on what matters most."
+msgstr "Filtern Sie Ausführungen und konzentrieren Sie sich auf das Wesentliche."
+
+msgid "View job logs: download and preview run logs for quick troubleshooting."
+msgstr "Zeigen Sie Job-Protokolle an: Laden Sie Ausführungsprotokolle herunter und sehen Sie sie zur schnellen Fehlerbehebung an."
+
+msgid "Dispatch workflows, cancel running workflows, and re-run failed runs directly from the app."
+msgstr "Starten Sie Workflows, brechen Sie laufende Workflows ab und starten Sie fehlgeschlagene Ausführungen direkt in der App neu."
+
+msgid "Favorites and quick search let you focus on the repositories and workflows that matter most."
+msgstr "Favoriten und schnelle Suche helfen Ihnen, sich auf die wichtigsten Repositories und Workflows zu konzentrieren."
+
+msgid "Desktop notifications for run completions and failures so you never miss important results."
+msgstr "Desktop-Benachrichtigungen bei abgeschlossenen und fehlgeschlagenen Ausführungen, damit Sie keine wichtigen Ergebnisse verpassen."
+
+msgid "Keep recent workflow data available offline."
+msgstr "Halten Sie aktuelle Workflow-Daten offline verfügbar."
+
+msgid "Fast refreshes that keep the interface responsive."
+msgstr "Schnelle Aktualisierungen halten die Oberfläche reaktionsschnell."
+
+msgid "Browse Actions workflows."
+msgstr "Actions-Workflows durchsuchen."
+
+msgid "Inspect workflow runs and drill into job details quickly."
+msgstr "Workflow-Ausführungen pruefen und schnell zu Job-Details springen."
+
+msgid "Review job logs inline without leaving the app."
+msgstr "Job-Protokolle direkt in der App pruefen."
+
+msgid "Run a job on any branch."
+msgstr "Einen Job auf jedem Branch ausführen."
+
+msgid "This release includes an important security update to help keep Actioneer safer to use."
+msgstr "Dieses Release enthaelt ein wichtiges Sicherheitsupdate, damit Actioneer sicherer nutzbar bleibt."
+
+msgid "Bundled components have been refreshed for a more reliable and up-to-date experience."
+msgstr "Gebuendelte Komponenten wurden fuer ein zuverlaessigeres und aktuelleres Nutzungserlebnis aktualisiert."
+
+msgid "Workflow runs and expanded details are now more stable during background refreshes, with badges and job summaries preserved while results update."
+msgstr "Workflow-Laeufe und geoeffnete Details bleiben bei Hintergrundaktualisierungen jetzt stabiler; Badges und Job-Zusammenfassungen bleiben waehrend der Aktualisierung erhalten."
+
+msgid "Completed runs now stay collapsed when you close them, and run detail actions recover more reliably after temporary loading hiccups."
+msgstr "Abgeschlossene Laeufe bleiben jetzt eingeklappt, wenn Sie sie schliessen, und Detailaktionen erholen sich zuverlaessiger nach kurzen Ladeproblemen."
+
+msgid "GitHub connectivity is more resilient to API and permission-related responses, helping keep repository and workflow data visible instead of unexpectedly signing you out."
+msgstr "Die GitHub-Anbindung reagiert robuster auf API- und Berechtigungsantworten, sodass Repository- und Workflow-Daten sichtbar bleiben, statt unerwartet eine Abmeldung auszulösen."
+
+msgid "In-progress workflow runs now stay up to date, so jobs and steps refresh while a run is still active."
+msgstr "Laufende Workflow-Ausfuehrungen bleiben jetzt aktuell, sodass Jobs und Schritte aktualisiert werden, waehrend ein Lauf noch aktiv ist."
+
+msgid "Expanded run details are more stable and easier to follow, with clearer job badges and step numbering."
+msgstr "Die Details erweiterter Laeufe sind jetzt stabiler und leichter zu verfolgen, mit klareren Job-Badges und einer verstaendlicheren Schrittnummerierung."
+
+msgid "Workflow status badges are now translated more consistently across the app."
+msgstr "Workflow-Status-Badges sind jetzt in der gesamten App einheitlicher uebersetzt."
+
+msgid "Background refresh is lighter on the GitHub API, which helps preserve your rate limit."
+msgstr "Hintergrundaktualisierungen belasten die GitHub-API jetzt weniger, was beim Schonen des Rate Limits hilft."
+
+msgid "The app now feels faster and smoother during sign-in, refreshes, and everyday navigation."
+msgstr "Die App fühlt sich jetzt bei Anmeldung, Aktualisierungen und der täglichen Navigation schneller und flüssiger an."
+
+msgid "Notifications and background updates are more reliable, so important run results are less likely to be missed."
+msgstr "Benachrichtigungen und Hintergrundaktualisierungen sind zuverlässiger, sodass wichtige Ausführungsergebnisse seltener verpasst werden."
+
+msgid "German and Dutch translations are now available across the app and listing metadata."
+msgstr "Deutsche und niederländische Übersetzungen sind jetzt in der gesamten App und in den Listing-Metadaten verfügbar."
+
+msgid "Actioneer is now localized in English, German, Dutch, Simplified Chinese, Hindi, Spanish, French, Arabic, Bengali, Brazilian Portuguese, Russian, and Urdu."
+msgstr "Actioneer ist jetzt auf Englisch, Deutsch, Niederländisch, vereinfachtem Chinesisch, Hindi, Spanisch, Französisch, Arabisch, Bengalisch, brasilianischem Portugiesisch, Russisch und Urdu verfügbar."
+
+msgid "Added Help and Shortcuts to make in-app guidance and keyboard workflows easier."
+msgstr "Hilfe und Tastenkombinationen wurden hinzugefügt, um In-App-Anleitungen und Tastatur-Workflows zu erleichtern."
+
+msgid "Improved GitHub request stability with client-side timeouts."
+msgstr "Die Stabilität von GitHub-Anfragen wurde durch clientseitige Timeouts verbessert."

@@ -663,3 +663,147 @@ msgstr "Abrir carpeta de fallos"
 
 msgid "Dismiss"
 msgstr "Cerrar"
+
+msgid "Track GitHub Actions runs"
+msgstr "Sigue las ejecuciones de GitHub Actions"
+
+msgid "Actioneer lets you browse GitHub repositories, inspect workflow runs, check job logs, and refresh status without leaving your desktop."
+msgstr "Actioneer te permite explorar repositorios de GitHub, revisar ejecuciones de workflows, consultar logs de jobs y actualizar el estado sin salir del escritorio."
+
+msgid "Key features"
+msgstr "Funciones principales"
+
+msgid "This package contains the desktop application, icons and AppStream metadata required for distribution via Flatpak/Flathub. See the project repository for source code, contribution guidelines, and additional documentation."
+msgstr "Este paquete incluye la aplicación de escritorio, los iconos y los metadatos de AppStream necesarios para distribuir mediante Flatpak/Flathub. Consulta el repositorio del proyecto para el código fuente, las guías de contribución y documentación adicional."
+
+msgid "Browse your GitHub repositories and view Actions workflows and recent runs quickly."
+msgstr "Explora rápidamente tus repositorios de GitHub y consulta workflows de Actions y ejecuciones recientes."
+
+msgid "Inspect run status (success, failure, queued, in progress) with clear badges and counts."
+msgstr "Revisa el estado de las ejecuciones (éxito, fallo, en cola, en progreso) con insignias y conteos claros."
+
+msgid "Filter runs and focus on what matters most."
+msgstr "Filtra ejecuciones y céntrate en lo más importante."
+
+msgid "View job logs: download and preview run logs for quick troubleshooting."
+msgstr "Consulta logs de jobs: descarga y previsualiza logs para resolver problemas rápidamente."
+
+msgid "Dispatch workflows, cancel running workflows, and re-run failed runs directly from the app."
+msgstr "Lanza workflows, cancela workflows en ejecución y vuelve a ejecutar fallos directamente desde la app."
+
+msgid "Favorites and quick search let you focus on the repositories and workflows that matter most."
+msgstr "Favoritos y búsqueda rápida te ayudan a enfocarte en los repositorios y workflows que más importan."
+
+msgid "Desktop notifications for run completions and failures so you never miss important results."
+msgstr "Notificaciones de escritorio para ejecuciones completadas y fallidas para no perder resultados importantes."
+
+msgid "Keep recent workflow data available offline."
+msgstr "Mantén disponibles sin conexión los datos recientes de workflows."
+
+msgid "Fast refreshes that keep the interface responsive."
+msgstr "Actualizaciones rápidas que mantienen la interfaz fluida."
+
+msgid "Browse Actions workflows."
+msgstr "Explora workflows de Actions."
+
+msgid "Inspect workflow runs and drill into job details quickly."
+msgstr "Inspecciona ejecuciones de workflows y profundiza rápido en los detalles de jobs."
+
+msgid "Review job logs inline without leaving the app."
+msgstr "Revisa logs de jobs en línea sin salir de la aplicación."
+
+msgid "Run a job on any branch."
+msgstr "Ejecuta un job en cualquier rama."
+
+msgid "This release includes an important security update to help keep Actioneer safer to use."
+msgstr "Esta version incluye una importante actualizacion de seguridad para ayudar a que Actioneer siga siendo mas seguro de usar."
+
+msgid "Bundled components have been refreshed for a more reliable and up-to-date experience."
+msgstr "Los componentes incluidos se han actualizado para ofrecer una experiencia mas fiable y al dia."
+
+msgid "Workflow runs and expanded details are now more stable during background refreshes, with badges and job summaries preserved while results update."
+msgstr "Las ejecuciones de workflow y sus detalles expandidos ahora son más estables durante las actualizaciones en segundo plano, y conservan los badges y resúmenes de jobs mientras se actualizan los resultados."
+
+msgid "Completed runs now stay collapsed when you close them, and run detail actions recover more reliably after temporary loading hiccups."
+msgstr "Las ejecuciones completadas ahora permanecen contraídas cuando las cierras, y las acciones de los detalles del run se recuperan mejor tras problemas temporales de carga."
+
+msgid "GitHub connectivity is more resilient to API and permission-related responses, helping keep repository and workflow data visible instead of unexpectedly signing you out."
+msgstr "La conexión con GitHub ahora es más resistente ante respuestas de API y permisos, lo que ayuda a mantener visibles los datos de repositorios y workflows en lugar de cerrar tu sesión inesperadamente."
+
+msgid "In-progress workflow runs now stay up to date, so jobs and steps refresh while a run is still active."
+msgstr "Las ejecuciones de workflow en curso ahora se mantienen actualizadas, por lo que los jobs y pasos se refrescan mientras la ejecución sigue activa."
+
+msgid "Expanded run details are more stable and easier to follow, with clearer job badges and step numbering."
+msgstr "Los detalles de las ejecuciones expandidas ahora son más estables y fáciles de seguir, con indicadores de jobs y numeración de pasos más claros."
+
+msgid "Workflow status badges are now translated more consistently across the app."
+msgstr "Los indicadores de estado de workflows ahora están traducidos de forma más consistente en toda la app."
+
+msgid "Background refresh is lighter on the GitHub API, which helps preserve your rate limit."
+msgstr "La actualización en segundo plano ahora consume menos de la API de GitHub, lo que ayuda a conservar tu límite de uso."
+
+msgid "The app now feels faster and smoother during sign-in, refreshes, and everyday navigation."
+msgstr "La app ahora se siente más rápida y fluida al iniciar sesión, actualizar y navegar cada día."
+
+msgid "Notifications and background updates are more reliable, so important run results are less likely to be missed."
+msgstr "Las notificaciones y las actualizaciones en segundo plano son más fiables, por lo que es menos probable perder resultados importantes."
+
+msgid "German and Dutch translations are now available across the app and listing metadata."
+msgstr "Ahora hay traducciones al alemán y al neerlandés disponibles en toda la app y en los metadatos de la ficha."
+
+msgid "Actioneer is now localized in English, German, Dutch, Simplified Chinese, Hindi, Spanish, French, Arabic, Bengali, Brazilian Portuguese, Russian, and Urdu."
+msgstr "Actioneer ahora está disponible en inglés, chino simplificado, hindi, español, francés, árabe, bengalí, portugués de Brasil, ruso y urdu."
+
+msgid "Added Help and Shortcuts to make in-app guidance and keyboard workflows easier."
+msgstr "Se añadieron Ayuda y Atajos para facilitar la guía dentro de la app y los flujos con teclado."
+
+msgid "Improved GitHub request stability with client-side timeouts."
+msgstr "Se mejoró la estabilidad de las solicitudes a GitHub con tiempos de espera en el cliente."
+
+msgid "Manual workflow triggers now support workflow_dispatch inputs with dynamic parameter fields."
+msgstr "Los disparadores manuales de workflows ahora admiten entradas workflow_dispatch con campos de parámetros dinámicos."
+
+msgid "Dependency updates for ryu, unicode-ident, and zmij."
+msgstr "Actualizaciones de dependencias para ryu, unicode-ident y zmij."
+
+msgid "Handle expired job logs (HTTP 410) with clearer messaging instead of a broken view."
+msgstr "Los logs de jobs expirados (HTTP 410) ahora muestran un mensaje claro en lugar de una vista rota."
+
+msgid "Strip BOM markers in job logs so first-line timestamps render correctly."
+msgstr "Se eliminan marcadores BOM en logs para que el timestamp de la primera línea se renderice correctamente."
+
+msgid "Job logs now render ANSI colors, grouped workflow sections, and clearer command/output formatting."
+msgstr "Los logs de jobs ahora renderizan colores ANSI, secciones de workflow agrupadas y un formato de comandos/salida más claro."
+
+msgid "Aligned timestamps and command prefixes improve scanability, with stronger error highlighting."
+msgstr "Timestamps y prefijos de comandos alineados mejoran la legibilidad, con un resaltado de errores más fuerte."
+
+msgid "Packaging CI refreshed with multi-arch updates for AppImage/Snap/Flatpak builds."
+msgstr "El CI de empaquetado se actualizó con mejoras multi-arquitectura para builds AppImage/Snap/Flatpak."
+
+msgid "Dependency updates and demo log refreshes for improved accuracy."
+msgstr "Actualizaciones de dependencias y renovación de logs de demo para mejorar la precisión."
+
+msgid "Faster and smoother UI with refreshed repo/workflow lists and improved scrolling behavior."
+msgstr "Interfaz más rápida y fluida con listas de repositorios/workflows renovadas y mejor desplazamiento."
+
+msgid "New run filtering controls with better caching, so switching filters is instant and doesn't reload data."
+msgstr "Nuevos controles de filtrado de ejecuciones con mejor caché: cambiar filtros es instantáneo y sin recargar datos."
+
+msgid "Better workflow auto-refresh and run status updates, including fewer duplicate fetches."
+msgstr "Mejoras en el auto-refresh de workflows y en actualizaciones de estado, con menos solicitudes duplicadas."
+
+msgid "Notifications are more reliable across Snap/Flatpak, with improved icon handling and fallbacks."
+msgstr "Las notificaciones son más fiables en Snap/Flatpak, con mejor gestión de iconos y fallbacks."
+
+msgid "Improved sandboxed credential storage using the secret portal for Snap/Flatpak."
+msgstr "Mejor almacenamiento de credenciales en sandbox usando Secret Portal para Snap/Flatpak."
+
+msgid "Offline-friendly cache persistence for workflows, runs, and jobs."
+msgstr "Persistencia de caché apta para uso offline en workflows, ejecuciones y jobs."
+
+msgid "Packaging and CI updates across Snap, Flatpak, and AppImage for better compatibility."
+msgstr "Actualizaciones de empaquetado y CI para Snap, Flatpak y AppImage con mejor compatibilidad."
+
+msgid "Dependency updates and stability fixes."
+msgstr "Actualizaciones de dependencias y correcciones de estabilidad."
