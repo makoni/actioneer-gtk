@@ -806,3 +806,6 @@ msgstr "Hilfe und Tastenkombinationen wurden hinzugefügt, um In-App-Anleitungen
 
 msgid "Improved GitHub request stability with client-side timeouts."
 msgstr "Die Stabilität von GitHub-Anfragen wurde durch clientseitige Timeouts verbessert."
+
+msgid "Refreshed bundled components for a more reliable and up-to-date experience."
+msgstr "Gebündelte Komponenten wurden für ein zuverlässigeres und aktuelleres Nutzungserlebnis aktualisiert."

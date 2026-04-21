@@ -807,3 +807,6 @@ msgstr "Mises à jour du packaging et de la CI pour Snap, Flatpak et AppImage af
 
 msgid "Dependency updates and stability fixes."
 msgstr "Mises à jour des dépendances et correctifs de stabilité."
+
+msgid "Refreshed bundled components for a more reliable and up-to-date experience."
+msgstr "Composants intégrés actualisés pour offrir une expérience plus fiable et plus à jour."

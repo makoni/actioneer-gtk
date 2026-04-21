@@ -29,8 +29,8 @@ Given a target version, this skill must:
 
 1. Update the version everywhere Actioneer expects it.
 2. Regenerate lock / packaging metadata that depends on the version or lockfile.
-3. Add a new user-friendly release entry to `data/metainfo.xml`.
-4. Generate AppStream release notes in **all supported application languages**.
+3. Add a new user-friendly release entry to `data/metainfo.xml.in` (the gettext-aware source template; `data/metainfo.xml` is generated and gitignored).
+4. Generate AppStream release notes in **all supported application languages** via the gettext pipeline (`po/*.po`).
 5. Generate technical GitHub release notes in `RELEASE.md`.
 6. Run the required scripts from `scripts/`.
 7. Validate the result and summarize what changed.
@@ -86,16 +86,18 @@ cargo generate-lockfile
 
 If `Cargo.lock` changes, run the required Flatpak sync scripts described below.
 
-### 4. Generate `data/metainfo.xml` release notes
+### 4. Add the English release entry to `data/metainfo.xml.in`
 
-Add a new `<release>` entry at the top of the `<releases>` list.
+Add a new `<release>` entry at the top of the `<releases>` list in `data/metainfo.xml.in`.
+
+Do **not** hand-edit `data/metainfo.xml` — it is gitignored and rendered from `data/metainfo.xml.in` + `po/*.po` by `msgfmt --xml` at build time.
 
 Rules:
 
 - Use the requested version for `version="..."`.
 - Use the current date for `date="YYYY-MM-DD"`.
 - Keep older release entries intact.
-- Follow the existing formatting and locale order already used in `data/metainfo.xml`.
+- Write **English only** in `<li>` elements; no inline `xml:lang` entries (translations live in `po/*.po`).
 - Keep the changelog **user-friendly**:
   - describe improvements in terms of user-visible behavior
   - avoid raw implementation details, refactor notes, and dependency-noise unless it clearly benefits users
@@ -103,18 +105,23 @@ Rules:
 - If `release_kind` is `maintenance` or `security`, prefer a short and simple changelog instead of stretching minor technical work into feature-style bullets.
 - For security-only or dependency-only releases, it is acceptable for AppStream notes to say that the release includes an important security update and refreshed bundled components, as long as the wording stays user-friendly.
 
-### 5. Generate release notes for all supported languages
+### 5. Translate release notes into all supported languages via gettext
 
-Supported languages come from `po/LINGUAS`, plus English as the default non-`xml:lang` entry.
+Supported languages come from `po/LINGUAS`. English is the default source in `metainfo.xml.in` and does not need a `po/en.po` entry for release bullets.
 
-Current AppStream locale mapping is documented in `release-context.md`.
+Steps:
 
-For each bullet:
+1. Run `scripts/extract-translations.sh` to refresh `po/actioneer.pot` with the new English msgids pulled from `data/metainfo.xml.in`.
+2. For every non-English locale listed in `po/LINGUAS`, append a new `msgid` + `msgstr` pair to `po/<lang>.po` covering each new bullet:
+   ```
+   msgid "Your new English bullet text."
+   msgstr "<translated text for this locale>"
+   ```
+   Preserve natural, concise phrasing rather than mechanically literal translations.
+3. Validate every `.po` with `msgfmt -c -o /dev/null po/<lang>.po`.
+4. Run `scripts/compile-translations.sh` — this compiles `.mo` catalogs into `po/locale/<lang>/LC_MESSAGES/` and renders the fully-translated `data/metainfo.xml` via `msgfmt --xml -L MetaInfo --template=data/metainfo.xml.in -d po`.
 
-1. Write the English source bullet first.
-2. Add translated `<li xml:lang="...">...</li>` entries for every supported locale.
-3. Preserve the existing locale order.
-4. Keep wording natural and concise rather than mechanically literal.
+`po/it.po` and `po/ja.po` exist in the repo but are not in `LINGUAS` — do not translate new bullets into them.
 
 If the repository gains or removes supported locales, update `release-context.md` to match.
 
@@ -136,19 +143,16 @@ Rules:
 
 ### 7. Run the required scripts from `scripts/`
 
-For a normal Actioneer version bump, always run the release-related scripts documented in `release-context.md`.
-
-Today that means:
+For every Actioneer version bump, always run:
 
 ```bash
-scripts/regenerate-flatpak-sources.sh
-scripts/check-flatpak-lock-sync.sh
+scripts/extract-translations.sh        # refresh po/actioneer.pot with new msgids
+scripts/compile-translations.sh        # compile .mo catalogs and render data/metainfo.xml
+scripts/regenerate-flatpak-sources.sh  # regenerate flatpak/me.spaceinbox.actioneer.cargo-sources.json
+scripts/check-flatpak-lock-sync.sh     # verify Cargo.lock / flatpak manifest are in sync
 ```
 
-Additionally:
-
-- Run `scripts/compile-translations.sh` only if the bump also changed gettext catalogs under `po/`.
-- Do **not** run unrelated helper scripts such as icon maintenance or local packaging build helpers unless the task explicitly changed those assets or packaging flows.
+Do **not** run unrelated helper scripts such as icon maintenance or local packaging build helpers unless the task explicitly changed those assets or packaging flows.
 
 ### 8. Validate
 

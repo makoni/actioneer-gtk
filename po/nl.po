@@ -804,3 +804,6 @@ msgstr "Help en sneltoetsen zijn toegevoegd om begeleiding in de app en toetsenb
 
 msgid "Improved GitHub request stability with client-side timeouts."
 msgstr "De stabiliteit van GitHub-verzoeken is verbeterd met time-outs aan clientzijde."
+
+msgid "Refreshed bundled components for a more reliable and up-to-date experience."
+msgstr "Meegeleverde componenten vernieuwd voor een betrouwbaardere en actuelere ervaring."

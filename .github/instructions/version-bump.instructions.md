@@ -18,7 +18,7 @@ scripts/check-flatpak-lock-sync.sh
 ```
 
 ## 3) Update the AppStream changelog
-- Add a new `<release>` in `data/metainfo.xml`.
+- Add a new `<release>` in `data/metainfo.xml.in` (English only; `data/metainfo.xml` is gitignored and rendered at build time).
 - Build the change list from commits after the latest tag:
   ```bash
   git describe --tags --abbrev=0
@@ -26,7 +26,12 @@ scripts/check-flatpak-lock-sync.sh
   ```
 - Keep older entries intact.
 
-## 4) Recommended checks
+## 4) Translate the new changelog bullets
+- Run `scripts/extract-translations.sh` to refresh `po/actioneer.pot` with the new msgids.
+- For every locale in `po/LINGUAS` (except `en`), append a `msgid` + `msgstr` pair to `po/<lang>.po`.
+- Run `scripts/compile-translations.sh` to compile `.mo` catalogs and render the final `data/metainfo.xml`.
+
+## 5) Recommended checks
 ```bash
 cargo fmt
 cargo clippy --all-targets --all-features -- -D warnings

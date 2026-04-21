@@ -812,3 +812,6 @@ msgstr "Обновлены упаковка и CI для Snap, Flatpak и AppIma
 
 msgid "Dependency updates and stability fixes."
 msgstr "Обновления зависимостей и исправления стабильности."
+
+msgid "Refreshed bundled components for a more reliable and up-to-date experience."
+msgstr "Встроенные компоненты обновлены для более надёжной и актуальной работы приложения."

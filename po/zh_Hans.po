@@ -807,3 +807,6 @@ msgstr "更新了 Snap、Flatpak 和 AppImage 的打包与 CI，提升兼容性�
 
 msgid "Dependency updates and stability fixes."
 msgstr "依赖更新和稳定性修复。"
+
+msgid "Refreshed bundled components for a more reliable and up-to-date experience."
+msgstr "已更新随附组件，带来更可靠、更新鲜的使用体验。"

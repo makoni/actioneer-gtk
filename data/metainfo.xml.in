@@ -84,6 +84,13 @@
   </screenshots>
 
   <releases>
+    <release version="1.0.11" date="2026-04-21">
+      <description>
+        <ul>
+          <li>Refreshed bundled components for a more reliable and up-to-date experience.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.10" date="2026-03-23">
       <description>
         <ul>

@@ -807,3 +807,6 @@ msgstr "बेहतर संगतता के लिए Snap, Flatpak और
 
 msgid "Dependency updates and stability fixes."
 msgstr "डिपेंडेंसी अपडेट और स्थिरता सुधार।"
+
+msgid "Refreshed bundled components for a more reliable and up-to-date experience."
+msgstr "साथ में आने वाले components अपडेट किए गए हैं, ताकि अनुभव अधिक भरोसेमंद और आधुनिक रहे।"

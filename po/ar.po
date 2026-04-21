@@ -807,3 +807,6 @@ msgstr "تحديثات في الحزم وCI عبر Snap وFlatpak وAppImage ل�
 
 msgid "Dependency updates and stability fixes."
 msgstr "تحديثات للتبعيات وإصلاحات للاستقرار."
+
+msgid "Refreshed bundled components for a more reliable and up-to-date experience."
+msgstr "تم تحديث المكونات المضمنة لتقديم تجربة أكثر موثوقية وحداثة."
