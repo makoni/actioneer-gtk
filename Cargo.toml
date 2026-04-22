@@ -11,7 +11,7 @@ license = "MIT"
 
 gtk4 = { version = "0.10", package = "gtk4" }
 libadwaita = { version = "0.8", package = "libadwaita", features = ["v1_5"] }
-gio = "0.21"
+gio = "0.22"
 
 # HTTP client and async runtime
 reqwest = { version = "0.13", features = ["json", "query"] }
