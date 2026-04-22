@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    ignore:
+      # Phantom lockfile entry. keyring 3.6.x declares `secret-service` as an
+      # optional dep behind the `async-secret-service` feature, which we never
+      # enable (we use `sync-secret-service` → `dbus-secret-service`, which does
+      # not depend on rand). Cargo still resolves optional deps into Cargo.lock
+      # for reproducibility, so rand 0.8.x shows up even though it is not
+      # compiled into the binary. Revisit once keyring 4.x ships stable.
+      - dependency-name: rand
+        versions: ["0.8.x"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns:
+          - "*"
