@@ -28,7 +28,7 @@ jobs:
       run-id: ${{ steps.expose-run-id.outputs.run_id }}
 
     steps:
-      - uses: actions/checkout@v5.0.0
+      - uses: actions/checkout@v6.0.2
 
       - name: Build snap for ${{ matrix.platform }}
         uses: snapcore/action-build@v1
