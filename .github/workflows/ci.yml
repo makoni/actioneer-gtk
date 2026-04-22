@@ -15,20 +15,20 @@ jobs:
     runs-on: ubuntu-latest
     needs: lock-sync
     steps:
-      - uses: actions/checkout@v5.0.0
+      - uses: actions/checkout@v6.0.2
       - name: Install system packages (GTK4 & libadwaita)
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-4-dev libadwaita-1-dev libglib2.0-dev pkg-config build-essential gettext
       
       - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1.15.3
+        uses: actions-rust-lang/setup-rust-toolchain@v1.16.0
         with:
           toolchain: stable
           cache: false
 
       - name: Cache cargo registry and index
-        uses: actions/cache@v5.0.3
+        uses: actions/cache@v5.0.5
         with:
           path: |
             ~/.cargo/registry
@@ -60,7 +60,7 @@ jobs:
           - arch: aarch64
             runner: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v5.0.0
+      - uses: actions/checkout@v6.0.2
 
       - name: Install system packages (GTK4 & libadwaita)
         run: |
@@ -68,13 +68,13 @@ jobs:
           sudo apt-get install -y libgtk-4-dev libadwaita-1-dev libglib2.0-dev pkg-config build-essential gettext
 
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1.15.3
+        uses: actions-rust-lang/setup-rust-toolchain@v1.16.0
         with:
           toolchain: stable
           cache: false
 
       - name: Cache cargo (target + registry)
-        uses: actions/cache@v5.0.3
+        uses: actions/cache@v5.0.5
         with:
           path: |
             target
@@ -119,7 +119,7 @@ jobs:
           - arch: aarch64
             runner: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v5.0.0
+      - uses: actions/checkout@v6.0.2
 
       - name: Install system packages (GUI deps)
         run: |
@@ -128,13 +128,13 @@ jobs:
             dbus dbus-x11 at-spi2-core
 
       - name: Install Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1.15.3
+        uses: actions-rust-lang/setup-rust-toolchain@v1.16.0
         with:
           toolchain: stable
           cache: false
 
       - name: Cache cargo (target + registry)
-        uses: actions/cache@v5.0.3
+        uses: actions/cache@v5.0.5
         with:
           path: |
             target
@@ -158,7 +158,7 @@ jobs:
     needs: build-test
     if: ${{ github.event_name != 'pull_request' }}
     steps:
-      - uses: actions/checkout@v5.0.0
+      - uses: actions/checkout@v6.0.2
 
       - name: Install runtime + AT-SPI deps
         run: |
@@ -167,7 +167,7 @@ jobs:
             xvfb dbus dbus-x11 at-spi2-core python3-pyatspi gettext
 
       - name: Download prebuilt release binary
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: ci-actioneer-release-bin-x86_64
           path: target/release

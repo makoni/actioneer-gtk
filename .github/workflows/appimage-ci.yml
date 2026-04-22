@@ -35,7 +35,7 @@ jobs:
       APPDIR: build/AppDir
       LINUXDEPLOY_PLUGIN_GTK: ${{ github.workspace }}/linuxdeploy-plugin-gtk.sh
     steps:
-      - uses: actions/checkout@v5.0.0
+      - uses: actions/checkout@v6.0.2
 
       - name: Install system packages
         run: |
@@ -43,7 +43,7 @@ jobs:
           sudo apt-get install -y pkg-config libglib2.0-dev libgtk-4-dev libadwaita-1-dev desktop-file-utils gettext
 
       - name: Download prebuilt release binary
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: actioneer-release-bin-${{ matrix.arch }}
           path: dist/release-payload
