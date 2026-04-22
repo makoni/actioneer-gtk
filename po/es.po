@@ -810,3 +810,7 @@ msgstr "Actualizaciones de dependencias y correcciones de estabilidad."
 
 msgid "Refreshed bundled components for a more reliable and up-to-date experience."
 msgstr "Componentes incluidos actualizados para ofrecer una experiencia más fiable y al día."
+
+
+msgid "Refreshed the GNOME desktop libraries and HTTP stack for a more reliable, up-to-date experience."
+msgstr "Se han actualizado las bibliotecas del escritorio GNOME y la pila HTTP para ofrecer una experiencia más fiable y al día."

@@ -810,3 +810,7 @@ msgstr "ডিপেন্ডেন্সি আপডেট ও স্থিত
 
 msgid "Refreshed bundled components for a more reliable and up-to-date experience."
 msgstr "অন্তর্ভুক্ত কম্পোনেন্টগুলো নতুন করে আপডেট করা হয়েছে, যাতে অভিজ্ঞতা আরও নির্ভরযোগ্য ও আধুনিক থাকে।"
+
+
+msgid "Refreshed the GNOME desktop libraries and HTTP stack for a more reliable, up-to-date experience."
+msgstr "GNOME ডেস্কটপ লাইব্রেরি ও HTTP স্ট্যাক আপডেট করা হয়েছে, যাতে অভিজ্ঞতা আরও নির্ভরযোগ্য ও আধুনিক থাকে।"
