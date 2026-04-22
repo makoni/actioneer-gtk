@@ -33,10 +33,6 @@ pub const APP_ICON_NAME: &str = APP_ID;
 const DEV_ICON_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/icons/icons");
 const DEFAULT_TOKIO_WORKER_THREADS: usize = 4;
 const TOKIO_WORKER_THREADS_ENV: &str = "ACTIONEER_TOKIO_WORKER_THREADS";
-#[cfg(unix)]
-const SIGINT_SIGNAL: i32 = 2;
-#[cfg(unix)]
-const SIGTERM_SIGNAL: i32 = 15;
 
 // Global runtime handle
 static RUNTIME_HANDLE: OnceLock<Handle> = OnceLock::new();
@@ -113,22 +109,40 @@ fn mark_current_session_clean(reason: &str) {
 }
 
 #[cfg(unix)]
-fn install_unix_signal_handlers(app: &adw::Application) {
-    install_unix_signal_handler(app, SIGINT_SIGNAL, "SIGINT");
-    install_unix_signal_handler(app, SIGTERM_SIGNAL, "SIGTERM");
-}
+fn install_unix_signal_handlers(_app: &adw::Application) {
+    use tokio::signal::unix::{SignalKind, signal};
 
-#[cfg(unix)]
-fn install_unix_signal_handler(app: &adw::Application, signum: i32, signal_name: &'static str) {
-    let app = app.clone();
-    glib::source::unix_signal_add_local(signum, move || {
-        info!(
-            signal = signal_name,
-            "Received termination signal, quitting cleanly"
-        );
-        mark_current_session_clean(signal_name);
-        app.quit();
-        glib::ControlFlow::Break
+    runtime_handle().spawn(async move {
+        let mut sigint = match signal(SignalKind::interrupt()) {
+            Ok(s) => s,
+            Err(err) => {
+                warn!(error = %err, "Failed to register SIGINT handler");
+                return;
+            }
+        };
+        let mut sigterm = match signal(SignalKind::terminate()) {
+            Ok(s) => s,
+            Err(err) => {
+                warn!(error = %err, "Failed to register SIGTERM handler");
+                return;
+            }
+        };
+
+        let signal_name = tokio::select! {
+            _ = sigint.recv() => "SIGINT",
+            _ = sigterm.recv() => "SIGTERM",
+        };
+
+        glib::MainContext::default().invoke(move || {
+            info!(
+                signal = signal_name,
+                "Received termination signal, quitting cleanly"
+            );
+            mark_current_session_clean(signal_name);
+            if let Some(app) = gio::Application::default() {
+                app.quit();
+            }
+        });
     });
 }
 
