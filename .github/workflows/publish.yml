@@ -30,24 +30,24 @@ jobs:
     needs: [flatpak, snap, appimage]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5.0.0
+      - uses: actions/checkout@v6.0.2
 
       - name: Download Flatpak artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: artifacts/flatpak
           github-token: ${{ secrets.RELEASES_PERSONAL_TOKEN }}
           run-id: ${{ needs.flatpak.outputs.run-id }}
 
       - name: Download Snap artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: artifacts/snap
           github-token: ${{ secrets.RELEASES_PERSONAL_TOKEN }}
           run-id: ${{ needs.snap.outputs.run-id }}
 
       - name: Download AppImage artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: artifacts/appimage
           github-token: ${{ secrets.RELEASES_PERSONAL_TOKEN }}
@@ -81,7 +81,7 @@ jobs:
           echo "notes=${NOTES}" >> "$GITHUB_OUTPUT"
 
       - name: Draft GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.release_vars.outputs.tag }}
           name: ${{ steps.release_vars.outputs.name }}
