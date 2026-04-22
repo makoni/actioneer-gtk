@@ -33,6 +33,30 @@ updates:
       # compiled into the binary. Revisit once keyring 4.x ships stable.
       - dependency-name: rand
         versions: ["0.8.x"]
+      # Block major bumps of gtk-rs-core crates: even with the `gtk-rs` group,
+      # Dependabot opens PRs one crate at a time when a co-released peer hasn't
+      # also updated, which leaves two versions of shared types in the graph
+      # and breaks compilation (see closed PRs #19, #24). Major bumps of these
+      # crates must be done as a coordinated manual migration, typically
+      # alongside a GNOME Platform SDK bump.
+      - dependency-name: gtk4
+        update-types: ["version-update:semver-major"]
+      - dependency-name: libadwaita
+        update-types: ["version-update:semver-major"]
+      - dependency-name: gio
+        update-types: ["version-update:semver-major"]
+      - dependency-name: glib
+        update-types: ["version-update:semver-major"]
+      - dependency-name: gdk4
+        update-types: ["version-update:semver-major"]
+      - dependency-name: gsk4
+        update-types: ["version-update:semver-major"]
+      - dependency-name: pango
+        update-types: ["version-update:semver-major"]
+      - dependency-name: cairo-rs
+        update-types: ["version-update:semver-major"]
+      - dependency-name: graphene-rs
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: "/"
