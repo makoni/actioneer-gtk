@@ -137,7 +137,7 @@ pub fn retrieve_secret(_previous_token: Option<&str>) -> Result<PortalSecret, Po
             .await
             .map_err(PortalSecretError::Portal)?;
         let request = portal
-            .retrieve(&writer)
+            .retrieve(&writer, Default::default())
             .await
             .map_err(PortalSecretError::Portal)?;
         request.response().map_err(PortalSecretError::Portal)?;
