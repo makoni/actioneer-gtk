@@ -3096,14 +3096,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/rustls/rustls-0.23.38.crate",
-        "sha256": "69f9466fb2c14ea04357e91413efb882e2a6d4a406e625449bc0a5d360d53a21",
-        "dest": "cargo/vendor/rustls-0.23.38"
+        "url": "https://static.crates.io/crates/rustls/rustls-0.23.39.crate",
+        "sha256": "7c2c118cb077cca2822033836dfb1b975355dfb784b5e8da48f7b6c5db74e60e",
+        "dest": "cargo/vendor/rustls-0.23.39"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"69f9466fb2c14ea04357e91413efb882e2a6d4a406e625449bc0a5d360d53a21\", \"files\": {}}",
-        "dest": "cargo/vendor/rustls-0.23.38",
+        "contents": "{\"package\": \"7c2c118cb077cca2822033836dfb1b975355dfb784b5e8da48f7b6c5db74e60e\", \"files\": {}}",
+        "dest": "cargo/vendor/rustls-0.23.39",
         "dest-filename": ".cargo-checksum.json"
     },
     {
