@@ -810,3 +810,7 @@ msgstr "依赖更新和稳定性修复。"
 
 msgid "Refreshed bundled components for a more reliable and up-to-date experience."
 msgstr "已更新随附组件，带来更可靠、更新鲜的使用体验。"
+
+
+msgid "Refreshed the GNOME desktop libraries and HTTP stack for a more reliable, up-to-date experience."
+msgstr "已更新 GNOME 桌面库与 HTTP 栈，带来更可靠、更新鲜的使用体验。"

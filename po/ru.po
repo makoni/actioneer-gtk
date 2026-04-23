@@ -815,3 +815,7 @@ msgstr "Обновления зависимостей и исправления 
 
 msgid "Refreshed bundled components for a more reliable and up-to-date experience."
 msgstr "Встроенные компоненты обновлены для более надёжной и актуальной работы приложения."
+
+
+msgid "Refreshed the GNOME desktop libraries and HTTP stack for a more reliable, up-to-date experience."
+msgstr "Обновлены библиотеки рабочего стола GNOME и HTTP-стек — работа приложения стала надёжнее и актуальнее."

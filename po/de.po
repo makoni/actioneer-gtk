@@ -809,3 +809,7 @@ msgstr "Die Stabilität von GitHub-Anfragen wurde durch clientseitige Timeouts v
 
 msgid "Refreshed bundled components for a more reliable and up-to-date experience."
 msgstr "Gebündelte Komponenten wurden für ein zuverlässigeres und aktuelleres Nutzungserlebnis aktualisiert."
+
+
+msgid "Refreshed the GNOME desktop libraries and HTTP stack for a more reliable, up-to-date experience."
+msgstr "Die GNOME-Desktop-Bibliotheken und der HTTP-Stack wurden aktualisiert für ein zuverlässigeres und aktuelleres Nutzungserlebnis."

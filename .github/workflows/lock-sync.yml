@@ -15,5 +15,12 @@ jobs:
       - uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 0
+      - name: Install flatpak-cargo-generator
+        run: |
+          set -euo pipefail
+          python3 -m pip install --user --quiet pipx
+          python3 -m pipx ensurepath
+          python3 -m pipx install flatpak-cargo-generator
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Ensure Cargo.lock and Flatpak manifest match
         run: scripts/check-flatpak-lock-sync.sh
