@@ -637,7 +637,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users",
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -712,7 +712,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -1030,9 +1030,9 @@ dependencies = [
 
 [[package]]
 name = "gio"
-version = "0.22.5"
+version = "0.22.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "401b600a9795c46ff45890146968b712c96ce4e9393798804133e137bd81d89c"
+checksum = "e3848bcba3a35cc0a71df8ba8ecfd799d6bfb862342a53a4a915fb62213aa4e6"
 dependencies = [
  "futures-channel",
  "futures-core",
@@ -1055,14 +1055,14 @@ dependencies = [
  "gobject-sys",
  "libc",
  "system-deps",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
 name = "glib"
-version = "0.22.5"
+version = "0.22.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1b7df55594e0e787d1560e23f7e12d7360d0b22e7b7c228ec2488b9e59b1b6b"
+checksum = "c207e04e51605dcf7b2924c41591b3a10e1438eaac5bcf448fb91f325381104a"
 dependencies = [
  "bitflags",
  "futures-channel",
@@ -1081,9 +1081,9 @@ dependencies = [
 
 [[package]]
 name = "glib-macros"
-version = "0.22.2"
+version = "0.22.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bda575994e3689b1bc12f89c3df621ead46ff292623b76b4710a3a5b79be54bb"
+checksum = "506d23499707c7142898429757e8d9a3871d965239a2cb66dfa05052be6d6f19"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -1093,9 +1093,9 @@ dependencies = [
 
 [[package]]
 name = "glib-sys"
-version = "0.22.3"
+version = "0.22.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1eb23a616a3dbc7fc15bbd26f58756ff0b04c8a894df3f0680cd21011db6a642"
+checksum = "5f7fbac234ed5bc2a28359b7bde8e1b9cdf1441cc2d7f068e4824672d7db9445"
 dependencies = [
  "libc",
  "system-deps",
@@ -1103,9 +1103,9 @@ dependencies = [
 
 [[package]]
 name = "gobject-sys"
-version = "0.22.0"
+version = "0.22.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18eda93f09d3778f38255b231b17ef67195013a592c91624a4daf8bead875565"
+checksum = "22a861859b887a79cf461359c192c97a57d8fb0229dd291232e57aa11f6fa72c"
 dependencies = [
  "glib-sys",
  "libc",
@@ -1168,9 +1168,9 @@ dependencies = [
 
 [[package]]
 name = "gtk4"
-version = "0.11.2"
+version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25d47a7ca9ec6f50b5ace32eaaf11fe152c9bbc4f780a35e42c9b7fc5b046f9c"
+checksum = "7181b837f04cbe93f79441475f7a00560a92cba7a72e38cc1a68b6f8b78eaae2"
 dependencies = [
  "cairo-rs",
  "field-offset",
@@ -1201,9 +1201,9 @@ dependencies = [
 
 [[package]]
 name = "gtk4-sys"
-version = "0.11.2"
+version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a25bd07084651c77bb6e7bce7d4cea8d9f98d210acee473e400a9106bc0ce50"
+checksum = "20ba8e695e2640455561274e65e45f0a151619e450746007667f4b23ceae4e1b"
 dependencies = [
  "cairo-sys-rs",
  "gdk-pixbuf-sys",
@@ -1862,7 +1862,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -2072,9 +2072,9 @@ dependencies = [
 
 [[package]]
 name = "pango"
-version = "0.22.4"
+version = "0.22.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4804fb6018c6604eac198f0f897320d3696c9af7983cde056f07cef93cac9202"
+checksum = "251bdc6e6487b811be0e406a21e301e07e45c0aa8fa39e00c0c8e12a91752438"
 dependencies = [
  "gio",
  "glib",
@@ -2494,7 +2494,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2551,7 +2551,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2821,7 +2821,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a766e1110788c36f4fa1c2b71b387a7815aa65f88ce0229841826633d93723e"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -2929,7 +2929,7 @@ dependencies = [
  "getrandom 0.4.2",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3257,7 +3257,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
 dependencies = [
  "memoffset",
  "tempfile",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -3530,7 +3530,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
