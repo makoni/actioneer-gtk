@@ -2,7 +2,8 @@ use super::{
     portal_token_store::{PortalStoreError, PortalTokenStore},
     secret_portal::{self, PortalPreference},
 };
-use keyring::Entry;
+use keyring_core::{Entry, Error as KeyringCoreError};
+use std::sync::OnceLock;
 use thiserror::Error;
 use tracing::{debug, info, warn};
 
@@ -12,7 +13,7 @@ const TOKEN_KEY: &str = "github_token";
 #[derive(Debug, Error)]
 pub enum StorageError {
     #[error("Keyring error: {0}")]
-    KeyringError(#[from] keyring::Error),
+    KeyringError(#[from] KeyringCoreError),
 
     #[error("Token not found")]
     TokenNotFound,
@@ -25,14 +26,20 @@ pub enum StorageError {
 }
 
 pub struct TokenStorage {
-    entry: Entry,
     backend: Backend,
 }
 
 enum Backend {
-    Portal(PortalTokenStore),
-    Keyring,
+    Portal {
+        store: PortalTokenStore,
+        legacy_entry: Option<Entry>,
+    },
+    Keyring {
+        entry: Entry,
+    },
 }
+
+static KEYRING_STORE_CONFIGURED: OnceLock<()> = OnceLock::new();
 
 impl TokenStorage {
     pub fn new() -> Result<Self, StorageError> {
@@ -40,37 +47,41 @@ impl TokenStorage {
             "Creating TokenStorage with service: {}, key: {}",
             SERVICE_NAME, TOKEN_KEY
         );
-        let entry = Entry::new(SERVICE_NAME, TOKEN_KEY)?;
         let preference = secret_portal::portal_preference();
 
-        if let Some(backend) = try_portal_backend(&entry, preference) {
-            return Ok(Self { entry, backend });
+        if let Some(backend) = try_portal_backend(preference) {
+            return Ok(Self { backend });
         }
 
         info!("Falling back to system keyring storage");
-        let backend = Backend::Keyring;
-        ensure_keyring_ready(&entry)?;
+        let entry = keyring_entry()?;
+        let backend = Backend::Keyring { entry };
+        let entry = match &backend {
+            Backend::Keyring { entry } => entry,
+            Backend::Portal { .. } => unreachable!(),
+        };
+        ensure_keyring_ready(entry)?;
         info!("✅ Keyring is available and working");
         info!("TokenStorage initialized (keyring backend)");
 
-        Ok(Self { entry, backend })
+        Ok(Self { backend })
     }
 
     /// Save the token to secure storage
     pub fn save_token(&self, token: &str) -> Result<(), StorageError> {
         match &self.backend {
-            Backend::Portal(store) => {
+            Backend::Portal { store, .. } => {
                 info!("Saving token to portal-backed storage");
                 store.save_token(token).map_err(map_portal_err)?;
             }
-            Backend::Keyring => {
+            Backend::Keyring { entry } => {
                 info!(
                     "Saving token to keyring storage (service: {}, key: {})",
                     SERVICE_NAME, TOKEN_KEY
                 );
-                self.entry.set_password(token)?;
+                entry.set_password(token)?;
                 info!("Token saved to keyring - verifying...");
-                if let Ok(retrieved) = self.entry.get_password() {
+                if let Ok(retrieved) = entry.get_password() {
                     if retrieved == token {
                         info!("✅ Token verified in keyring - save successful");
                     } else {
@@ -86,16 +97,16 @@ impl TokenStorage {
     /// Retrieve the token from secure storage
     pub fn get_token(&self) -> Result<String, StorageError> {
         match &self.backend {
-            Backend::Portal(store) => {
+            Backend::Portal { store, .. } => {
                 info!("Retrieving token from portal-backed storage");
                 store.get_token().map_err(map_portal_err)
             }
-            Backend::Keyring => {
+            Backend::Keyring { entry } => {
                 info!(
                     "Retrieving token from keyring storage (service: {}, key: {})",
                     SERVICE_NAME, TOKEN_KEY
                 );
-                match self.entry.get_password() {
+                match entry.get_password() {
                     Ok(token) => {
                         info!(
                             "✅ Token retrieved from keyring successfully (length: {} chars)",
@@ -103,7 +114,7 @@ impl TokenStorage {
                         );
                         Ok(token)
                     }
-                    Err(keyring::Error::NoEntry) => {
+                    Err(KeyringCoreError::NoEntry) => {
                         info!("❌ No token found in keyring storage");
                         Err(StorageError::TokenNotFound)
                     }
@@ -120,17 +131,22 @@ impl TokenStorage {
     pub fn delete_token(&self) -> Result<(), StorageError> {
         info!("Deleting token from secure storage");
         match &self.backend {
-            Backend::Portal(store) => {
+            Backend::Portal {
+                store,
+                legacy_entry,
+            } => {
                 store.delete_token().map_err(map_portal_err)?;
                 // Best effort cleanup in case a legacy keyring entry still exists
-                match self.entry.delete_credential() {
-                    Ok(()) | Err(keyring::Error::NoEntry) => (),
-                    Err(err) => warn!("Failed to clean legacy keyring entry: {err}"),
+                if let Some(entry) = legacy_entry.as_ref() {
+                    match entry.delete_credential() {
+                        Ok(()) | Err(KeyringCoreError::NoEntry) => (),
+                        Err(err) => warn!("Failed to clean legacy keyring entry: {err}"),
+                    }
                 }
                 Ok(())
             }
-            Backend::Keyring => match self.entry.delete_credential() {
-                Ok(()) | Err(keyring::Error::NoEntry) => {
+            Backend::Keyring { entry } => match entry.delete_credential() {
+                Ok(()) | Err(KeyringCoreError::NoEntry) => {
                     debug!("Keyring token deleted or already absent");
                     Ok(())
                 }
@@ -142,8 +158,8 @@ impl TokenStorage {
     /// Check if a token exists
     pub fn has_token(&self) -> bool {
         match &self.backend {
-            Backend::Portal(store) => store.has_token(),
-            Backend::Keyring => self.entry.get_password().is_ok(),
+            Backend::Portal { store, .. } => store.has_token(),
+            Backend::Keyring { entry } => entry.get_password().is_ok(),
         }
     }
 }
@@ -154,7 +170,7 @@ impl Default for TokenStorage {
     }
 }
 
-fn try_portal_backend(entry: &Entry, preference: PortalPreference) -> Option<Backend> {
+fn try_portal_backend(preference: PortalPreference) -> Option<Backend> {
     if !preference.use_portal() {
         debug!("Secret portal disabled (reason: {})", preference.describe());
         return None;
@@ -174,8 +190,12 @@ fn try_portal_backend(entry: &Entry, preference: PortalPreference) -> Option<Bac
                 "Using secret portal storage (reason: {})",
                 preference.describe()
             );
-            migrate_keyring_token(entry, &store);
-            Some(Backend::Portal(store))
+            let legacy_entry = keyring_entry_for_migration();
+            migrate_keyring_token(legacy_entry.as_ref(), &store);
+            Some(Backend::Portal {
+                store,
+                legacy_entry,
+            })
         }
         Err(err) => {
             warn!("Secret portal initialization failed: {err}");
@@ -184,11 +204,52 @@ fn try_portal_backend(entry: &Entry, preference: PortalPreference) -> Option<Bac
     }
 }
 
-fn migrate_keyring_token(entry: &Entry, store: &PortalTokenStore) {
+fn keyring_entry() -> Result<Entry, StorageError> {
+    configure_keyring_store()?;
+    Entry::new(SERVICE_NAME, TOKEN_KEY).map_err(StorageError::KeyringError)
+}
+
+fn keyring_entry_for_migration() -> Option<Entry> {
+    match keyring_entry() {
+        Ok(entry) => Some(entry),
+        Err(StorageError::KeyringUnavailable) => {
+            debug!("Keyring backend unavailable during portal migration; skipping legacy access");
+            None
+        }
+        Err(err) => {
+            warn!("Failed to prepare keyring migration entry: {err}");
+            None
+        }
+    }
+}
+
+fn configure_keyring_store() -> Result<(), StorageError> {
+    if KEYRING_STORE_CONFIGURED.get().is_some() {
+        return Ok(());
+    }
+
+    let prefer_secret_service = cfg!(target_os = "linux");
+    match keyring::use_native_store(prefer_secret_service) {
+        Ok(()) => {
+            let _ = KEYRING_STORE_CONFIGURED.set(());
+            Ok(())
+        }
+        Err(err) => {
+            warn!("Failed to initialize system keyring backend: {err}");
+            Err(StorageError::KeyringUnavailable)
+        }
+    }
+}
+
+fn migrate_keyring_token(entry: Option<&Entry>, store: &PortalTokenStore) {
     if store.has_token() {
         debug!("Portal storage already contains a token; skipping migration");
         return;
     }
+
+    let Some(entry) = entry else {
+        return;
+    };
 
     match entry.get_password() {
         Ok(token) => {
@@ -201,7 +262,7 @@ fn migrate_keyring_token(entry: &Entry, store: &PortalTokenStore) {
                 warn!("Failed to delete migrated keyring credential: {err}");
             }
         }
-        Err(keyring::Error::NoEntry) => {
+        Err(KeyringCoreError::NoEntry) => {
             debug!("No keyring token present to migrate");
         }
         Err(err) => {
@@ -227,7 +288,7 @@ fn ensure_keyring_ready(entry: &Entry) -> Result<(), StorageError> {
 fn has_existing_token(entry: &Entry) -> bool {
     match entry.get_password() {
         Ok(_) => true,
-        Err(keyring::Error::NoEntry) => false,
+        Err(KeyringCoreError::NoEntry) => false,
         Err(err) => {
             warn!("Failed to check existing token: {err}");
             false

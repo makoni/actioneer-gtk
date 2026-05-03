@@ -8,7 +8,7 @@ use chacha20poly1305::{
     ChaCha20Poly1305, Key, Nonce,
     aead::{Aead, KeyInit},
 };
-use rand_core::{OsRng, RngCore};
+use getrandom::fill as getrandom_fill;
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 
@@ -60,7 +60,7 @@ impl PortalTokenStore {
         ensure_parent(&self.cipher_path)?;
 
         let mut nonce = [0u8; NONCE_LEN];
-        OsRng.fill_bytes(&mut nonce);
+        getrandom_fill(&mut nonce).map_err(|_| PortalStoreError::Encryption)?;
 
         let cipher = ChaCha20Poly1305::new(Key::from_slice(&self.key));
         let ciphertext = cipher

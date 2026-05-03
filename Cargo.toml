@@ -25,9 +25,10 @@ serde_yaml = "0.9"
 base64 = "0.22"
 
 # Secret storage
-keyring = { version = "3.6", default-features = false, features = ["sync-secret-service", "crypto-rust", "vendored"] }
+keyring = "4.0"
+keyring-core = "1.0"
 chacha20poly1305 = { version = "0.10", default-features = false, features = ["std"] }
-rand_core = { version = "0.6", features = ["getrandom"] }
+getrandom = "0.3"
 sha2 = "0.11"
 ashpd = { version = "0.13", default-features = false, features = ["tokio", "notification", "secret"] }
 
