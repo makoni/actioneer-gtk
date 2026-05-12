@@ -246,14 +246,18 @@ mod tests {
 
     #[test]
     fn format_run_subtitle_includes_parts() {
+        let _guard = i18n_test_guard();
+        init(None);
+
         let mut run = run_stub();
         run.status = Some("completed".into());
         run.conclusion = Some("success".into());
         run.head_branch = Some("main".into());
         run.updated_at = Some("2024-01-01T00:00:00Z".into());
 
+        let _ = apply_language_preference(LanguagePreference::En);
         let subtitle = format_run_subtitle(&run);
-        assert!(subtitle.contains("Success"));
+        assert!(subtitle.contains(&tr("Success")));
         assert!(subtitle.contains("main"));
     }
 
