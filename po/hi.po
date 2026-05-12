@@ -814,3 +814,9 @@ msgstr "साथ में आने वाले components अपडेट �
 
 msgid "Refreshed the GNOME desktop libraries and HTTP stack for a more reliable, up-to-date experience."
 msgstr "GNOME डेस्कटॉप लाइब्रेरी और HTTP स्टैक अपडेट किए गए हैं, ताकि अनुभव अधिक भरोसेमंद और आधुनिक रहे।"
+
+msgid "Older workflow runs now show dates in your selected app language, making run history easier to scan."
+msgstr "पुराने वर्कफ़्लो रन अब आपकी चुनी हुई ऐप भाषा में तारीखें दिखाते हैं, जिससे रन इतिहास को देखना आसान हो जाता है।"
+
+msgid "Updated components and build improvements help keep Linux releases more reliable."
+msgstr "अपडेट किए गए कॉम्पोनेंट और बिल्ड सुधार Linux रिलीज़ को अधिक भरोसेमंद बनाए रखने में मदद करते हैं।"

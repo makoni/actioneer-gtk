@@ -814,3 +814,9 @@ msgstr "已更新随附组件，带来更可靠、更新鲜的使用体验。"
 
 msgid "Refreshed the GNOME desktop libraries and HTTP stack for a more reliable, up-to-date experience."
 msgstr "已更新 GNOME 桌面库与 HTTP 栈，带来更可靠、更新鲜的使用体验。"
+
+msgid "Older workflow runs now show dates in your selected app language, making run history easier to scan."
+msgstr "较早的工作流运行现在会按你选择的应用语言显示日期，让运行历史更易浏览。"
+
+msgid "Updated components and build improvements help keep Linux releases more reliable."
+msgstr "更新的组件和构建改进有助于让 Linux 版本更加可靠。"

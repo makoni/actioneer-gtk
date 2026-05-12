@@ -814,3 +814,9 @@ msgstr "شامل اجزا کو تازہ کر دیا گیا ہے تاکہ است�
 
 msgid "Refreshed the GNOME desktop libraries and HTTP stack for a more reliable, up-to-date experience."
 msgstr "GNOME ڈیسک ٹاپ لائبریریاں اور HTTP اسٹیک تازہ کر دیے گئے ہیں تاکہ استعمال کا تجربہ زیادہ قابلِ اعتماد اور جدید رہے۔"
+
+msgid "Older workflow runs now show dates in your selected app language, making run history easier to scan."
+msgstr "پرانے ورک فلو رنز اب تاریخیں آپ کی منتخب کردہ ایپ زبان میں دکھاتے ہیں، جس سے رن ہسٹری دیکھنا آسان ہو جاتا ہے۔"
+
+msgid "Updated components and build improvements help keep Linux releases more reliable."
+msgstr "اپ ڈیٹ شدہ اجزاء اور بلڈ میں بہتری Linux ریلیزز کو زیادہ قابلِ اعتماد رکھنے میں مدد دیتی ہے۔"

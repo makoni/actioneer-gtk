@@ -814,3 +814,9 @@ msgstr "Componentes incluídos atualizados para oferecer uma experiência mais c
 
 msgid "Refreshed the GNOME desktop libraries and HTTP stack for a more reliable, up-to-date experience."
 msgstr "As bibliotecas de desktop do GNOME e a pilha HTTP foram atualizadas para oferecer uma experiência mais confiável e atual."
+
+msgid "Older workflow runs now show dates in your selected app language, making run history easier to scan."
+msgstr "Execuções antigas de workflow agora mostram as datas no idioma escolhido no app, facilitando a leitura do histórico."
+
+msgid "Updated components and build improvements help keep Linux releases more reliable."
+msgstr "Componentes atualizados e melhorias no build ajudam a manter as versões para Linux mais confiáveis."

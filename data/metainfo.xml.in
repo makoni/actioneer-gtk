@@ -84,6 +84,14 @@
   </screenshots>
 
   <releases>
+    <release version="1.0.13" date="2026-05-12">
+      <description>
+        <ul>
+          <li>Older workflow runs now show dates in your selected app language, making run history easier to scan.</li>
+          <li>Updated components and build improvements help keep Linux releases more reliable.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.12" date="2026-04-23">
       <description>
         <ul>

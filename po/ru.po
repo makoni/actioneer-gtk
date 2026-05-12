@@ -819,3 +819,9 @@ msgstr "Встроенные компоненты обновлены для бо
 
 msgid "Refreshed the GNOME desktop libraries and HTTP stack for a more reliable, up-to-date experience."
 msgstr "Обновлены библиотеки рабочего стола GNOME и HTTP-стек — работа приложения стала надёжнее и актуальнее."
+
+msgid "Older workflow runs now show dates in your selected app language, making run history easier to scan."
+msgstr "Старые запуски workflow теперь показывают даты на выбранном в приложении языке, поэтому историю запусков стало легче просматривать."
+
+msgid "Updated components and build improvements help keep Linux releases more reliable."
+msgstr "Обновлённые компоненты и улучшения сборки помогают сделать Linux-релизы более надёжными."
