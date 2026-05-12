@@ -153,7 +153,7 @@ fn lookup_po_translation(message: &str) -> Option<String> {
         .cloned()
 }
 
-fn current_effective_language() -> String {
+pub(crate) fn current_effective_language() -> String {
     let lock = EFFECTIVE_LANGUAGE.get_or_init(|| RwLock::new("en".to_string()));
     match lock.read() {
         Ok(guard) => guard.clone(),

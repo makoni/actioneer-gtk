@@ -1,4 +1,4 @@
-use crate::i18n::tr;
+use crate::i18n::{current_effective_language, tr};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -333,7 +333,7 @@ impl WorkflowRun {
 
 /// Parse ISO 8601 timestamp and return relative time string
 fn relative_time_from_iso(iso_string: &str) -> String {
-    use chrono::{DateTime, Utc};
+    use chrono::{DateTime, Local, Utc};
 
     // Try parsing the ISO string
     if let Ok(dt) = DateTime::parse_from_rfc3339(iso_string) {
@@ -358,11 +358,36 @@ fn relative_time_from_iso(iso_string: &str) -> String {
                 tr("{count}d ago").replace("{count}", days.to_string().as_str())
             }
         } else {
-            // Use numeric format to avoid locale-specific month abbreviations.
-            dt.format("%Y-%m-%d").to_string()
+            localized_absolute_date_from_iso(iso_string)
+                .unwrap_or_else(|| fallback_localized_numeric_date(dt.with_timezone(&Local)))
         }
     } else {
         String::new()
+    }
+}
+
+fn localized_absolute_date_from_iso(iso_string: &str) -> Option<String> {
+    let date_time = gio::glib::DateTime::from_iso8601(iso_string, None).ok()?;
+    let local_date_time = date_time.to_local().ok()?;
+    let formatted = local_date_time.format("%x").ok()?;
+    let formatted = formatted.trim();
+
+    if formatted.is_empty() {
+        None
+    } else {
+        Some(formatted.to_string())
+    }
+}
+
+fn fallback_localized_numeric_date(date_time: chrono::DateTime<chrono::Local>) -> String {
+    match current_effective_language().as_str() {
+        "en" => date_time.format("%m/%d/%Y").to_string(),
+        "zh_Hans" => date_time.format("%Y/%m/%d").to_string(),
+        "pt_BR" | "fr" | "es" | "hi" | "ar" | "bn" | "ur" => {
+            date_time.format("%d/%m/%Y").to_string()
+        }
+        "de" | "nl" | "ru" => date_time.format("%d.%m.%Y").to_string(),
+        _ => date_time.format("%Y-%m-%d").to_string(),
     }
 }
 
@@ -501,6 +526,8 @@ impl RateLimitInfo {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::i18n::{apply_language_preference, i18n_test_guard, init};
+    use crate::preferences::LanguagePreference;
 
     #[test]
     fn test_repo_deserialization() {
@@ -701,5 +728,42 @@ mod tests {
 
         let result = build_dispatch_inputs_payload(&inputs, &values);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_relative_time_from_iso_localizes_old_dates() {
+        let _guard = i18n_test_guard();
+        init(None);
+        let _ = apply_language_preference(LanguagePreference::En);
+
+        let formatted = relative_time_from_iso("2024-01-08T13:45:00Z");
+
+        assert!(!formatted.is_empty());
+        assert_ne!(formatted, "2024-01-08");
+    }
+
+    #[test]
+    fn test_fallback_localized_numeric_date_uses_english_order() {
+        let _guard = i18n_test_guard();
+        init(None);
+        let _ = apply_language_preference(LanguagePreference::En);
+        let date_time = chrono::DateTime::parse_from_rfc3339("2024-01-08T13:45:00Z")
+            .unwrap()
+            .with_timezone(&chrono::Local);
+
+        assert_eq!(fallback_localized_numeric_date(date_time), "01/08/2024");
+    }
+
+    #[test]
+    fn test_fallback_localized_numeric_date_uses_russian_order() {
+        let _guard = i18n_test_guard();
+        init(None);
+        let _ = apply_language_preference(LanguagePreference::Ru);
+        let date_time = chrono::DateTime::parse_from_rfc3339("2024-01-08T13:45:00Z")
+            .unwrap()
+            .with_timezone(&chrono::Local);
+
+        assert_eq!(fallback_localized_numeric_date(date_time), "08.01.2024");
+        let _ = apply_language_preference(LanguagePreference::En);
     }
 }
