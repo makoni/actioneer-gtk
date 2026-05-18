@@ -820,3 +820,12 @@ msgstr "较早的工作流运行现在会按你选择的应用语言显示日期
 
 msgid "Updated components and build improvements help keep Linux releases more reliable."
 msgstr "更新的组件和构建改进有助于让 Linux 版本更加可靠。"
+
+msgid "Closing and reopening Actioneer is more reliable, so you are less likely to see an unexpected crash report after a normal shutdown."
+msgstr "现在关闭并重新打开 Actioneer 更可靠了，因此在正常退出后更不容易看到意外的崩溃报告。"
+
+msgid "Sign-in checks and secure storage now recover more gracefully when desktop services are slow to respond."
+msgstr "当桌面服务响应较慢时，登录检查和安全存储现在也能更从容地恢复。"
+
+msgid "Updated bundled components help keep the app reliable and up to date."
+msgstr "更新后的内置组件有助于让应用保持可靠并与时俱进。"

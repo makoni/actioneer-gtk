@@ -820,3 +820,12 @@ msgstr "পুরোনো ওয়ার্কফ্লো রান এখন �
 
 msgid "Updated components and build improvements help keep Linux releases more reliable."
 msgstr "আপডেট করা কম্পোনেন্ট ও বিল্ড উন্নতি Linux রিলিজকে আরও নির্ভরযোগ্য রাখতে সাহায্য করে।"
+
+msgid "Closing and reopening Actioneer is more reliable, so you are less likely to see an unexpected crash report after a normal shutdown."
+msgstr "Actioneer বন্ধ করে আবার চালু করা এখন আরও নির্ভরযোগ্য, তাই স্বাভাবিকভাবে বন্ধ করার পর অপ্রত্যাশিত ক্র্যাশ রিপোর্ট দেখার সম্ভাবনা কম।"
+
+msgid "Sign-in checks and secure storage now recover more gracefully when desktop services are slow to respond."
+msgstr "ডেস্কটপ পরিষেবাগুলি ধীরে সাড়া দিলে সাইন-ইন যাচাই ও নিরাপদ সংরক্ষণ এখন আরও ভালোভাবে স্বাভাবিক অবস্থায় ফিরে আসে।"
+
+msgid "Updated bundled components help keep the app reliable and up to date."
+msgstr "হালনাগাদ করা অন্তর্ভুক্ত কম্পোনেন্টগুলো অ্যাপটিকে নির্ভরযোগ্য ও আধুনিক রাখতে সহায়তা করে।"

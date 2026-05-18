@@ -820,3 +820,12 @@ msgstr "Las ejecuciones antiguas de workflows ahora muestran las fechas en el id
 
 msgid "Updated components and build improvements help keep Linux releases more reliable."
 msgstr "Los componentes actualizados y las mejoras de compilación ayudan a que las versiones para Linux sean más fiables."
+
+msgid "Closing and reopening Actioneer is more reliable, so you are less likely to see an unexpected crash report after a normal shutdown."
+msgstr "Cerrar y volver a abrir Actioneer ahora es más fiable, así que es menos probable que aparezca un informe de fallo inesperado después de un cierre normal."
+
+msgid "Sign-in checks and secure storage now recover more gracefully when desktop services are slow to respond."
+msgstr "Las comprobaciones de inicio de sesión y el almacenamiento seguro ahora se recuperan mejor cuando los servicios del escritorio tardan en responder."
+
+msgid "Updated bundled components help keep the app reliable and up to date."
+msgstr "Los componentes incluidos actualizados ayudan a mantener la aplicación fiable y al día."

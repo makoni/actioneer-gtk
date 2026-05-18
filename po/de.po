@@ -801,6 +801,7 @@ msgstr "Deutsche und niederländische Übersetzungen sind jetzt in der gesamten 
 msgid "Actioneer is now localized in English, German, Dutch, Simplified Chinese, Hindi, Spanish, French, Arabic, Bengali, Brazilian Portuguese, Russian, and Urdu."
 msgstr "Actioneer ist jetzt auf Englisch, Deutsch, Niederländisch, vereinfachtem Chinesisch, Hindi, Spanisch, Französisch, Arabisch, Bengalisch, brasilianischem Portugiesisch, Russisch und Urdu verfügbar."
 
+
 msgid "Added Help and Shortcuts to make in-app guidance and keyboard workflows easier."
 msgstr "Hilfe und Tastenkombinationen wurden hinzugefügt, um In-App-Anleitungen und Tastatur-Workflows zu erleichtern."
 
@@ -819,3 +820,12 @@ msgstr "Ältere Workflow-Ausführungen zeigen Datumsangaben jetzt in der ausgew�
 
 msgid "Updated components and build improvements help keep Linux releases more reliable."
 msgstr "Aktualisierte Komponenten und Verbesserungen am Build helfen dabei, Linux-Veröffentlichungen zuverlässiger zu machen."
+
+msgid "Closing and reopening Actioneer is more reliable, so you are less likely to see an unexpected crash report after a normal shutdown."
+msgstr "Das Schließen und erneute Öffnen von Actioneer ist jetzt zuverlässiger, sodass nach einem normalen Beenden seltener unerwartete Absturzberichte erscheinen."
+
+msgid "Sign-in checks and secure storage now recover more gracefully when desktop services are slow to respond."
+msgstr "Anmeldeprüfungen und die sichere Speicherung erholen sich jetzt robuster, wenn Desktop-Dienste langsam reagieren."
+
+msgid "Updated bundled components help keep the app reliable and up to date."
+msgstr "Aktualisierte mitgelieferte Komponenten helfen dabei, die App zuverlässig und aktuell zu halten."

@@ -1,6 +1,6 @@
 name: actioneer
 base: core24
-version: '1.0.13'
+version: '1.0.14'
 title: Actioneer
 summary: GitHub Actions desktop client for GNOME
 description: |

@@ -820,3 +820,12 @@ msgstr "پرانے ورک فلو رنز اب تاریخیں آپ کی منتخب
 
 msgid "Updated components and build improvements help keep Linux releases more reliable."
 msgstr "اپ ڈیٹ شدہ اجزاء اور بلڈ میں بہتری Linux ریلیزز کو زیادہ قابلِ اعتماد رکھنے میں مدد دیتی ہے۔"
+
+msgid "Closing and reopening Actioneer is more reliable, so you are less likely to see an unexpected crash report after a normal shutdown."
+msgstr "اب Actioneer کو بند کرکے دوبارہ کھولنا زیادہ قابلِ اعتماد ہے، اس لیے عام طور پر بند کرنے کے بعد غیر متوقع کریش رپورٹ دیکھنے کا امکان کم ہے۔"
+
+msgid "Sign-in checks and secure storage now recover more gracefully when desktop services are slow to respond."
+msgstr "جب ڈیسک ٹاپ سروسز آہستہ جواب دیں تو سائن اِن کی جانچ اور محفوظ ذخیرہ اب زیادہ بہتر انداز میں بحال ہوتے ہیں۔"
+
+msgid "Updated bundled components help keep the app reliable and up to date."
+msgstr "تازہ کاری شدہ شامل اجزا ایپ کو قابلِ اعتماد اور جدید رکھنے میں مدد دیتے ہیں۔"
