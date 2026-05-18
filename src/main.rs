@@ -146,6 +146,7 @@ impl ShutdownSignal {
 fn install_unix_signal_handlers(_app: &adw::Application) {
     use tokio::signal::unix::signal;
 
+    let _runtime_guard = runtime_handle().enter();
     let mut handles = Vec::with_capacity(ShutdownSignal::all().len());
     for shutdown_signal in ShutdownSignal::all() {
         let handle = match signal(shutdown_signal.kind()) {
