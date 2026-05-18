@@ -76,11 +76,32 @@ pub fn initialize_session_lifecycle() -> io::Result<SessionMarker> {
 }
 
 pub fn initialize_session_lifecycle_in(base_dir: &Path, pid: u32) -> io::Result<SessionMarker> {
+    initialize_session_lifecycle_with(base_dir, pid, is_process_active)
+}
+
+fn initialize_session_lifecycle_with<F>(
+    base_dir: &Path,
+    pid: u32,
+    is_pid_active: F,
+) -> io::Result<SessionMarker>
+where
+    F: Fn(u32) -> bool,
+{
     ensure_storage_dirs_in(base_dir)?;
-    if let Some(previous) = read_session_marker_in(base_dir)?
-        && read_pending_report_in(base_dir)?.is_none()
-    {
-        persist_abnormal_exit_report_in(base_dir, &previous)?;
+    let stale_markers = read_session_marker_entries_in(base_dir)?
+        .into_iter()
+        .filter(|entry| !is_pid_active(entry.marker.pid))
+        .collect::<Vec<_>>();
+    let has_pending_report = read_pending_report_in(base_dir)?.is_some();
+
+    if !has_pending_report && let Some(previous) = stale_markers.first() {
+        persist_abnormal_exit_report_in(base_dir, &previous.marker)?;
+    }
+
+    for stale in &stale_markers {
+        if stale.path.exists() {
+            fs::remove_file(&stale.path)?;
+        }
     }
 
     let current = SessionMarker {
@@ -97,13 +118,9 @@ pub fn mark_session_clean(session_id: &str) -> io::Result<()> {
 }
 
 pub fn mark_session_clean_in(base_dir: &Path, session_id: &str) -> io::Result<()> {
-    if let Some(marker) = read_session_marker_in(base_dir)?
-        && marker.session_id == session_id
-    {
-        let marker_path = session_marker_path_from(base_dir);
-        if marker_path.exists() {
-            fs::remove_file(marker_path)?;
-        }
+    let marker_path = session_marker_path_from(base_dir, session_id);
+    if marker_path.exists() {
+        fs::remove_file(marker_path)?;
     }
     Ok(())
 }
@@ -337,8 +354,8 @@ fn session_dir_from(base_dir: &Path) -> PathBuf {
     base_dir.join("session")
 }
 
-fn session_marker_path_from(base_dir: &Path) -> PathBuf {
-    session_dir_from(base_dir).join("current_session.json")
+fn session_marker_path_from(base_dir: &Path, session_id: &str) -> PathBuf {
+    session_dir_from(base_dir).join(format!("{session_id}.json"))
 }
 
 fn pending_report_path_from(base_dir: &Path) -> PathBuf {
@@ -357,24 +374,42 @@ fn write_session_marker_in(base_dir: &Path, marker: &SessionMarker) -> io::Resul
     ensure_storage_dirs_in(base_dir)?;
     let body = serde_json::to_string_pretty(marker)
         .map_err(|err| io::Error::other(format!("failed to serialize session marker: {err}")))?;
-    fs::write(session_marker_path_from(base_dir), body)?;
+    fs::write(session_marker_path_from(base_dir, &marker.session_id), body)?;
     Ok(())
 }
 
-fn read_session_marker_in(base_dir: &Path) -> io::Result<Option<SessionMarker>> {
-    let marker_path = session_marker_path_from(base_dir);
-    if !marker_path.exists() {
-        return Ok(None);
+fn read_session_marker_entries_in(base_dir: &Path) -> io::Result<Vec<SessionMarkerEntry>> {
+    let session_dir = session_dir_from(base_dir);
+    if !session_dir.exists() {
+        return Ok(Vec::new());
     }
 
-    let data = fs::read_to_string(marker_path)?;
-    let marker = serde_json::from_str::<SessionMarker>(&data).map_err(|err| {
-        io::Error::new(
-            io::ErrorKind::InvalidData,
-            format!("failed to parse session marker: {err}"),
-        )
-    })?;
-    Ok(Some(marker))
+    let mut markers = Vec::new();
+    for entry in fs::read_dir(session_dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if !path.is_file() || path.extension().and_then(|ext| ext.to_str()) != Some("json") {
+            continue;
+        }
+
+        let data = fs::read_to_string(&path)?;
+        let marker = serde_json::from_str::<SessionMarker>(&data).map_err(|err| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!("failed to parse session marker '{}': {err}", path.display()),
+            )
+        })?;
+        markers.push(SessionMarkerEntry { marker, path });
+    }
+
+    markers.sort_by(|left, right| {
+        left.marker
+            .started_at
+            .cmp(&right.marker.started_at)
+            .then(left.marker.session_id.cmp(&right.marker.session_id))
+    });
+
+    Ok(markers)
 }
 
 fn persist_abnormal_exit_report_in(base_dir: &Path, marker: &SessionMarker) -> io::Result<PathBuf> {
@@ -419,6 +454,22 @@ fn generate_session_id(pid: u32) -> String {
     )
 }
 
+#[derive(Debug, Clone)]
+struct SessionMarkerEntry {
+    marker: SessionMarker,
+    path: PathBuf,
+}
+
+#[cfg(target_os = "linux")]
+fn is_process_active(pid: u32) -> bool {
+    pid != 0 && Path::new("/proc").join(pid.to_string()).exists()
+}
+
+#[cfg(not(target_os = "linux"))]
+fn is_process_active(_pid: u32) -> bool {
+    false
+}
+
 fn render_text_report(report: &CrashReport) -> String {
     format!(
         "Actioneer crash report\n\
@@ -446,6 +497,7 @@ Backtrace:\n{}\n",
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashSet;
     use tempfile::tempdir;
 
     #[test]
@@ -455,8 +507,8 @@ mod tests {
         assert_eq!(crash_reports_dir_from(&base), base.join("crashes"));
         assert_eq!(session_dir_from(&base), base.join("session"));
         assert_eq!(
-            session_marker_path_from(&base),
-            base.join("session").join("current_session.json")
+            session_marker_path_from(&base, "session-1"),
+            base.join("session").join("session-1.json")
         );
         assert_eq!(
             pending_report_path_from(&base),
@@ -519,8 +571,8 @@ mod tests {
         };
         write_session_marker_in(&base, &old_marker).expect("write previous marker");
 
-        let current =
-            initialize_session_lifecycle_in(&base, 200).expect("initialize session lifecycle");
+        let current = initialize_session_lifecycle_with(&base, 200, |_| false)
+            .expect("initialize session lifecycle");
         assert_ne!(current.session_id, old_marker.session_id);
 
         let pending = read_pending_report_in(&base)
@@ -530,6 +582,62 @@ mod tests {
         let report: CrashReport = serde_json::from_str(&report_json).expect("parse report json");
         assert_eq!(report.kind, CrashKind::AbnormalExit);
         assert_eq!(report.session_id.as_deref(), Some("session-old"));
+        assert!(!session_marker_path_from(&base, "session-old").exists());
+    }
+
+    #[test]
+    fn initialize_session_lifecycle_ignores_live_other_instances() {
+        let temp = tempdir().expect("temp dir");
+        let base = temp.path().join("state");
+        let live_marker = SessionMarker {
+            session_id: "session-live".to_string(),
+            started_at: Utc::now().to_rfc3339(),
+            pid: 100,
+        };
+        write_session_marker_in(&base, &live_marker).expect("write previous marker");
+
+        let current =
+            initialize_session_lifecycle_with(&base, 200, |pid| pid == 100).expect("initialize");
+
+        assert_eq!(read_pending_report_in(&base).expect("read pending"), None);
+        assert!(session_marker_path_from(&base, &live_marker.session_id).exists());
+        assert!(session_marker_path_from(&base, &current.session_id).exists());
+    }
+
+    #[test]
+    fn initialize_session_lifecycle_clears_stale_markers_when_pending_report_exists() {
+        let temp = tempdir().expect("temp dir");
+        let base = temp.path().join("state");
+        let stale_marker = SessionMarker {
+            session_id: "session-stale".to_string(),
+            started_at: Utc::now().to_rfc3339(),
+            pid: 100,
+        };
+        write_session_marker_in(&base, &stale_marker).expect("write stale marker");
+        fs::write(
+            pending_report_path_from(&base),
+            r#"{"report_id":"id","report_path":"/tmp/id.json","created_at":"now"}"#,
+        )
+        .expect("write pending");
+
+        let current = initialize_session_lifecycle_with(&base, 200, |_| false)
+            .expect("initialize session lifecycle");
+
+        let session_dir = session_dir_from(&base);
+        let session_files = fs::read_dir(&session_dir)
+            .expect("read session dir")
+            .map(|entry| {
+                entry
+                    .expect("entry")
+                    .file_name()
+                    .to_string_lossy()
+                    .to_string()
+            })
+            .collect::<HashSet<_>>();
+        assert_eq!(
+            session_files,
+            HashSet::from([format!("{}.json", current.session_id)])
+        );
     }
 
     #[test]
@@ -541,9 +649,16 @@ mod tests {
             started_at: Utc::now().to_rfc3339(),
             pid: 100,
         };
+        let other = SessionMarker {
+            session_id: "session-other".to_string(),
+            started_at: Utc::now().to_rfc3339(),
+            pid: 200,
+        };
         write_session_marker_in(&base, &marker).expect("write marker");
+        write_session_marker_in(&base, &other).expect("write other marker");
         mark_session_clean_in(&base, "session-abc").expect("mark clean");
-        assert!(!session_marker_path_from(&base).exists());
+        assert!(!session_marker_path_from(&base, "session-abc").exists());
+        assert!(session_marker_path_from(&base, "session-other").exists());
     }
 
     #[test]

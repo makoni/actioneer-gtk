@@ -1,4 +1,4 @@
-use std::{env, io::Read, os::unix::net::UnixStream};
+use std::{env, future::Future, io::Read, os::unix::net::UnixStream, time::Duration};
 
 use ashpd::desktop::secret::Secret as PortalClient;
 use gio::glib::{self, VariantTy};
@@ -14,6 +14,7 @@ const PORTAL_OBJECT_PATH: &str = "/org/freedesktop/portal/desktop";
 const INTROSPECT_INTERFACE: &str = "org.freedesktop.DBus.Introspectable";
 const SECRET_INTERFACE: &str = "org.freedesktop.portal.Secret";
 const INTROSPECT_TIMEOUT_MS: i32 = 5_000;
+const SECRET_REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 const ENABLE_ENV: &str = "ACTIONEER_ENABLE_SECRET_PORTAL";
 const DISABLE_ENV: &str = "ACTIONEER_DISABLE_SECRET_PORTAL";
 
@@ -32,6 +33,8 @@ pub enum PortalSecretError {
     Io(#[from] std::io::Error),
     #[error("secret portal request failed: {0}")]
     Portal(ashpd::Error),
+    #[error("secret portal request timed out after {0:?}")]
+    Timeout(Duration),
     #[error("secret portal response missing expected data")]
     InvalidResponse,
 }
@@ -132,17 +135,20 @@ pub fn secret_portal_available() -> Result<bool, PortalDetectionError> {
 /// Retrieve the per-application secret via the portal and return it alongside any session token.
 pub fn retrieve_secret(_previous_token: Option<&str>) -> Result<PortalSecret, PortalSecretError> {
     let (reader, writer) = UnixStream::pair()?;
-    runtime_handle().block_on(async {
-        let portal = PortalClient::new()
-            .await
-            .map_err(PortalSecretError::Portal)?;
-        let request = portal
-            .retrieve(&writer, Default::default())
-            .await
-            .map_err(PortalSecretError::Portal)?;
-        request.response().map_err(PortalSecretError::Portal)?;
-        Ok::<(), PortalSecretError>(())
-    })?;
+    runtime_handle().block_on(run_portal_request_with_timeout(
+        || async {
+            let portal = PortalClient::new()
+                .await
+                .map_err(PortalSecretError::Portal)?;
+            let request = portal
+                .retrieve(&writer, Default::default())
+                .await
+                .map_err(PortalSecretError::Portal)?;
+            request.response().map_err(PortalSecretError::Portal)?;
+            Ok::<(), PortalSecretError>(())
+        },
+        SECRET_REQUEST_TIMEOUT,
+    ))?;
     drop(writer);
 
     let secret_bytes = read_secret(reader)?;
@@ -198,9 +204,23 @@ fn parse_flag(value: &str) -> bool {
     )
 }
 
+async fn run_portal_request_with_timeout<F, Fut>(
+    request: F,
+    timeout: Duration,
+) -> Result<(), PortalSecretError>
+where
+    F: FnOnce() -> Fut,
+    Fut: Future<Output = Result<(), PortalSecretError>>,
+{
+    tokio::time::timeout(timeout, request())
+        .await
+        .map_err(|_| PortalSecretError::Timeout(timeout))?
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::Duration;
 
     #[test]
     fn parses_truthy_flags() {
@@ -215,5 +235,29 @@ mod tests {
         assert!(!parse_flag("0"));
         assert!(!parse_flag("false"));
         assert!(!parse_flag(""));
+    }
+
+    #[tokio::test]
+    async fn portal_request_timeout_returns_explicit_error() {
+        let err = run_portal_request_with_timeout(
+            || async {
+                tokio::time::sleep(Duration::from_millis(50)).await;
+                Ok(())
+            },
+            Duration::from_millis(1),
+        )
+        .await
+        .expect_err("request should time out");
+
+        assert!(
+            matches!(err, PortalSecretError::Timeout(timeout) if timeout == Duration::from_millis(1))
+        );
+    }
+
+    #[tokio::test]
+    async fn portal_request_timeout_allows_fast_requests() {
+        run_portal_request_with_timeout(|| async { Ok(()) }, Duration::from_secs(1))
+            .await
+            .expect("request should succeed");
     }
 }

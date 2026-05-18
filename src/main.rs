@@ -109,28 +109,70 @@ fn mark_current_session_clean(reason: &str) {
 }
 
 #[cfg(unix)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ShutdownSignal {
+    Hangup,
+    Interrupt,
+    Quit,
+    Terminate,
+}
+
+#[cfg(unix)]
+impl ShutdownSignal {
+    fn all() -> [Self; 4] {
+        [Self::Hangup, Self::Interrupt, Self::Quit, Self::Terminate]
+    }
+
+    fn name(self) -> &'static str {
+        match self {
+            Self::Hangup => "SIGHUP",
+            Self::Interrupt => "SIGINT",
+            Self::Quit => "SIGQUIT",
+            Self::Terminate => "SIGTERM",
+        }
+    }
+
+    fn kind(self) -> tokio::signal::unix::SignalKind {
+        match self {
+            Self::Hangup => tokio::signal::unix::SignalKind::hangup(),
+            Self::Interrupt => tokio::signal::unix::SignalKind::interrupt(),
+            Self::Quit => tokio::signal::unix::SignalKind::quit(),
+            Self::Terminate => tokio::signal::unix::SignalKind::terminate(),
+        }
+    }
+}
+
+#[cfg(unix)]
 fn install_unix_signal_handlers(_app: &adw::Application) {
-    use tokio::signal::unix::{SignalKind, signal};
+    use tokio::signal::unix::signal;
+
+    let mut handles = Vec::with_capacity(ShutdownSignal::all().len());
+    for shutdown_signal in ShutdownSignal::all() {
+        let handle = match signal(shutdown_signal.kind()) {
+            Ok(handle) => handle,
+            Err(err) => {
+                warn!(signal = shutdown_signal.name(), error = %err, "Failed to register shutdown signal handler");
+                return;
+            }
+        };
+        handles.push((shutdown_signal, handle));
+    }
+
+    let [
+        (signal_hangup, mut sig_hangup),
+        (signal_interrupt, mut sig_interrupt),
+        (signal_quit, mut sig_quit),
+        (signal_terminate, mut sig_terminate),
+    ]: [(ShutdownSignal, tokio::signal::unix::Signal); 4] = handles
+        .try_into()
+        .expect("shutdown signal registration count should match enum");
 
     runtime_handle().spawn(async move {
-        let mut sigint = match signal(SignalKind::interrupt()) {
-            Ok(s) => s,
-            Err(err) => {
-                warn!(error = %err, "Failed to register SIGINT handler");
-                return;
-            }
-        };
-        let mut sigterm = match signal(SignalKind::terminate()) {
-            Ok(s) => s,
-            Err(err) => {
-                warn!(error = %err, "Failed to register SIGTERM handler");
-                return;
-            }
-        };
-
         let signal_name = tokio::select! {
-            _ = sigint.recv() => "SIGINT",
-            _ = sigterm.recv() => "SIGTERM",
+            _ = sig_hangup.recv() => signal_hangup.name(),
+            _ = sig_interrupt.recv() => signal_interrupt.name(),
+            _ = sig_quit.recv() => signal_quit.name(),
+            _ = sig_terminate.recv() => signal_terminate.name(),
         };
 
         glib::MainContext::default().invoke(move || {
@@ -390,6 +432,8 @@ fn register_icon_theme_paths() {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(unix)]
+    use super::ShutdownSignal;
     use super::{
         default_tokio_worker_threads_for, extract_cli_locale_arg,
         parse_tokio_worker_threads_override,
@@ -441,5 +485,15 @@ mod tests {
     fn parses_valid_tokio_worker_override_values() {
         assert_eq!(parse_tokio_worker_threads_override("6"), Some(6));
         assert_eq!(parse_tokio_worker_threads_override(" 3 "), Some(3));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn clean_shutdown_signal_set_covers_terminal_and_session_signals() {
+        let names = ShutdownSignal::all()
+            .into_iter()
+            .map(ShutdownSignal::name)
+            .collect::<Vec<_>>();
+        assert_eq!(names, vec!["SIGHUP", "SIGINT", "SIGQUIT", "SIGTERM"]);
     }
 }
