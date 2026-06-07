@@ -35,7 +35,7 @@ jobs:
       APPDIR: build/AppDir
       LINUXDEPLOY_PLUGIN_GTK: ${{ github.workspace }}/linuxdeploy-plugin-gtk.sh
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6.0.3
 
       - name: Install system packages
         run: |
