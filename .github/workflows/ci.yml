@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: lock-sync
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6.0.3
       - name: Install system packages (GTK4 & libadwaita)
         run: |
           sudo apt-get update
@@ -60,7 +60,7 @@ jobs:
           - arch: aarch64
             runner: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6.0.3
 
       - name: Install system packages (GTK4 & libadwaita)
         run: |
@@ -119,7 +119,7 @@ jobs:
           - arch: aarch64
             runner: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6.0.3
 
       - name: Install system packages (GUI deps)
         run: |
@@ -158,7 +158,7 @@ jobs:
     needs: build-test
     if: ${{ github.event_name != 'pull_request' }}
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v6.0.3
 
       - name: Install runtime + AT-SPI deps
         run: |
