@@ -2,7 +2,8 @@ use super::{
     portal_token_store::{PortalStoreError, PortalTokenStore},
     secret_portal::{self, PortalPreference},
 };
-use keyring_core::{Entry, Error as KeyringCoreError};
+use keyring::v1::Entry;
+use keyring_core::Error as KeyringCoreError;
 use std::sync::OnceLock;
 use thiserror::Error;
 use tracing::{debug, info, warn};
@@ -228,17 +229,19 @@ fn configure_keyring_store() -> Result<(), StorageError> {
         return Ok(());
     }
 
-    let prefer_secret_service = cfg!(target_os = "linux");
-    match keyring::use_native_store(prefer_secret_service) {
-        Ok(()) => {
-            let _ = KEYRING_STORE_CONFIGURED.set(());
-            Ok(())
-        }
-        Err(err) => {
-            warn!("Failed to initialize system keyring backend: {err}");
-            Err(StorageError::KeyringUnavailable)
-        }
+    // keyring 4.1 dropped the crate-root `use_native_store`; the `v1` API now
+    // installs the platform's native store (secret-service on Linux) on the
+    // first `Entry::new` via an internal `call_once`. That setup silently
+    // no-ops when no session secret service is reachable, so we trigger it and
+    // then confirm a default store was actually registered.
+    let _ = Entry::new(SERVICE_NAME, TOKEN_KEY);
+    if keyring_core::get_default_store().is_none() {
+        warn!("Failed to initialize system keyring backend: no default store available");
+        return Err(StorageError::KeyringUnavailable);
     }
+
+    let _ = KEYRING_STORE_CONFIGURED.set(());
+    Ok(())
 }
 
 fn migrate_keyring_token(entry: Option<&Entry>, store: &PortalTokenStore) {
