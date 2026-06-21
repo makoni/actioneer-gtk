@@ -7,6 +7,9 @@ vendor/
 # Environment variables (contains secrets)
 .env
 
+# Codegraph local index
+.codegraph/
+
 # IDE
 .vscode/
 .idea/
