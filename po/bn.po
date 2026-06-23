@@ -829,3 +829,9 @@ msgstr "ডেস্কটপ পরিষেবাগুলি ধীরে স
 
 msgid "Updated bundled components help keep the app reliable and up to date."
 msgstr "হালনাগাদ করা অন্তর্ভুক্ত কম্পোনেন্টগুলো অ্যাপটিকে নির্ভরযোগ্য ও আধুনিক রাখতে সহায়তা করে।"
+
+msgid "Sign-in works more reliably on newer Linux systems thanks to improved secure token storage compatibility."
+msgstr "নিরাপদ টোকেন সংরক্ষণের সামঞ্জস্যতা উন্নত হওয়ায় নতুন Linux সিস্টেমে সাইন-ইন আরও নির্ভরযোগ্য হয়েছে।"
+
+msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
+msgstr "হালনাগাদ বান্ডেলকৃত কম্পোনেন্টগুলো Actioneer-কে স্থিতিশীল, নির্ভরযোগ্য এবং আপ-টু-ডেট রাখতে সহায়তা করে।"

@@ -826,3 +826,9 @@ msgstr "Aanmeldcontroles en veilige opslag herstellen nu beter als desktopdienst
 
 msgid "Updated bundled components help keep the app reliable and up to date."
 msgstr "Bijgewerkte meegeleverde onderdelen helpen de app betrouwbaar en actueel te houden."
+
+msgid "Sign-in works more reliably on newer Linux systems thanks to improved secure token storage compatibility."
+msgstr "Aanmelden werkt betrouwbaarder op nieuwere Linux-systemen dankzij verbeterde compatibiliteit van veilige tokenopslag."
+
+msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
+msgstr "Bijgewerkte meegeleverde onderdelen helpen Actioneer stabiel, betrouwbaar en actueel te houden."

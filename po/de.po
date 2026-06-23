@@ -829,3 +829,9 @@ msgstr "Anmeldeprüfungen und die sichere Speicherung erholen sich jetzt robuste
 
 msgid "Updated bundled components help keep the app reliable and up to date."
 msgstr "Aktualisierte mitgelieferte Komponenten helfen dabei, die App zuverlässig und aktuell zu halten."
+
+msgid "Sign-in works more reliably on newer Linux systems thanks to improved secure token storage compatibility."
+msgstr "Die Anmeldung funktioniert auf neueren Linux-Systemen zuverlässiger dank verbesserter Kompatibilität der sicheren Token-Speicherung."
+
+msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
+msgstr "Aktualisierte mitgelieferte Komponenten helfen dabei, Actioneer stabil, zuverlässig und aktuell zu halten."

@@ -829,3 +829,9 @@ msgstr "जब डेस्कटॉप सेवाएं धीमे जव�
 
 msgid "Updated bundled components help keep the app reliable and up to date."
 msgstr "अपडेट किए गए शामिल घटक ऐप को भरोसेमंद और अद्यतित बनाए रखने में मदद करते हैं।"
+
+msgid "Sign-in works more reliably on newer Linux systems thanks to improved secure token storage compatibility."
+msgstr "सुरक्षित टोकन स्टोरेज संगतता में सुधार के कारण नए Linux सिस्टम पर साइन-इन अब अधिक भरोसेमंद है।"
+
+msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
+msgstr "अपडेट किए गए शामिल घटक Actioneer को स्थिर, भरोसेमंद और अद्यतित बनाए रखने में मदद करते हैं।"

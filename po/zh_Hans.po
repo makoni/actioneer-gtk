@@ -829,3 +829,9 @@ msgstr "当桌面服务响应较慢时，登录检查和安全存储现在也能
 
 msgid "Updated bundled components help keep the app reliable and up to date."
 msgstr "更新后的内置组件有助于让应用保持可靠并与时俱进。"
+
+msgid "Sign-in works more reliably on newer Linux systems thanks to improved secure token storage compatibility."
+msgstr "由于改进了安全令牌存储兼容性，在较新的 Linux 系统上登录更加可靠。"
+
+msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
+msgstr "更新的捆绑组件有助于让 Actioneer 保持稳定、可靠并保持最新。"

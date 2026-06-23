@@ -829,3 +829,9 @@ msgstr "Les vérifications de connexion et le stockage sécurisé se rétablisse
 
 msgid "Updated bundled components help keep the app reliable and up to date."
 msgstr "Des composants intégrés mis à jour contribuent à garder l’application fiable et à jour."
+
+msgid "Sign-in works more reliably on newer Linux systems thanks to improved secure token storage compatibility."
+msgstr "La connexion fonctionne de façon plus fiable sur les systèmes Linux récents grâce à une meilleure compatibilité du stockage sécurisé des jetons."
+
+msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
+msgstr "Les composants intégrés mis à jour aident à maintenir Actioneer stable, fiable et à jour."

@@ -829,3 +829,9 @@ msgstr "جب ڈیسک ٹاپ سروسز آہستہ جواب دیں تو سائن
 
 msgid "Updated bundled components help keep the app reliable and up to date."
 msgstr "تازہ کاری شدہ شامل اجزا ایپ کو قابلِ اعتماد اور جدید رکھنے میں مدد دیتے ہیں۔"
+
+msgid "Sign-in works more reliably on newer Linux systems thanks to improved secure token storage compatibility."
+msgstr "محفوظ ٹوکن اسٹوریج کی بہتر مطابقت کی بدولت نئے Linux سسٹمز پر سائن اِن زیادہ قابلِ بھروسا ہو گیا ہے۔"
+
+msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
+msgstr "تازہ کردہ بنڈلڈ اجزا Actioneer کو مستحکم، قابلِ بھروسا اور تازہ ترین رکھنے میں مدد دیتے ہیں۔"
