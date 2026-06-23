@@ -84,6 +84,14 @@
   </screenshots>
 
   <releases>
+    <release version="1.0.15" date="2026-06-23">
+      <description>
+        <ul>
+          <li>Sign-in works more reliably on newer Linux systems thanks to improved secure token storage compatibility.</li>
+          <li>Updated bundled components help keep Actioneer stable, reliable, and up to date.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.14" date="2026-05-18">
       <description>
         <ul>

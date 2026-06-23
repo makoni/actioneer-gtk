@@ -834,3 +834,9 @@ msgstr "Проверка входа и безопасное хранилище �
 
 msgid "Updated bundled components help keep the app reliable and up to date."
 msgstr "Обновлённые встроенные компоненты помогают приложению оставаться надёжным и актуальным."
+
+msgid "Sign-in works more reliably on newer Linux systems thanks to improved secure token storage compatibility."
+msgstr "Вход в систему на новых версиях Linux работает надёжнее благодаря улучшенной совместимости безопасного хранения токенов."
+
+msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
+msgstr "Обновлённые встроенные компоненты помогают поддерживать Actioneer стабильным, надёжным и актуальным."

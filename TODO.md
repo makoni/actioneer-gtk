@@ -22,6 +22,10 @@ CI runs only on `workflow_dispatch` (see `AGENTS.md`), so validate locally:
 4. UI tests (requires display): `cargo test -- --ignored` (or `xvfb-run`)
 5. If `Cargo.lock` changed: `scripts/regenerate-flatpak-sources.sh` then `scripts/check-flatpak-lock-sync.sh`
 
+## Recent Updates
+
+- 2026-06-23: Started [🔄] and completed [✅] release bump to `1.0.15` (maintenance): updated version targets, added AppStream + GitHub changelog entries based on commits since `1.0.14`, refreshed gettext/Flatpak artifacts, and ran release validation checks.
+
 ## Open items (optional / low priority)
 
 These are enhancement ideas, not required work — none has been started.
