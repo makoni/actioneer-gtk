@@ -80,14 +80,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/ashpd/ashpd-0.13.11.crate",
-        "sha256": "340e0f6bf7f9ee78549c61454f1460a3ed97c011902ee76b58301bbc6d502a32",
-        "dest": "cargo/vendor/ashpd-0.13.11"
+        "url": "https://static.crates.io/crates/ashpd/ashpd-0.13.12.crate",
+        "sha256": "281e6645758940dee594495e28807a7672ce40f11ebf4df6c22c4fcd59e2689f",
+        "dest": "cargo/vendor/ashpd-0.13.12"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"340e0f6bf7f9ee78549c61454f1460a3ed97c011902ee76b58301bbc6d502a32\", \"files\": {}}",
-        "dest": "cargo/vendor/ashpd-0.13.11",
+        "contents": "{\"package\": \"281e6645758940dee594495e28807a7672ce40f11ebf4df6c22c4fcd59e2689f\", \"files\": {}}",
+        "dest": "cargo/vendor/ashpd-0.13.12",
         "dest-filename": ".cargo-checksum.json"
     },
     {
