@@ -5,7 +5,7 @@ use std::{
 };
 
 use chacha20poly1305::{
-    ChaCha20Poly1305, Key, Nonce,
+    ChaCha20Poly1305, Nonce,
     aead::{Aead, KeyInit},
 };
 use getrandom::fill as getrandom_fill;
@@ -59,12 +59,14 @@ impl PortalTokenStore {
     pub fn save_token(&self, token: &str) -> Result<(), PortalStoreError> {
         ensure_parent(&self.cipher_path)?;
 
-        let mut nonce = [0u8; NONCE_LEN];
-        getrandom_fill(&mut nonce).map_err(|_| PortalStoreError::Encryption)?;
+        let mut nonce_bytes = [0u8; NONCE_LEN];
+        getrandom_fill(&mut nonce_bytes).map_err(|_| PortalStoreError::Encryption)?;
 
-        let cipher = ChaCha20Poly1305::new(Key::from_slice(&self.key));
+        let cipher = ChaCha20Poly1305::new_from_slice(&self.key)
+            .map_err(|_| PortalStoreError::Encryption)?;
+        let nonce = Nonce::from(nonce_bytes);
         let ciphertext = cipher
-            .encrypt(Nonce::from_slice(&nonce), token.as_bytes())
+            .encrypt(&nonce, token.as_bytes())
             .map_err(|_| PortalStoreError::Encryption)?;
 
         let mut payload = Vec::with_capacity(
@@ -72,7 +74,7 @@ impl PortalTokenStore {
         );
         payload.extend_from_slice(FILE_MAGIC);
         payload.push(FILE_VERSION);
-        payload.extend_from_slice(&nonce);
+        payload.extend_from_slice(&nonce_bytes);
         payload.extend_from_slice(&(ciphertext.len() as u32).to_be_bytes());
         payload.extend_from_slice(&ciphertext);
 
@@ -130,9 +132,14 @@ impl PortalTokenStore {
 
         let ciphertext = &data[len_end..len_end + ciphertext_len];
 
-        let cipher = ChaCha20Poly1305::new(Key::from_slice(&self.key));
+        let cipher = ChaCha20Poly1305::new_from_slice(&self.key)
+            .map_err(|_| PortalStoreError::Decryption)?;
+        let nonce_bytes: [u8; NONCE_LEN] = data[nonce_start..nonce_end]
+            .try_into()
+            .map_err(|_| PortalStoreError::Decryption)?;
+        let nonce = Nonce::from(nonce_bytes);
         let plaintext = cipher
-            .decrypt(Nonce::from_slice(&data[nonce_start..nonce_end]), ciphertext)
+            .decrypt(&nonce, ciphertext)
             .map_err(|_| PortalStoreError::Decryption)?;
 
         let token = String::from_utf8(plaintext).map_err(|_| PortalStoreError::Decryption)?;
