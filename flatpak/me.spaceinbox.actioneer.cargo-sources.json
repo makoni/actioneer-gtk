@@ -2004,14 +2004,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/keyring/keyring-4.1.2.crate",
-        "sha256": "8fef88805a7ddbc8f9cf52bfa8dba90b3f80dff23a1e1533cd4f1d8e8d448fc8",
-        "dest": "cargo/vendor/keyring-4.1.2"
+        "url": "https://static.crates.io/crates/keyring/keyring-4.1.3.crate",
+        "sha256": "d1daef93704e6f6506d5b273175189bf8a5e00371930387fb77fd871e15c0d94",
+        "dest": "cargo/vendor/keyring-4.1.3"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"8fef88805a7ddbc8f9cf52bfa8dba90b3f80dff23a1e1533cd4f1d8e8d448fc8\", \"files\": {}}",
-        "dest": "cargo/vendor/keyring-4.1.2",
+        "contents": "{\"package\": \"d1daef93704e6f6506d5b273175189bf8a5e00371930387fb77fd871e15c0d94\", \"files\": {}}",
+        "dest": "cargo/vendor/keyring-4.1.3",
         "dest-filename": ".cargo-checksum.json"
     },
     {
