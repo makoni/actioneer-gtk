@@ -2381,14 +2381,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/open/open-5.3.5.crate",
-        "sha256": "2fbaa89d2ddc8473c78a3adf69eea8cffa28c483b8e02a971ef31527cd0fc92c",
-        "dest": "cargo/vendor/open-5.3.5"
+        "url": "https://static.crates.io/crates/open/open-5.3.6.crate",
+        "sha256": "cd8d3b65c44123a56e0133d2cd06ce4361bd3ca99d41198b2f25e3c3db9b8b4a",
+        "dest": "cargo/vendor/open-5.3.6"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"2fbaa89d2ddc8473c78a3adf69eea8cffa28c483b8e02a971ef31527cd0fc92c\", \"files\": {}}",
-        "dest": "cargo/vendor/open-5.3.5",
+        "contents": "{\"package\": \"cd8d3b65c44123a56e0133d2cd06ce4361bd3ca99d41198b2f25e3c3db9b8b4a\", \"files\": {}}",
+        "dest": "cargo/vendor/open-5.3.6",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -2493,19 +2493,6 @@
         "type": "inline",
         "contents": "{\"package\": \"2621685985a2ebf1c516881c026032ac7deafcda1a2c9b7850dc81e3dfcb64c1\", \"files\": {}}",
         "dest": "cargo/vendor/parking_lot_core-0.9.12",
-        "dest-filename": ".cargo-checksum.json"
-    },
-    {
-        "type": "archive",
-        "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/pathdiff/pathdiff-0.2.3.crate",
-        "sha256": "df94ce210e5bc13cb6651479fa48d14f601d9858cfe0467f43ae157023b938d3",
-        "dest": "cargo/vendor/pathdiff-0.2.3"
-    },
-    {
-        "type": "inline",
-        "contents": "{\"package\": \"df94ce210e5bc13cb6651479fa48d14f601d9858cfe0467f43ae157023b938d3\", \"files\": {}}",
-        "dest": "cargo/vendor/pathdiff-0.2.3",
         "dest-filename": ".cargo-checksum.json"
     },
     {
