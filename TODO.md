@@ -25,6 +25,7 @@ CI runs only on `workflow_dispatch` (see `AGENTS.md`), so validate locally:
 ## Recent Updates
 
 - 2026-06-23: Started [🔄] and completed [✅] release bump to `1.0.15` (maintenance): updated version targets, added AppStream + GitHub changelog entries based on commits since `1.0.14`, refreshed gettext/Flatpak artifacts, and ran release validation checks.
+- 2026-06-30: Started [🔄] and completed [✅] dependency maintenance pass: merged pending Dependabot updates, refreshed Cargo deps (`gio`, `gtk4`, `open`, `chacha20poly1305` major), and synchronized Flatpak cargo sources with `Cargo.lock`.
 
 ## Open items (optional / low priority)
 
