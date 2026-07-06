@@ -1445,14 +1445,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/gtk4/gtk4-0.11.3.crate",
-        "sha256": "7181b837f04cbe93f79441475f7a00560a92cba7a72e38cc1a68b6f8b78eaae2",
-        "dest": "cargo/vendor/gtk4-0.11.3"
+        "url": "https://static.crates.io/crates/gtk4/gtk4-0.11.4.crate",
+        "sha256": "98a0a0466484f64b07b5b8184d43fa46be78eb0b8e04ae4e179af31d770b76d9",
+        "dest": "cargo/vendor/gtk4-0.11.4"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"7181b837f04cbe93f79441475f7a00560a92cba7a72e38cc1a68b6f8b78eaae2\", \"files\": {}}",
-        "dest": "cargo/vendor/gtk4-0.11.3",
+        "contents": "{\"package\": \"98a0a0466484f64b07b5b8184d43fa46be78eb0b8e04ae4e179af31d770b76d9\", \"files\": {}}",
+        "dest": "cargo/vendor/gtk4-0.11.4",
         "dest-filename": ".cargo-checksum.json"
     },
     {
