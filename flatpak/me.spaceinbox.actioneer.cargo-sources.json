@@ -2420,14 +2420,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/open/open-5.3.6.crate",
-        "sha256": "cd8d3b65c44123a56e0133d2cd06ce4361bd3ca99d41198b2f25e3c3db9b8b4a",
-        "dest": "cargo/vendor/open-5.3.6"
+        "url": "https://static.crates.io/crates/open/open-5.4.0.crate",
+        "sha256": "a0b3d059e795d52b8a72fef45658620edd4d9c359b338564aa14391ffa511ed5",
+        "dest": "cargo/vendor/open-5.4.0"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"cd8d3b65c44123a56e0133d2cd06ce4361bd3ca99d41198b2f25e3c3db9b8b4a\", \"files\": {}}",
-        "dest": "cargo/vendor/open-5.3.6",
+        "contents": "{\"package\": \"a0b3d059e795d52b8a72fef45658620edd4d9c359b338564aa14391ffa511ed5\", \"files\": {}}",
+        "dest": "cargo/vendor/open-5.4.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
