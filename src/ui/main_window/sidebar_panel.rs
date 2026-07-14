@@ -53,6 +53,9 @@ impl SidebarPanel {
 
         let factory = gtk::SignalListItemFactory::new();
         factory.connect_bind(|_, list_item| {
+            let Some(list_item) = list_item.downcast_ref::<gtk::ListItem>() else {
+                return;
+            };
             let Some(row) = list_item
                 .item()
                 .and_then(|obj| obj.downcast::<gtk::Widget>().ok())
@@ -65,6 +68,9 @@ impl SidebarPanel {
             list_item.set_activatable(row_activatable_from_object(row.as_ref()));
         });
         factory.connect_unbind(|_, list_item| {
+            let Some(list_item) = list_item.downcast_ref::<gtk::ListItem>() else {
+                return;
+            };
             if let Some(child) = list_item.child() {
                 child.unparent();
                 list_item.set_child(None::<&gtk::Widget>);

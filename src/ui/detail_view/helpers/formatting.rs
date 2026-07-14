@@ -356,6 +356,6 @@ mod tests {
         update_workflow_status_badge(&badge, &run);
 
         assert_eq!(badge.text().as_str(), "Failed");
-        assert!(badge.style_context().has_class("error"));
+        assert!(badge.has_css_class("error"));
     }
 }

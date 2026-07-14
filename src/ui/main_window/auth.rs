@@ -3,8 +3,10 @@ use crate::i18n::tr;
 use crate::storage::TokenStorage;
 use crate::ui::auth_window::AuthWindow;
 use crate::ui::utils::MainContextChannelExt;
+use gtk4::glib;
 use gtk4::prelude::*;
-use gtk4::{self as gtk, glib};
+use libadwaita as adw;
+use libadwaita::prelude::*;
 use tracing::{error, info, warn};
 
 fn load_token_if_present_blocking() -> Result<Option<String>, String> {
@@ -30,24 +32,21 @@ impl MainWindow {
         let parent = self.window.clone();
         let this = self.clone();
 
-        let dialog = gtk::MessageDialog::new(
-            Some(&parent),
-            gtk::DialogFlags::MODAL,
-            gtk::MessageType::Warning,
-            gtk::ButtonsType::None,
-            "",
+        let dialog = adw::AlertDialog::new(
+            None,
+            Some(
+                tr("Are you sure you want to sign out?\n\nYou will need to sign in again to continue.")
+                    .as_str(),
+            ),
         );
-        dialog.set_text(Some(
-            tr("Are you sure you want to sign out?\n\nYou will need to sign in again to continue.")
-                .as_str(),
-        ));
-        dialog.add_button(tr("No").as_str(), gtk::ResponseType::No);
-        dialog.add_button(tr("Yes").as_str(), gtk::ResponseType::Yes);
+        dialog.add_response("cancel", tr("No").as_str());
+        dialog.add_response("signout", tr("Yes").as_str());
+        dialog.set_response_appearance("signout", adw::ResponseAppearance::Destructive);
+        dialog.set_default_response(Some("cancel"));
+        dialog.set_close_response("cancel");
 
-        dialog.connect_response(move |dialog, response| {
-            dialog.close();
-
-            if response == gtk::ResponseType::Yes {
+        dialog.connect_response(None, move |_dialog, response| {
+            if response == "signout" {
                 let this_for_ui = this.clone();
                 let (sender, receiver) = glib::MainContext::default()
                     .channel::<Result<(), String>>(glib::Priority::default());
@@ -73,7 +72,7 @@ impl MainWindow {
             }
         });
 
-        dialog.present();
+        dialog.present(Some(&parent));
     }
 
     pub(super) fn check_authentication(&self) {

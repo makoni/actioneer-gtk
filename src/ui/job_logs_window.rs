@@ -3,6 +3,7 @@ use crate::api::{GitHubClient, GitHubError};
 use crate::i18n::tr;
 use crate::ui::utils::channel::MainContextChannelExt;
 use gtk4::gdk;
+use gtk4::gio;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
@@ -348,26 +349,22 @@ impl JobLogsWindow {
         let job_title = self.job_title.clone();
 
         button.connect_clicked(move |_| {
-            let dialog = gtk::FileChooserNative::builder()
+            let default_name = JobLogsWindow::default_file_name(&run_title, &job_title);
+            let dialog = gtk::FileDialog::builder()
                 .title(tr("Save Logs"))
                 .accept_label(tr("Save"))
-                .cancel_label(tr("Cancel"))
-                .action(gtk::FileChooserAction::Save)
-                .transient_for(&window)
                 .modal(true)
+                .initial_name(default_name)
                 .build();
-
-            let default_name = JobLogsWindow::default_file_name(&run_title, &job_title);
-            dialog.set_current_name(&default_name);
 
             let overlay_for_dialog = overlay.clone();
             let text_for_dialog = text_view.clone();
 
-            dialog.connect_response(move |dialog, response| {
-                if response != gtk::ResponseType::Accept {
-                    dialog.destroy();
-                    return;
-                }
+            dialog.save(Some(&window), gio::Cancellable::NONE, move |result| {
+                let file = match result {
+                    Ok(file) => file,
+                    Err(_) => return,
+                };
 
                 let buffer = text_for_dialog.buffer();
                 let text = buffer
@@ -378,60 +375,45 @@ impl JobLogsWindow {
                     let toast = adw::Toast::new(tr("Logs are empty; nothing saved").as_str());
                     toast.set_timeout(3);
                     overlay_for_dialog.add_toast(toast);
-                    dialog.destroy();
                     return;
                 }
 
-                match dialog.file() {
-                    Some(file) => {
-                        if let Some(path) = file.path() {
-                            let text_to_write = text.clone();
-                            let (sender, receiver) = glib::MainContext::default()
-                                .channel::<Result<(), String>>(glib::Priority::default());
-                            let overlay_for_result = overlay_for_dialog.clone();
+                if let Some(path) = file.path() {
+                    let text_to_write = text.clone();
+                    let (sender, receiver) = glib::MainContext::default()
+                        .channel::<Result<(), String>>(glib::Priority::default());
+                    let overlay_for_result = overlay_for_dialog.clone();
 
-                            receiver.attach(None, move |message| {
-                                match message {
-                                    Ok(()) => {
-                                        let toast = adw::Toast::new(tr("Logs saved").as_str());
-                                        toast.set_timeout(3);
-                                        overlay_for_result.add_toast(toast);
-                                    }
-                                    Err(err) => {
-                                        let toast = adw::Toast::new(
-                                            tr("Failed to save logs: {error}")
-                                                .replace("{error}", err.as_str())
-                                                .as_str(),
-                                        );
-                                        toast.set_timeout(5);
-                                        overlay_for_result.add_toast(toast);
-                                    }
-                                }
-                                glib::ControlFlow::Break
-                            });
-
-                            crate::runtime_handle().spawn_blocking(move || {
-                                let result = std::fs::write(&path, text_to_write);
-                                let _ = sender.send(result.map_err(|e| e.to_string()));
-                            });
-                        } else {
-                            let toast =
-                                adw::Toast::new(tr("Unable to determine save location").as_str());
-                            toast.set_timeout(5);
-                            overlay_for_dialog.add_toast(toast);
+                    receiver.attach(None, move |message| {
+                        match message {
+                            Ok(()) => {
+                                let toast = adw::Toast::new(tr("Logs saved").as_str());
+                                toast.set_timeout(3);
+                                overlay_for_result.add_toast(toast);
+                            }
+                            Err(err) => {
+                                let toast = adw::Toast::new(
+                                    tr("Failed to save logs: {error}")
+                                        .replace("{error}", err.as_str())
+                                        .as_str(),
+                                );
+                                toast.set_timeout(5);
+                                overlay_for_result.add_toast(toast);
+                            }
                         }
-                    }
-                    _ => {
-                        let toast = adw::Toast::new(tr("No file selected").as_str());
-                        toast.set_timeout(5);
-                        overlay_for_dialog.add_toast(toast);
-                    }
+                        glib::ControlFlow::Break
+                    });
+
+                    crate::runtime_handle().spawn_blocking(move || {
+                        let result = std::fs::write(&path, text_to_write);
+                        let _ = sender.send(result.map_err(|e| e.to_string()));
+                    });
+                } else {
+                    let toast = adw::Toast::new(tr("Unable to determine save location").as_str());
+                    toast.set_timeout(5);
+                    overlay_for_dialog.add_toast(toast);
                 }
-
-                dialog.destroy();
             });
-
-            dialog.show();
         });
     }
 

@@ -6,6 +6,7 @@ use crate::ui::utils::MainContextChannelExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
+use libadwaita::prelude::*;
 use parking_lot::Mutex;
 use std::sync::Arc;
 use tracing::error;
@@ -77,14 +78,19 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
     let run_title = format_run_title(run);
 
     button.connect_clicked(move |btn| {
-        let dialog = gtk::MessageDialog::new(
-            Some(&parent_window),
-            gtk::DialogFlags::MODAL,
-            gtk::MessageType::Question,
-            gtk::ButtonsType::YesNo,
-            tr("Do you want to re-run \"{run}\"?").replace("{run}", run_title.as_str()),
+        let dialog = adw::AlertDialog::new(
+            Some(tr("Re-run Workflow").as_str()),
+            Some(
+                tr("Do you want to re-run \"{run}\"?")
+                    .replace("{run}", run_title.as_str())
+                    .as_str(),
+            ),
         );
-        dialog.set_title(Some(tr("Re-run Workflow").as_str()));
+        dialog.add_response("cancel", tr("No").as_str());
+        dialog.add_response("confirm", tr("Yes").as_str());
+        dialog.set_response_appearance("confirm", adw::ResponseAppearance::Suggested);
+        dialog.set_default_response(Some("cancel"));
+        dialog.set_close_response("cancel");
 
         let btn_clone = btn.clone();
         let client = client.clone();
@@ -93,9 +99,8 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
         let toast_overlay = toast_overlay.clone();
         let run_title = run_title.clone();
 
-        dialog.connect_response(move |dialog, response| {
-            dialog.close();
-            if response != gtk::ResponseType::Yes {
+        dialog.connect_response(None, move |_dialog, response| {
+            if response != "confirm" {
                 return;
             }
 
@@ -137,7 +142,7 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
             });
         });
 
-        dialog.present();
+        dialog.present(Some(&parent_window));
     });
 
     button
@@ -160,15 +165,19 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
     let run_title = format_run_title(run);
 
     button.connect_clicked(move |btn| {
-        let dialog = gtk::MessageDialog::new(
-            Some(&parent_window),
-            gtk::DialogFlags::MODAL,
-            gtk::MessageType::Warning,
-            gtk::ButtonsType::YesNo,
-            tr("Do you want to re-run all failed jobs in \"{run}\"?")
-                .replace("{run}", run_title.as_str()),
+        let dialog = adw::AlertDialog::new(
+            Some(tr("Re-run Failed Jobs").as_str()),
+            Some(
+                tr("Do you want to re-run all failed jobs in \"{run}\"?")
+                    .replace("{run}", run_title.as_str())
+                    .as_str(),
+            ),
         );
-        dialog.set_title(Some(tr("Re-run Failed Jobs").as_str()));
+        dialog.add_response("cancel", tr("No").as_str());
+        dialog.add_response("confirm", tr("Yes").as_str());
+        dialog.set_response_appearance("confirm", adw::ResponseAppearance::Suggested);
+        dialog.set_default_response(Some("cancel"));
+        dialog.set_close_response("cancel");
 
         let btn_clone = btn.clone();
         let client = client.clone();
@@ -177,9 +186,8 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
         let toast_overlay = toast_overlay.clone();
         let run_title = run_title.clone();
 
-        dialog.connect_response(move |dialog, response| {
-            dialog.close();
-            if response != gtk::ResponseType::Yes {
+        dialog.connect_response(None, move |_dialog, response| {
+            if response != "confirm" {
                 return;
             }
 
@@ -218,7 +226,7 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
             });
         });
 
-        dialog.present();
+        dialog.present(Some(&parent_window));
     });
 
     button
@@ -241,15 +249,19 @@ fn create_cancel_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::B
     let run_title = format_run_title(run);
 
     button.connect_clicked(move |btn| {
-        let dialog = gtk::MessageDialog::new(
-            Some(&parent_window),
-            gtk::DialogFlags::MODAL,
-            gtk::MessageType::Warning,
-            gtk::ButtonsType::YesNo,
-            tr("Do you want to cancel the in-progress run \"{run}\"?\n\nThis action cannot be undone.")
-                .replace("{run}", run_title.as_str()),
+        let dialog = adw::AlertDialog::new(
+            Some(tr("Cancel Workflow Run").as_str()),
+            Some(
+                tr("Do you want to cancel the in-progress run \"{run}\"?\n\nThis action cannot be undone.")
+                    .replace("{run}", run_title.as_str())
+                    .as_str(),
+            ),
         );
-        dialog.set_title(Some(tr("Cancel Workflow Run").as_str()));
+        dialog.add_response("cancel", tr("No").as_str());
+        dialog.add_response("confirm", tr("Yes").as_str());
+        dialog.set_response_appearance("confirm", adw::ResponseAppearance::Destructive);
+        dialog.set_default_response(Some("cancel"));
+        dialog.set_close_response("cancel");
 
         let btn_clone = btn.clone();
         let client = client.clone();
@@ -258,9 +270,8 @@ fn create_cancel_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::B
         let toast_overlay = toast_overlay.clone();
         let run_title = run_title.clone();
 
-        dialog.connect_response(move |dialog, response| {
-            dialog.close();
-            if response != gtk::ResponseType::Yes {
+        dialog.connect_response(None, move |_dialog, response| {
+            if response != "confirm" {
                 return;
             }
 
@@ -299,7 +310,7 @@ fn create_cancel_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::B
             });
         });
 
-        dialog.present();
+        dialog.present(Some(&parent_window));
     });
 
     button

@@ -354,23 +354,13 @@ pub(crate) fn create_workflow_expander_row(
         let repo_model_for_dialog = repo_model_for_trigger.clone();
         let run_load_service_for_dialog = run_load_service_for_trigger.clone();
 
-        let dialog = gtk::Dialog::with_buttons(
-            Some(tr("Trigger Workflow").as_str()),
-            Some(&parent_window),
-            gtk::DialogFlags::MODAL | gtk::DialogFlags::DESTROY_WITH_PARENT,
-            &[
-                (tr("Cancel").as_str(), gtk::ResponseType::Cancel),
-                (tr("Trigger").as_str(), gtk::ResponseType::Accept),
-            ],
-        );
-        dialog.set_default_response(gtk::ResponseType::Accept);
-        dialog.set_modal(true);
+        let dialog = adw::AlertDialog::new(Some(tr("Trigger Workflow").as_str()), None);
+        dialog.add_response("cancel", tr("Cancel").as_str());
+        dialog.add_response("trigger", tr("Trigger").as_str());
+        dialog.set_response_appearance("trigger", adw::ResponseAppearance::Suggested);
+        dialog.set_default_response(Some("trigger"));
+        dialog.set_close_response("cancel");
 
-        let content_area = dialog.content_area();
-        content_area.set_margin_start(12);
-        content_area.set_margin_end(12);
-        content_area.set_margin_top(12);
-        content_area.set_margin_bottom(12);
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 12);
 
         let info_label = gtk::Label::new(Some(&format!(
@@ -404,12 +394,7 @@ pub(crate) fn create_workflow_expander_row(
             .build();
         inputs_group.set_visible(false);
 
-        if let Some(trigger_button) = dialog
-            .widget_for_response(gtk::ResponseType::Accept)
-            .and_then(|w| w.downcast::<gtk::Button>().ok())
-        {
-            trigger_button.set_sensitive(false);
-        }
+        dialog.set_response_enabled("trigger", false);
 
         let input_fields: Rc<RefCell<Vec<DispatchInputField>>> = Rc::new(RefCell::new(Vec::new()));
         let branches_loaded = Rc::new(Cell::new(false));
@@ -425,9 +410,7 @@ pub(crate) fn create_workflow_expander_row(
         let (branch_sender, branch_receiver) = glib::MainContext::default()
             .channel::<Vec<String>>(glib::Priority::default());
 
-        let trigger_button_for_branches = dialog
-            .widget_for_response(gtk::ResponseType::Accept)
-            .and_then(|w| w.downcast::<gtk::Button>().ok());
+        let dialog_for_branches = dialog.clone();
         let branches_loaded_for_branches = branches_loaded.clone();
         let branches_available_for_branches = branches_available.clone();
         let inputs_loaded_for_branches = inputs_loaded.clone();
@@ -446,12 +429,10 @@ pub(crate) fn create_workflow_expander_row(
             branches_loaded_for_branches.set(true);
             branches_available_for_branches.set(!str_refs.is_empty());
 
-            if let Some(btn) = trigger_button_for_branches.as_ref() {
-                let should_enable = branches_loaded_for_branches.get()
-                    && inputs_loaded_for_branches.get()
-                    && branches_available_for_branches.get();
-                btn.set_sensitive(should_enable);
-            }
+            let should_enable = branches_loaded_for_branches.get()
+                && inputs_loaded_for_branches.get()
+                && branches_available_for_branches.get();
+            dialog_for_branches.set_response_enabled("trigger", should_enable);
             glib::ControlFlow::Break
         });
 
@@ -495,9 +476,7 @@ pub(crate) fn create_workflow_expander_row(
         let inputs_group_for_loader = inputs_group.clone();
         let inputs_placeholder_for_loader = inputs_placeholder.clone();
         let input_fields_for_loader = input_fields.clone();
-        let trigger_button_for_inputs = dialog
-            .widget_for_response(gtk::ResponseType::Accept)
-            .and_then(|w| w.downcast::<gtk::Button>().ok());
+        let dialog_for_inputs = dialog.clone();
         let branches_loaded_for_inputs = branches_loaded.clone();
         let branches_available_for_inputs = branches_available.clone();
         let inputs_loaded_for_inputs = inputs_loaded.clone();
@@ -600,12 +579,10 @@ pub(crate) fn create_workflow_expander_row(
             }
 
             inputs_loaded_for_inputs.set(true);
-            if let Some(btn) = trigger_button_for_inputs.as_ref() {
-                let should_enable = branches_loaded_for_inputs.get()
-                    && inputs_loaded_for_inputs.get()
-                    && branches_available_for_inputs.get();
-                btn.set_sensitive(should_enable);
-            }
+            let should_enable = branches_loaded_for_inputs.get()
+                && inputs_loaded_for_inputs.get()
+                && branches_available_for_inputs.get();
+            dialog_for_inputs.set_response_enabled("trigger", should_enable);
 
             glib::ControlFlow::Break
         });
@@ -633,7 +610,7 @@ pub(crate) fn create_workflow_expander_row(
         vbox.append(&inputs_placeholder);
         vbox.append(&inputs_group);
 
-        content_area.append(&vbox);
+        dialog.set_extra_child(Some(&vbox));
 
         let client_clone = client.clone();
         let owner_clone = owner.clone();
@@ -655,8 +632,8 @@ pub(crate) fn create_workflow_expander_row(
         let run_load_service_handle = run_load_service_for_response.clone();
         let input_fields_for_dialog = input_fields.clone();
         let status_badge_for_dialog = status_badge_for_reload.clone();
-        dialog.connect_response(move |dialog, response| {
-            if response == gtk::ResponseType::Accept {
+        dialog.connect_response(None, move |_dialog, response| {
+            if response == "trigger" {
                 let selected_branch = branch_dropdown
                     .selected_item()
                     .and_then(|obj| obj.downcast::<gtk::StringObject>().ok())
@@ -908,11 +885,9 @@ pub(crate) fn create_workflow_expander_row(
                     glib::ControlFlow::Break
                 });
             }
-
-            dialog.close();
         });
 
-        dialog.present();
+        dialog.present(Some(&parent_window));
     });
 
     card

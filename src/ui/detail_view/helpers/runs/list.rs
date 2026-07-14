@@ -70,6 +70,9 @@ impl WorkflowRunListModel {
         let factory = gtk::SignalListItemFactory::new();
 
         factory.connect_setup(|_, list_item| {
+            let Some(list_item) = list_item.downcast_ref::<gtk::ListItem>() else {
+                return;
+            };
             let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
             list_item.set_child(Some(&container));
         });
@@ -78,6 +81,9 @@ impl WorkflowRunListModel {
         let expanded_runs = Rc::new(RefCell::new(HashSet::new()));
         let expanded_runs_for_bind = expanded_runs.clone();
         factory.connect_bind(move |_, list_item| {
+            let Some(list_item) = list_item.downcast_ref::<gtk::ListItem>() else {
+                return;
+            };
             let context = bind_context.clone();
             let Some(container) = list_item
                 .child()
@@ -120,6 +126,9 @@ impl WorkflowRunListModel {
         });
 
         factory.connect_unbind(|_, list_item| {
+            let Some(list_item) = list_item.downcast_ref::<gtk::ListItem>() else {
+                return;
+            };
             if let Some(container) = list_item
                 .child()
                 .and_then(|child| child.downcast::<gtk::Box>().ok())

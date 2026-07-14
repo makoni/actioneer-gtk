@@ -33,14 +33,6 @@ updates:
       # compiled into the binary. Revisit once keyring 4.x ships stable.
       - dependency-name: rand
         versions: ["0.8.x"]
-      # gtk4 0.11.4 cfg-gated `gtk4::Accessible` behind the `v4_10` feature
-      # (gtk-rs/gtk4-rs#2332). This breaks libadwaita 0.9.1's generated bindings
-      # (which reference `gtk::Accessible` unconditionally) and our own ListItem
-      # factory code, and no compatible libadwaita 0.9.x has been released.
-      # Enabling the `v4_10` feature fixes the libadwaita errors but not ours.
-      # Block this specific version; revisit when 0.11.5+ resolves the gating.
-      - dependency-name: gtk4
-        versions: ["0.11.4"]
       # Block major bumps of gtk-rs-core crates: even with the `gtk-rs` group,
       # Dependabot opens PRs one crate at a time when a co-released peer hasn't
       # also updated, which leaves two versions of shared types in the graph

@@ -18,15 +18,10 @@ impl MainWindow {
         } else {
             warn!("Preferences unavailable; preferences manager failed to initialize");
             let unavailable_message = tr("Preferences are currently unavailable.");
-            let dialog = gtk::MessageDialog::new(
-                Some(&self.window),
-                gtk::DialogFlags::MODAL,
-                gtk::MessageType::Info,
-                gtk::ButtonsType::Ok,
-                unavailable_message.as_str(),
-            );
-            dialog.connect_response(|dialog, _| dialog.close());
-            dialog.present();
+            let dialog = adw::AlertDialog::new(None, Some(unavailable_message.as_str()));
+            dialog.add_response("ok", tr("OK").as_str());
+            dialog.set_default_response(Some("ok"));
+            dialog.present(Some(&self.window));
         }
     }
 
@@ -211,15 +206,10 @@ Troubleshooting\n\
         if let Err(err) = open::that(issue_url) {
             error!("Failed to open issue tracker URL: {}", err);
             let open_issue_error = tr("Failed to open issue tracker in the browser.");
-            let dialog = gtk::MessageDialog::new(
-                Some(&self.window),
-                gtk::DialogFlags::MODAL,
-                gtk::MessageType::Error,
-                gtk::ButtonsType::Ok,
-                open_issue_error.as_str(),
-            );
-            dialog.connect_response(|dialog, _| dialog.close());
-            dialog.present();
+            let dialog = adw::AlertDialog::new(None, Some(open_issue_error.as_str()));
+            dialog.add_response("ok", tr("OK").as_str());
+            dialog.set_default_response(Some("ok"));
+            dialog.present(Some(&self.window));
         }
     }
 
@@ -321,15 +311,10 @@ Troubleshooting\n\
         if let Err(err) = open::that(DONATION_URL) {
             error!("Failed to open donation URL: {}", err);
             let open_donation_error = tr("Failed to open donation page in the browser.");
-            let dialog = gtk::MessageDialog::new(
-                Some(&self.window),
-                gtk::DialogFlags::MODAL,
-                gtk::MessageType::Error,
-                gtk::ButtonsType::Ok,
-                open_donation_error.as_str(),
-            );
-            dialog.connect_response(|dialog, _| dialog.close());
-            dialog.present();
+            let dialog = adw::AlertDialog::new(None, Some(open_donation_error.as_str()));
+            dialog.add_response("ok", tr("OK").as_str());
+            dialog.set_default_response(Some("ok"));
+            dialog.present(Some(&self.window));
         }
     }
 
@@ -353,15 +338,10 @@ Troubleshooting\n\
             None => {
                 warn!("Notifications unavailable; could not send test notification");
                 let notifications_unavailable = tr("Notifications are currently unavailable.");
-                let dialog = gtk::MessageDialog::new(
-                    Some(&self.window),
-                    gtk::DialogFlags::MODAL,
-                    gtk::MessageType::Info,
-                    gtk::ButtonsType::Ok,
-                    notifications_unavailable.as_str(),
-                );
-                dialog.connect_response(|dialog, _| dialog.close());
-                dialog.present();
+                let dialog = adw::AlertDialog::new(None, Some(notifications_unavailable.as_str()));
+                dialog.add_response("ok", tr("OK").as_str());
+                dialog.set_default_response(Some("ok"));
+                dialog.present(Some(&self.window));
             }
         }
     }
