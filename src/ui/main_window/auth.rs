@@ -28,10 +28,9 @@ fn delete_token_blocking() -> Result<(), String> {
 }
 
 impl MainWindow {
-    pub(super) fn show_sign_out_dialog(&self) {
-        let parent = self.window.clone();
-        let this = self.clone();
-
+    /// Builds the sign-out confirmation dialog (without wiring the response
+    /// handler), so its structure can be asserted in tests.
+    fn build_sign_out_dialog() -> adw::AlertDialog {
         let dialog = adw::AlertDialog::new(
             None,
             Some(
@@ -44,6 +43,14 @@ impl MainWindow {
         dialog.set_response_appearance("signout", adw::ResponseAppearance::Destructive);
         dialog.set_default_response(Some("cancel"));
         dialog.set_close_response("cancel");
+        dialog
+    }
+
+    pub(super) fn show_sign_out_dialog(&self) {
+        let parent = self.window.clone();
+        let this = self.clone();
+
+        let dialog = Self::build_sign_out_dialog();
 
         dialog.connect_response(None, move |_dialog, response| {
             if response == "signout" {
@@ -214,5 +221,33 @@ impl MainWindow {
                 let _ = sender.send(result);
             });
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ui::test_helpers::gtk_test_guard;
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn sign_out_dialog_has_expected_responses() {
+        let Some(_guard) = gtk_test_guard("sign_out_dialog_has_expected_responses") else {
+            return;
+        };
+
+        let dialog = MainWindow::build_sign_out_dialog();
+
+        // The migration to adw::AlertDialog must keep the two response ids the
+        // handler relies on, with cancel as the safe default/close response and
+        // the destructive appearance on the confirming action.
+        assert!(dialog.has_response("cancel"));
+        assert!(dialog.has_response("signout"));
+        assert_eq!(dialog.default_response().as_deref(), Some("cancel"));
+        assert_eq!(dialog.close_response().as_str(), "cancel");
+        assert_eq!(
+            dialog.response_appearance("signout"),
+            adw::ResponseAppearance::Destructive
+        );
     }
 }
