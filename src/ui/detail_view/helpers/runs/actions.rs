@@ -20,6 +20,26 @@ pub(super) struct RunActionContext {
     pub(super) toast_overlay: adw::ToastOverlay,
 }
 
+/// Builds a Yes/No confirmation alert. The confirming action uses the `confirm`
+/// response id (styled destructive or suggested); `cancel` is the safe
+/// default/close response.
+fn confirm_dialog(heading: &str, body: &str, destructive: bool) -> adw::AlertDialog {
+    let dialog = adw::AlertDialog::new(Some(heading), Some(body));
+    dialog.add_response("cancel", tr("No").as_str());
+    dialog.add_response("confirm", tr("Yes").as_str());
+    dialog.set_response_appearance(
+        "confirm",
+        if destructive {
+            adw::ResponseAppearance::Destructive
+        } else {
+            adw::ResponseAppearance::Suggested
+        },
+    );
+    dialog.set_default_response(Some("cancel"));
+    dialog.set_close_response("cancel");
+    dialog
+}
+
 pub(super) fn create_actions_box(run: &WorkflowRun, context: &RunActionContext) -> gtk::Box {
     let actions_box = gtk::Box::new(gtk::Orientation::Horizontal, 4);
     actions_box.set_valign(gtk::Align::Start);
@@ -78,19 +98,13 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
     let run_title = format_run_title(run);
 
     button.connect_clicked(move |btn| {
-        let dialog = adw::AlertDialog::new(
-            Some(tr("Re-run Workflow").as_str()),
-            Some(
-                tr("Do you want to re-run \"{run}\"?")
-                    .replace("{run}", run_title.as_str())
-                    .as_str(),
-            ),
+        let dialog = confirm_dialog(
+            tr("Re-run Workflow").as_str(),
+            tr("Do you want to re-run \"{run}\"?")
+                .replace("{run}", run_title.as_str())
+                .as_str(),
+            false,
         );
-        dialog.add_response("cancel", tr("No").as_str());
-        dialog.add_response("confirm", tr("Yes").as_str());
-        dialog.set_response_appearance("confirm", adw::ResponseAppearance::Suggested);
-        dialog.set_default_response(Some("cancel"));
-        dialog.set_close_response("cancel");
 
         let btn_clone = btn.clone();
         let client = client.clone();
@@ -165,19 +179,13 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
     let run_title = format_run_title(run);
 
     button.connect_clicked(move |btn| {
-        let dialog = adw::AlertDialog::new(
-            Some(tr("Re-run Failed Jobs").as_str()),
-            Some(
-                tr("Do you want to re-run all failed jobs in \"{run}\"?")
-                    .replace("{run}", run_title.as_str())
-                    .as_str(),
-            ),
+        let dialog = confirm_dialog(
+            tr("Re-run Failed Jobs").as_str(),
+            tr("Do you want to re-run all failed jobs in \"{run}\"?")
+                .replace("{run}", run_title.as_str())
+                .as_str(),
+            false,
         );
-        dialog.add_response("cancel", tr("No").as_str());
-        dialog.add_response("confirm", tr("Yes").as_str());
-        dialog.set_response_appearance("confirm", adw::ResponseAppearance::Suggested);
-        dialog.set_default_response(Some("cancel"));
-        dialog.set_close_response("cancel");
 
         let btn_clone = btn.clone();
         let client = client.clone();
@@ -249,19 +257,13 @@ fn create_cancel_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::B
     let run_title = format_run_title(run);
 
     button.connect_clicked(move |btn| {
-        let dialog = adw::AlertDialog::new(
-            Some(tr("Cancel Workflow Run").as_str()),
-            Some(
-                tr("Do you want to cancel the in-progress run \"{run}\"?\n\nThis action cannot be undone.")
-                    .replace("{run}", run_title.as_str())
-                    .as_str(),
-            ),
+        let dialog = confirm_dialog(
+            tr("Cancel Workflow Run").as_str(),
+            tr("Do you want to cancel the in-progress run \"{run}\"?\n\nThis action cannot be undone.")
+                .replace("{run}", run_title.as_str())
+                .as_str(),
+            true,
         );
-        dialog.add_response("cancel", tr("No").as_str());
-        dialog.add_response("confirm", tr("Yes").as_str());
-        dialog.set_response_appearance("confirm", adw::ResponseAppearance::Destructive);
-        dialog.set_default_response(Some("cancel"));
-        dialog.set_close_response("cancel");
 
         let btn_clone = btn.clone();
         let client = client.clone();
@@ -338,6 +340,30 @@ mod tests {
             updated_at: None,
             html_url: Some("https://example.com".into()),
         }
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn confirm_dialog_wires_responses_and_appearance() {
+        let Some(_guard) = gtk_test_guard("confirm_dialog_wires_responses_and_appearance") else {
+            return;
+        };
+
+        let suggested = confirm_dialog("Re-run", "Re-run this?", false);
+        assert!(suggested.has_response("cancel"));
+        assert!(suggested.has_response("confirm"));
+        assert_eq!(suggested.default_response().as_deref(), Some("cancel"));
+        assert_eq!(suggested.close_response().as_str(), "cancel");
+        assert_eq!(
+            suggested.response_appearance("confirm"),
+            adw::ResponseAppearance::Suggested
+        );
+
+        let destructive = confirm_dialog("Cancel run", "Cancel this?", true);
+        assert_eq!(
+            destructive.response_appearance("confirm"),
+            adw::ResponseAppearance::Destructive
+        );
     }
 
     #[test]

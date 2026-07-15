@@ -44,6 +44,20 @@ pub(crate) struct WorkflowRowContext {
     pub run_load_service: RunLoadService,
 }
 
+/// Builds the "Trigger Workflow" dialog shell (form content is attached and the
+/// response handler wired by the caller). The trigger action starts disabled
+/// until branches and inputs have loaded.
+fn build_trigger_dialog(heading: &str) -> adw::AlertDialog {
+    let dialog = adw::AlertDialog::new(Some(heading), None);
+    dialog.add_response("cancel", tr("Cancel").as_str());
+    dialog.add_response("trigger", tr("Trigger").as_str());
+    dialog.set_response_appearance("trigger", adw::ResponseAppearance::Suggested);
+    dialog.set_default_response(Some("trigger"));
+    dialog.set_close_response("cancel");
+    dialog.set_response_enabled("trigger", false);
+    dialog
+}
+
 pub(crate) struct WorkflowRowSettings {
     pub should_expand: bool,
     pub initial_expanded_run_ids: Vec<i64>,
@@ -354,12 +368,7 @@ pub(crate) fn create_workflow_expander_row(
         let repo_model_for_dialog = repo_model_for_trigger.clone();
         let run_load_service_for_dialog = run_load_service_for_trigger.clone();
 
-        let dialog = adw::AlertDialog::new(Some(tr("Trigger Workflow").as_str()), None);
-        dialog.add_response("cancel", tr("Cancel").as_str());
-        dialog.add_response("trigger", tr("Trigger").as_str());
-        dialog.set_response_appearance("trigger", adw::ResponseAppearance::Suggested);
-        dialog.set_default_response(Some("trigger"));
-        dialog.set_close_response("cancel");
+        let dialog = build_trigger_dialog(tr("Trigger Workflow").as_str());
 
         let vbox = gtk::Box::new(gtk::Orientation::Vertical, 12);
 
@@ -393,8 +402,6 @@ pub(crate) fn create_workflow_expander_row(
             .title(tr("Inputs"))
             .build();
         inputs_group.set_visible(false);
-
-        dialog.set_response_enabled("trigger", false);
 
         let input_fields: Rc<RefCell<Vec<DispatchInputField>>> = Rc::new(RefCell::new(Vec::new()));
         let branches_loaded = Rc::new(Cell::new(false));
@@ -907,4 +914,32 @@ pub(crate) fn workflow_row_card<W: IsA<gtk::Widget>>(child: &W) -> gtk::Box {
     card.set_overflow(gtk::Overflow::Hidden);
     card.append(child);
     card
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ui::test_helpers::gtk_test_guard;
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn trigger_dialog_starts_with_disabled_trigger() {
+        let Some(_guard) = gtk_test_guard("trigger_dialog_starts_with_disabled_trigger") else {
+            return;
+        };
+
+        let dialog = build_trigger_dialog("Trigger Workflow");
+
+        assert!(dialog.has_response("cancel"));
+        assert!(dialog.has_response("trigger"));
+        assert_eq!(dialog.default_response().as_deref(), Some("trigger"));
+        assert_eq!(dialog.close_response().as_str(), "cancel");
+        assert_eq!(
+            dialog.response_appearance("trigger"),
+            adw::ResponseAppearance::Suggested
+        );
+        // The trigger action is disabled until branches and inputs finish loading.
+        assert!(!dialog.is_response_enabled("trigger"));
+        assert!(dialog.is_response_enabled("cancel"));
+    }
 }

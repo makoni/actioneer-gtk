@@ -350,12 +350,7 @@ impl JobLogsWindow {
 
         button.connect_clicked(move |_| {
             let default_name = JobLogsWindow::default_file_name(&run_title, &job_title);
-            let dialog = gtk::FileDialog::builder()
-                .title(tr("Save Logs"))
-                .accept_label(tr("Save"))
-                .modal(true)
-                .initial_name(default_name)
-                .build();
+            let dialog = JobLogsWindow::build_save_dialog(&default_name);
 
             let overlay_for_dialog = overlay.clone();
             let text_for_dialog = text_view.clone();
@@ -425,6 +420,16 @@ impl JobLogsWindow {
         format!("{} - {}.log", run_segment, job_segment)
     }
 
+    /// Builds the "Save Logs" file dialog pre-filled with the default file name.
+    fn build_save_dialog(default_name: &str) -> gtk::FileDialog {
+        gtk::FileDialog::builder()
+            .title(tr("Save Logs"))
+            .accept_label(tr("Save"))
+            .modal(true)
+            .initial_name(default_name)
+            .build()
+    }
+
     fn sanitize_filename_segment(input: &str) -> Option<String> {
         let filtered: String = input
             .chars()
@@ -445,5 +450,29 @@ impl JobLogsWindow {
 
     pub fn present(&self) {
         self.window.present();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ui::test_helpers::gtk_test_guard;
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn save_dialog_prefills_default_name() {
+        let Some(_guard) = gtk_test_guard("save_dialog_prefills_default_name") else {
+            return;
+        };
+
+        let default_name = JobLogsWindow::default_file_name("CI", "build");
+        let dialog = JobLogsWindow::build_save_dialog(&default_name);
+
+        assert_eq!(
+            dialog.initial_name().as_deref(),
+            Some(default_name.as_str())
+        );
+        assert_eq!(dialog.title().as_str(), tr("Save Logs").as_str());
+        assert_eq!(dialog.accept_label().as_deref(), Some(tr("Save").as_str()));
     }
 }

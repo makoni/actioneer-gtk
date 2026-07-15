@@ -10,6 +10,14 @@ use std::fs;
 use tracing::{error, info, warn};
 
 impl MainWindow {
+    /// Builds a simple informational alert with a single dismiss button.
+    fn info_alert(message: &str) -> adw::AlertDialog {
+        let dialog = adw::AlertDialog::new(None, Some(message));
+        dialog.add_response("ok", tr("OK").as_str());
+        dialog.set_default_response(Some("ok"));
+        dialog
+    }
+
     pub(super) fn open_preferences_window(&self) {
         if let Some(manager) = &self.preferences_manager {
             let parent = self.window.clone();
@@ -18,9 +26,7 @@ impl MainWindow {
         } else {
             warn!("Preferences unavailable; preferences manager failed to initialize");
             let unavailable_message = tr("Preferences are currently unavailable.");
-            let dialog = adw::AlertDialog::new(None, Some(unavailable_message.as_str()));
-            dialog.add_response("ok", tr("OK").as_str());
-            dialog.set_default_response(Some("ok"));
+            let dialog = Self::info_alert(unavailable_message.as_str());
             dialog.present(Some(&self.window));
         }
     }
@@ -206,9 +212,7 @@ Troubleshooting\n\
         if let Err(err) = open::that(issue_url) {
             error!("Failed to open issue tracker URL: {}", err);
             let open_issue_error = tr("Failed to open issue tracker in the browser.");
-            let dialog = adw::AlertDialog::new(None, Some(open_issue_error.as_str()));
-            dialog.add_response("ok", tr("OK").as_str());
-            dialog.set_default_response(Some("ok"));
+            let dialog = Self::info_alert(open_issue_error.as_str());
             dialog.present(Some(&self.window));
         }
     }
@@ -311,9 +315,7 @@ Troubleshooting\n\
         if let Err(err) = open::that(DONATION_URL) {
             error!("Failed to open donation URL: {}", err);
             let open_donation_error = tr("Failed to open donation page in the browser.");
-            let dialog = adw::AlertDialog::new(None, Some(open_donation_error.as_str()));
-            dialog.add_response("ok", tr("OK").as_str());
-            dialog.set_default_response(Some("ok"));
+            let dialog = Self::info_alert(open_donation_error.as_str());
             dialog.present(Some(&self.window));
         }
     }
@@ -338,9 +340,7 @@ Troubleshooting\n\
             None => {
                 warn!("Notifications unavailable; could not send test notification");
                 let notifications_unavailable = tr("Notifications are currently unavailable.");
-                let dialog = adw::AlertDialog::new(None, Some(notifications_unavailable.as_str()));
-                dialog.add_response("ok", tr("OK").as_str());
-                dialog.set_default_response(Some("ok"));
+                let dialog = Self::info_alert(notifications_unavailable.as_str());
                 dialog.present(Some(&self.window));
             }
         }
@@ -382,5 +382,18 @@ mod tests {
         }
 
         assert!(!window.is_visible());
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn info_alert_has_single_ok_response() {
+        let Some(_guard) = gtk_test_guard("info_alert_has_single_ok_response") else {
+            return;
+        };
+
+        let dialog = MainWindow::info_alert("Something went wrong");
+
+        assert!(dialog.has_response("ok"));
+        assert_eq!(dialog.default_response().as_deref(), Some("ok"));
     }
 }
