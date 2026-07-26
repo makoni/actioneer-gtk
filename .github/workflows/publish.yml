@@ -30,7 +30,7 @@ jobs:
     needs: [flatpak, snap, appimage]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7.0.0
+      - uses: actions/checkout@v7.0.1
 
       - name: Download Flatpak artifacts
         uses: actions/download-artifact@v8
