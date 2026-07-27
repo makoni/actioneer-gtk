@@ -625,6 +625,12 @@ mod tests {
                 event: None,
                 created_at: None,
                 updated_at: None,
+                actor: None,
+
+                head_commit: None,
+
+                triggering_actor: None,
+
                 html_url: None,
             },
             WorkflowRun {
@@ -640,6 +646,12 @@ mod tests {
                 event: None,
                 created_at: None,
                 updated_at: None,
+                actor: None,
+
+                head_commit: None,
+
+                triggering_actor: None,
+
                 html_url: None,
             },
         ];
@@ -685,6 +697,12 @@ mod tests {
             event: None,
             created_at: None,
             updated_at: None,
+            actor: None,
+
+            head_commit: None,
+
+            triggering_actor: None,
+
             html_url: None,
         };
         model.set_runs(std::sync::Arc::new(vec![existing.clone()]));

@@ -214,6 +214,7 @@ fn parse_dispatch_run_details(
         name: None,
         display_title: None,
         head_branch: Some(ref_name.to_string()),
+        head_commit: None,
         status: Some("queued".to_string()),
         conclusion: None,
         run_started_at: Some(now.clone()),
@@ -221,6 +222,8 @@ fn parse_dispatch_run_details(
         created_at: Some(now.clone()),
         updated_at: Some(now),
         html_url: details.html_url,
+        actor: None,
+        triggering_actor: None,
     }))
 }
 

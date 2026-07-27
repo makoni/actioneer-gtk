@@ -155,6 +155,12 @@ impl DemoData {
                 event: Some("push".to_string()),
                 created_at: Some("2026-01-24T12:09:30Z".to_string()),
                 updated_at: Some("2026-01-24T12:12:20Z".to_string()),
+                actor: None,
+
+                head_commit: None,
+
+                triggering_actor: None,
+
                 html_url: Some(
                     "https://github.com/demo-org/actioneer-demo-app/actions/runs/30108".to_string(),
                 ),
@@ -172,6 +178,12 @@ impl DemoData {
                 event: Some("pull_request".to_string()),
                 created_at: Some("2026-01-24T11:19:20Z".to_string()),
                 updated_at: Some("2026-01-24T11:28:10Z".to_string()),
+                actor: None,
+
+                head_commit: None,
+
+                triggering_actor: None,
+
                 html_url: Some(
                     "https://github.com/demo-org/actioneer-demo-app/actions/runs/30107".to_string(),
                 ),
@@ -189,6 +201,12 @@ impl DemoData {
                 event: Some("push".to_string()),
                 created_at: Some("2026-01-24T11:12:00Z".to_string()),
                 updated_at: Some("2026-01-24T11:12:20Z".to_string()),
+                actor: None,
+
+                head_commit: None,
+
+                triggering_actor: None,
+
                 html_url: Some(
                     "https://github.com/demo-org/actioneer-demo-app/actions/runs/30106".to_string(),
                 ),
@@ -206,6 +224,12 @@ impl DemoData {
                 event: Some("workflow_dispatch".to_string()),
                 created_at: Some("2026-01-24T11:05:00Z".to_string()),
                 updated_at: Some("2026-01-24T11:05:15Z".to_string()),
+                actor: None,
+
+                head_commit: None,
+
+                triggering_actor: None,
+
                 html_url: Some(
                     "https://github.com/demo-org/actioneer-demo-app/actions/runs/30105".to_string(),
                 ),
@@ -223,6 +247,12 @@ impl DemoData {
                 event: Some("push".to_string()),
                 created_at: Some("2026-01-24T10:30:00Z".to_string()),
                 updated_at: Some("2026-01-24T10:33:40Z".to_string()),
+                actor: None,
+
+                head_commit: None,
+
+                triggering_actor: None,
+
                 html_url: Some(
                     "https://github.com/demo-org/actioneer-demo-app/actions/runs/30103".to_string(),
                 ),
@@ -240,6 +270,12 @@ impl DemoData {
                 event: Some("pull_request".to_string()),
                 created_at: Some("2026-01-24T10:41:00Z".to_string()),
                 updated_at: Some("2026-01-24T10:42:10Z".to_string()),
+                actor: None,
+
+                head_commit: None,
+
+                triggering_actor: None,
+
                 html_url: Some(
                     "https://github.com/demo-org/actioneer-demo-app/actions/runs/30104".to_string(),
                 ),
@@ -257,6 +293,12 @@ impl DemoData {
                 event: Some("push".to_string()),
                 created_at: Some("2025-10-28T07:20:00Z".to_string()),
                 updated_at: Some("2025-10-28T07:25:00Z".to_string()),
+                actor: None,
+
+                head_commit: None,
+
+                triggering_actor: None,
+
                 html_url: Some(
                     "https://github.com/demo-org/actioneer-demo-app/actions/runs/30101".to_string(),
                 ),
@@ -274,6 +316,12 @@ impl DemoData {
                 event: Some("pull_request".to_string()),
                 created_at: Some("2025-10-27T18:12:00Z".to_string()),
                 updated_at: Some("2025-10-27T18:18:00Z".to_string()),
+                actor: None,
+
+                head_commit: None,
+
+                triggering_actor: None,
+
                 html_url: Some(
                     "https://github.com/demo-org/actioneer-demo-app/actions/runs/30102".to_string(),
                 ),
@@ -293,6 +341,12 @@ impl DemoData {
             event: Some("workflow_dispatch".to_string()),
             created_at: Some("2025-10-28T09:38:00Z".to_string()),
             updated_at: Some("2025-10-28T09:40:00Z".to_string()),
+            actor: None,
+
+            head_commit: None,
+
+            triggering_actor: None,
+
             html_url: Some(
                 "https://github.com/demo-org/actioneer-demo-app/actions/runs/30201".to_string(),
             ),
@@ -496,6 +550,12 @@ impl DemoData {
             event: Some("workflow_dispatch".to_string()),
             created_at: Some("2025-10-26T15:00:00Z".to_string()),
             updated_at: Some("2025-10-26T15:04:00Z".to_string()),
+            actor: None,
+
+            head_commit: None,
+
+            triggering_actor: None,
+
             html_url: Some(
                 "https://github.com/demo-labs/workflow-lab/actions/runs/31001".to_string(),
             ),
@@ -542,6 +602,12 @@ impl DemoData {
             event: Some("schedule".to_string()),
             created_at: Some("2025-10-27T02:00:00Z".to_string()),
             updated_at: Some("2025-10-27T02:06:45Z".to_string()),
+            actor: None,
+
+            head_commit: None,
+
+            triggering_actor: None,
+
             html_url: Some(
                 "https://github.com/demo-team/device-edge/actions/runs/32101".to_string(),
             ),
@@ -705,6 +771,7 @@ impl DemoData {
             name: Some("Manual Dispatch".to_string()),
             display_title: Some(format!("{} • {}", reference, reference)),
             head_branch: Some(reference.to_string()),
+            head_commit: None,
             status: Some("queued".to_string()),
             conclusion: None,
             run_started_at: Some(now.to_rfc3339()),
@@ -715,6 +782,8 @@ impl DemoData {
                 "https://github.com/{}/{}/actions/runs/{}",
                 owner, name, run_id
             )),
+            actor: None,
+            triggering_actor: None,
         };
 
         runs.insert(0, new_run.clone());

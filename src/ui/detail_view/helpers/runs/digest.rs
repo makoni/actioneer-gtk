@@ -156,6 +156,12 @@ mod tests {
             event: None,
             created_at: None,
             updated_at: Some("2024-01-01T00:00:00Z".to_string()),
+            actor: None,
+
+            head_commit: None,
+
+            triggering_actor: None,
+
             html_url: None,
         }
     }

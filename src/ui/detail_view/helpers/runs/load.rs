@@ -469,6 +469,12 @@ mod tests {
             event: None,
             created_at: None,
             updated_at: None,
+            actor: None,
+
+            head_commit: None,
+
+            triggering_actor: None,
+
             html_url: None,
         }
     }

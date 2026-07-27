@@ -2,8 +2,8 @@ use super::super::context::{
     JobContextMap, JobRefreshContext, JobRefreshContextParams, RunBadgeSummaryMap,
 };
 use super::super::formatting::{
-    format_run_subtitle, format_run_title, get_run_status_class, get_run_status_icon,
-    update_job_summary_badges, update_job_summary_badges_from_summary,
+    format_run_subtitle, format_run_title, format_run_tooltip, get_run_status_class,
+    get_run_status_icon, update_job_summary_badges, update_job_summary_badges_from_summary,
 };
 use super::super::jobs::{LoadJobsParams, load_run_jobs};
 use super::actions::{RunActionContext, create_actions_box};
@@ -187,6 +187,7 @@ fn build_expander(run: &WorkflowRun, run_title: &str) -> (gtk::Expander, gtk::Bo
     subtitle_label.set_halign(gtk::Align::Start);
     subtitle_label.add_css_class("dim-label");
     subtitle_label.set_ellipsize(pango::EllipsizeMode::End);
+    subtitle_label.set_tooltip_text(Some(&format_run_tooltip(run)));
     text_box.append(&subtitle_label);
 
     let subtitle_label_weak = subtitle_label.downgrade();
@@ -194,6 +195,7 @@ fn build_expander(run: &WorkflowRun, run_title: &str) -> (gtk::Expander, gtk::Bo
     glib::timeout_add_seconds_local(60, move || match subtitle_label_weak.upgrade() {
         Some(label) => {
             label.set_text(&format_run_subtitle(&run_for_timer));
+            label.set_tooltip_text(Some(&format_run_tooltip(&run_for_timer)));
             glib::ControlFlow::Continue
         }
         None => glib::ControlFlow::Break,
@@ -533,6 +535,7 @@ mod tests {
             name: Some("CI".into()),
             display_title: Some("CI".into()),
             head_branch: Some("main".into()),
+            head_commit: None,
             status: Some("in_progress".into()),
             conclusion: None,
             run_started_at: None,
@@ -540,6 +543,8 @@ mod tests {
             created_at: None,
             updated_at: None,
             html_url: None,
+            actor: None,
+            triggering_actor: None,
         };
         let job_summaries = Rc::new(RefCell::new(HashMap::new()));
         job_summaries.borrow_mut().insert(

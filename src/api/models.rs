@@ -138,6 +138,7 @@ pub struct WorkflowRun {
     pub name: Option<String>,
     pub display_title: Option<String>,
     pub head_branch: Option<String>,
+    pub head_commit: Option<RunHeadCommit>,
     pub status: Option<String>,
     pub conclusion: Option<String>,
     pub run_started_at: Option<String>,
@@ -145,6 +146,16 @@ pub struct WorkflowRun {
     pub created_at: Option<String>,
     pub updated_at: Option<String>,
     pub html_url: Option<String>,
+    #[serde(default)]
+    pub actor: Option<User>,
+    #[serde(default)]
+    pub triggering_actor: Option<User>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RunHeadCommit {
+    pub id: String,
+    pub message: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -462,6 +473,29 @@ impl Job {
     /// Returns a formatted duration string (e.g., "2m 34s")
     pub fn duration_string(&self) -> Option<String> {
         duration_string_from_bounds(self.started_at.as_ref(), self.completed_at.as_ref())
+    }
+}
+
+impl WorkflowRun {
+    /// Returns a formatted duration for the workflow run, if both timestamps are present.
+    pub fn run_duration_string(&self) -> Option<String> {
+        duration_string_from_bounds(self.run_started_at.as_ref(), self.updated_at.as_ref())
+    }
+
+    /// Returns the commit message for the run, truncated to the first line.
+    pub fn commit_message_headline(&self) -> Option<String> {
+        self.head_commit
+            .as_ref()
+            .map(|commit| commit.message.lines().next().unwrap_or("").to_string())
+            .filter(|message| !message.is_empty())
+    }
+
+    /// Returns the login of the actor who triggered or re-triggered the run.
+    pub fn actor_login(&self) -> Option<String> {
+        self.triggering_actor
+            .as_ref()
+            .or(self.actor.as_ref())
+            .map(|user| user.login.clone())
     }
 }
 

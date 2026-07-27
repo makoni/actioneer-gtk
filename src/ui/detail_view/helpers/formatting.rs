@@ -42,12 +42,68 @@ pub(crate) fn format_run_subtitle(run: &WorkflowRun) -> String {
         parts.push(branch.clone());
     }
 
+    if let Some(actor) = run.actor_login() {
+        parts.push(actor);
+    }
+
+    if let Some(event) = &run.event {
+        parts.push(event.replace('_', " "));
+    }
+
+    if let Some(duration) = run.run_duration_string() {
+        parts.push(duration);
+    }
+
     let time_str = run.relative_time_string();
     if !time_str.is_empty() {
         parts.push(time_str);
     }
 
     parts.join(" • ")
+}
+
+pub(crate) fn format_run_tooltip(run: &WorkflowRun) -> String {
+    let mut lines = Vec::new();
+
+    if let Some(status) = &run.status {
+        lines.push(format!("{}: {}", tr("Status"), status));
+    }
+
+    if let Some(conclusion) = &run.conclusion {
+        lines.push(format!("{}: {}", tr("Conclusion"), conclusion));
+    }
+
+    if let Some(branch) = &run.head_branch {
+        lines.push(format!("{}: {}", tr("Branch"), branch));
+    }
+
+    if let Some(commit) = run.commit_message_headline() {
+        lines.push(format!("{}: {}", tr("Commit"), commit));
+    }
+
+    if let Some(actor) = run.actor_login() {
+        lines.push(format!("{}: {}", tr("Triggered by"), actor));
+    }
+
+    if let Some(event) = &run.event {
+        lines.push(format!("{}: {}", tr("Event"), event));
+    }
+
+    if let Some(duration) = run.run_duration_string() {
+        lines.push(format!("{}: {}", tr("Duration"), duration));
+    }
+
+    if let Some(created) = &run.run_started_at {
+        lines.push(format!("{}: {}", tr("Started"), created));
+    } else if let Some(created) = &run.created_at {
+        lines.push(format!("{}: {}", tr("Started"), created));
+    }
+
+    if let Some(updated) = &run.updated_at {
+        lines.push(format!("{}: {}", tr("Updated"), updated));
+    }
+
+    lines.join("\n")
 }
 
 pub(crate) fn format_job_status(job: &Job) -> String {
@@ -225,6 +281,7 @@ mod tests {
             name: None,
             display_title: None,
             head_branch: None,
+            head_commit: None,
             status: None,
             conclusion: None,
             run_started_at: None,
@@ -232,6 +289,8 @@ mod tests {
             created_at: None,
             updated_at: None,
             html_url: None,
+            actor: None,
+            triggering_actor: None,
         }
     }
 
@@ -253,12 +312,18 @@ mod tests {
         run.status = Some("completed".into());
         run.conclusion = Some("success".into());
         run.head_branch = Some("main".into());
+        run.actor = Some(crate::api::models::User {
+            login: "makoni".into(),
+        });
+        run.event = Some("push".into());
         run.updated_at = Some("2024-01-01T00:00:00Z".into());
 
         let _ = apply_language_preference(LanguagePreference::En);
         let subtitle = format_run_subtitle(&run);
-        assert!(subtitle.contains(&tr("Success")));
         assert!(subtitle.contains("main"));
+        assert!(subtitle.contains("makoni"));
+        assert!(subtitle.contains("push"));
+        assert!(subtitle.contains(&tr("Success")));
     }
 
     #[test]

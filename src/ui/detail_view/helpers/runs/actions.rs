@@ -332,6 +332,7 @@ mod tests {
             name: Some("Test".into()),
             display_title: None,
             head_branch: None,
+            head_commit: None,
             status: None,
             conclusion: None,
             run_started_at: None,
@@ -339,6 +340,8 @@ mod tests {
             created_at: None,
             updated_at: None,
             html_url: Some("https://example.com".into()),
+            actor: None,
+            triggering_actor: None,
         }
     }
 
