@@ -1,5 +1,5 @@
 use super::super::context::{JobContextMap, current_job_context_run_ids};
-use super::super::formatting::update_workflow_status_badge;
+use super::super::workflows::update_workflow_row_header;
 use super::digest::{RunDigestMap, RunDigestStore, update_digest_and_collect_notifications};
 use super::filters::summarize_visible_runs;
 use super::list::WorkflowRunListModel;
@@ -50,7 +50,6 @@ pub(crate) struct LoadRunsParams {
     pub workflow_name: String,
     pub run_list: WorkflowRunListModel,
     pub parent_window: adw::ApplicationWindow,
-    pub status_badge: Option<gtk::Label>,
     pub expander: gtk::Expander,
     pub toast_overlay: adw::ToastOverlay,
     pub job_contexts: JobContextMap,
@@ -75,7 +74,6 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
         workflow_name,
         run_list,
         parent_window,
-        status_badge,
         expander,
         toast_overlay,
         job_contexts,
@@ -150,6 +148,13 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                     digests.insert(workflow_id, RunDigestMap::new());
                 }
 
+                if let Some(header) = task_run_list.row_header() {
+                    update_workflow_row_header(&header, None, None);
+                }
+                if let Some(detail) = task_run_list.detail_header() {
+                    detail.record_latest_run(workflow_id, None);
+                }
+
                 if should_render_run_list(background_for_ui, expander_expanded, true) {
                     task_run_list.show_empty();
                 }
@@ -215,11 +220,18 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                     }
                 }
 
-                if let Some(ref badge) = status_badge
-                    && let Some(latest_run) = runs.first()
-                {
-                    update_workflow_status_badge(badge, latest_run);
-                    badge.set_visible(true);
+                if let Some(latest_run) = runs.first() {
+                    let summary = task_run_list
+                        .job_summaries()
+                        .borrow()
+                        .get(&latest_run.id)
+                        .cloned();
+                    if let Some(header) = task_run_list.row_header() {
+                        update_workflow_row_header(&header, Some(latest_run), summary.as_ref());
+                    }
+                    if let Some(detail) = task_run_list.detail_header() {
+                        detail.record_latest_run(workflow_id, Some(latest_run));
+                    }
                 }
 
                 let has_active_runs =
@@ -382,18 +394,25 @@ fn update_expander_activity(
         )
     });
 
+    set_expander_active(expander, has_active_runs);
+    info!(
+        workflow_id,
+        has_active_runs, "Updated workflow activity state"
+    );
+
+    has_active_runs
+}
+
+/// Toggles the `_ACTIVE` suffix used by the background refresh scanner.
+pub(crate) fn set_expander_active(expander: &gtk::Expander, active: bool) {
     let widget_name = expander.widget_name();
     let base_name = widget_name.as_str().trim_end_matches("_ACTIVE");
 
-    if has_active_runs {
+    if active {
         expander.set_widget_name(&format!("{}_ACTIVE", base_name));
-        info!("Workflow {} has active runs", workflow_id);
     } else {
         expander.set_widget_name(base_name);
-        info!("Workflow {} has no active runs", workflow_id);
     }
-
-    has_active_runs
 }
 
 fn show_error_state(error: GitHubError, workflow_id: i64, context: RunErrorContext) {
@@ -432,7 +451,6 @@ fn show_error_state(error: GitHubError, workflow_id: i64, context: RunErrorConte
             workflow_name: workflow_name.clone(),
             run_list: retry_run_list.clone(),
             parent_window: parent_window.clone(),
-            status_badge: None,
             expander: expander.clone(),
             toast_overlay: toast_overlay.clone(),
             job_contexts: job_contexts.clone(),

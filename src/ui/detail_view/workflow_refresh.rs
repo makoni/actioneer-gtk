@@ -142,6 +142,10 @@ fn configure_auto_refresh_timer_slot(
         return;
     }
 
+    list_context
+        .header
+        .set_refresh_interval(refresh_interval_secs);
+
     cancel_auto_refresh_timer_slot(auto_refresh_source);
 
     if refresh_interval_secs == 0 {
@@ -170,6 +174,7 @@ fn configure_auto_refresh_timer_slot(
     let workflows_last_loaded = list_context.workflows_last_loaded.clone();
     let run_filters = list_context.run_filters.clone();
     let run_load_service = list_context.run_load_service.clone();
+    let header_state = list_context.header.clone();
     let silent_refresh = silent_refresh.clone();
     let repo_full_name = repo_full_name.to_string();
     let refresh_active = refresh_active.clone();
@@ -216,6 +221,7 @@ fn configure_auto_refresh_timer_slot(
             run_filters: run_filters.clone(),
             run_load_service: run_load_service.clone(),
             expand_first_workflow: Rc::new(Cell::new(false)),
+            header: header_state.clone(),
         };
 
         refresh_workflows_silent_with_state(
@@ -328,7 +334,10 @@ fn refresh_workflows_silent_with_state(
             run_filters: run_filters_for_ui.clone(),
             run_load_service: context.run_load_service.clone(),
             expand_first_workflow: Rc::new(Cell::new(false)),
+            header: context.header.clone(),
         };
+
+        context.header.note_refreshed();
 
         match result {
             Ok(wf_list) => {
@@ -428,6 +437,7 @@ impl RepoDetailPane {
                 run_filters: run_filters_for_ui.clone(),
                 run_load_service: context.run_load_service.clone(),
                 expand_first_workflow: context.expand_first_workflow.clone(),
+                header: context.header.clone(),
             };
 
             match result {
@@ -536,6 +546,7 @@ impl RepoDetailPane {
             let preferences_manager_for_ui = preferences_manager_handle.clone();
             let run_load_service_for_ui = context.run_load_service.clone();
             let run_badge_summaries_for_ui = run_badge_summaries.clone();
+            let header_for_ui = context.header.clone();
 
             receiver.attach(None, move |message| {
                 callback_refs_for_ui.show_loading(false);
@@ -567,6 +578,7 @@ impl RepoDetailPane {
                             run_filters: run_filters_for_ui.clone(),
                             run_load_service: run_load_service_for_ui.clone(),
                             expand_first_workflow: Rc::new(Cell::new(false)),
+                            header: header_for_ui.clone(),
                         };
 
                         super::workflow_list::update_workflows_list(&ui_context, wf_list.as_ref());
@@ -701,7 +713,6 @@ impl RepoDetailPane {
                 }
 
                 if let Some(run_list) = run_list_for_expander(expander) {
-                    let status_badge = Self::status_badge_for_expander(expander);
                     let mut preserved_runs: Vec<i64> =
                         run_list.expanded_run_ids().into_iter().collect();
                     if preserved_runs.is_empty() {
@@ -725,7 +736,6 @@ impl RepoDetailPane {
                         workflow_name: workflow_label,
                         run_list,
                         parent_window: parent_window.clone(),
-                        status_badge,
                         expander: expander.clone(),
                         toast_overlay: toast_overlay.clone(),
                         job_contexts: job_contexts.clone(),
@@ -748,24 +758,6 @@ impl RepoDetailPane {
         refresh_jobs_for_workflows(&job_contexts, &job_refresh_targets);
 
         *workflows_with_active.lock() = observed_active;
-    }
-
-    pub(super) fn status_badge_for_expander(expander: &gtk::Expander) -> Option<gtk::Label> {
-        expander
-            .label_widget()
-            .and_then(|widget| widget.downcast::<gtk::Box>().ok())
-            .and_then(|header| {
-                let mut child = header.first_child();
-                while let Some(widget) = child.as_ref() {
-                    if let Ok(label) = widget.clone().downcast::<gtk::Label>()
-                        && label.has_css_class("badge")
-                    {
-                        return Some(label);
-                    }
-                    child = widget.next_sibling();
-                }
-                None
-            })
     }
 
     fn clone_for_callbacks(&self) -> CallbackRefs {
@@ -962,4 +954,11 @@ pub(super) fn run_list_for_expander(
     expander: &gtk::Expander,
 ) -> Option<super::helpers::WorkflowRunListModel> {
     scan::run_list_for_expander(expander)
+}
+
+pub(super) fn visit_workflow_expanders<F: FnMut(&gtk::Expander, i64, bool)>(
+    widget: &gtk::Widget,
+    f: &mut F,
+) {
+    scan::visit_expanders(widget, f);
 }

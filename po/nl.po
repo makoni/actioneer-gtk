@@ -832,3 +832,42 @@ msgstr "Aanmelden werkt betrouwbaarder op nieuwere Linux-systemen dankzij verbet
 
 msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
 msgstr "Bijgewerkte meegeleverde onderdelen helpen Actioneer stabiel, betrouwbaar en actueel te houden."
+
+msgid "Workflows"
+msgstr "Workflows"
+
+msgid "Auto-refresh is disabled."
+msgstr "Automatisch vernieuwen is uitgeschakeld."
+
+msgid "Data refreshes automatically every {seconds} seconds."
+msgstr "Gegevens worden elke {seconds} seconden automatisch vernieuwd."
+
+msgid "{count} workflows"
+msgstr "{count} workflows"
+
+msgid "Updated {when}"
+msgstr "Bijgewerkt {when}"
+
+msgid "Not updated yet"
+msgstr "Nog niet bijgewerkt"
+
+msgid "No runs yet"
+msgstr "Nog geen runs"
+
+msgid "Recent runs"
+msgstr "Recente runs"
+
+msgid "All on GitHub"
+msgstr "Alles op GitHub"
+
+msgid "Showing {visible} of {overall}"
+msgstr "{visible} van {overall} weergegeven"
+
+msgid "Showing {visible} of {filtered} matching filters"
+msgstr "{visible} van {filtered} die overeenkomen met filters weergegeven"
+
+msgid "All"
+msgstr "Alle"
+
+msgid "Active"
+msgstr "Actief"

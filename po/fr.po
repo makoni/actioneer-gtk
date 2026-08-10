@@ -835,3 +835,42 @@ msgstr "La connexion fonctionne de façon plus fiable sur les systèmes Linux r�
 
 msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
 msgstr "Les composants intégrés mis à jour aident à maintenir Actioneer stable, fiable et à jour."
+
+msgid "Workflows"
+msgstr "Workflows"
+
+msgid "Auto-refresh is disabled."
+msgstr "L'actualisation automatique est désactivée."
+
+msgid "Data refreshes automatically every {seconds} seconds."
+msgstr "Les données sont actualisées automatiquement toutes les {seconds} secondes."
+
+msgid "{count} workflows"
+msgstr "{count} workflows"
+
+msgid "Updated {when}"
+msgstr "Mis à jour {when}"
+
+msgid "Not updated yet"
+msgstr "Pas encore mis à jour"
+
+msgid "No runs yet"
+msgstr "Aucune exécution pour l'instant"
+
+msgid "Recent runs"
+msgstr "Exécutions récentes"
+
+msgid "All on GitHub"
+msgstr "Tout sur GitHub"
+
+msgid "Showing {visible} of {overall}"
+msgstr "Affichage de {visible} sur {overall}"
+
+msgid "Showing {visible} of {filtered} matching filters"
+msgstr "Affichage de {visible} sur {filtered} correspondant aux filtres"
+
+msgid "All"
+msgstr "Tous"
+
+msgid "Active"
+msgstr "Actifs"

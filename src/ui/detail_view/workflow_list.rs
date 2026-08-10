@@ -1,12 +1,13 @@
 use super::helpers::{
     WorkflowRowContext, WorkflowRowSettings, create_workflow_expander_row,
-    current_job_context_run_ids, workflow_row_card,
+    current_job_context_run_ids, set_expander_active, update_workflow_row_header,
 };
 use super::{RepoDetailPane, WorkflowListContext};
-use crate::api::models::Workflow;
+use crate::api::models::{Workflow, WorkflowRun};
 use crate::i18n::tr;
+use crate::ui::utils::MainContextChannelExt;
 use gtk4::prelude::*;
-use gtk4::{self as gtk, gio};
+use gtk4::{self as gtk, gio, glib};
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 use tracing::{debug, info};
@@ -32,6 +33,7 @@ impl RepoDetailPane {
             run_filters: self.run_filters.clone(),
             run_load_service: self.run_load_service.clone(),
             expand_first_workflow: self.expand_first_workflow_on_load.clone(),
+            header: self.header.clone(),
         }
     }
 }
@@ -95,11 +97,14 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
         placeholder.set_margin_end(12);
 
         let placeholder_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        placeholder_box.add_css_class("workflow-row");
+        placeholder_box.add_css_class("workflow-item");
+        placeholder_box.add_css_class("workflow-item-first");
         placeholder_box.append(&placeholder);
 
-        let card = workflow_row_card(&placeholder_box);
-        store.append(&card);
+        store.append(&placeholder_box);
+        context.header.set_workflow_count(0);
+        context.header.note_refreshed();
+        context.header.retain_workflows(&visible_workflows);
         return;
     }
 
@@ -120,9 +125,10 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
         preferences_manager: context.preferences_manager.clone(),
         run_filters: context.run_filters.clone(),
         run_load_service: context.run_load_service.clone(),
+        header: context.header.clone(),
     };
 
-    for workflow in workflows {
+    for (index, workflow) in workflows.iter().enumerate() {
         let should_expand = expanded_ids.contains(&workflow.id);
         let preserved_run_ids = expanded_runs_by_workflow
             .get(&workflow.id)
@@ -133,11 +139,17 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
         let settings = WorkflowRowSettings {
             should_expand,
             initial_expanded_run_ids: preserved_run_ids,
+            is_first: index == 0,
         };
 
         let expander_row = create_workflow_expander_row(workflow, &row_context, settings);
         store.append(&expander_row);
     }
+
+    context.header.set_workflow_count(workflows.len());
+    context.header.note_refreshed();
+    context.header.retain_workflows(&visible_workflows);
+    fetch_latest_runs_summary(context);
 
     if context.expand_first_workflow.get() {
         for idx in 0..store.n_items() {
@@ -170,6 +182,73 @@ pub(super) fn workflows_differ(a: &[Workflow], b: &[Workflow]) -> bool {
     let b_ids: HashSet<_> = b.iter().map(|w| w.id).collect();
 
     a_ids != b_ids
+}
+
+/// Fetches the repo-wide run list once and records the latest run per workflow
+/// so collapsed rows can show their status dot and meta line. Runs on the Tokio
+/// runtime; UI updates happen on the GLib main context.
+pub(super) fn fetch_latest_runs_summary(context: &WorkflowListContext) {
+    let client = context.client.clone();
+    let owner = context.owner.clone();
+    let repo = context.repo.clone();
+    let header = context.header.clone();
+    let store = context.store.clone();
+
+    let (sender, receiver) =
+        glib::MainContext::default().channel::<Vec<WorkflowRun>>(glib::Priority::default());
+
+    receiver.attach(None, move |runs| {
+        // Repo-wide runs arrive newest-first; keep the first hit per workflow.
+        let mut seen = HashSet::new();
+        let mut latest_runs: Vec<(i64, WorkflowRun)> = Vec::new();
+        for run in runs {
+            let Some(workflow_id) = run.workflow_id else {
+                continue;
+            };
+            if seen.insert(workflow_id) {
+                latest_runs.push((workflow_id, run));
+            }
+        }
+
+        for (workflow_id, run) in latest_runs {
+            header.record_latest_run(workflow_id, Some(&run));
+        }
+
+        // Refresh every visible row in place.
+        for row in collect_workflow_rows(&store) {
+            super::workflow_refresh::visit_workflow_expanders(
+                &row,
+                &mut |expander, workflow_id, _| {
+                    let Some(run_list) = super::workflow_refresh::run_list_for_expander(expander)
+                    else {
+                        return;
+                    };
+                    let latest = header.latest_run(workflow_id);
+                    let summary = latest
+                        .as_ref()
+                        .and_then(|run| run_list.job_summaries().borrow().get(&run.id).cloned());
+                    if let Some(row_header) = run_list.row_header() {
+                        update_workflow_row_header(&row_header, latest.as_ref(), summary.as_ref());
+                    }
+                    set_expander_active(
+                        expander,
+                        latest.as_ref().is_some_and(|run| run.is_active()),
+                    );
+                },
+            );
+        }
+
+        glib::ControlFlow::Break
+    });
+
+    crate::runtime_handle().spawn(async move {
+        let client_guard = client.lock().clone();
+        let runs = client_guard
+            .list_repository_runs(&owner, &repo)
+            .await
+            .unwrap_or_default();
+        let _ = sender.send(runs);
+    });
 }
 
 pub(super) fn collect_workflow_rows(store: &gio::ListStore) -> Vec<gtk::Widget> {

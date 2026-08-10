@@ -19,6 +19,8 @@ const REPO_FULL_NAME_KEY: &str = "actioneer-repo-full-name";
 const REPO_MODEL_KEY: &str = "actioneer-repo-model";
 const SELECTABLE_KEY: &str = "actioneer-sidebar-selectable";
 const ACTIVATABLE_KEY: &str = "actioneer-sidebar-activatable";
+pub(crate) const FAVORITE_ROW_KEY: &str = "actioneer-sidebar-favorite";
+pub(crate) const ACTIVE_RUNS_ROW_KEY: &str = "actioneer-sidebar-active-runs";
 
 #[derive(Clone)]
 pub struct RepoListRenderContext {
@@ -111,7 +113,7 @@ pub fn rebuild_repo_list(store: gio::ListStore, context: RepoListRenderContext) 
 
     append_section(
         tr("Favorites").as_str(),
-        "emblem-favorite-symbolic",
+        crate::ui::utils::favorite_icon_name(),
         favorites_section,
         &favorites_snapshot,
     );
@@ -152,6 +154,33 @@ pub fn row_matches_query(row: &gtk::Widget, query: &str) -> bool {
     false
 }
 
+/// Pill filter modes shown above the repo list.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum SidebarFilter {
+    #[default]
+    All,
+    Favorites,
+    Active,
+}
+
+/// Repo rows only pass a non-`All` pill filter when they carry matching state.
+pub fn row_matches_filter(row: &gtk::Widget, query: &str, filter: SidebarFilter) -> bool {
+    let is_repo_row = repo_id_from_row(row).is_some();
+
+    if is_repo_row {
+        let passes_pill = match filter {
+            SidebarFilter::All => true,
+            SidebarFilter::Favorites => get_data_copy(row, FAVORITE_ROW_KEY).unwrap_or(false),
+            SidebarFilter::Active => get_data_copy(row, ACTIVE_RUNS_ROW_KEY).unwrap_or(false),
+        };
+        if !passes_pill {
+            return false;
+        }
+    }
+
+    row_matches_query(row, query)
+}
+
 pub fn find_label_by_name(widget: &gtk::Widget, name: &str) -> Option<gtk::Label> {
     if widget.widget_name() == name {
         return widget.clone().downcast::<gtk::Label>().ok();
@@ -175,30 +204,37 @@ fn build_repo_row(
     favorites_arc: Arc<Mutex<HashSet<i64>>>,
     favorites_manager: Option<Arc<FavoritesManager>>,
 ) -> gtk::Box {
-    let row = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+    let row = gtk::Box::new(gtk::Orientation::Horizontal, 10);
     let repo_id = repo.id;
-    row.set_margin_top(12);
-    row.set_margin_bottom(12);
-    row.set_margin_start(12);
-    row.set_margin_end(12);
+    row.set_margin_top(8);
+    row.set_margin_bottom(8);
+    row.set_margin_start(10);
+    row.set_margin_end(8);
     row.set_hexpand(true);
     row.set_can_focus(false);
     row.add_css_class("activatable");
+    row.add_css_class("sidebar-repo-row");
+
+    let icon = gtk::Image::from_icon_name("folder-symbolic");
+    icon.set_pixel_size(16);
+    icon.set_valign(gtk::Align::Center);
+    icon.set_halign(gtk::Align::Center);
+    icon.add_css_class("dim-label");
+    row.append(&icon);
 
     let favorite_button = gtk::ToggleButton::new();
     favorite_button.add_css_class("flat");
+    favorite_button.add_css_class("sidebar-fav");
     favorite_button.set_valign(gtk::Align::Center);
-    favorite_button.set_icon_name("emblem-favorite-symbolic");
+    favorite_button.set_icon_name(crate::ui::utils::favorite_icon_name());
     favorite_button.set_tooltip_text(Some(tr("Toggle favorite").as_str()));
     favorite_button.set_active(is_favorite);
-    update_favorite_button_visual(&favorite_button, is_favorite);
 
     let favorites_arc_for_update = favorites_arc.clone();
     let favorites_manager_for_update = favorites_manager.clone();
 
     favorite_button.connect_toggled(move |button| {
         let desired_state = button.is_active();
-        update_favorite_button_visual(button, desired_state);
 
         let favorites_arc = favorites_arc_for_update.clone();
         let favorites_manager = favorites_manager_for_update.clone();
@@ -231,7 +267,6 @@ fn build_repo_row(
 
                         if button_clone.is_active() != is_now_favorite {
                             button_clone.set_active(is_now_favorite);
-                            update_favorite_button_visual(&button_clone, is_now_favorite);
                         }
                     }
                     Err((err, stored_state)) => {
@@ -246,7 +281,6 @@ fn build_repo_row(
 
                         if button_clone.is_active() != stored_state {
                             button_clone.set_active(stored_state);
-                            update_favorite_button_visual(&button_clone, stored_state);
                         }
                     }
                 }
@@ -276,18 +310,12 @@ fn build_repo_row(
         }
     });
 
-    row.append(&favorite_button);
-
-    let icon = gtk::Image::from_icon_name("folder-symbolic");
-    icon.set_pixel_size(24);
-    icon.set_valign(gtk::Align::Center);
-    icon.set_halign(gtk::Align::Center);
-    row.append(&icon);
-
-    let content_box = gtk::Box::new(gtk::Orientation::Vertical, 6);
+    let content_box = gtk::Box::new(gtk::Orientation::Vertical, 2);
+    content_box.set_valign(gtk::Align::Center);
 
     let name_label = gtk::Label::new(Some(&repo.full_name));
     name_label.set_halign(gtk::Align::Start);
+    name_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
     name_label.add_css_class("heading");
     name_label.set_widget_name("repo-name-label");
     content_box.append(&name_label);
@@ -323,12 +351,15 @@ fn build_repo_row(
     }
 
     row.append(&content_box);
+    row.append(&favorite_button);
 
     set_data(&row, REPO_ID_KEY, repo_id);
     set_data(&row, REPO_FULL_NAME_KEY, repo.full_name.clone());
     set_data(&row, REPO_MODEL_KEY, repo);
     set_data(&row, SELECTABLE_KEY, true);
     set_data(&row, ACTIVATABLE_KEY, true);
+    set_data(&row, FAVORITE_ROW_KEY, is_favorite);
+    set_data(&row, ACTIVE_RUNS_ROW_KEY, workflow_counts.active > 0);
 
     row
 }
@@ -384,28 +415,23 @@ pub fn find_first_repo_index(model: &gtk::FilterListModel) -> Option<u32> {
     None
 }
 
-fn create_section_header(title: &str, icon_name: &str) -> gtk::Box {
+fn create_section_header(title: &str, _icon_name: &str) -> gtk::Box {
     let row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     row.set_can_focus(false);
     row.set_can_target(false);
     row.add_css_class("section-header");
     row.add_css_class("hoverless-row");
-    row.set_margin_top(18);
-    row.set_margin_bottom(6);
-    row.set_margin_start(12);
-    row.set_margin_end(12);
+    row.set_margin_top(14);
+    row.set_margin_bottom(4);
+    row.set_margin_start(10);
+    row.set_margin_end(10);
     set_data(&row, SELECTABLE_KEY, false);
     set_data(&row, ACTIVATABLE_KEY, false);
 
-    let icon = gtk::Image::from_icon_name(icon_name);
-    icon.set_pixel_size(16);
-    row.append(&icon);
-
-    let label = gtk::Label::new(Some(title));
+    let label = gtk::Label::new(Some(&title.to_uppercase()));
     label.set_halign(gtk::Align::Start);
     label.set_hexpand(true);
-    label.add_css_class("dim-label");
-    label.add_css_class("heading");
+    label.add_css_class("sidebar-owner-label");
 
     row.append(&label);
 
@@ -418,17 +444,16 @@ fn create_owner_header(owner: &str) -> gtk::Box {
     row.set_can_target(false);
     row.add_css_class("owner-header");
     row.add_css_class("hoverless-row");
-    row.set_margin_top(4);
-    row.set_margin_bottom(4);
-    row.set_margin_start(28);
-    row.set_margin_end(12);
+    row.set_margin_top(10);
+    row.set_margin_bottom(3);
+    row.set_margin_start(10);
+    row.set_margin_end(10);
     set_data(&row, SELECTABLE_KEY, false);
     set_data(&row, ACTIVATABLE_KEY, false);
 
-    let label = gtk::Label::new(Some(owner));
+    let label = gtk::Label::new(Some(&owner.to_uppercase()));
     label.set_halign(gtk::Align::Start);
-    label.add_css_class("caption");
-    label.add_css_class("dim-label");
+    label.add_css_class("sidebar-owner-label");
     row.append(&label);
     row
 }
@@ -456,18 +481,6 @@ fn create_meta_label(text: String) -> gtk::Label {
     label.add_css_class("dim-label");
     label.add_css_class("caption");
     label
-}
-
-fn update_favorite_button_visual(button: &gtk::ToggleButton, is_active: bool) {
-    if is_active {
-        button.remove_css_class("flat");
-        button.add_css_class("suggested-action");
-        button.set_opacity(1.0);
-    } else {
-        button.remove_css_class("suggested-action");
-        button.add_css_class("flat");
-        button.set_opacity(0.5);
-    }
 }
 
 /// Gather workflow status counts for a repository

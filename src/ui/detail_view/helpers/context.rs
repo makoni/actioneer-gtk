@@ -18,7 +18,6 @@ pub(crate) struct JobRefreshContext {
     run_id: i64,
     expander: gtk::Expander,
     jobs_box: gtk::Box,
-    badges_box: Option<gtk::Box>,
     parent_window: gtk::Window,
     repo_model: Repo,
     branch: Option<String>,
@@ -35,7 +34,6 @@ pub(crate) struct JobRefreshContextParams {
     pub run_id: i64,
     pub expander: gtk::Expander,
     pub jobs_box: gtk::Box,
-    pub badges_box: Option<gtk::Box>,
     pub parent_window: gtk::Window,
     pub repo_model: Repo,
     pub branch: Option<String>,
@@ -54,7 +52,6 @@ impl JobRefreshContext {
             run_id: params.run_id,
             expander: params.expander,
             jobs_box: params.jobs_box,
-            badges_box: params.badges_box,
             parent_window: params.parent_window,
             repo_model: params.repo_model,
             branch: params.branch,
@@ -100,10 +97,6 @@ impl JobRefreshContext {
 
     pub(crate) fn jobs_box(&self) -> gtk::Box {
         self.jobs_box.clone()
-    }
-
-    pub(crate) fn badges_box(&self) -> Option<gtk::Box> {
-        self.badges_box.clone()
     }
 
     pub(crate) fn parent_window(&self) -> gtk::Window {
@@ -192,7 +185,6 @@ mod tests {
             run_id,
             expander: expander.clone(),
             jobs_box: gtk::Box::new(gtk::Orientation::Vertical, 0),
-            badges_box: None,
             parent_window: gtk::Window::new(),
             repo_model: repo_stub(),
             branch: Some("main".into()),

@@ -20,12 +20,15 @@ use tracing::info;
 mod content;
 mod favorite_controls;
 mod filter_controls;
+pub(crate) mod header_state;
 mod helpers;
 mod run_filters;
 mod workflow_list;
 mod workflow_refresh;
-use favorite_controls::{observe_favorites, setup_favorite_button};
+use favorite_controls::observe_favorites;
+use favorite_controls::setup_favorite_button;
 use filter_controls::{FilterChips, FilterControls};
+use header_state::DetailHeaderState;
 use helpers::{JobContextMap, RunBadgeSummaryMap, RunDigestStore, RunLoadService};
 
 #[derive(Clone)]
@@ -63,6 +66,7 @@ pub struct RepoDetailPane {
     lifecycle_token: Rc<()>,
     refresh_active: Arc<AtomicBool>,
     expand_first_workflow_on_load: Rc<Cell<bool>>,
+    header: DetailHeaderState,
 }
 
 #[derive(Clone)]
@@ -93,6 +97,7 @@ struct WorkflowListContext {
     run_filters: Arc<Mutex<RunFilters>>,
     run_load_service: RunLoadService,
     expand_first_workflow: Rc<Cell<bool>>,
+    header: DetailHeaderState,
 }
 
 #[derive(Debug, Clone)]
@@ -159,13 +164,13 @@ impl RepoDetailPane {
         let run_badge_summaries = Rc::new(RefCell::new(HashMap::new()));
 
         let favorite_button = gtk::ToggleButton::new();
-        favorite_button.set_icon_name("emblem-favorite-symbolic");
-        favorite_button.add_css_class("flat");
+        favorite_button.set_icon_name(crate::ui::utils::favorite_icon_name());
+        favorite_button.add_css_class("header-action-btn");
         favorite_button.set_tooltip_text(Some(tr("Toggle favorite").as_str()));
 
         let refresh_button = gtk::Button::from_icon_name("view-refresh-symbolic");
         refresh_button.set_tooltip_text(Some(tr("Refresh workflows").as_str()));
-        refresh_button.add_css_class("flat");
+        refresh_button.add_css_class("header-action-btn");
 
         let buttons_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         buttons_box.set_valign(gtk::Align::Center);
@@ -196,41 +201,41 @@ impl RepoDetailPane {
             }
         });
         let workflow_view = gtk::ListView::new(Some(workflow_selection), Some(workflow_factory));
-        workflow_view.add_css_class("boxed-list");
+        workflow_view.add_css_class("workflows-card");
         workflow_view.add_css_class("hoverless-list");
         workflow_view.set_single_click_activate(false);
-        workflow_view.set_margin_top(12);
-        workflow_view.set_margin_bottom(12);
-        workflow_view.set_margin_start(12);
-        workflow_view.set_margin_end(12);
-        workflow_view.set_valign(gtk::Align::Fill);
-        workflow_view.set_vexpand(true);
-        // Create ToastOverlay to wrap the content for showing feedback
+        workflow_view.set_valign(gtk::Align::Start);
+        workflow_view.set_vexpand(false);
+        workflow_view.set_overflow(gtk::Overflow::Hidden);
+        // Create ToastOverlay to wrap the content for showing feedback.
+        // The pane header is pinned above the scroll area; only the workflows
+        // content scrolls (see `content.rs`).
         let toast_overlay = adw::ToastOverlay::new();
         let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
         root.set_hexpand(true);
         root.set_vexpand(true);
-
-        let scrolled_window = gtk::ScrolledWindow::builder()
-            .hscrollbar_policy(gtk::PolicyType::Never)
-            .vscrollbar_policy(gtk::PolicyType::Automatic)
-            .hexpand(true)
-            .vexpand(true)
-            .build();
-        scrolled_window.set_propagate_natural_height(true);
-
-        let viewport = gtk::Viewport::builder()
-            .scroll_to_focus(false)
-            .hexpand(true)
-            .vexpand(true)
-            .build();
-        viewport.set_child(Some(&root));
-        scrolled_window.set_child(Some(&viewport));
-        toast_overlay.set_child(Some(&scrolled_window));
+        toast_overlay.set_child(Some(&root));
 
         let filter_controls = FilterControls::new();
         let filter_chips = filter_controls.chips.clone();
         let filter_controls_widget = filter_controls.widget();
+
+        let subtitle_label = gtk::Label::new(None);
+        subtitle_label.add_css_class("dim-label");
+        subtitle_label.add_css_class("caption");
+        subtitle_label.set_halign(gtk::Align::Start);
+
+        let footer_label = gtk::Label::new(None);
+        footer_label.add_css_class("dim-label");
+        footer_label.add_css_class("caption");
+        footer_label.set_halign(gtk::Align::Start);
+
+        let header = DetailHeaderState::new(
+            subtitle_label.clone(),
+            footer_label.clone(),
+            filter_chips.clone(),
+        );
+
         let run_digests = Arc::new(Mutex::new(HashMap::new()));
         let run_filters = Arc::new(Mutex::new(RunFilters::default()));
         let workflows_last_loaded = Arc::new(Mutex::new(HashMap::new()));
@@ -288,6 +293,7 @@ impl RepoDetailPane {
             lifecycle_token: Rc::new(()),
             refresh_active: Arc::new(AtomicBool::new(true)),
             expand_first_workflow_on_load: Rc::new(Cell::new(expand_first_workflow_on_load)),
+            header,
         };
 
         pane.build_ui();
@@ -333,30 +339,49 @@ impl RepoDetailPane {
         let refresh_button = self.refresh_button.clone();
         self.connect_refresh_button(&refresh_button);
         self.connect_workflow_selected();
+
+        // Keep the "updated …" subline fresh.
+        let header = self.header.clone();
+        let refresh_active = self.refresh_active.clone();
+        glib::timeout_add_seconds_local(30, move || {
+            if !refresh_active.load(Ordering::Relaxed) {
+                return glib::ControlFlow::Break;
+            }
+            header.refresh_relative_time();
+            glib::ControlFlow::Continue
+        });
     }
 
     fn build_header(&self) {
         let header_box = gtk::Box::new(gtk::Orientation::Horizontal, 12);
-        header_box.set_margin_top(24);
-        header_box.set_margin_bottom(12);
+        header_box.set_margin_top(16);
+        header_box.set_margin_bottom(14);
         header_box.set_margin_start(24);
         header_box.set_margin_end(24);
 
-        let info_box = gtk::Box::new(gtk::Orientation::Vertical, 4);
+        let info_box = gtk::Box::new(gtk::Orientation::Vertical, 5);
         info_box.set_hexpand(true);
+        info_box.set_valign(gtk::Align::Center);
+
+        let title_row = gtk::Box::new(gtk::Orientation::Horizontal, 9);
+        title_row.set_valign(gtk::Align::Center);
 
         let repo_label = gtk::Label::new(Some(&self.repo.full_name));
         repo_label.add_css_class("title-2");
-        repo_label.set_halign(gtk::Align::Start);
-        info_box.append(&repo_label);
+        title_row.append(&repo_label);
 
-        if self.repo.is_private {
-            let private_label = gtk::Label::new(Some(tr("Private Repository").as_str()));
-            private_label.add_css_class("dim-label");
-            private_label.add_css_class("caption");
-            private_label.set_halign(gtk::Align::Start);
-            info_box.append(&private_label);
-        }
+        let visibility_text = if self.repo.is_private {
+            tr("Private").to_uppercase()
+        } else {
+            tr("Public").to_uppercase()
+        };
+        let visibility_badge = gtk::Label::new(Some(&visibility_text));
+        visibility_badge.add_css_class("visibility-badge");
+        visibility_badge.set_valign(gtk::Align::Center);
+        title_row.append(&visibility_badge);
+
+        info_box.append(&title_row);
+        info_box.append(&self.header.subtitle_label());
 
         header_box.append(&info_box);
 
@@ -367,6 +392,13 @@ impl RepoDetailPane {
 
         let chips_row = self.filter_controls.clone();
         buttons_box.append(&chips_row);
+
+        let separator = gtk::Separator::new(gtk::Orientation::Vertical);
+        separator.set_margin_start(3);
+        separator.set_margin_end(3);
+        separator.set_margin_top(6);
+        separator.set_margin_bottom(6);
+        buttons_box.append(&separator);
 
         let refresh_button = self.refresh_button.clone();
         refresh_button.set_valign(gtk::Align::Center);

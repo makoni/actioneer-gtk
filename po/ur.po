@@ -835,3 +835,42 @@ msgstr "محفوظ ٹوکن اسٹوریج کی بہتر مطابقت کی بد�
 
 msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
 msgstr "تازہ کردہ بنڈلڈ اجزا Actioneer کو مستحکم، قابلِ بھروسا اور تازہ ترین رکھنے میں مدد دیتے ہیں۔"
+
+msgid "Workflows"
+msgstr "ورک فلو"
+
+msgid "Auto-refresh is disabled."
+msgstr "خودکار تازہ کاری غیر فعال ہے۔"
+
+msgid "Data refreshes automatically every {seconds} seconds."
+msgstr "ڈیٹا ہر {seconds} سیکنڈ میں خودکار طور پر تازہ ہوتا ہے۔"
+
+msgid "{count} workflows"
+msgstr "{count} ورک فلو"
+
+msgid "Updated {when}"
+msgstr "{when} اپڈیٹ ہوا"
+
+msgid "Not updated yet"
+msgstr "ابھی اپڈیٹ نہیں ہوا"
+
+msgid "No runs yet"
+msgstr "ابھی کوئی رن نہیں"
+
+msgid "Recent runs"
+msgstr "حالیہ رن"
+
+msgid "All on GitHub"
+msgstr "GitHub پر سب"
+
+msgid "Showing {visible} of {overall}"
+msgstr "{overall} میں سے {visible} دکھائے جا رہے ہیں"
+
+msgid "Showing {visible} of {filtered} matching filters"
+msgstr "فلٹرز سے ملنے والے {filtered} میں سے {visible} دکھائے جا رہے ہیں"
+
+msgid "All"
+msgstr "سب"
+
+msgid "Active"
+msgstr "فعال"

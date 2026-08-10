@@ -835,3 +835,42 @@ msgstr "أصبح تسجيل الدخول أكثر موثوقية على أنظم
 
 msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
 msgstr "تساعد المكونات المضمّنة المحدّثة في إبقاء Actioneer مستقراً وموثوقاً ومحدّثاً."
+
+msgid "Workflows"
+msgstr "سير العمل"
+
+msgid "Auto-refresh is disabled."
+msgstr "التحديث التلقائي معطّل."
+
+msgid "Data refreshes automatically every {seconds} seconds."
+msgstr "يتم تحديث البيانات تلقائيًا كل {seconds} ثانية."
+
+msgid "{count} workflows"
+msgstr "{count} من سير العمل"
+
+msgid "Updated {when}"
+msgstr "تم التحديث {when}"
+
+msgid "Not updated yet"
+msgstr "لم يتم التحديث بعد"
+
+msgid "No runs yet"
+msgstr "لا توجد تشغيلات بعد"
+
+msgid "Recent runs"
+msgstr "التشغيلات الأخيرة"
+
+msgid "All on GitHub"
+msgstr "الكل على GitHub"
+
+msgid "Showing {visible} of {overall}"
+msgstr "عرض {visible} من {overall}"
+
+msgid "Showing {visible} of {filtered} matching filters"
+msgstr "عرض {visible} من {filtered} المطابقة للمرشحات"
+
+msgid "All"
+msgstr "الكل"
+
+msgid "Active"
+msgstr "النشطة"

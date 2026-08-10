@@ -12,12 +12,12 @@ use std::sync::Arc;
 use tracing::error;
 
 #[derive(Clone)]
-pub(super) struct RunActionContext {
-    pub(super) client: Arc<Mutex<GitHubClient>>,
-    pub(super) owner: String,
-    pub(super) repo: String,
-    pub(super) parent_window: adw::ApplicationWindow,
-    pub(super) toast_overlay: adw::ToastOverlay,
+pub(crate) struct RunActionContext {
+    pub(crate) client: Arc<Mutex<GitHubClient>>,
+    pub(crate) owner: String,
+    pub(crate) repo: String,
+    pub(crate) parent_window: adw::ApplicationWindow,
+    pub(crate) toast_overlay: adw::ToastOverlay,
 }
 
 /// Builds a Yes/No confirmation alert. The confirming action uses the `confirm`
@@ -41,13 +41,10 @@ fn confirm_dialog(heading: &str, body: &str, destructive: bool) -> adw::AlertDia
 }
 
 pub(super) fn create_actions_box(run: &WorkflowRun, context: &RunActionContext) -> gtk::Box {
-    let actions_box = gtk::Box::new(gtk::Orientation::Horizontal, 4);
+    let actions_box = gtk::Box::new(gtk::Orientation::Horizontal, 2);
     actions_box.set_valign(gtk::Align::Start);
     actions_box.set_halign(gtk::Align::End);
-
-    if let Some(url) = run.html_url.as_ref() {
-        actions_box.append(&create_open_button(url));
-    }
+    actions_box.set_margin_top(1);
 
     if run.is_rerunnable() {
         actions_box.append(&create_rerun_button(run, context));
@@ -61,14 +58,17 @@ pub(super) fn create_actions_box(run: &WorkflowRun, context: &RunActionContext) 
         actions_box.append(&create_cancel_button(run, context));
     }
 
+    if let Some(url) = run.html_url.as_ref() {
+        actions_box.append(&create_open_button(url));
+    }
+
     actions_box
 }
 
 fn create_open_button(url: &str) -> gtk::Button {
     let button = gtk::Button::from_icon_name("adw-external-link-symbolic");
     button.set_tooltip_text(Some(tr("Open in GitHub").as_str()));
-    button.add_css_class("flat");
-    button.add_css_class("circular");
+    button.add_css_class("row-action-btn");
     button.set_focus_on_click(false);
 
     let url = url.to_string();
@@ -84,9 +84,7 @@ fn create_open_button(url: &str) -> gtk::Button {
 fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Button {
     let button = gtk::Button::from_icon_name("view-refresh-symbolic");
     button.set_tooltip_text(Some(tr("Re-run workflow").as_str()));
-    button.add_css_class("flat");
-    button.add_css_class("circular");
-    button.add_css_class("warning");
+    button.add_css_class("row-action-btn");
     button.set_focus_on_click(false);
 
     let client = context.client.clone();
@@ -165,9 +163,7 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
 fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Button {
     let button = gtk::Button::from_icon_name("system-reboot-symbolic");
     button.set_tooltip_text(Some(tr("Re-run failed jobs").as_str()));
-    button.add_css_class("flat");
-    button.add_css_class("circular");
-    button.add_css_class("error");
+    button.add_css_class("row-action-btn");
     button.set_focus_on_click(false);
 
     let client = context.client.clone();
@@ -243,79 +239,84 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
 fn create_cancel_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Button {
     let button = gtk::Button::from_icon_name("process-stop-symbolic");
     button.set_tooltip_text(Some(tr("Cancel run").as_str()));
-    button.add_css_class("flat");
-    button.add_css_class("circular");
-    button.add_css_class("destructive-action");
+    button.add_css_class("row-action-btn");
+    button.add_css_class("cancel-action");
     button.set_focus_on_click(false);
 
+    let run = run.clone();
+    let context = context.clone();
+    button.connect_clicked(move |btn| {
+        confirm_and_cancel_run(&run, &context, btn);
+    });
+
+    button
+}
+
+/// Presents the cancel confirmation dialog for `run` and issues the API call on
+/// confirmation. Shared between the per-run button and the workflow-row button.
+pub(crate) fn confirm_and_cancel_run(
+    run: &WorkflowRun,
+    context: &RunActionContext,
+    btn: &gtk::Button,
+) {
+    let dialog = confirm_dialog(
+        tr("Cancel Workflow Run").as_str(),
+        tr("Do you want to cancel the in-progress run \"{run}\"?\n\nThis action cannot be undone.")
+            .replace("{run}", format_run_title(run).as_str())
+            .as_str(),
+        true,
+    );
+
+    let btn_clone = btn.clone();
     let client = context.client.clone();
     let owner = context.owner.clone();
     let repo = context.repo.clone();
-    let run_id = run.id;
-    let parent_window = context.parent_window.clone();
     let toast_overlay = context.toast_overlay.clone();
+    let parent_window = context.parent_window.clone();
     let run_title = format_run_title(run);
+    let run_id = run.id;
 
-    button.connect_clicked(move |btn| {
-        let dialog = confirm_dialog(
-            tr("Cancel Workflow Run").as_str(),
-            tr("Do you want to cancel the in-progress run \"{run}\"?\n\nThis action cannot be undone.")
-                .replace("{run}", run_title.as_str())
-                .as_str(),
-            true,
-        );
+    dialog.connect_response(None, move |_dialog, response| {
+        if response != "confirm" {
+            return;
+        }
 
-        let btn_clone = btn.clone();
+        btn_clone.set_sensitive(false);
+
         let client = client.clone();
         let owner = owner.clone();
         let repo = repo.clone();
         let toast_overlay = toast_overlay.clone();
         let run_title = run_title.clone();
 
-        dialog.connect_response(None, move |_dialog, response| {
-            if response != "confirm" {
-                return;
-            }
+        let (sender, receiver) =
+            glib::MainContext::default().channel::<bool>(glib::Priority::default());
 
-            btn_clone.set_sensitive(false);
-
-            let client = client.clone();
-            let owner = owner.clone();
-            let repo = repo.clone();
-            let toast_overlay = toast_overlay.clone();
-            let run_title = run_title.clone();
-
-            let (sender, receiver) =
-                glib::MainContext::default().channel::<bool>(glib::Priority::default());
-
-            receiver.attach(None, move |success| {
-                let message = if success {
-                    tr("✓ Cancelled run '{run}'").replace("{run}", run_title.as_str())
-                } else {
-                    tr("✗ Failed to cancel run")
-                };
-                let toast = adw::Toast::new(&message);
-                toast.set_timeout(if success { 3 } else { 5 });
-                toast_overlay.add_toast(toast);
-                glib::ControlFlow::Break
-            });
-
-            crate::runtime_handle().spawn(async move {
-                let client_guard = client.lock().clone();
-                let cancel_result = client_guard.cancel_run(&owner, &repo, run_id).await;
-                if let Err(err) = cancel_result {
-                    error!("Failed to cancel run: {}", err);
-                    let _ = sender.send(false);
-                } else {
-                    let _ = sender.send(true);
-                }
-            });
+        receiver.attach(None, move |success| {
+            let message = if success {
+                tr("✓ Cancelled run '{run}'").replace("{run}", run_title.as_str())
+            } else {
+                tr("✗ Failed to cancel run")
+            };
+            let toast = adw::Toast::new(&message);
+            toast.set_timeout(if success { 3 } else { 5 });
+            toast_overlay.add_toast(toast);
+            glib::ControlFlow::Break
         });
 
-        dialog.present(Some(&parent_window));
+        crate::runtime_handle().spawn(async move {
+            let client_guard = client.lock().clone();
+            let cancel_result = client_guard.cancel_run(&owner, &repo, run_id).await;
+            if let Err(err) = cancel_result {
+                error!("Failed to cancel run: {}", err);
+                let _ = sender.send(false);
+            } else {
+                let _ = sender.send(true);
+            }
+        });
     });
 
-    button
+    dialog.present(Some(&parent_window));
 }
 
 #[cfg(test)]

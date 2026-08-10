@@ -835,3 +835,42 @@ msgstr "Die Anmeldung funktioniert auf neueren Linux-Systemen zuverlässiger dan
 
 msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
 msgstr "Aktualisierte mitgelieferte Komponenten helfen dabei, Actioneer stabil, zuverlässig und aktuell zu halten."
+
+msgid "Workflows"
+msgstr "Workflows"
+
+msgid "Auto-refresh is disabled."
+msgstr "Automatische Aktualisierung ist deaktiviert."
+
+msgid "Data refreshes automatically every {seconds} seconds."
+msgstr "Daten werden alle {seconds} Sekunden automatisch aktualisiert."
+
+msgid "{count} workflows"
+msgstr "{count} Workflows"
+
+msgid "Updated {when}"
+msgstr "Aktualisiert {when}"
+
+msgid "Not updated yet"
+msgstr "Noch nicht aktualisiert"
+
+msgid "No runs yet"
+msgstr "Noch keine Ausführungen"
+
+msgid "Recent runs"
+msgstr "Letzte Ausführungen"
+
+msgid "All on GitHub"
+msgstr "Alle auf GitHub"
+
+msgid "Showing {visible} of {overall}"
+msgstr "{visible} von {overall} angezeigt"
+
+msgid "Showing {visible} of {filtered} matching filters"
+msgstr "{visible} von {filtered} passend zu den Filtern angezeigt"
+
+msgid "All"
+msgstr "Alle"
+
+msgid "Active"
+msgstr "Aktiv"

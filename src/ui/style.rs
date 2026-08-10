@@ -45,6 +45,334 @@ const APP_CSS: &str = r#"
     box-shadow: none;
 }
 
+/* ------------------------------------------------------------------ */
+/* Workflows redesign                                                  */
+/* ------------------------------------------------------------------ */
+
+/* Round status indicator: tinted circle with a symbolic glyph inside. */
+.status-dot {
+    border-radius: 999px;
+    padding: 0;
+}
+
+.status-dot image {
+    color: currentColor;
+}
+
+.status-dot.success {
+    background-color: alpha(@success_color, 0.16);
+}
+.status-dot.success image {
+    color: @success_color;
+}
+
+.status-dot.error {
+    background-color: alpha(@error_color, 0.16);
+}
+.status-dot.error image {
+    color: @error_color;
+}
+
+.status-dot.warning,
+.status-dot.accent {
+    background-color: alpha(@warning_color, 0.18);
+}
+.status-dot.warning image,
+.status-dot.accent image {
+    color: @warning_color;
+}
+
+.status-dot.dim-label,
+.status-dot.idle {
+    background-color: alpha(currentColor, 0.07);
+}
+.status-dot.dim-label image,
+.status-dot.idle image {
+    color: alpha(currentColor, 0.55);
+}
+
+/* Single rounded card containing every workflow row. */
+.workflows-card {
+    background-color: @card_bg_color;
+    border: 1px solid alpha(currentColor, 0.07);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px alpha(black, 0.28);
+}
+
+.workflow-item:not(.workflow-item-first) {
+    border-top: 1px solid alpha(currentColor, 0.06);
+}
+
+.workflow-item {
+    transition: background-color 120ms ease-out;
+}
+
+.workflow-item:hover {
+    background-color: alpha(currentColor, 0.045);
+}
+
+.workflow-item.expanded,
+.workflow-item.expanded:hover {
+    background-color: alpha(black, 0.16);
+}
+
+.workflow-item.expanded .workflow-detail {
+    background-color: transparent;
+}
+
+.workflow-title {
+    font-weight: 700;
+}
+
+.workflow-file {
+    font-family: monospace;
+}
+
+.mono {
+    font-family: monospace;
+}
+
+/* Expanded workflow area: progress + recent runs card. */
+.workflow-detail {
+    /* aligned under the workflow title (chevron + status dot widths) */
+}
+
+.workflow-progress trough {
+    min-height: 4px;
+}
+
+.workflow-progress trough progress {
+    min-height: 4px;
+    background-color: @warning_color;
+}
+
+.runs-card {
+    background-color: alpha(black, 0.22);
+    border: 1px solid alpha(currentColor, 0.06);
+    border-radius: 10px;
+}
+
+.run-item:not(.run-item-first) {
+    border-top: 1px solid alpha(currentColor, 0.055);
+}
+
+.run-item:hover {
+    background-color: alpha(currentColor, 0.04);
+}
+
+.run-item.expanded,
+.run-item.expanded:hover {
+    background-color: alpha(currentColor, 0.03);
+}
+
+.run-number {
+    font-weight: 700;
+}
+
+/* Job cards inside an expanded run. */
+.job-card {
+    background-color: alpha(currentColor, 0.03);
+    border: 1px solid alpha(currentColor, 0.07);
+    border-radius: 9px;
+}
+
+.job-name {
+    font-weight: 700;
+}
+
+.step-row {
+    border-radius: 6px;
+}
+
+.step-row:hover {
+    background-color: alpha(currentColor, 0.05);
+}
+
+/* Small ghost icon buttons used on workflow/run/job rows. */
+.row-action-btn {
+    min-width: 30px;
+    min-height: 30px;
+    padding: 0;
+    border-radius: 7px;
+    color: alpha(currentColor, 0.6);
+}
+
+.row-action-btn:hover {
+    background-color: alpha(currentColor, 0.1);
+    color: currentColor;
+}
+
+.row-action-btn.cancel-action {
+    background-color: alpha(@error_color, 0.16);
+    color: @error_color;
+}
+
+.row-action-btn.cancel-action:hover {
+    background-color: alpha(@error_color, 0.3);
+}
+
+.row-action-btn.run-action {
+    background-color: alpha(currentColor, 0.08);
+    color: alpha(currentColor, 0.85);
+}
+
+.row-action-btn.run-action:hover {
+    background-color: @accent_color;
+    color: white;
+}
+
+/* Pane header action buttons (refresh / favorite). */
+.header-action-btn {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    border-radius: 8px;
+    background-color: alpha(currentColor, 0.08);
+    color: alpha(currentColor, 0.85);
+}
+
+.header-action-btn:hover {
+    background-color: alpha(currentColor, 0.13);
+}
+
+.header-action-btn:checked {
+    background-color: alpha(@accent_color, 0.2);
+    color: @accent_color;
+}
+
+/* Section labels like "WORKFLOWS" / "RECENT RUNS". */
+.section-label {
+    font-size: 0.82em;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: alpha(currentColor, 0.55);
+}
+
+/* Pane header: visibility badge next to the repo title. */
+.visibility-badge {
+    border: 1px solid alpha(currentColor, 0.16);
+    border-radius: 5px;
+    padding: 1px 8px;
+    font-size: 0.68em;
+    letter-spacing: 0.03em;
+    color: alpha(currentColor, 0.65);
+}
+
+/* Segmented run-status filter with counts. */
+.segmented-status-filter {
+    border-radius: 8px;
+}
+
+.segmented-status-filter > .filter-segment {
+    min-height: 30px;
+    padding: 0 10px;
+    border-radius: 0;
+}
+
+.segmented-status-filter > .filter-segment:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+.segmented-status-filter > .filter-segment:last-child {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.filter-segment .segment-count {
+    font-weight: 700;
+}
+
+.filter-segment.seg-success {
+    color: @success_color;
+}
+.filter-segment.seg-success:checked {
+    background-color: alpha(@success_color, 0.2);
+    color: @success_color;
+}
+
+.filter-segment.seg-running {
+    color: @warning_color;
+}
+.filter-segment.seg-running:checked {
+    background-color: alpha(@warning_color, 0.2);
+    color: @warning_color;
+}
+
+.filter-segment.seg-failed {
+    color: alpha(currentColor, 0.55);
+}
+.filter-segment.seg-failed:checked {
+    background-color: alpha(@error_color, 0.2);
+    color: @error_color;
+}
+
+/* Light-scheme variants: replace white-alpha overlays with dark-alpha ones. */
+.workflow-item.expanded,
+.workflow-item.expanded:hover {
+    background-color: alpha(black, 0.16);
+}
+
+@media not (prefers-color-scheme: dark) {
+    .workflow-item.expanded,
+    .workflow-item.expanded:hover {
+        background-color: alpha(black, 0.045);
+    }
+
+    .runs-card {
+        background-color: alpha(black, 0.045);
+        border-color: alpha(black, 0.08);
+    }
+
+    .job-card {
+        background-color: alpha(black, 0.02);
+        border-color: alpha(black, 0.08);
+    }
+}
+
+/* Sidebar polish: pill filters + solid-accent selection. */
+.filter-pill {
+    border-radius: 999px;
+    min-height: 24px;
+    padding: 0 12px;
+    font-size: 0.85em;
+    background-color: alpha(currentColor, 0.06);
+    color: alpha(currentColor, 0.7);
+}
+
+.filter-pill:checked {
+    background-color: alpha(@accent_color, 0.22);
+    color: @accent_color;
+    font-weight: 700;
+}
+
+.sidebar-surface listview row:selected,
+.sidebar-surface listview row:selected:hover {
+    background-color: @accent_color;
+    color: white;
+    border-radius: 9px;
+}
+
+.sidebar-surface listview row:selected .dim-label {
+    color: alpha(white, 0.72);
+}
+
+.sidebar-surface listview row:selected image {
+    color: white;
+}
+
+.sidebar-surface listview row:hover:not(:selected) {
+    background-color: alpha(currentColor, 0.06);
+    border-radius: 9px;
+}
+
+.sidebar-owner-label {
+    font-size: 0.72em;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    color: alpha(currentColor, 0.55);
+}
+
 .run-row,
 .run-row:hover,
 .run-row:focus,

@@ -835,3 +835,42 @@ msgstr "由于改进了安全令牌存储兼容性，在较新的 Linux 系统�
 
 msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
 msgstr "更新的捆绑组件有助于让 Actioneer 保持稳定、可靠并保持最新。"
+
+msgid "Workflows"
+msgstr "工作流"
+
+msgid "Auto-refresh is disabled."
+msgstr "自动刷新已禁用。"
+
+msgid "Data refreshes automatically every {seconds} seconds."
+msgstr "数据每 {seconds} 秒自动刷新一次。"
+
+msgid "{count} workflows"
+msgstr "{count} 个工作流"
+
+msgid "Updated {when}"
+msgstr "更新于{when}"
+
+msgid "Not updated yet"
+msgstr "尚未更新"
+
+msgid "No runs yet"
+msgstr "暂无运行记录"
+
+msgid "Recent runs"
+msgstr "最近的运行"
+
+msgid "All on GitHub"
+msgstr "在 GitHub 上查看全部"
+
+msgid "Showing {visible} of {overall}"
+msgstr "显示 {visible}/{overall}"
+
+msgid "Showing {visible} of {filtered} matching filters"
+msgstr "显示符合筛选条件的 {visible}/{filtered}"
+
+msgid "All"
+msgstr "全部"
+
+msgid "Active"
+msgstr "活跃"

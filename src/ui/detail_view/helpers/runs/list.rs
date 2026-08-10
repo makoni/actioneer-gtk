@@ -1,8 +1,10 @@
+use super::super::workflows::{WorkflowRowHeader, update_workflow_row_header};
 use super::filters::summarize_visible_runs;
 use super::row::{RunRowContext, create_run_expander_row};
-use crate::api::models::WorkflowRun;
+use crate::api::models::{JobSummary, WorkflowRun};
 use crate::i18n::tr;
 use crate::ui::detail_view::RunFilters;
+use crate::ui::detail_view::header_state::DetailHeaderState;
 use glib::subclass::types::ObjectSubclassIsExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, gio, glib};
@@ -31,6 +33,11 @@ pub(crate) struct WorkflowRunListModel {
     last_runs: Rc<RefCell<Arc<Vec<WorkflowRun>>>>,
     has_loaded: Rc<Cell<bool>>,
     expanded_runs: Rc<RefCell<HashSet<i64>>>,
+    workflow_id: i64,
+    job_summaries: super::super::context::RunBadgeSummaryMap,
+    row_header: Rc<RefCell<Option<WorkflowRowHeader>>>,
+    detail_header: Rc<RefCell<Option<DetailHeaderState>>>,
+    counts_label: Rc<RefCell<Option<gtk::Label>>>,
 }
 
 #[cfg(test)]
@@ -60,11 +67,18 @@ pub(crate) fn test_run_list_model() -> WorkflowRunListModel {
         last_runs: Rc::new(RefCell::new(Arc::new(Vec::new()))),
         has_loaded: Rc::new(Cell::new(false)),
         expanded_runs: Rc::new(RefCell::new(HashSet::new())),
+        workflow_id: 0,
+        job_summaries: Rc::new(RefCell::new(std::collections::HashMap::new())),
+        row_header: Rc::new(RefCell::new(None)),
+        detail_header: Rc::new(RefCell::new(None)),
+        counts_label: Rc::new(RefCell::new(None)),
     }
 }
 
 impl WorkflowRunListModel {
     pub(crate) fn new(context: RunRowContext) -> Self {
+        let workflow_id = context.workflow_id;
+        let job_summaries = context.job_summaries.clone();
         let list_store = gio::ListStore::new::<RunListEntry>();
         let selection = gtk::NoSelection::new(Some(list_store.clone()));
         let factory = gtk::SignalListItemFactory::new();
@@ -105,6 +119,9 @@ impl WorkflowRunListModel {
 
             let widget =
                 create_run_expander_row(&entry_obj.run(), &context, entry_obj.expand_jobs());
+            if entry_obj.is_first() {
+                widget.add_css_class("run-item-first");
+            }
             container.append(&widget);
 
             if let Some(expander) = find_run_expander(widget.upcast_ref()) {
@@ -140,15 +157,11 @@ impl WorkflowRunListModel {
         });
 
         let list_view = gtk::ListView::new(Some(selection.clone()), Some(factory.clone()));
-        list_view.add_css_class("boxed-list");
         list_view.add_css_class("hoverless-list");
+        list_view.add_css_class("runs-list");
         list_view.set_single_click_activate(false);
         list_view.set_valign(gtk::Align::Start);
         list_view.set_vexpand(false);
-        list_view.set_margin_top(12);
-        list_view.set_margin_bottom(12);
-        list_view.set_margin_start(12);
-        list_view.set_margin_end(12);
 
         let header_label = gtk::Label::new(None);
         header_label.add_css_class("dim-label");
@@ -175,10 +188,6 @@ impl WorkflowRunListModel {
         stack.add_named(&error_box, Some(STATE_ERROR));
         stack.add_named(&content_box, Some(STATE_CONTENT));
         stack.set_visible_child_name(STATE_IDLE);
-        stack.set_margin_start(24);
-        stack.set_margin_end(12);
-        stack.set_margin_top(8);
-        stack.set_margin_bottom(8);
 
         Self {
             stack,
@@ -189,6 +198,11 @@ impl WorkflowRunListModel {
             last_runs: Rc::new(RefCell::new(Arc::new(Vec::new()))),
             has_loaded: Rc::new(Cell::new(false)),
             expanded_runs,
+            workflow_id,
+            job_summaries,
+            row_header: Rc::new(RefCell::new(None)),
+            detail_header: Rc::new(RefCell::new(None)),
+            counts_label: Rc::new(RefCell::new(None)),
         }
     }
 
@@ -196,22 +210,74 @@ impl WorkflowRunListModel {
         self.stack.clone().upcast()
     }
 
+    pub(crate) fn set_row_header(&self, header: WorkflowRowHeader) {
+        *self.row_header.borrow_mut() = Some(header);
+    }
+
+    pub(crate) fn row_header(&self) -> Option<WorkflowRowHeader> {
+        self.row_header.borrow().clone()
+    }
+
+    pub(crate) fn set_detail_header(&self, header: DetailHeaderState) {
+        *self.detail_header.borrow_mut() = Some(header);
+    }
+
+    pub(crate) fn detail_header(&self) -> Option<DetailHeaderState> {
+        self.detail_header.borrow().clone()
+    }
+
+    /// External "shown N of M" label rendered in the workflow's sub-header.
+    pub(crate) fn set_counts_label(&self, label: gtk::Label) {
+        *self.counts_label.borrow_mut() = Some(label);
+    }
+
+    pub(crate) fn job_summaries(&self) -> super::super::context::RunBadgeSummaryMap {
+        self.job_summaries.clone()
+    }
+
+    /// Re-renders the workflow-level progress indicator when fresh job counts
+    /// arrive for the workflow's latest run.
+    pub(crate) fn refresh_progress_from_summary(&self, run_id: i64, summary: Option<&JobSummary>) {
+        let Some(header) = self.row_header() else {
+            return;
+        };
+        let Some(detail) = self.detail_header() else {
+            return;
+        };
+        let Some(latest) = detail.latest_run(self.workflow_id) else {
+            return;
+        };
+        if latest.id != run_id {
+            return;
+        }
+        update_workflow_row_header(&header, Some(&latest), summary);
+    }
+
     pub(crate) fn show_loading(&self) {
         self.header_label.set_visible(false);
+        self.set_counts_visible(false);
         self.list_store.remove_all();
         self.set_state(STATE_LOADING);
     }
 
     pub(crate) fn show_empty(&self) {
         self.header_label.set_visible(false);
+        self.set_counts_visible(false);
         self.list_store.remove_all();
         self.set_state(STATE_EMPTY);
     }
 
     pub(crate) fn show_filtered_placeholder(&self) {
         self.header_label.set_visible(false);
+        self.set_counts_visible(false);
         self.list_store.remove_all();
         self.set_state(STATE_FILTERED);
+    }
+
+    fn set_counts_visible(&self, visible: bool) {
+        if let Some(label) = self.counts_label.borrow().as_ref() {
+            label.set_visible(visible);
+        }
     }
 
     pub(crate) fn show_runs(
@@ -222,12 +288,21 @@ impl WorkflowRunListModel {
         runs: &[WorkflowRun],
         expanded_runs: &HashSet<i64>,
     ) {
-        self.header_label.set_visible(true);
-        self.header_label.set_text(&format_runs_header(
-            visible_count,
-            filtered_total,
-            overall_total,
-        ));
+        if let Some(counts_label) = self.counts_label.borrow().as_ref() {
+            counts_label.set_text(&format_runs_counts(
+                visible_count,
+                filtered_total,
+                overall_total,
+            ));
+            counts_label.set_visible(true);
+        } else {
+            self.header_label.set_visible(true);
+            self.header_label.set_text(&format_runs_header(
+                visible_count,
+                filtered_total,
+                overall_total,
+            ));
+        }
         self.replace_runs(runs, expanded_runs);
         self.set_state(STATE_CONTENT);
     }
@@ -348,8 +423,8 @@ impl WorkflowRunListModel {
     fn replace_runs(&self, runs: &[WorkflowRun], expanded_runs: &HashSet<i64>) {
         self.update_expanded_runs(expanded_runs);
         self.list_store.remove_all();
-        for run in runs {
-            let entry = RunListEntry::new(run.clone(), expanded_runs.contains(&run.id));
+        for (index, run) in runs.iter().enumerate() {
+            let entry = RunListEntry::new(run.clone(), expanded_runs.contains(&run.id), index == 0);
             self.list_store.append(&entry);
         }
     }
@@ -449,6 +524,19 @@ fn build_error_placeholder() -> (gtk::Widget, gtk::Label, RetryHandler) {
     (container.upcast(), detail_label, retry_handler)
 }
 
+/// Short "shown N of M" variant for the workflow sub-header.
+fn format_runs_counts(visible_count: usize, filtered_total: usize, overall_total: usize) -> String {
+    if filtered_total == overall_total || visible_count == filtered_total {
+        tr("Showing {visible} of {overall}")
+            .replace("{visible}", visible_count.to_string().as_str())
+            .replace("{overall}", overall_total.to_string().as_str())
+    } else {
+        tr("Showing {visible} of {filtered} matching filters")
+            .replace("{visible}", visible_count.to_string().as_str())
+            .replace("{filtered}", filtered_total.to_string().as_str())
+    }
+}
+
 fn format_runs_header(visible_count: usize, filtered_total: usize, overall_total: usize) -> String {
     if filtered_total == overall_total || visible_count == filtered_total {
         if visible_count < overall_total {
@@ -495,12 +583,13 @@ glib::wrapper! {
 }
 
 impl RunListEntry {
-    fn new(run: WorkflowRun, expand_jobs: bool) -> Self {
+    fn new(run: WorkflowRun, expand_jobs: bool, is_first: bool) -> Self {
         let obj: Self = glib::Object::new::<RunListEntry>();
         {
             let imp = obj.imp();
             *imp.run.borrow_mut() = Some(run);
             imp.expand_jobs.set(expand_jobs);
+            imp.is_first.set(is_first);
         }
         obj
     }
@@ -517,6 +606,10 @@ impl RunListEntry {
     fn expand_jobs(&self) -> bool {
         self.imp().expand_jobs.get()
     }
+
+    fn is_first(&self) -> bool {
+        self.imp().is_first.get()
+    }
 }
 
 mod imp {
@@ -528,6 +621,7 @@ mod imp {
     pub struct RunListEntry {
         pub run: RefCell<Option<WorkflowRun>>,
         pub expand_jobs: Cell<bool>,
+        pub is_first: Cell<bool>,
     }
 
     #[glib::object_subclass]

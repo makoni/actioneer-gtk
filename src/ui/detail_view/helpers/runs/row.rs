@@ -2,10 +2,11 @@ use super::super::context::{
     JobContextMap, JobRefreshContext, JobRefreshContextParams, RunBadgeSummaryMap,
 };
 use super::super::formatting::{
-    format_run_subtitle, format_run_title, format_run_tooltip, get_run_status_class,
-    get_run_status_icon, update_job_summary_badges, update_job_summary_badges_from_summary,
+    format_run_title, format_run_tooltip, get_run_status_class, get_run_status_icon,
+    populate_run_meta,
 };
 use super::super::jobs::{LoadJobsParams, load_run_jobs};
+use super::super::status_dot::{RUN_DOT_SIZE, build_status_dot};
 use super::actions::{RunActionContext, create_actions_box};
 use crate::api::GitHubClient;
 use crate::api::models::{Repo, WorkflowRun};
@@ -55,7 +56,7 @@ impl RunRowContext {
         }
     }
 
-    fn actions_context(&self) -> RunActionContext {
+    pub(super) fn actions_context(&self) -> RunActionContext {
         RunActionContext {
             client: self.client.clone(),
             owner: self.owner.clone(),
@@ -79,12 +80,8 @@ pub(crate) fn create_run_expander_row(
         let guard = context.job_contexts.borrow();
         guard.get(&run.id).map(|ctx| ctx.jobs_box())
     };
-    let (expander, badges_box) = build_expander(run, &run_title);
+    let expander = build_expander(run);
     let actions_box = create_actions_box(run, &context.actions_context());
-
-    if let Some(summary) = context.job_summaries.borrow().get(&run.id).cloned() {
-        update_job_summary_badges_from_summary(&badges_box, &summary);
-    }
 
     row_container.append(&expander);
     row_container.append(&actions_box);
@@ -98,6 +95,16 @@ pub(crate) fn create_run_expander_row(
     };
     expander.set_child(Some(&jobs_box));
 
+    // Highlight the row while the run is expanded.
+    let run_box_for_state = run_box.clone();
+    expander.connect_expanded_notify(move |exp| {
+        if exp.is_expanded() {
+            run_box_for_state.add_css_class("expanded");
+        } else {
+            run_box_for_state.remove_css_class("expanded");
+        }
+    });
+
     let parent_window_for_jobs: gtk::Window = context.parent_window.clone().upcast();
     if expand_jobs {
         rebind_preserved_job_context(
@@ -110,7 +117,6 @@ pub(crate) fn create_run_expander_row(
                 run_id: run.id,
                 expander: expander.clone(),
                 jobs_box: jobs_box.clone(),
-                badges_box: Some(badges_box.clone()),
                 parent_window: parent_window_for_jobs.clone(),
                 repo_model: context.repo_model.clone(),
                 branch: run.head_branch.clone(),
@@ -123,7 +129,6 @@ pub(crate) fn create_run_expander_row(
     attach_job_loader(
         &expander,
         jobs_box,
-        badges_box,
         context,
         run,
         parent_window_for_jobs,
@@ -140,85 +145,108 @@ pub(crate) fn create_run_expander_row(
 
 fn create_run_container() -> gtk::Box {
     let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
-    container.add_css_class("run-row");
+    container.add_css_class("run-item");
     container.add_css_class("hoverless-row");
     container
 }
 
 fn create_row_container() -> gtk::Box {
-    let container = gtk::Box::new(gtk::Orientation::Horizontal, 12);
-    container.set_margin_start(12);
-    container.set_margin_end(12);
-    container.set_margin_top(8);
-    container.set_margin_bottom(8);
+    let container = gtk::Box::new(gtk::Orientation::Horizontal, 11);
+    container.set_margin_start(4);
+    container.set_margin_end(8);
+    container.set_margin_top(9);
+    container.set_margin_bottom(9);
     container.set_hexpand(true);
     container.set_valign(gtk::Align::Center);
     container
 }
 
-fn build_expander(run: &WorkflowRun, run_title: &str) -> (gtk::Expander, gtk::Box) {
+/// Run title without the trailing run number (the number is rendered separately).
+fn run_title_base(run: &WorkflowRun) -> String {
+    run.display_title
+        .as_ref()
+        .or(run.name.as_ref())
+        .cloned()
+        .unwrap_or_else(|| tr("Workflow Run"))
+}
+
+fn build_expander(run: &WorkflowRun) -> gtk::Expander {
     let expander = gtk::Expander::new(None);
     expander.set_hexpand(true);
     expander.set_valign(gtk::Align::Center);
     expander.set_widget_name(&format!("run_{}", run.id));
+    expander.add_css_class("run-expander");
 
-    let header_box = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+    let header_box = gtk::Box::new(gtk::Orientation::Horizontal, 11);
     header_box.set_hexpand(true);
+    header_box.set_valign(gtk::Align::Center);
 
-    let status_icon = gtk::Image::from_icon_name(get_run_status_icon(run));
-    let status_class = get_run_status_class(run);
-    if !status_class.is_empty() {
-        status_icon.add_css_class(status_class);
+    let status_dot = build_status_dot(
+        get_run_status_icon(run),
+        get_run_status_class(run),
+        RUN_DOT_SIZE,
+    );
+    let tooltip = format_run_tooltip(run);
+    if !tooltip.is_empty() {
+        status_dot.set_tooltip_text(Some(&tooltip));
     }
-    status_icon.set_valign(gtk::Align::Center);
-    header_box.append(&status_icon);
+    header_box.append(&status_dot);
 
     let text_box = gtk::Box::new(gtk::Orientation::Vertical, 2);
     text_box.set_hexpand(true);
+    text_box.set_valign(gtk::Align::Center);
 
-    let title_label = gtk::Label::new(Some(run_title));
+    let title_line = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+    title_line.set_halign(gtk::Align::Start);
+
+    let has_number = run.run_number.is_some();
+    if let Some(num) = run.run_number {
+        let num_label = gtk::Label::new(Some(&format!("#{num}")));
+        num_label.add_css_class("run-number");
+        title_line.append(&num_label);
+    }
+
+    let title_label = gtk::Label::new(Some(&run_title_base(run)));
     title_label.set_halign(gtk::Align::Start);
     title_label.set_hexpand(true);
     title_label.set_ellipsize(pango::EllipsizeMode::End);
-    title_label.add_css_class("title-4");
-    text_box.append(&title_label);
+    if has_number {
+        title_label.add_css_class("dim-label");
+    } else {
+        title_label.add_css_class("run-number");
+    }
+    title_line.append(&title_label);
+    text_box.append(&title_line);
 
-    let subtitle_label = gtk::Label::new(Some(&format_run_subtitle(run)));
-    subtitle_label.set_halign(gtk::Align::Start);
-    subtitle_label.add_css_class("dim-label");
-    subtitle_label.set_ellipsize(pango::EllipsizeMode::End);
-    subtitle_label.set_tooltip_text(Some(&format_run_tooltip(run)));
-    text_box.append(&subtitle_label);
+    let meta_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    meta_box.set_halign(gtk::Align::Start);
+    populate_run_meta(&meta_box, run);
+    meta_box.set_tooltip_text(Some(&format_run_tooltip(run)));
+    text_box.append(&meta_box);
 
-    let subtitle_label_weak = subtitle_label.downgrade();
+    let meta_box_weak = meta_box.downgrade();
     let run_for_timer = run.clone();
-    glib::timeout_add_seconds_local(60, move || match subtitle_label_weak.upgrade() {
-        Some(label) => {
-            label.set_text(&format_run_subtitle(&run_for_timer));
-            label.set_tooltip_text(Some(&format_run_tooltip(&run_for_timer)));
+    glib::timeout_add_seconds_local(60, move || match meta_box_weak.upgrade() {
+        Some(meta_box) => {
+            populate_run_meta(&meta_box, &run_for_timer);
+            meta_box.set_tooltip_text(Some(&format_run_tooltip(&run_for_timer)));
             glib::ControlFlow::Continue
         }
         None => glib::ControlFlow::Break,
     });
 
     header_box.append(&text_box);
-
-    let badges_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-    badges_box.set_halign(gtk::Align::End);
-    badges_box.set_valign(gtk::Align::Center);
-    header_box.append(&badges_box);
-
     expander.set_label_widget(Some(&header_box));
 
-    (expander, badges_box)
+    expander
 }
 
 fn build_jobs_placeholder() -> gtk::Box {
-    let jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 4);
-    jobs_box.set_margin_start(24);
+    let jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 8);
+    jobs_box.set_margin_start(36);
     jobs_box.set_margin_end(12);
-    jobs_box.set_margin_top(4);
-    jobs_box.set_margin_bottom(4);
+    jobs_box.set_margin_top(2);
+    jobs_box.set_margin_bottom(12);
     jobs_box.set_hexpand(true);
 
     let placeholder = gtk::Label::new(Some(tr("Click to load jobs...").as_str()));
@@ -232,7 +260,6 @@ fn build_jobs_placeholder() -> gtk::Box {
 fn attach_job_loader(
     expander: &gtk::Expander,
     jobs_box: gtk::Box,
-    badges_box: gtk::Box,
     context: &RunRowContext,
     run: &WorkflowRun,
     parent_window: gtk::Window,
@@ -248,7 +275,6 @@ fn attach_job_loader(
     let job_contexts_for_load = context.job_contexts.clone();
     let job_contexts_for_remove = context.job_contexts.clone();
     let repo_model = context.repo_model.clone();
-    let badges_box_for_load = badges_box.clone();
     let job_summaries_for_load = context.job_summaries.clone();
     let parent_window_for_load = parent_window.clone();
     let run_title_for_load = run_title.clone();
@@ -277,7 +303,6 @@ fn attach_job_loader(
                 run_id,
                 expander: exp.clone(),
                 jobs_box: jobs_box.clone(),
-                badges_box: Some(badges_box_for_load.clone()),
                 workflow_id,
                 parent_window: parent_window_for_load.clone(),
                 repo_model: repo_model.clone(),
@@ -308,10 +333,6 @@ fn rebind_preserved_job_context(job_contexts: &JobContextMap, params: JobRefresh
             .map(|context| context.jobs())
             .unwrap_or_else(|| std::sync::Arc::new(Vec::new()))
     };
-
-    if let Some(ref badges_box) = params.badges_box {
-        update_job_summary_badges(badges_box, previous_jobs.as_ref());
-    }
 
     let mut params = params;
     params.jobs = previous_jobs;
@@ -370,6 +391,97 @@ mod tests {
         ))
     }
 
+    fn run_stub() -> WorkflowRun {
+        WorkflowRun {
+            id: 42,
+            run_number: Some(128),
+            workflow_id: Some(7),
+            name: Some("CI".into()),
+            display_title: Some("Bundle flatpak manifest".into()),
+            head_branch: Some("main".into()),
+            head_commit: None,
+            status: Some("in_progress".into()),
+            conclusion: None,
+            run_started_at: None,
+            event: None,
+            created_at: None,
+            updated_at: None,
+            html_url: None,
+            actor: None,
+            triggering_actor: None,
+        }
+    }
+
+    fn context_stub() -> RunRowContext {
+        RunRowContext::new(
+            client_stub(),
+            "mak".into(),
+            "actioneer".into(),
+            repo_stub(),
+            adw::ApplicationWindow::builder().build(),
+            7,
+            adw::ToastOverlay::new(),
+            Rc::new(RefCell::new(HashMap::new())),
+            Rc::new(RefCell::new(HashMap::new())),
+        )
+    }
+
+    fn params_for(
+        expander: &gtk::Expander,
+        jobs_box: &gtk::Box,
+        jobs: Arc<Vec<Job>>,
+    ) -> JobRefreshContextParams {
+        JobRefreshContextParams {
+            client: client_stub(),
+            owner: "mak".into(),
+            repo: "actioneer".into(),
+            workflow_id: 7,
+            run_id: 42,
+            expander: expander.clone(),
+            jobs_box: jobs_box.clone(),
+            parent_window: gtk::Window::new(),
+            repo_model: repo_stub(),
+            branch: Some("main".into()),
+            run_title: "CI".into(),
+            jobs,
+            job_summaries: Rc::new(RefCell::new(HashMap::new())),
+        }
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn run_row_renders_number_dot_and_meta() {
+        let Some(_guard) = gtk_test_guard("run_row_renders_number_dot_and_meta") else {
+            return;
+        };
+
+        let context = context_stub();
+        let row = create_run_expander_row(&run_stub(), &context, false);
+
+        assert!(row.has_css_class("run-item"));
+
+        let row_container = row
+            .first_child()
+            .and_then(|child| child.downcast::<gtk::Box>().ok())
+            .expect("row container");
+        let expander = row_container
+            .first_child()
+            .and_then(|child| child.downcast::<gtk::Expander>().ok())
+            .expect("run expander");
+        assert_eq!(expander.widget_name().as_str(), "run_42");
+
+        let header = expander
+            .label_widget()
+            .and_then(|child| child.downcast::<gtk::Box>().ok())
+            .expect("header box");
+        let dot = header
+            .first_child()
+            .and_then(|child| child.downcast::<gtk::Box>().ok())
+            .expect("status dot");
+        assert!(dot.has_css_class("status-dot"));
+        assert!(dot.has_css_class("accent"));
+    }
+
     #[test]
     #[ignore = "requires GTK display"]
     fn remove_job_context_only_removes_matching_expander() {
@@ -386,22 +498,11 @@ mod tests {
 
         job_contexts.borrow_mut().insert(
             42,
-            JobRefreshContext::from_params(JobRefreshContextParams {
-                client: client_stub(),
-                owner: "mak".into(),
-                repo: "actioneer".into(),
-                workflow_id: 7,
-                run_id: 42,
-                expander: new_expander.clone(),
-                jobs_box: jobs_box.clone(),
-                badges_box: None,
-                parent_window: gtk::Window::new(),
-                repo_model: repo_stub(),
-                branch: Some("main".into()),
-                run_title: "CI".into(),
-                jobs: std::sync::Arc::new(Vec::new()),
-                job_summaries: Rc::new(RefCell::new(HashMap::new())),
-            }),
+            JobRefreshContext::from_params(params_for(
+                &new_expander,
+                &jobs_box,
+                Arc::new(Vec::new()),
+            )),
         );
 
         remove_job_context_if_current(&job_contexts, 42, &old_expander);
@@ -424,22 +525,7 @@ mod tests {
 
         rebind_preserved_job_context(
             &job_contexts,
-            JobRefreshContextParams {
-                client: client_stub(),
-                owner: "mak".into(),
-                repo: "actioneer".into(),
-                workflow_id: 7,
-                run_id: 42,
-                expander: gtk::Expander::new(None),
-                jobs_box,
-                badges_box: None,
-                parent_window: gtk::Window::new(),
-                repo_model: repo_stub(),
-                branch: Some("main".into()),
-                run_title: "CI".into(),
-                jobs: std::sync::Arc::new(Vec::new()),
-                job_summaries: Rc::new(RefCell::new(HashMap::new())),
-            },
+            params_for(&gtk::Expander::new(None), &jobs_box, Arc::new(Vec::new())),
         );
 
         assert!(job_contexts.borrow().is_empty());
@@ -447,20 +533,17 @@ mod tests {
 
     #[test]
     #[ignore = "requires GTK display"]
-    fn rebind_preserved_job_context_restores_badges_from_cached_jobs() {
-        let Some(_guard) =
-            gtk_test_guard("rebind_preserved_job_context_restores_badges_from_cached_jobs")
-        else {
+    fn rebind_preserved_job_context_keeps_cached_jobs() {
+        let Some(_guard) = gtk_test_guard("rebind_preserved_job_context_keeps_cached_jobs") else {
             return;
         };
 
         let job_contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
         let old_expander = gtk::Expander::new(None);
-        let new_expander = gtk::Expander::new(None);
         let old_jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
         old_jobs_box.append(&gtk::Spinner::new());
 
-        let cached_jobs = std::sync::Arc::new(vec![Job {
+        let cached_jobs = Arc::new(vec![Job {
             id: 1,
             run_id: 42,
             status: Some("in_progress".into()),
@@ -474,118 +557,21 @@ mod tests {
 
         job_contexts.borrow_mut().insert(
             42,
-            JobRefreshContext::from_params(JobRefreshContextParams {
-                client: client_stub(),
-                owner: "mak".into(),
-                repo: "actioneer".into(),
-                workflow_id: 7,
-                run_id: 42,
-                expander: old_expander,
-                jobs_box: old_jobs_box,
-                badges_box: None,
-                parent_window: gtk::Window::new(),
-                repo_model: repo_stub(),
-                branch: Some("main".into()),
-                run_title: "CI".into(),
-                jobs: cached_jobs,
-                job_summaries: Rc::new(RefCell::new(HashMap::new())),
-            }),
+            JobRefreshContext::from_params(params_for(&old_expander, &old_jobs_box, cached_jobs)),
         );
 
+        let new_expander = gtk::Expander::new(None);
         let new_jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
         new_jobs_box.append(&gtk::Spinner::new());
-        let new_badges_box = gtk::Box::new(gtk::Orientation::Horizontal, 0);
 
         rebind_preserved_job_context(
             &job_contexts,
-            JobRefreshContextParams {
-                client: client_stub(),
-                owner: "mak".into(),
-                repo: "actioneer".into(),
-                workflow_id: 7,
-                run_id: 42,
-                expander: new_expander,
-                jobs_box: new_jobs_box,
-                badges_box: Some(new_badges_box.clone()),
-                parent_window: gtk::Window::new(),
-                repo_model: repo_stub(),
-                branch: Some("main".into()),
-                run_title: "CI".into(),
-                jobs: std::sync::Arc::new(Vec::new()),
-                job_summaries: Rc::new(RefCell::new(HashMap::new())),
-            },
+            params_for(&new_expander, &new_jobs_box, Arc::new(Vec::new())),
         );
 
-        assert!(new_badges_box.first_child().is_some());
-    }
-
-    #[test]
-    #[ignore = "requires GTK display"]
-    fn create_run_expander_row_restores_cached_badges_without_job_context() {
-        let Some(_guard) =
-            gtk_test_guard("create_run_expander_row_restores_cached_badges_without_job_context")
-        else {
-            return;
-        };
-
-        let run = WorkflowRun {
-            id: 42,
-            run_number: Some(1),
-            workflow_id: Some(7),
-            name: Some("CI".into()),
-            display_title: Some("CI".into()),
-            head_branch: Some("main".into()),
-            head_commit: None,
-            status: Some("in_progress".into()),
-            conclusion: None,
-            run_started_at: None,
-            event: None,
-            created_at: None,
-            updated_at: None,
-            html_url: None,
-            actor: None,
-            triggering_actor: None,
-        };
-        let job_summaries = Rc::new(RefCell::new(HashMap::new()));
-        job_summaries.borrow_mut().insert(
-            42,
-            crate::api::models::JobSummary {
-                queued: 1,
-                running: 2,
-                completed: 3,
-            },
-        );
-
-        let context = RunRowContext::new(
-            client_stub(),
-            "mak".into(),
-            "actioneer".into(),
-            repo_stub(),
-            adw::ApplicationWindow::builder().build(),
-            7,
-            adw::ToastOverlay::new(),
-            Rc::new(RefCell::new(HashMap::new())),
-            job_summaries,
-        );
-
-        let row = create_run_expander_row(&run, &context, false);
-        let row_container = row
-            .first_child()
-            .and_then(|child| child.downcast::<gtk::Box>().ok())
-            .expect("row container");
-        let expander = row_container
-            .first_child()
-            .and_then(|child| child.downcast::<gtk::Expander>().ok())
-            .expect("expander");
-        let header = expander
-            .label_widget()
-            .and_then(|child| child.downcast::<gtk::Box>().ok())
-            .expect("header box");
-        let badges_box = header
-            .last_child()
-            .and_then(|child| child.downcast::<gtk::Box>().ok())
-            .expect("badges box");
-
-        assert!(badges_box.first_child().is_some());
+        let contexts = job_contexts.borrow();
+        let rebound = contexts.get(&42).expect("context preserved");
+        assert_eq!(rebound.jobs().len(), 1);
+        assert!(rebound.matches_expander(&new_expander));
     }
 }
