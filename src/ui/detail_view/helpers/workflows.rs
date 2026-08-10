@@ -149,6 +149,7 @@ pub(crate) fn create_workflow_expander_row(
     let workflow_name_label = gtk::Label::new(Some(&workflow.name));
     workflow_name_label.set_halign(gtk::Align::Start);
     workflow_name_label.set_hexpand(true);
+    workflow_name_label.add_css_class("heading");
     header_box.append(&workflow_name_label);
 
     let trigger_btn = gtk::Button::from_icon_name("media-playback-start-symbolic");

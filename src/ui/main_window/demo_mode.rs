@@ -9,7 +9,7 @@ impl MainWindow {
         *self.demo_mode.lock()
     }
 
-    pub(super) fn enter_demo_mode(&self) {
+    pub(crate) fn enter_demo_mode(&self) {
         if self.is_demo_mode() {
             info!("Demo mode already active");
             return;
@@ -49,10 +49,19 @@ impl MainWindow {
 
         self.refresh_repository_view(repos.clone(), rate_info.clone());
 
-        if let Some(first_repo) = repos.first().cloned() {
+        // Prefer the demo repo with the richest workflow/run data for a representative view.
+        let preferred_repo = repos
+            .iter()
+            .find(|repo| repo.full_name == "demo-org/actioneer-demo-app")
+            .or(repos.first())
+            .cloned();
+        if let Some(repo) = preferred_repo {
+            let repo_id = repo.id;
+            *self.selected_repo_id.lock() = Some(repo_id);
             let this = self.clone();
-            glib::idle_add_local_once(move || {
-                this.handle_repo_selection(Some(first_repo));
+            glib::timeout_add_local_once(std::time::Duration::from_millis(500), move || {
+                *this.selected_repo_id.lock() = Some(repo_id);
+                this.restore_repo_selection_now();
             });
         } else {
             self.show_detail_placeholder();

@@ -31,8 +31,27 @@ impl RepoDetailPane {
             preferences_manager: self.preferences_manager.clone(),
             run_filters: self.run_filters.clone(),
             run_load_service: self.run_load_service.clone(),
+            expand_first_workflow: self.expand_first_workflow_on_load.clone(),
         }
     }
+}
+
+fn expand_first_expander(widget: &gtk::Widget) -> bool {
+    if let Some(expander) = widget.downcast_ref::<gtk::Expander>() {
+        if !expander.is_expanded() {
+            expander.set_expanded(true);
+        }
+        return true;
+    }
+
+    let mut child = widget.first_child();
+    while let Some(current) = child {
+        if expand_first_expander(&current) {
+            return true;
+        }
+        child = current.next_sibling();
+    }
+    false
 }
 
 pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[Workflow]) {
@@ -118,6 +137,18 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
 
         let expander_row = create_workflow_expander_row(workflow, &row_context, settings);
         store.append(&expander_row);
+    }
+
+    if context.expand_first_workflow.get() {
+        for idx in 0..store.n_items() {
+            if let Some(obj) = store.item(idx)
+                && let Ok(widget) = obj.downcast::<gtk::Widget>()
+                && expand_first_expander(&widget)
+            {
+                break;
+            }
+        }
+        context.expand_first_workflow.set(false);
     }
 
     let elapsed = render_start.elapsed();

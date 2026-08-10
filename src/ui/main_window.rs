@@ -79,7 +79,7 @@ pub struct MainWindow {
 }
 
 impl MainWindow {
-    pub fn new(app: &adw::Application) -> Self {
+    pub fn new(app: &adw::Application, start_demo_mode: bool) -> Self {
         crate::apply_text_direction_for_language();
         let window = adw::ApplicationWindow::builder()
             .application(app)
@@ -203,7 +203,11 @@ impl MainWindow {
         main_window.prime_favorites();
         main_window.observe_favorites();
         main_window.setup_focus_handler();
-        main_window.check_authentication();
+        if start_demo_mode {
+            main_window.enter_demo_mode();
+        } else {
+            main_window.check_authentication();
+        }
         main_window
     }
 
@@ -766,7 +770,7 @@ impl MainWindow {
 
         self.stop_background_refresh();
 
-        let replacement = MainWindow::new(&app);
+        let replacement = MainWindow::new(&app, was_demo_mode);
         {
             let mut replacement_selected = replacement.selected_repo_id.lock();
             *replacement_selected = selected_repo;

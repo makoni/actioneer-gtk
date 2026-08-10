@@ -264,8 +264,12 @@ fn main() -> anyhow::Result<()> {
     let send_test_notification = Arc::new(AtomicBool::new(false));
     let option_flag = send_test_notification.clone();
 
+    let start_demo_mode = Arc::new(AtomicBool::new(false));
+    let demo_option_flag = start_demo_mode.clone();
+
     let test_notification_help = tr("Send a test notification when the app starts");
     let locale_help = tr("Set the application language (e.g., ru, en, zh_Hans)");
+    let demo_help = tr("Start the app with sample demo data");
 
     app.add_main_option(
         "test-notification",
@@ -285,9 +289,21 @@ fn main() -> anyhow::Result<()> {
         Some("LOCALE"),
     );
 
+    app.add_main_option(
+        "demo",
+        glib::Char::from(b'd'),
+        glib::OptionFlags::NONE,
+        glib::OptionArg::None,
+        demo_help.as_str(),
+        None,
+    );
+
     app.connect_handle_local_options(move |_app, options| {
         if options.contains("test-notification") {
             option_flag.store(true, Ordering::Relaxed);
+        }
+        if options.contains("demo") {
+            demo_option_flag.store(true, Ordering::Relaxed);
         }
         ControlFlow::Continue(())
     });
@@ -322,7 +338,14 @@ fn main() -> anyhow::Result<()> {
     });
 
     let activate_flag = send_test_notification.clone();
-    app.connect_activate(move |app| build_ui(app, activate_flag.load(Ordering::Relaxed)));
+    let activate_demo = start_demo_mode.clone();
+    app.connect_activate(move |app| {
+        build_ui(
+            app,
+            activate_flag.load(Ordering::Relaxed),
+            activate_demo.load(Ordering::Relaxed),
+        )
+    });
 
     // Run the application
     app.run();
@@ -389,8 +412,8 @@ where
     None
 }
 
-fn build_ui(app: &adw::Application, send_test_notification: bool) {
-    let main_window = MainWindow::new(app);
+fn build_ui(app: &adw::Application, send_test_notification: bool, start_demo_mode: bool) {
+    let main_window = MainWindow::new(app, start_demo_mode);
     if send_test_notification {
         main_window.trigger_test_notification();
     }
