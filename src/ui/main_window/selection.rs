@@ -170,6 +170,7 @@ impl MainWindow {
                     repo,
                     Arc::new(Mutex::new(client)),
                     deps,
+                    self.is_demo_mode(),
                 );
                 let stack = self.detail_stack.clone();
                 let active_detail = self.active_detail.clone();

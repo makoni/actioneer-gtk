@@ -62,6 +62,7 @@ pub struct RepoDetailPane {
     run_load_service: RunLoadService,
     lifecycle_token: Rc<()>,
     refresh_active: Arc<AtomicBool>,
+    expand_first_workflow_on_load: Rc<Cell<bool>>,
 }
 
 #[derive(Clone)]
@@ -91,6 +92,7 @@ struct WorkflowListContext {
     workflows_loading_runs: Arc<Mutex<HashSet<i64>>>,
     run_filters: Arc<Mutex<RunFilters>>,
     run_load_service: RunLoadService,
+    expand_first_workflow: Rc<Cell<bool>>,
 }
 
 #[derive(Debug, Clone)]
@@ -149,6 +151,7 @@ impl RepoDetailPane {
         repo: Repo,
         client: Arc<Mutex<GitHubClient>>,
         deps: RepoDetailDeps,
+        expand_first_workflow_on_load: bool,
     ) -> Self {
         info!("Creating RepoDetailPane for: {}", repo.full_name);
         let workflows = Arc::new(Mutex::new(Arc::new(Vec::new())));
@@ -284,6 +287,7 @@ impl RepoDetailPane {
             notification_manager: notification_manager.clone(),
             lifecycle_token: Rc::new(()),
             refresh_active: Arc::new(AtomicBool::new(true)),
+            expand_first_workflow_on_load: Rc::new(Cell::new(expand_first_workflow_on_load)),
         };
 
         pane.build_ui();

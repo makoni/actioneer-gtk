@@ -10,6 +10,7 @@ use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
 use parking_lot::Mutex;
+use std::cell::Cell;
 use std::collections::HashSet;
 use std::rc::Rc;
 use std::sync::{
@@ -214,6 +215,7 @@ fn configure_auto_refresh_timer_slot(
             preferences_manager: preferences_manager.clone(),
             run_filters: run_filters.clone(),
             run_load_service: run_load_service.clone(),
+            expand_first_workflow: Rc::new(Cell::new(false)),
         };
 
         refresh_workflows_silent_with_state(
@@ -325,6 +327,7 @@ fn refresh_workflows_silent_with_state(
             preferences_manager: preferences_manager_for_ui.clone(),
             run_filters: run_filters_for_ui.clone(),
             run_load_service: context.run_load_service.clone(),
+            expand_first_workflow: Rc::new(Cell::new(false)),
         };
 
         match result {
@@ -424,6 +427,7 @@ impl RepoDetailPane {
                 preferences_manager: preferences_manager_for_ui.clone(),
                 run_filters: run_filters_for_ui.clone(),
                 run_load_service: context.run_load_service.clone(),
+                expand_first_workflow: context.expand_first_workflow.clone(),
             };
 
             match result {
@@ -562,6 +566,7 @@ impl RepoDetailPane {
                             preferences_manager: preferences_manager_for_ui.clone(),
                             run_filters: run_filters_for_ui.clone(),
                             run_load_service: run_load_service_for_ui.clone(),
+                            expand_first_workflow: Rc::new(Cell::new(false)),
                         };
 
                         super::workflow_list::update_workflows_list(&ui_context, wf_list.as_ref());
