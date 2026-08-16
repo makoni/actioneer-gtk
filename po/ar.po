@@ -888,10 +888,10 @@ msgid "Branch"
 msgstr "الفرع"
 
 msgid "Commit"
-msgstr "الالتزام"
+msgstr "إيداع"
 
 msgid "Triggered by"
-msgstr "شغّله"
+msgstr "المشغِّل"
 
 msgid "Event"
 msgstr "الحدث"
@@ -925,3 +925,6 @@ msgstr "يتم جمع النشاط عند فتح المستودعات."
 
 msgid "{count} workflows in this state"
 msgstr "{count} من سير العمل في هذه الحالة"
+
+msgid "Try another filter or search term."
+msgstr "جرّب مرشّحًا أو مصطلح بحث آخر."

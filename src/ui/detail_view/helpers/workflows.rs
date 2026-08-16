@@ -1385,31 +1385,6 @@ mod tests {
     use crate::ui::detail_view::filter_controls::FilterControls;
     use crate::ui::test_helpers::gtk_test_guard;
 
-    /// Collects weak refs to every widget in a row, including the pieces hung
-    /// off an expander (its label widget and its child), which a plain
-    /// first_child/next_sibling walk does not reach.
-    fn collect_widget_weaks(
-        widget: &gtk::Widget,
-        out: &mut Vec<(String, glib::WeakRef<gtk::Widget>)>,
-    ) {
-        out.push((widget.type_().name().to_string(), widget.downgrade()));
-
-        if let Some(expander) = widget.downcast_ref::<gtk::Expander>() {
-            if let Some(label) = expander.label_widget() {
-                collect_widget_weaks(&label, out);
-            }
-            if let Some(child) = expander.child() {
-                collect_widget_weaks(&child, out);
-            }
-        }
-
-        let mut child = widget.first_child();
-        while let Some(current) = child {
-            collect_widget_weaks(&current, out);
-            child = current.next_sibling();
-        }
-    }
-
     fn find_expander(widget: gtk::Widget) -> Option<gtk::Expander> {
         if let Ok(expander) = widget.clone().downcast::<gtk::Expander>() {
             return Some(expander);
@@ -1503,7 +1478,10 @@ mod tests {
             );
             let expander = find_expander(row.clone().upcast::<gtk::Widget>())
                 .expect("workflow row should contain an expander");
-            collect_widget_weaks(&row.clone().upcast::<gtk::Widget>(), &mut weaks);
+            crate::ui::test_helpers::collect_widget_weaks(
+                &row.clone().upcast::<gtk::Widget>(),
+                &mut weaks,
+            );
             (row.downgrade(), expander.downgrade())
         };
 

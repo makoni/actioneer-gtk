@@ -925,3 +925,6 @@ msgstr "A atividade é coletada conforme você abre repositórios."
 
 msgid "{count} workflows in this state"
 msgstr "{count} fluxos de trabalho neste estado"
+
+msgid "Try another filter or search term."
+msgstr "Tente outro filtro ou termo de busca."

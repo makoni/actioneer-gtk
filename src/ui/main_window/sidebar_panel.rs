@@ -108,7 +108,7 @@ impl SidebarPanel {
         search_entry.set_margin_end(12);
 
         let filter_changed: FilterChangedHandler = Rc::new(RefCell::new(None));
-        let pills = build_filter_pills(&filter, &filter_mode, &selection, &filter_changed);
+        let pills = build_filter_pills(&filter, &filter_mode, &filter_changed);
         pills.set_margin_start(12);
         pills.set_margin_end(12);
         pills.set_margin_bottom(10);
@@ -128,22 +128,32 @@ impl SidebarPanel {
         list_stack.set_visible_child_name(STACK_LIST);
         list_stack.set_vexpand(true);
 
+        // Both models have to be watched, and only weakly. GtkFilterListModel
+        // stays silent when the source changes but the visible set is empty
+        // either side of it — which is exactly the rebuild path — so the store
+        // is watched too. Strong captures here would pin the model that owns the
+        // handler (and through the list view, the window).
         {
-            let list_stack = list_stack.clone();
-            let repo_store = repo_store.clone();
-            let filter_model_for_state = filter_model.clone();
-            let update = move || {
-                let has_rows = filter_model_for_state.n_items() > 0;
-                let has_repos = repo_store.n_items() > 0;
-                list_stack.set_visible_child_name(if has_rows || !has_repos {
-                    STACK_LIST
-                } else {
-                    STACK_EMPTY
-                });
-            };
-            update();
-            filter_model.connect_items_changed(move |_, _, _, _| update());
+            let stack = list_stack.downgrade();
+            let store = repo_store.downgrade();
+            filter_model.connect_items_changed(move |model, _, _, _| {
+                let (Some(stack), Some(store)) = (stack.upgrade(), store.upgrade()) else {
+                    return;
+                };
+                refresh_empty_state(&stack, model, &store);
+            });
         }
+        {
+            let stack = list_stack.downgrade();
+            let filtered = filter_model.downgrade();
+            repo_store.connect_items_changed(move |store, _, _, _| {
+                let (Some(stack), Some(filtered)) = (stack.upgrade(), filtered.upgrade()) else {
+                    return;
+                };
+                refresh_empty_state(&stack, &filtered, store);
+            });
+        }
+        refresh_empty_state(&list_stack, &filter_model, &repo_store);
 
         let sidebar_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
         sidebar_box.append(&search_entry);
@@ -211,6 +221,23 @@ impl SidebarPanel {
     }
 }
 
+/// Switches between the repo list and the empty state. Showing the list while
+/// no repositories have loaded yet keeps the empty state from flashing at
+/// startup.
+fn refresh_empty_state(
+    stack: &gtk::Stack,
+    filtered: &gtk::FilterListModel,
+    store: &gio::ListStore,
+) {
+    let has_rows = filtered.n_items() > 0;
+    let has_repos = store.n_items() > 0;
+    stack.set_visible_child_name(if has_rows || !has_repos {
+        STACK_LIST
+    } else {
+        STACK_EMPTY
+    });
+}
+
 /// Shown when the active filter matches no repository.
 fn build_empty_state() -> gtk::Box {
     let container = gtk::Box::new(gtk::Orientation::Vertical, 6);
@@ -225,9 +252,7 @@ fn build_empty_state() -> gtk::Box {
     title.set_justify(gtk::Justification::Center);
     container.append(&title);
 
-    let hint = gtk::Label::new(Some(
-        tr("Activity is gathered as you open repositories.").as_str(),
-    ));
+    let hint = gtk::Label::new(Some(tr("Try another filter or search term.").as_str()));
     hint.add_css_class("dim-label");
     hint.add_css_class("caption");
     hint.set_wrap(true);
@@ -241,7 +266,6 @@ fn build_empty_state() -> gtk::Box {
 fn build_filter_pills(
     filter: &gtk::CustomFilter,
     mode: &Rc<Cell<SidebarFilter>>,
-    selection: &gtk::SingleSelection,
     filter_changed: &FilterChangedHandler,
 ) -> gtk::Box {
     let pills = gtk::Box::new(gtk::Orientation::Horizontal, 6);
@@ -261,14 +285,10 @@ fn build_filter_pills(
     ] {
         let filter = filter.clone();
         let mode = mode.clone();
-        let selection = selection.clone();
         let filter_changed = filter_changed.clone();
         pill.connect_toggled(move |btn| {
             if btn.is_active() {
                 mode.set(pill_mode);
-                // Drop the current selection: the filtered row set changes and a
-                // stale index could paint selection styling onto a header row.
-                selection.set_selected(gtk::INVALID_LIST_POSITION);
                 filter.changed(gtk::FilterChange::Different);
                 // Re-select the repo that is still open, if it survived the
                 // filter. The handler is cloned out first: holding the borrow

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-16 19:47+0000\n"
+"POT-Creation-Date: 2026-08-16 20:19+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -518,15 +518,15 @@ msgstr ""
 msgid "Refresh workflows"
 msgstr ""
 
-#: src/ui/detail_view/mod.rs:380 src/ui/sidebar.rs:346
+#: src/ui/detail_view/mod.rs:378 src/ui/sidebar.rs:346
 msgid "Private"
 msgstr ""
 
-#: src/ui/detail_view/mod.rs:382 src/ui/sidebar.rs:349
+#: src/ui/detail_view/mod.rs:380 src/ui/sidebar.rs:349
 msgid "Public"
 msgstr ""
 
-#: src/ui/sidebar.rs:141 src/ui/main_window/sidebar_panel.rs:250
+#: src/ui/sidebar.rs:141 src/ui/main_window/sidebar_panel.rs:276
 msgid "Favorites"
 msgstr ""
 
@@ -726,23 +726,23 @@ msgid "Loading repositories..."
 msgstr ""
 
 #: src/ui/main_window/sidebar_panel.rs:104
-#: src/ui/main_window/sidebar_panel.rs:326
+#: src/ui/main_window/sidebar_panel.rs:348
 msgid "Search repositories..."
 msgstr ""
 
-#: src/ui/main_window/sidebar_panel.rs:222
+#: src/ui/main_window/sidebar_panel.rs:249
 msgid "No repositories match"
 msgstr ""
 
-#: src/ui/main_window/sidebar_panel.rs:229
-msgid "Activity is gathered as you open repositories."
+#: src/ui/main_window/sidebar_panel.rs:256
+msgid "Try another filter or search term."
 msgstr ""
 
-#: src/ui/main_window/sidebar_panel.rs:249
+#: src/ui/main_window/sidebar_panel.rs:275
 msgid "All"
 msgstr ""
 
-#: src/ui/main_window/sidebar_panel.rs:251
+#: src/ui/main_window/sidebar_panel.rs:277
 msgid "Active"
 msgstr ""
 

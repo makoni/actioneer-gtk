@@ -925,3 +925,6 @@ msgstr "रिपॉज़िटरी खोलने पर गतिविध
 
 msgid "{count} workflows in this state"
 msgstr "इस स्थिति में {count} वर्कफ़्लो"
+
+msgid "Try another filter or search term."
+msgstr "कोई अन्य फ़िल्टर या खोज शब्द आज़माएँ।"

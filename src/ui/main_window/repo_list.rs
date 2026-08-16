@@ -139,8 +139,14 @@ impl MainWindow {
             .borrow()
             .as_ref()
             .map(|pane| pane.repo().id);
+        // `find_repo_index` returning None covers two different situations: the
+        // repo is hidden by the filter (keep it open), or it is gone entirely —
+        // deleted, transferred, access revoked — in which case falling through to
+        // the normal plan is what stops the pane from being stranded on it.
+        let repo_still_exists = self.repos.lock().iter().any(|repo| Some(repo.id) == target);
         if let (Some(target), Some(active)) = (target, active_repo_id)
             && target == active
+            && repo_still_exists
             && find_repo_index(&self.repo_filter_model, target).is_none()
         {
             *self.handling_selection.lock() = true;
@@ -170,15 +176,20 @@ fn reapply_selection_after_filter(
     selected_repo_id: &Arc<Mutex<Option<i64>>>,
     handling_selection: &Arc<Mutex<bool>>,
 ) {
-    let Some(target) = *selected_repo_id.lock() else {
-        return;
-    };
-    let Some(index) = find_repo_index(model, target) else {
-        return;
-    };
+    let target = *selected_repo_id.lock();
+    let index = target.and_then(|target| find_repo_index(model, target));
 
+    // Held across both branches: a bare deselect notify would reach
+    // `connect_repo_selection` as "user picked nothing", which closes a repo
+    // whose pane is a placeholder (e.g. Actions disabled) rather than a detail.
     *handling_selection.lock() = true;
-    selection.set_selected(index);
+    match index {
+        // The open repo survived the filter — put the highlight back on it.
+        Some(index) => selection.set_selected(index),
+        // It was filtered out: clear the highlight but keep the pane, so the
+        // stale index cannot paint selection styling onto a section header.
+        None => selection.set_selected(gtk::INVALID_LIST_POSITION),
+    }
     *handling_selection.lock() = false;
 }
 

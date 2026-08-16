@@ -925,3 +925,6 @@ msgstr "ریپوزٹریز کھولنے پر سرگرمی جمع کی جاتی �
 
 msgid "{count} workflows in this state"
 msgstr "اس حالت میں {count} ورک فلو"
+
+msgid "Try another filter or search term."
+msgstr "کوئی اور فلٹر یا تلاش کی اصطلاح آزمائیں۔"

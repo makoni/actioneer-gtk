@@ -921,4 +921,7 @@ msgid "Activity is gathered as you open repositories."
 msgstr "Activiteit wordt verzameld zodra u repository's opent."
 
 msgid "{count} workflows in this state"
-msgstr "{count} workflows in deze staat"
+msgstr "{count} workflows met deze status"
+
+msgid "Try another filter or search term."
+msgstr "Probeer een ander filter of een andere zoekterm."

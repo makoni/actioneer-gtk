@@ -464,9 +464,14 @@ mod tests {
         // a handler on a widget it owns. Such a cycle is invisible at runtime —
         // it silently keeps the row alive, which in turn defeats the weak-ref
         // guard on its 60s refresh timer and leaves it ticking forever.
+        let mut weaks: Vec<(String, glib::WeakRef<gtk::Widget>)> = Vec::new();
         let weak = {
             let context = context_stub();
             let row = create_run_expander_row(&run_stub(), &context, false);
+            crate::ui::test_helpers::collect_widget_weaks(
+                &row.clone().upcast::<gtk::Widget>(),
+                &mut weaks,
+            );
             row.downgrade()
         };
 
@@ -478,6 +483,20 @@ mod tests {
             weak.upgrade().is_none(),
             "run row outlived its last strong reference — a signal handler is \
              holding it in a reference cycle"
+        );
+
+        // Checking the outer box alone is not enough: a cycle pinning only the
+        // expander leaves `meta_box` alive, and with it the 60s refresh timer
+        // whose weak upgrade then never fails.
+        let survivors: Vec<&str> = weaks
+            .iter()
+            .filter(|(_, weak)| weak.upgrade().is_some())
+            .map(|(name, _)| name.as_str())
+            .collect();
+        assert!(
+            survivors.is_empty(),
+            "widgets outlived the discarded run row: {survivors:?} — a signal \
+             handler is holding them in a reference cycle"
         );
     }
 

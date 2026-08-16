@@ -107,14 +107,16 @@ const APP_CSS: &str = r#"
     background-color: alpha(currentColor, 0.045);
 }
 
-/* Recessed surfaces use a black alpha rather than a scheme-specific override:
-   GTK's `prefers-color-scheme` media query does not follow AdwStyleManager for
-   app-level providers, so a @media block here would apply in the wrong scheme
-   (and is unsupported altogether on the GTK 4.14 snap runtime). A light black
-   wash reads as "deeper than the card" in both light and dark. */
+/* The expanded row is tinted with currentColor, not a black alpha: GTK's
+   `prefers-color-scheme` query does not follow AdwStyleManager for app-level
+   providers (so a @media block would apply in the wrong scheme, and is
+   unsupported on the GTK 4.14 snap runtime), while a fixed black wash strong
+   enough to read in dark stacks with the runs card nested inside it and pushes
+   light-mode meta text below AA. currentColor lightens in dark and darkens in
+   light, and is kept clearly stronger than the hover cue. */
 .workflow-item.expanded,
 .workflow-item.expanded:hover {
-    background-color: alpha(black, 0.06);
+    background-color: alpha(currentColor, 0.09);
 }
 
 .workflow-item.expanded .workflow-detail {
@@ -321,7 +323,7 @@ const APP_CSS: &str = r#"
     color: @accent_color;
 }
 
-.sidebar-fav:hover {
+.sidebar-fav:hover:not(:checked) {
     opacity: 0.8;
 }
 
@@ -331,13 +333,6 @@ const APP_CSS: &str = r#"
 
 .sidebar-surface listview row:selected .sidebar-fav:checked {
     opacity: 1;
-}
-
-/* Scripts without letter case (Arabic, Devanagari, CJK …) are damaged by
-   tracking: it breaks cursive joining and detaches matras. Headings in those
-   scripts opt out. */
-.no-tracking {
-    letter-spacing: 0;
 }
 
 /* Sidebar polish: pill filters + solid-accent selection. */
@@ -396,6 +391,13 @@ const APP_CSS: &str = r#"
 .owner-header:focus-visible {
     background-color: transparent;
     box-shadow: none;
+}
+
+/* Scripts where tracking is harmful (Arabic, Hebrew, Devanagari, Bengali, Thai,
+   CJK) opt out of it. This block must stay last: it has the same specificity as
+   the heading rules it overrides, so source order is what decides. */
+.no-tracking {
+    letter-spacing: 0;
 }
 "#;
 

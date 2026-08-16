@@ -930,3 +930,6 @@ msgstr "Активность собирается по мере открытия
 
 msgid "{count} workflows in this state"
 msgstr "{count} воркфлоу в этом состоянии"
+
+msgid "Try another filter or search term."
+msgstr "Попробуйте другой фильтр или запрос."

@@ -846,7 +846,7 @@ msgid "Data refreshes automatically every {seconds} seconds."
 msgstr "প্রতি {seconds} সেকেন্ডে ডেটা স্বয়ংক্রিয়ভাবে রিফ্রেশ হয়।"
 
 msgid "1 workflow"
-msgstr "১টি ওয়ার্কফ্লো"
+msgstr "1টি ওয়ার্কফ্লো"
 
 msgid "{count} workflows"
 msgstr "{count}টি ওয়ার্কফ্লো"
@@ -925,3 +925,6 @@ msgstr "রিপোজিটরি খুললে কার্যকলাপ 
 
 msgid "{count} workflows in this state"
 msgstr "এই অবস্থায় {count}টি ওয়ার্কফ্লো"
+
+msgid "Try another filter or search term."
+msgstr "অন্য ফিল্টার বা অনুসন্ধান শব্দ চেষ্টা করুন।"

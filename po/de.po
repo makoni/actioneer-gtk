@@ -925,3 +925,6 @@ msgstr "Aktivität wird erfasst, sobald Sie Repositorys öffnen."
 
 msgid "{count} workflows in this state"
 msgstr "{count} Workflows in diesem Zustand"
+
+msgid "Try another filter or search term."
+msgstr "Versuchen Sie einen anderen Filter oder Suchbegriff."

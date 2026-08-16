@@ -925,3 +925,6 @@ msgstr "打开仓库后才会收集活动信息。"
 
 msgid "{count} workflows in this state"
 msgstr "{count} 个工作流处于此状态"
+
+msgid "Try another filter or search term."
+msgstr "请尝试其他筛选条件或搜索词。"

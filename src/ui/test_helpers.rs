@@ -58,3 +58,35 @@ impl GtkTestGuard {
 pub fn gtk_test_guard(test_name: &str) -> Option<GtkTestGuard> {
     GtkTestGuard::new(test_name)
 }
+
+/// Collects weak references to every widget under `widget`, including the parts
+/// hung off a `GtkExpander` (its label widget and its child), which a plain
+/// first_child/next_sibling walk does not reach.
+///
+/// Leak tests assert that *all* of these die with the row: a cycle can pin a
+/// single nested widget — and through it a model, a timer, or the whole pane —
+/// while the outer container is released normally.
+#[cfg(test)]
+pub fn collect_widget_weaks(
+    widget: &gtk::Widget,
+    out: &mut Vec<(String, gtk::glib::WeakRef<gtk::Widget>)>,
+) {
+    use gtk::prelude::*;
+
+    out.push((widget.type_().name().to_string(), widget.downgrade()));
+
+    if let Some(expander) = widget.downcast_ref::<gtk::Expander>() {
+        if let Some(label) = expander.label_widget() {
+            collect_widget_weaks(&label, out);
+        }
+        if let Some(child) = expander.child() {
+            collect_widget_weaks(&child, out);
+        }
+    }
+
+    let mut child = widget.first_child();
+    while let Some(current) = child {
+        collect_widget_weaks(&current, out);
+        child = current.next_sibling();
+    }
+}
