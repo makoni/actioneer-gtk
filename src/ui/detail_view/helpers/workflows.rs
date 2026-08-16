@@ -1383,7 +1383,7 @@ mod tests {
     use super::*;
     use crate::api::models::User;
     use crate::ui::detail_view::filter_controls::FilterControls;
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
 
     fn find_expander(widget: gtk::Widget) -> Option<gtk::Expander> {
         if let Ok(expander) = widget.clone().downcast::<gtk::Expander>() {
@@ -1447,93 +1447,89 @@ mod tests {
     #[test]
     #[ignore = "requires GTK display"]
     fn workflow_row_is_released_when_dropped() {
-        let Some(_guard) = gtk_test_guard("workflow_row_is_released_when_dropped") else {
-            return;
-        };
-
-        // Regression guard for two cycles that used to pin every workflow row:
-        // the trigger handler capturing its own expander, and the run-list model
-        // holding a header that held the very buttons whose handler owns that
-        // model. While either existed the row's 1s elapsed ticker could never
-        // stop, so rebuilt rows accumulated live timers.
-        // Both the row *and* its expander must die: a cycle that only pins the
-        // expander still leaks the whole subtree hanging off it, while the outer
-        // box is released normally.
-        let mut weaks: Vec<(String, glib::WeakRef<gtk::Widget>)> = Vec::new();
-        let (row_weak, expander_weak) = {
-            let context = row_context_stub();
-            let workflow = Workflow {
-                id: 7,
-                name: "CI".into(),
-                path: ".github/workflows/ci.yml".into(),
+        run_gtk_test("workflow_row_is_released_when_dropped", || {
+            // Regression guard for two cycles that used to pin every workflow row:
+            // the trigger handler capturing its own expander, and the run-list model
+            // holding a header that held the very buttons whose handler owns that
+            // model. While either existed the row's 1s elapsed ticker could never
+            // stop, so rebuilt rows accumulated live timers.
+            // Both the row *and* its expander must die: a cycle that only pins the
+            // expander still leaks the whole subtree hanging off it, while the outer
+            // box is released normally.
+            let mut weaks: Vec<(String, glib::WeakRef<gtk::Widget>)> = Vec::new();
+            let (row_weak, expander_weak) = {
+                let context = row_context_stub();
+                let workflow = Workflow {
+                    id: 7,
+                    name: "CI".into(),
+                    path: ".github/workflows/ci.yml".into(),
+                };
+                let row = create_workflow_expander_row(
+                    &workflow,
+                    &context,
+                    WorkflowRowSettings {
+                        should_expand: false,
+                        initial_expanded_run_ids: Vec::new(),
+                        is_first: true,
+                    },
+                );
+                let expander = find_expander(row.clone().upcast::<gtk::Widget>())
+                    .expect("workflow row should contain an expander");
+                crate::ui::test_helpers::collect_widget_weaks(
+                    &row.clone().upcast::<gtk::Widget>(),
+                    &mut weaks,
+                );
+                (row.downgrade(), expander.downgrade())
             };
-            let row = create_workflow_expander_row(
-                &workflow,
-                &context,
-                WorkflowRowSettings {
-                    should_expand: false,
-                    initial_expanded_run_ids: Vec::new(),
-                    is_first: true,
-                },
+
+            while glib::MainContext::default().pending() {
+                let _ = glib::MainContext::default().iteration(false);
+            }
+
+            assert!(
+                row_weak.upgrade().is_none(),
+                "workflow row outlived its last strong reference — a signal handler \
+                 is holding it in a reference cycle"
             );
-            let expander = find_expander(row.clone().upcast::<gtk::Widget>())
-                .expect("workflow row should contain an expander");
-            crate::ui::test_helpers::collect_widget_weaks(
-                &row.clone().upcast::<gtk::Widget>(),
-                &mut weaks,
+            assert!(
+                expander_weak.upgrade().is_none(),
+                "workflow expander outlived its row — a handler on a widget inside \
+                 the expander is capturing the expander itself"
             );
-            (row.downgrade(), expander.downgrade())
-        };
 
-        while glib::MainContext::default().pending() {
-            let _ = glib::MainContext::default().iteration(false);
-        }
-
-        assert!(
-            row_weak.upgrade().is_none(),
-            "workflow row outlived its last strong reference — a signal handler \
-             is holding it in a reference cycle"
-        );
-        assert!(
-            expander_weak.upgrade().is_none(),
-            "workflow expander outlived its row — a handler on a widget inside \
-             the expander is capturing the expander itself"
-        );
-
-        // Nothing hung off the row may survive either: a cycle can pin a single
-        // button (and through it the run-list model and the pane) while the row
-        // and expander themselves are released normally.
-        let survivors: Vec<&str> = weaks
-            .iter()
-            .filter(|(_, weak)| weak.upgrade().is_some())
-            .map(|(name, _)| name.as_str())
-            .collect();
-        assert!(
-            survivors.is_empty(),
-            "widgets outlived the discarded workflow row: {survivors:?} — a \
-             signal handler is holding them in a reference cycle"
-        );
+            // Nothing hung off the row may survive either: a cycle can pin a single
+            // button (and through it the run-list model and the pane) while the row
+            // and expander themselves are released normally.
+            let survivors: Vec<&str> = weaks
+                .iter()
+                .filter(|(_, weak)| weak.upgrade().is_some())
+                .map(|(name, _)| name.as_str())
+                .collect();
+            assert!(
+                survivors.is_empty(),
+                "widgets outlived the discarded workflow row: {survivors:?} — a \
+                 signal handler is holding them in a reference cycle"
+            );
+        });
     }
 
     #[test]
     #[ignore = "requires GTK display"]
     fn trigger_dialog_starts_with_disabled_trigger() {
-        let Some(_guard) = gtk_test_guard("trigger_dialog_starts_with_disabled_trigger") else {
-            return;
-        };
+        run_gtk_test("trigger_dialog_starts_with_disabled_trigger", || {
+            let dialog = build_trigger_dialog("Trigger Workflow");
 
-        let dialog = build_trigger_dialog("Trigger Workflow");
-
-        assert!(dialog.has_response("cancel"));
-        assert!(dialog.has_response("trigger"));
-        assert_eq!(dialog.default_response().as_deref(), Some("trigger"));
-        assert_eq!(dialog.close_response().as_str(), "cancel");
-        assert_eq!(
-            dialog.response_appearance("trigger"),
-            adw::ResponseAppearance::Suggested
-        );
-        // The trigger action is disabled until branches and inputs finish loading.
-        assert!(!dialog.is_response_enabled("trigger"));
-        assert!(dialog.is_response_enabled("cancel"));
+            assert!(dialog.has_response("cancel"));
+            assert!(dialog.has_response("trigger"));
+            assert_eq!(dialog.default_response().as_deref(), Some("trigger"));
+            assert_eq!(dialog.close_response().as_str(), "cancel");
+            assert_eq!(
+                dialog.response_appearance("trigger"),
+                adw::ResponseAppearance::Suggested
+            );
+            // The trigger action is disabled until branches and inputs finish loading.
+            assert!(!dialog.is_response_enabled("trigger"));
+            assert!(dialog.is_response_enabled("cancel"));
+        });
     }
 }

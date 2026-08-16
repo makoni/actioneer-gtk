@@ -122,45 +122,43 @@ fn create_status_segment(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
 
     #[test]
     #[ignore = "requires GTK display"]
     fn filter_controls_build_expected_chips() {
-        let Some(_guard) = gtk_test_guard("filter_controls_build_expected_chips") else {
-            return;
-        };
-        let controls = FilterControls::new();
-        let toolbar = controls.widget();
+        run_gtk_test("filter_controls_build_expected_chips", || {
+            let controls = FilterControls::new();
+            let toolbar = controls.widget();
 
-        let mut count = 0;
-        let mut child = toolbar.first_child();
-        while let Some(widget) = child {
-            count += 1;
-            child = widget.next_sibling();
-        }
-        assert_eq!(count, 3);
+            let mut count = 0;
+            let mut child = toolbar.first_child();
+            while let Some(widget) = child {
+                count += 1;
+                child = widget.next_sibling();
+            }
+            assert_eq!(count, 3);
 
-        assert!(controls.chips.success.is_active());
-        assert!(controls.chips.failed.is_active());
-        assert!(controls.chips.running.is_active());
+            assert!(controls.chips.success.is_active());
+            assert!(controls.chips.failed.is_active());
+            assert!(controls.chips.running.is_active());
 
-        assert!(controls.chips.success.has_css_class("seg-success"));
-        assert!(controls.chips.running.has_css_class("seg-running"));
-        assert!(controls.chips.failed.has_css_class("seg-failed"));
+            assert!(controls.chips.success.has_css_class("seg-success"));
+            assert!(controls.chips.running.has_css_class("seg-running"));
+            assert!(controls.chips.failed.has_css_class("seg-failed"));
+        });
     }
 
     #[test]
     #[ignore = "requires GTK display"]
     fn filter_chips_update_counts() {
-        let Some(_guard) = gtk_test_guard("filter_chips_update_counts") else {
-            return;
-        };
-        let controls = FilterControls::new();
-        controls.chips.set_counts(7, 1, 2);
+        run_gtk_test("filter_chips_update_counts", || {
+            let controls = FilterControls::new();
+            controls.chips.set_counts(7, 1, 2);
 
-        assert_eq!(controls.chips.success_count.text().as_str(), "7");
-        assert_eq!(controls.chips.running_count.text().as_str(), "1");
-        assert_eq!(controls.chips.failed_count.text().as_str(), "2");
+            assert_eq!(controls.chips.success_count.text().as_str(), "7");
+            assert_eq!(controls.chips.running_count.text().as_str(), "1");
+            assert_eq!(controls.chips.failed_count.text().as_str(), "2");
+        });
     }
 }

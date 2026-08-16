@@ -103,6 +103,10 @@ pub(crate) fn populate_run_meta(container: &gtk::Box, run: &WorkflowRun) {
         branch_label.add_css_class("mono");
         branch_label.add_css_class("dim-label");
         branch_label.add_css_class("caption");
+        // Long branch names (renovate/…, dependabot/…) must not set the pane's
+        // minimum width: the scroller has no horizontal bar to fall back on.
+        branch_label.set_ellipsize(pango::EllipsizeMode::End);
+        branch_label.set_max_width_chars(28);
         container.append(&branch_label);
     }
 
@@ -210,7 +214,7 @@ mod tests {
     use crate::api::models::{Job, WorkflowRun};
     use crate::i18n::{apply_language_preference, i18n_test_guard, init};
     use crate::preferences::LanguagePreference;
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
 
     #[test]
     fn status_presentation_covers_every_failure_conclusion() {
@@ -331,25 +335,23 @@ mod tests {
     #[test]
     #[ignore = "requires GTK display"]
     fn populate_run_meta_renders_branch_in_mono() {
-        let Some(_guard) = gtk_test_guard("populate_run_meta_renders_branch_in_mono") else {
-            return;
-        };
+        run_gtk_test("populate_run_meta_renders_branch_in_mono", || {
+            let mut run = run_stub();
+            run.head_branch = Some("main".into());
+            run.actor = Some(crate::api::models::User {
+                login: "makoni".into(),
+            });
 
-        let mut run = run_stub();
-        run.head_branch = Some("main".into());
-        run.actor = Some(crate::api::models::User {
-            login: "makoni".into(),
+            let container = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+            populate_run_meta(&container, &run);
+
+            let first = container
+                .first_child()
+                .and_then(|child| child.downcast::<gtk::Label>().ok())
+                .expect("branch label");
+            assert_eq!(first.text().as_str(), "main");
+            assert!(first.has_css_class("mono"));
+            assert!(container.is_visible());
         });
-
-        let container = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-        populate_run_meta(&container, &run);
-
-        let first = container
-            .first_child()
-            .and_then(|child| child.downcast::<gtk::Label>().ok())
-            .expect("branch label");
-        assert_eq!(first.text().as_str(), "main");
-        assert!(first.has_css_class("mono"));
-        assert!(container.is_visible());
     }
 }

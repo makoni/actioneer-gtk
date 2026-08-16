@@ -166,10 +166,10 @@ impl RepoDetailPane {
         let favorite_button = gtk::ToggleButton::new();
         favorite_button.set_icon_name(crate::ui::utils::favorite_icon_name());
         favorite_button.add_css_class("header-action-btn");
-        favorite_button.set_tooltip_text(Some(tr("Toggle favorite").as_str()));
+        crate::ui::utils::describe_control(&favorite_button, tr("Toggle favorite").as_str());
 
         let refresh_button = gtk::Button::from_icon_name("view-refresh-symbolic");
-        refresh_button.set_tooltip_text(Some(tr("Refresh workflows").as_str()));
+        crate::ui::utils::describe_control(&refresh_button, tr("Refresh workflows").as_str());
         refresh_button.add_css_class("header-action-btn");
 
         let buttons_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);

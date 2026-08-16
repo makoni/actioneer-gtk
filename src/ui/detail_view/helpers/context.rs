@@ -149,7 +149,7 @@ mod tests {
     use super::*;
     use crate::api::GitHubClient;
     use crate::api::models::{Repo, User};
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
     use parking_lot::Mutex;
     use std::cell::RefCell;
     use std::collections::HashMap;
@@ -197,30 +197,34 @@ mod tests {
     #[test]
     #[ignore = "requires GTK display"]
     fn current_job_context_run_ids_only_preserve_expanded_contexts() {
-        let Some(_guard) =
-            gtk_test_guard("current_job_context_run_ids_only_preserve_expanded_contexts")
-        else {
-            return;
-        };
+        run_gtk_test(
+            "current_job_context_run_ids_only_preserve_expanded_contexts",
+            || {
+                // `should_preserve_expansion` also requires the expander to be
+                // rooted, so the tree has to hang off a real window — without one
+                // `root()` is None and every context looks collapsed.
+                let window = gtk::Window::new();
+                let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
+                window.set_child(Some(&root));
 
-        let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
+                let expanded = gtk::Expander::new(None);
+                expanded.set_expanded(true);
+                root.append(&expanded);
 
-        let expanded = gtk::Expander::new(None);
-        expanded.set_expanded(true);
-        root.append(&expanded);
+                let collapsed = gtk::Expander::new(None);
+                collapsed.set_expanded(false);
+                root.append(&collapsed);
 
-        let collapsed = gtk::Expander::new(None);
-        collapsed.set_expanded(false);
-        root.append(&collapsed);
+                let contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
+                contexts
+                    .borrow_mut()
+                    .insert(11, context_for(&expanded, 11, 7));
+                contexts
+                    .borrow_mut()
+                    .insert(22, context_for(&collapsed, 22, 7));
 
-        let contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
-        contexts
-            .borrow_mut()
-            .insert(11, context_for(&expanded, 11, 7));
-        contexts
-            .borrow_mut()
-            .insert(22, context_for(&collapsed, 22, 7));
-
-        assert_eq!(current_job_context_run_ids(&contexts, 7), vec![11]);
+                assert_eq!(current_job_context_run_ids(&contexts, 7), vec![11]);
+            },
+        );
     }
 }

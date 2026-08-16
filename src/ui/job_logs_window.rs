@@ -456,23 +456,21 @@ impl JobLogsWindow {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
 
     #[test]
     #[ignore = "requires GTK display"]
     fn save_dialog_prefills_default_name() {
-        let Some(_guard) = gtk_test_guard("save_dialog_prefills_default_name") else {
-            return;
-        };
+        run_gtk_test("save_dialog_prefills_default_name", || {
+            let default_name = JobLogsWindow::default_file_name("CI", "build");
+            let dialog = JobLogsWindow::build_save_dialog(&default_name);
 
-        let default_name = JobLogsWindow::default_file_name("CI", "build");
-        let dialog = JobLogsWindow::build_save_dialog(&default_name);
-
-        assert_eq!(
-            dialog.initial_name().as_deref(),
-            Some(default_name.as_str())
-        );
-        assert_eq!(dialog.title().as_str(), tr("Save Logs").as_str());
-        assert_eq!(dialog.accept_label().as_deref(), Some(tr("Save").as_str()));
+            assert_eq!(
+                dialog.initial_name().as_deref(),
+                Some(default_name.as_str())
+            );
+            assert_eq!(dialog.title().as_str(), tr("Save Logs").as_str());
+            assert_eq!(dialog.accept_label().as_deref(), Some(tr("Save").as_str()));
+        });
     }
 }

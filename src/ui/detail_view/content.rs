@@ -69,27 +69,25 @@ fn build_runs_container(content: &gtk::Box) -> adw::Clamp {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
 
     #[test]
     fn builds_runs_container_with_clamped_content() {
-        let Some(_guard) = gtk_test_guard("builds_runs_container_with_clamped_content") else {
-            return;
-        };
+        run_gtk_test("builds_runs_container_with_clamped_content", || {
+            let store = gio::ListStore::new::<gtk::Widget>();
+            let selection = gtk::NoSelection::new(Some(store.clone()));
+            let factory = gtk::SignalListItemFactory::new();
+            let list_view = gtk::ListView::new(Some(selection), Some(factory));
 
-        let store = gio::ListStore::new::<gtk::Widget>();
-        let selection = gtk::NoSelection::new(Some(store.clone()));
-        let factory = gtk::SignalListItemFactory::new();
-        let list_view = gtk::ListView::new(Some(selection), Some(factory));
+            let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            content.append(&list_view);
 
-        let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        content.append(&list_view);
-
-        let clamp = build_runs_container(&content);
-        assert_eq!(clamp.maximum_size(), 880);
-        let child = clamp.child().expect("Clamp should wrap a widget");
-        let content = child.downcast::<gtk::Box>().expect("content box");
-        let first = content.first_child().expect("list view inside");
-        assert!(first.downcast_ref::<gtk::ListView>().is_some());
+            let clamp = build_runs_container(&content);
+            assert_eq!(clamp.maximum_size(), 880);
+            let child = clamp.child().expect("Clamp should wrap a widget");
+            let content = child.downcast::<gtk::Box>().expect("content box");
+            let first = content.first_child().expect("list view inside");
+            assert!(first.downcast_ref::<gtk::ListView>().is_some());
+        });
     }
 }

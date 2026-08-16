@@ -227,27 +227,25 @@ impl MainWindow {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
 
     #[test]
     #[ignore = "requires GTK display"]
     fn sign_out_dialog_has_expected_responses() {
-        let Some(_guard) = gtk_test_guard("sign_out_dialog_has_expected_responses") else {
-            return;
-        };
+        run_gtk_test("sign_out_dialog_has_expected_responses", || {
+            let dialog = MainWindow::build_sign_out_dialog();
 
-        let dialog = MainWindow::build_sign_out_dialog();
-
-        // The migration to adw::AlertDialog must keep the two response ids the
-        // handler relies on, with cancel as the safe default/close response and
-        // the destructive appearance on the confirming action.
-        assert!(dialog.has_response("cancel"));
-        assert!(dialog.has_response("signout"));
-        assert_eq!(dialog.default_response().as_deref(), Some("cancel"));
-        assert_eq!(dialog.close_response().as_str(), "cancel");
-        assert_eq!(
-            dialog.response_appearance("signout"),
-            adw::ResponseAppearance::Destructive
-        );
+            // The migration to adw::AlertDialog must keep the two response ids the
+            // handler relies on, with cancel as the safe default/close response and
+            // the destructive appearance on the confirming action.
+            assert!(dialog.has_response("cancel"));
+            assert!(dialog.has_response("signout"));
+            assert_eq!(dialog.default_response().as_deref(), Some("cancel"));
+            assert_eq!(dialog.close_response().as_str(), "cancel");
+            assert_eq!(
+                dialog.response_appearance("signout"),
+                adw::ResponseAppearance::Destructive
+            );
+        });
     }
 }

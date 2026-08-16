@@ -135,25 +135,23 @@ fn update_detail_favorite_button(button: &gtk::ToggleButton, is_active: bool) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
 
     #[test]
     #[ignore = "requires GTK display"]
     fn update_detail_favorite_button_toggles_css_classes() {
-        let Some(_guard) = gtk_test_guard("update_detail_favorite_button_toggles_css_classes")
-        else {
-            return;
-        };
-        let button = gtk::ToggleButton::new();
+        run_gtk_test("update_detail_favorite_button_toggles_css_classes", || {
+            let button = gtk::ToggleButton::new();
 
-        update_detail_favorite_button(&button, true);
-        assert!(button.has_css_class("suggested-action"));
-        assert!(!button.has_css_class("flat"));
-        assert_eq!(button.opacity(), 1.0);
+            update_detail_favorite_button(&button, true);
+            assert!(button.has_css_class("suggested-action"));
+            assert!(!button.has_css_class("flat"));
+            assert_eq!(button.opacity(), 1.0);
 
-        update_detail_favorite_button(&button, false);
-        assert!(button.has_css_class("flat"));
-        assert!(!button.has_css_class("suggested-action"));
-        assert!((button.opacity() - 0.5).abs() < 0.01);
+            update_detail_favorite_button(&button, false);
+            assert!(button.has_css_class("flat"));
+            assert!(!button.has_css_class("suggested-action"));
+            assert!((button.opacity() - 0.5).abs() < 0.01);
+        });
     }
 }

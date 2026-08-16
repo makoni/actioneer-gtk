@@ -630,7 +630,7 @@ mod tests {
     use super::*;
     use crate::api::models::{Repo, User, WorkflowRun};
     use crate::ui::state::WorkflowStatusCounts;
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
     use gtk4::{self as gtk, gio};
     use parking_lot::Mutex;
     use std::collections::{HashMap, HashSet};
@@ -695,49 +695,46 @@ mod tests {
     #[test]
     #[ignore = "requires GTK display"]
     fn repo_rows_use_widget_metadata_without_listbox_rows() {
-        let Some(_guard) = gtk_test_guard("repo_rows_use_widget_metadata_without_listbox_rows")
-        else {
-            return;
-        };
+        run_gtk_test("repo_rows_use_widget_metadata_without_listbox_rows", || {
+            let store = gio::ListStore::new::<gtk::Widget>();
+            let repo = Repo {
+                id: 42,
+                name: "actioneer".into(),
+                full_name: "mak/actioneer".into(),
+                owner: User {
+                    login: "mak".into(),
+                },
+                is_private: false,
+                permissions: None,
+                default_branch: Some("main".into()),
+            };
 
-        let store = gio::ListStore::new::<gtk::Widget>();
-        let repo = Repo {
-            id: 42,
-            name: "actioneer".into(),
-            full_name: "mak/actioneer".into(),
-            owner: User {
-                login: "mak".into(),
-            },
-            is_private: false,
-            permissions: None,
-            default_branch: Some("main".into()),
-        };
+            rebuild_repo_list(
+                store.clone(),
+                RepoListRenderContext {
+                    repos: vec![repo.clone()],
+                    favorites_snapshot: HashSet::new(),
+                    actions_snapshot: HashMap::new(),
+                    workflow_snapshot: HashMap::from([(repo.id, WorkflowStatusCounts::default())]),
+                    favorites_state: Arc::new(Mutex::new(HashSet::new())),
+                    favorites_manager: None,
+                },
+            );
 
-        rebuild_repo_list(
-            store.clone(),
-            RepoListRenderContext {
-                repos: vec![repo.clone()],
-                favorites_snapshot: HashSet::new(),
-                actions_snapshot: HashMap::new(),
-                workflow_snapshot: HashMap::from([(repo.id, WorkflowStatusCounts::default())]),
-                favorites_state: Arc::new(Mutex::new(HashSet::new())),
-                favorites_manager: None,
-            },
-        );
+            let repo_obj = (0..store.n_items())
+                .find_map(|idx| {
+                    store
+                        .item(idx)
+                        .filter(|obj| repo_from_object(obj).is_some())
+                })
+                .expect("repo item should exist");
 
-        let repo_obj = (0..store.n_items())
-            .find_map(|idx| {
-                store
-                    .item(idx)
-                    .filter(|obj| repo_from_object(obj).is_some())
-            })
-            .expect("repo item should exist");
-
-        assert!(repo_obj.downcast_ref::<gtk::ListBoxRow>().is_none());
-        assert_eq!(
-            repo_from_object(&repo_obj).map(|item| item.id),
-            Some(repo.id)
-        );
-        assert!(row_selectable_from_object(repo_obj.as_ref()));
+            assert!(repo_obj.downcast_ref::<gtk::ListBoxRow>().is_none());
+            assert_eq!(
+                repo_from_object(&repo_obj).map(|item| item.id),
+                Some(repo.id)
+            );
+            assert!(row_selectable_from_object(repo_obj.as_ref()));
+        });
     }
 }

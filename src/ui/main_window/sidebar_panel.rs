@@ -317,45 +317,43 @@ fn create_pill(label: &str) -> gtk::ToggleButton {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
 
     #[test]
     #[ignore = "requires GTK display"]
     fn selection_does_not_autoselect() {
-        let Some(_guard) = gtk_test_guard("selection_does_not_autoselect") else {
-            return;
-        };
-        let panel = SidebarPanel::new();
+        run_gtk_test("selection_does_not_autoselect", || {
+            let panel = SidebarPanel::new();
 
-        // With autoselect on, `set_selected(INVALID_LIST_POSITION)` is refused and
-        // GTK picks a replacement row inside `filter.changed()` — which lands the
-        // selection on a section header and swaps the open repo when a pill is
-        // toggled.
-        assert!(!panel.selection().is_autoselect());
-        panel.selection().set_selected(gtk::INVALID_LIST_POSITION);
-        assert_eq!(panel.selection().selected(), gtk::INVALID_LIST_POSITION);
+            // With autoselect on, `set_selected(INVALID_LIST_POSITION)` is refused and
+            // GTK picks a replacement row inside `filter.changed()` — which lands the
+            // selection on a section header and swaps the open repo when a pill is
+            // toggled.
+            assert!(!panel.selection().is_autoselect());
+            panel.selection().set_selected(gtk::INVALID_LIST_POSITION);
+            assert_eq!(panel.selection().selected(), gtk::INVALID_LIST_POSITION);
+        });
     }
 
     #[test]
     #[ignore = "requires GTK display"]
     fn sidebar_panel_initializes_widgets() {
-        let Some(_guard) = gtk_test_guard("sidebar_panel_initializes_widgets") else {
-            return;
-        };
-        let panel = SidebarPanel::new();
-        let expected_placeholder = tr("Search repositories...");
-        assert_eq!(
-            panel
-                .search_entry()
-                .placeholder_text()
-                .as_ref()
-                .map(|s| s.as_str()),
-            Some(expected_placeholder.as_str())
-        );
-        assert_eq!(
-            panel.repo_list().accessible_role(),
-            gtk::AccessibleRole::List
-        );
-        assert_eq!(panel.filter_mode.get(), SidebarFilter::All);
+        run_gtk_test("sidebar_panel_initializes_widgets", || {
+            let panel = SidebarPanel::new();
+            let expected_placeholder = tr("Search repositories...");
+            assert_eq!(
+                panel
+                    .search_entry()
+                    .placeholder_text()
+                    .as_ref()
+                    .map(|s| s.as_str()),
+                Some(expected_placeholder.as_str())
+            );
+            assert_eq!(
+                panel.repo_list().accessible_role(),
+                gtk::AccessibleRole::List
+            );
+            assert_eq!(panel.filter_mode.get(), SidebarFilter::All);
+        });
     }
 }

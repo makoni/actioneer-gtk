@@ -65,47 +65,45 @@ fn icon_pixel_size(dot_size: i32) -> i32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
 
     #[test]
     #[ignore = "requires GTK display"]
     fn status_dot_applies_class_and_icon() {
-        let Some(_guard) = gtk_test_guard("status_dot_applies_class_and_icon") else {
-            return;
-        };
+        run_gtk_test("status_dot_applies_class_and_icon", || {
+            let dot = build_status_dot("object-select-symbolic", "success", WORKFLOW_DOT_SIZE);
 
-        let dot = build_status_dot("object-select-symbolic", "success", WORKFLOW_DOT_SIZE);
+            assert!(dot.has_css_class("status-dot"));
+            assert!(dot.has_css_class("success"));
+            let (width, height) = dot.size_request();
+            assert_eq!((width, height), (WORKFLOW_DOT_SIZE, WORKFLOW_DOT_SIZE));
 
-        assert!(dot.has_css_class("status-dot"));
-        assert!(dot.has_css_class("success"));
-        let (width, height) = dot.size_request();
-        assert_eq!((width, height), (WORKFLOW_DOT_SIZE, WORKFLOW_DOT_SIZE));
+            let icon = dot
+                .first_child()
+                .and_then(|child| child.downcast::<gtk::Image>().ok())
+                .expect("status dot should contain an icon");
+            assert_eq!(icon.icon_name().as_deref(), Some("object-select-symbolic"));
 
-        let icon = dot
-            .first_child()
-            .and_then(|child| child.downcast::<gtk::Image>().ok())
-            .expect("status dot should contain an icon");
-        assert_eq!(icon.icon_name().as_deref(), Some("object-select-symbolic"));
+            // The glyph must be centred inside the fixed-size circle, not packed
+            // against its leading edge — and the dot itself must not expand, or it
+            // would push the row's title sideways.
+            assert!(dot.is_homogeneous());
+            assert_eq!(icon.halign(), gtk::Align::Center);
+            assert_eq!(icon.valign(), gtk::Align::Center);
+            assert!(!dot.hexpands());
 
-        // The glyph must be centred inside the fixed-size circle, not packed
-        // against its leading edge — and the dot itself must not expand, or it
-        // would push the row's title sideways.
-        assert!(dot.is_homogeneous());
-        assert_eq!(icon.halign(), gtk::Align::Center);
-        assert_eq!(icon.valign(), gtk::Align::Center);
-        assert!(!dot.hexpands());
+            set_status_dot_state(&dot, "dialog-error-symbolic", "error");
+            assert!(!dot.has_css_class("success"));
+            assert!(dot.has_css_class("error"));
+            assert_eq!(icon.icon_name().as_deref(), Some("dialog-error-symbolic"));
 
-        set_status_dot_state(&dot, "dialog-error-symbolic", "error");
-        assert!(!dot.has_css_class("success"));
-        assert!(dot.has_css_class("error"));
-        assert_eq!(icon.icon_name().as_deref(), Some("dialog-error-symbolic"));
+            // The dot must be reachable by assistive tech: an unnamed generic node
+            // is pruned, which would leave a screen reader with no status at all.
+            assert_eq!(dot.accessible_role(), gtk::AccessibleRole::Img);
 
-        // The dot must be reachable by assistive tech: an unnamed generic node
-        // is pruned, which would leave a screen reader with no status at all.
-        assert_eq!(dot.accessible_role(), gtk::AccessibleRole::Img);
-
-        // Empty status falls back to the neutral "idle" tint.
-        set_status_dot_state(&dot, "media-playback-start-symbolic", "");
-        assert!(dot.has_css_class("idle"));
+            // Empty status falls back to the neutral "idle" tint.
+            set_status_dot_state(&dot, "media-playback-start-symbolic", "");
+            assert!(dot.has_css_class("idle"));
+        });
     }
 }

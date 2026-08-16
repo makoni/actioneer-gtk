@@ -369,7 +369,7 @@ mod tests {
     use super::*;
     use crate::api::client::GitHubClient;
     use crate::api::models::{Job, Repo, User};
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
     use parking_lot::Mutex;
     use std::cell::RefCell;
     use std::collections::HashMap;
@@ -456,174 +456,167 @@ mod tests {
     #[test]
     #[ignore = "requires GTK display"]
     fn run_row_is_released_when_dropped() {
-        let Some(_guard) = gtk_test_guard("run_row_is_released_when_dropped") else {
-            return;
-        };
+        run_gtk_test("run_row_is_released_when_dropped", || {
+            // Regression guard: the row's own box must never be captured strongly by
+            // a handler on a widget it owns. Such a cycle is invisible at runtime —
+            // it silently keeps the row alive, which in turn defeats the weak-ref
+            // guard on its 60s refresh timer and leaves it ticking forever.
+            let mut weaks: Vec<(String, glib::WeakRef<gtk::Widget>)> = Vec::new();
+            let weak = {
+                let context = context_stub();
+                let row = create_run_expander_row(&run_stub(), &context, false);
+                crate::ui::test_helpers::collect_widget_weaks(
+                    &row.clone().upcast::<gtk::Widget>(),
+                    &mut weaks,
+                );
+                row.downgrade()
+            };
 
-        // Regression guard: the row's own box must never be captured strongly by
-        // a handler on a widget it owns. Such a cycle is invisible at runtime —
-        // it silently keeps the row alive, which in turn defeats the weak-ref
-        // guard on its 60s refresh timer and leaves it ticking forever.
-        let mut weaks: Vec<(String, glib::WeakRef<gtk::Widget>)> = Vec::new();
-        let weak = {
-            let context = context_stub();
-            let row = create_run_expander_row(&run_stub(), &context, false);
-            crate::ui::test_helpers::collect_widget_weaks(
-                &row.clone().upcast::<gtk::Widget>(),
-                &mut weaks,
+            while glib::MainContext::default().pending() {
+                let _ = glib::MainContext::default().iteration(false);
+            }
+
+            assert!(
+                weak.upgrade().is_none(),
+                "run row outlived its last strong reference — a signal handler is \
+                 holding it in a reference cycle"
             );
-            row.downgrade()
-        };
 
-        while glib::MainContext::default().pending() {
-            let _ = glib::MainContext::default().iteration(false);
-        }
-
-        assert!(
-            weak.upgrade().is_none(),
-            "run row outlived its last strong reference — a signal handler is \
-             holding it in a reference cycle"
-        );
-
-        // Checking the outer box alone is not enough: a cycle pinning only the
-        // expander leaves `meta_box` alive, and with it the 60s refresh timer
-        // whose weak upgrade then never fails.
-        let survivors: Vec<&str> = weaks
-            .iter()
-            .filter(|(_, weak)| weak.upgrade().is_some())
-            .map(|(name, _)| name.as_str())
-            .collect();
-        assert!(
-            survivors.is_empty(),
-            "widgets outlived the discarded run row: {survivors:?} — a signal \
-             handler is holding them in a reference cycle"
-        );
+            // Checking the outer box alone is not enough: a cycle pinning only the
+            // expander leaves `meta_box` alive, and with it the 60s refresh timer
+            // whose weak upgrade then never fails.
+            let survivors: Vec<&str> = weaks
+                .iter()
+                .filter(|(_, weak)| weak.upgrade().is_some())
+                .map(|(name, _)| name.as_str())
+                .collect();
+            assert!(
+                survivors.is_empty(),
+                "widgets outlived the discarded run row: {survivors:?} — a signal \
+                 handler is holding them in a reference cycle"
+            );
+        });
     }
 
     #[test]
     #[ignore = "requires GTK display"]
     fn run_row_renders_number_dot_and_meta() {
-        let Some(_guard) = gtk_test_guard("run_row_renders_number_dot_and_meta") else {
-            return;
-        };
+        run_gtk_test("run_row_renders_number_dot_and_meta", || {
+            let context = context_stub();
+            let row = create_run_expander_row(&run_stub(), &context, false);
 
-        let context = context_stub();
-        let row = create_run_expander_row(&run_stub(), &context, false);
+            assert!(row.has_css_class("run-item"));
 
-        assert!(row.has_css_class("run-item"));
+            let row_container = row
+                .first_child()
+                .and_then(|child| child.downcast::<gtk::Box>().ok())
+                .expect("row container");
+            let expander = row_container
+                .first_child()
+                .and_then(|child| child.downcast::<gtk::Expander>().ok())
+                .expect("run expander");
+            assert_eq!(expander.widget_name().as_str(), "run_42");
 
-        let row_container = row
-            .first_child()
-            .and_then(|child| child.downcast::<gtk::Box>().ok())
-            .expect("row container");
-        let expander = row_container
-            .first_child()
-            .and_then(|child| child.downcast::<gtk::Expander>().ok())
-            .expect("run expander");
-        assert_eq!(expander.widget_name().as_str(), "run_42");
-
-        let header = expander
-            .label_widget()
-            .and_then(|child| child.downcast::<gtk::Box>().ok())
-            .expect("header box");
-        let dot = header
-            .first_child()
-            .and_then(|child| child.downcast::<gtk::Box>().ok())
-            .expect("status dot");
-        assert!(dot.has_css_class("status-dot"));
-        assert!(dot.has_css_class("accent"));
+            let header = expander
+                .label_widget()
+                .and_then(|child| child.downcast::<gtk::Box>().ok())
+                .expect("header box");
+            let dot = header
+                .first_child()
+                .and_then(|child| child.downcast::<gtk::Box>().ok())
+                .expect("status dot");
+            assert!(dot.has_css_class("status-dot"));
+            assert!(dot.has_css_class("accent"));
+        });
     }
 
     #[test]
     #[ignore = "requires GTK display"]
     fn remove_job_context_only_removes_matching_expander() {
-        let Some(_guard) = gtk_test_guard("remove_job_context_only_removes_matching_expander")
-        else {
-            return;
-        };
+        run_gtk_test("remove_job_context_only_removes_matching_expander", || {
+            let old_expander = gtk::Expander::new(None);
+            let new_expander = gtk::Expander::new(None);
+            let jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            jobs_box.append(&gtk::Spinner::new());
+            let job_contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
 
-        let old_expander = gtk::Expander::new(None);
-        let new_expander = gtk::Expander::new(None);
-        let jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        jobs_box.append(&gtk::Spinner::new());
-        let job_contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
+            job_contexts.borrow_mut().insert(
+                42,
+                JobRefreshContext::from_params(params_for(
+                    &new_expander,
+                    &jobs_box,
+                    Arc::new(Vec::new()),
+                )),
+            );
 
-        job_contexts.borrow_mut().insert(
-            42,
-            JobRefreshContext::from_params(params_for(
-                &new_expander,
-                &jobs_box,
-                Arc::new(Vec::new()),
-            )),
-        );
+            remove_job_context_if_current(&job_contexts, 42, &old_expander);
+            assert!(job_contexts.borrow().contains_key(&42));
 
-        remove_job_context_if_current(&job_contexts, 42, &old_expander);
-        assert!(job_contexts.borrow().contains_key(&42));
-
-        remove_job_context_if_current(&job_contexts, 42, &new_expander);
-        assert!(!job_contexts.borrow().contains_key(&42));
+            remove_job_context_if_current(&job_contexts, 42, &new_expander);
+            assert!(!job_contexts.borrow().contains_key(&42));
+        });
     }
 
     #[test]
     #[ignore = "requires GTK display"]
     fn rebind_preserved_job_context_skips_placeholders() {
-        let Some(_guard) = gtk_test_guard("rebind_preserved_job_context_skips_placeholders") else {
-            return;
-        };
+        run_gtk_test("rebind_preserved_job_context_skips_placeholders", || {
+            let job_contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
+            let jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            jobs_box.append(&gtk::Label::new(Some("placeholder")));
 
-        let job_contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
-        let jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        jobs_box.append(&gtk::Label::new(Some("placeholder")));
+            rebind_preserved_job_context(
+                &job_contexts,
+                params_for(&gtk::Expander::new(None), &jobs_box, Arc::new(Vec::new())),
+            );
 
-        rebind_preserved_job_context(
-            &job_contexts,
-            params_for(&gtk::Expander::new(None), &jobs_box, Arc::new(Vec::new())),
-        );
-
-        assert!(job_contexts.borrow().is_empty());
+            assert!(job_contexts.borrow().is_empty());
+        });
     }
 
     #[test]
     #[ignore = "requires GTK display"]
     fn rebind_preserved_job_context_keeps_cached_jobs() {
-        let Some(_guard) = gtk_test_guard("rebind_preserved_job_context_keeps_cached_jobs") else {
-            return;
-        };
+        run_gtk_test("rebind_preserved_job_context_keeps_cached_jobs", || {
+            let job_contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
+            let old_expander = gtk::Expander::new(None);
+            let old_jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            old_jobs_box.append(&gtk::Spinner::new());
 
-        let job_contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
-        let old_expander = gtk::Expander::new(None);
-        let old_jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        old_jobs_box.append(&gtk::Spinner::new());
+            let cached_jobs = Arc::new(vec![Job {
+                id: 1,
+                run_id: 42,
+                status: Some("in_progress".into()),
+                conclusion: None,
+                started_at: None,
+                completed_at: None,
+                name: Some("Build".into()),
+                steps: Vec::new(),
+                html_url: None,
+            }]);
 
-        let cached_jobs = Arc::new(vec![Job {
-            id: 1,
-            run_id: 42,
-            status: Some("in_progress".into()),
-            conclusion: None,
-            started_at: None,
-            completed_at: None,
-            name: Some("Build".into()),
-            steps: Vec::new(),
-            html_url: None,
-        }]);
+            job_contexts.borrow_mut().insert(
+                42,
+                JobRefreshContext::from_params(params_for(
+                    &old_expander,
+                    &old_jobs_box,
+                    cached_jobs,
+                )),
+            );
 
-        job_contexts.borrow_mut().insert(
-            42,
-            JobRefreshContext::from_params(params_for(&old_expander, &old_jobs_box, cached_jobs)),
-        );
+            let new_expander = gtk::Expander::new(None);
+            let new_jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            new_jobs_box.append(&gtk::Spinner::new());
 
-        let new_expander = gtk::Expander::new(None);
-        let new_jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        new_jobs_box.append(&gtk::Spinner::new());
+            rebind_preserved_job_context(
+                &job_contexts,
+                params_for(&new_expander, &new_jobs_box, Arc::new(Vec::new())),
+            );
 
-        rebind_preserved_job_context(
-            &job_contexts,
-            params_for(&new_expander, &new_jobs_box, Arc::new(Vec::new())),
-        );
-
-        let contexts = job_contexts.borrow();
-        let rebound = contexts.get(&42).expect("context preserved");
-        assert_eq!(rebound.jobs().len(), 1);
-        assert!(rebound.matches_expander(&new_expander));
+            let contexts = job_contexts.borrow();
+            let rebound = contexts.get(&42).expect("context preserved");
+            assert_eq!(rebound.jobs().len(), 1);
+            assert!(rebound.matches_expander(&new_expander));
+        });
     }
 }

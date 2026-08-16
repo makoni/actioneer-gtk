@@ -67,7 +67,7 @@ pub(super) fn create_actions_box(run: &WorkflowRun, context: &RunActionContext) 
 
 fn create_open_button(url: &str) -> gtk::Button {
     let button = gtk::Button::from_icon_name("adw-external-link-symbolic");
-    button.set_tooltip_text(Some(tr("Open in GitHub").as_str()));
+    crate::ui::utils::describe_control(&button, tr("Open in GitHub").as_str());
     button.add_css_class("row-action-btn");
     button.set_focus_on_click(false);
 
@@ -83,7 +83,7 @@ fn create_open_button(url: &str) -> gtk::Button {
 
 fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Button {
     let button = gtk::Button::from_icon_name("view-refresh-symbolic");
-    button.set_tooltip_text(Some(tr("Re-run workflow").as_str()));
+    crate::ui::utils::describe_control(&button, tr("Re-run workflow").as_str());
     button.add_css_class("row-action-btn");
     button.set_focus_on_click(false);
 
@@ -162,7 +162,7 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
 
 fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Button {
     let button = gtk::Button::from_icon_name("system-reboot-symbolic");
-    button.set_tooltip_text(Some(tr("Re-run failed jobs").as_str()));
+    crate::ui::utils::describe_control(&button, tr("Re-run failed jobs").as_str());
     button.add_css_class("row-action-btn");
     button.set_focus_on_click(false);
 
@@ -238,7 +238,7 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
 
 fn create_cancel_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Button {
     let button = gtk::Button::from_icon_name("process-stop-symbolic");
-    button.set_tooltip_text(Some(tr("Cancel run").as_str()));
+    crate::ui::utils::describe_control(&button, tr("Cancel run").as_str());
     button.add_css_class("row-action-btn");
     button.add_css_class("cancel-action");
     button.set_focus_on_click(false);
@@ -323,7 +323,7 @@ pub(crate) fn confirm_and_cancel_run(
 mod tests {
     use super::*;
     use crate::api::models::WorkflowRun;
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
 
     fn run_stub() -> WorkflowRun {
         WorkflowRun {
@@ -349,58 +349,54 @@ mod tests {
     #[test]
     #[ignore = "requires GTK display"]
     fn confirm_dialog_wires_responses_and_appearance() {
-        let Some(_guard) = gtk_test_guard("confirm_dialog_wires_responses_and_appearance") else {
-            return;
-        };
+        run_gtk_test("confirm_dialog_wires_responses_and_appearance", || {
+            let suggested = confirm_dialog("Re-run", "Re-run this?", false);
+            assert!(suggested.has_response("cancel"));
+            assert!(suggested.has_response("confirm"));
+            assert_eq!(suggested.default_response().as_deref(), Some("cancel"));
+            assert_eq!(suggested.close_response().as_str(), "cancel");
+            assert_eq!(
+                suggested.response_appearance("confirm"),
+                adw::ResponseAppearance::Suggested
+            );
 
-        let suggested = confirm_dialog("Re-run", "Re-run this?", false);
-        assert!(suggested.has_response("cancel"));
-        assert!(suggested.has_response("confirm"));
-        assert_eq!(suggested.default_response().as_deref(), Some("cancel"));
-        assert_eq!(suggested.close_response().as_str(), "cancel");
-        assert_eq!(
-            suggested.response_appearance("confirm"),
-            adw::ResponseAppearance::Suggested
-        );
-
-        let destructive = confirm_dialog("Cancel run", "Cancel this?", true);
-        assert_eq!(
-            destructive.response_appearance("confirm"),
-            adw::ResponseAppearance::Destructive
-        );
+            let destructive = confirm_dialog("Cancel run", "Cancel this?", true);
+            assert_eq!(
+                destructive.response_appearance("confirm"),
+                adw::ResponseAppearance::Destructive
+            );
+        });
     }
 
     #[test]
     #[ignore = "requires GTK display"]
     fn open_button_added_when_url_present() {
-        let Some(_guard) = gtk_test_guard("open_button_added_when_url_present") else {
-            return;
-        };
+        run_gtk_test("open_button_added_when_url_present", || {
+            let run = run_stub();
+            let client = Arc::new(Mutex::new(GitHubClient::new(None).unwrap()));
+            let parent = adw::ApplicationWindow::builder().build();
+            let overlay = adw::ToastOverlay::new();
 
-        let run = run_stub();
-        let client = Arc::new(Mutex::new(GitHubClient::new(None).unwrap()));
-        let parent = adw::ApplicationWindow::builder().build();
-        let overlay = adw::ToastOverlay::new();
+            let context = RunActionContext {
+                client: client.clone(),
+                owner: "owner".to_string(),
+                repo: "repo".to_string(),
+                parent_window: parent.clone(),
+                toast_overlay: overlay.clone(),
+            };
 
-        let context = RunActionContext {
-            client: client.clone(),
-            owner: "owner".to_string(),
-            repo: "repo".to_string(),
-            parent_window: parent.clone(),
-            toast_overlay: overlay.clone(),
-        };
+            let box_widget = create_actions_box(&run, &context);
 
-        let box_widget = create_actions_box(&run, &context);
-
-        let mut child = box_widget.first_child();
-        let mut button_count = 0;
-        while let Some(widget) = child {
-            if widget.is::<gtk::Button>() {
-                button_count += 1;
+            let mut child = box_widget.first_child();
+            let mut button_count = 0;
+            while let Some(widget) = child {
+                if widget.is::<gtk::Button>() {
+                    button_count += 1;
+                }
+                child = widget.next_sibling();
             }
-            child = widget.next_sibling();
-        }
 
-        assert!(button_count >= 1);
+            assert!(button_count >= 1);
+        });
     }
 }

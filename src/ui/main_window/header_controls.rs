@@ -51,24 +51,23 @@ impl HeaderControls {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
 
     #[test]
     #[ignore = "requires GTK display"]
     fn header_controls_create_expected_widgets() {
-        let Some(_guard) = gtk_test_guard("header_controls_create_expected_widgets") else {
-            return;
-        };
-        let controls = HeaderControls::new();
-        let expected_tooltip = tr("Refresh repositories");
-        assert_eq!(
-            controls
-                .refresh_button()
-                .tooltip_text()
-                .as_ref()
-                .map(|s| s.as_str()),
-            Some(expected_tooltip.as_str())
-        );
-        assert_eq!(controls.rate_limit_label().text(), tr("Rate limit: –"));
+        run_gtk_test("header_controls_create_expected_widgets", || {
+            let controls = HeaderControls::new();
+            let expected_tooltip = tr("Refresh repositories");
+            assert_eq!(
+                controls
+                    .refresh_button()
+                    .tooltip_text()
+                    .as_ref()
+                    .map(|s| s.as_str()),
+                Some(expected_tooltip.as_str())
+            );
+            assert_eq!(controls.rate_limit_label().text(), tr("Rate limit: –"));
+        });
     }
 }
