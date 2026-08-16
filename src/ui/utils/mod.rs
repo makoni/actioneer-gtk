@@ -13,3 +13,6 @@ pub use workflow_run::{is_run_active, is_run_failure};
 
 mod icons;
 pub use icons::favorite_icon_name;
+
+mod a11y;
+pub use a11y::describe_control;

@@ -1,6 +1,8 @@
 use super::MainWindow;
 use crate::ui::sidebar::{find_first_repo_index, find_repo_index, repo_from_object};
 use gtk4::{self as gtk, glib, prelude::*};
+use parking_lot::Mutex;
+use std::sync::Arc;
 use tracing::info;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -21,10 +23,26 @@ impl MainWindow {
         });
 
         // The pill filters reshuffle the same list, so they need the same
-        // selection restore the search path performs.
-        let window = self.clone();
+        // selection restore the search path performs. The handler captures only
+        // the pieces it needs, never the window: `MainWindow` owns the panel that
+        // stores this handler, so capturing it would form a reference cycle.
+        let selection = self.repo_selection.clone();
+        let model = self.repo_filter_model.clone();
+        let selected_repo_id = self.selected_repo_id.clone();
+        let handling_selection = self.handling_selection.clone();
         self.sidebar_panel.connect_filter_changed(move || {
-            window.restore_selection_after_filter_async();
+            let selection = selection.clone();
+            let model = model.clone();
+            let selected_repo_id = selected_repo_id.clone();
+            let handling_selection = handling_selection.clone();
+            glib::idle_add_local_once(move || {
+                reapply_selection_after_filter(
+                    &selection,
+                    &model,
+                    &selected_repo_id,
+                    &handling_selection,
+                );
+            });
         });
     }
 
@@ -109,27 +127,6 @@ impl MainWindow {
         });
     }
 
-    /// Re-applies the sidebar highlight after a pill filter changed.
-    ///
-    /// Unlike the full restore, this never clears the selection: a repo hidden by
-    /// the filter is still the one open in the detail pane, and closing that pane
-    /// because the sidebar list narrowed would lose the user's place.
-    pub(super) fn restore_selection_after_filter_async(&self) {
-        let window = self.clone();
-        glib::idle_add_local_once(move || {
-            let Some(target) = *window.selected_repo_id.lock() else {
-                return;
-            };
-            let Some(index) = find_repo_index(&window.repo_filter_model, target) else {
-                return;
-            };
-
-            *window.handling_selection.lock() = true;
-            window.repo_selection.set_selected(index);
-            *window.handling_selection.lock() = false;
-        });
-    }
-
     pub(super) fn restore_repo_selection_now(&self) {
         let target = *self.selected_repo_id.lock();
 
@@ -141,6 +138,29 @@ impl MainWindow {
 
         self.ensure_detail_matches_selection();
     }
+}
+
+/// Re-applies the sidebar highlight after a pill filter changed.
+///
+/// Unlike the full restore, this never clears the selection: a repo hidden by the
+/// filter is still the one open in the detail pane, and closing that pane because
+/// the sidebar list narrowed would lose the user's place.
+fn reapply_selection_after_filter(
+    selection: &gtk::SingleSelection,
+    model: &gtk::FilterListModel,
+    selected_repo_id: &Arc<Mutex<Option<i64>>>,
+    handling_selection: &Arc<Mutex<bool>>,
+) {
+    let Some(target) = *selected_repo_id.lock() else {
+        return;
+    };
+    let Some(index) = find_repo_index(model, target) else {
+        return;
+    };
+
+    *handling_selection.lock() = true;
+    selection.set_selected(index);
+    *handling_selection.lock() = false;
 }
 
 pub(super) fn restore_sidebar_selection(

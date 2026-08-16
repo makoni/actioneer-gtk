@@ -89,7 +89,6 @@ fn create_status_segment(
     content.append(&count);
 
     let button = gtk::ToggleButton::builder()
-        .tooltip_text(tooltip)
         .valign(gtk::Align::Center)
         .child(&content)
         .build();
@@ -98,6 +97,10 @@ fn create_status_segment(
     button.add_css_class("filter-segment");
     button.add_css_class(segment_class);
     button.set_active(true);
+    // The only visible text is the number, so without an explicit label a screen
+    // reader announces just "7 toggle button".
+    crate::ui::utils::describe_control(&button, tooltip);
+
     (button, count)
 }
 

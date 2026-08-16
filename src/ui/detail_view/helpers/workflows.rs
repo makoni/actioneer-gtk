@@ -131,9 +131,22 @@ pub(crate) struct WorkflowRowHeader {
     pub progress_row: gtk::Box,
     pub progress_bar: gtk::ProgressBar,
     pub progress_label: gtk::Label,
-    pub trigger_btn: gtk::Button,
-    pub cancel_btn: gtk::Button,
+    // Weak: `WorkflowRunListModel` holds this header (`set_row_header`) and the
+    // trigger button's handler owns that same model, so strong references here
+    // would form a cycle that keeps the row — and the whole pane — alive.
+    trigger_btn: glib::WeakRef<gtk::Button>,
+    cancel_btn: glib::WeakRef<gtk::Button>,
     elapsed: Rc<RefCell<ElapsedTicker>>,
+}
+
+impl WorkflowRowHeader {
+    fn trigger_btn(&self) -> Option<gtk::Button> {
+        self.trigger_btn.upgrade()
+    }
+
+    fn cancel_btn(&self) -> Option<gtk::Button> {
+        self.cancel_btn.upgrade()
+    }
 }
 
 #[derive(Default)]
@@ -253,7 +266,7 @@ pub(crate) fn update_workflow_row_header(
                 get_run_status_class(run),
             );
             let (status_text, _) = workflow_status_text(run);
-            header.status_dot.set_tooltip_text(Some(&status_text));
+            crate::ui::utils::describe_control(&header.status_dot, &status_text);
 
             let meta = format_workflow_meta(run);
             if meta.is_empty() {
@@ -263,10 +276,12 @@ pub(crate) fn update_workflow_row_header(
             }
 
             let active = run.is_active();
-            header.trigger_btn.set_visible(!active);
-            header
-                .cancel_btn
-                .set_visible(active && run.is_cancellable());
+            if let Some(trigger) = header.trigger_btn() {
+                trigger.set_visible(!active);
+            }
+            if let Some(cancel) = header.cancel_btn() {
+                cancel.set_visible(active && run.is_cancellable());
+            }
 
             if active {
                 header.progress_row.set_visible(true);
@@ -287,12 +302,14 @@ pub(crate) fn update_workflow_row_header(
         }
         None => {
             set_status_dot_state(&header.status_dot, "window-minimize-symbolic", "idle");
-            header
-                .status_dot
-                .set_tooltip_text(Some(tr("No runs yet").as_str()));
+            crate::ui::utils::describe_control(&header.status_dot, tr("No runs yet").as_str());
             header.meta_label.set_text(tr("No runs yet").as_str());
-            header.trigger_btn.set_visible(true);
-            header.cancel_btn.set_visible(false);
+            if let Some(trigger) = header.trigger_btn() {
+                trigger.set_visible(true);
+            }
+            if let Some(cancel) = header.cancel_btn() {
+                cancel.set_visible(false);
+            }
             header.progress_row.set_visible(false);
             stop_elapsed_ticker(header);
         }
@@ -390,14 +407,14 @@ pub(crate) fn create_workflow_expander_row(
     actions_box.set_halign(gtk::Align::End);
 
     let logs_btn = gtk::Button::from_icon_name("text-x-generic-symbolic");
-    logs_btn.set_tooltip_text(Some(tr("View logs").as_str()));
+    crate::ui::utils::describe_control(&logs_btn, tr("View logs").as_str());
     logs_btn.add_css_class("row-action-btn");
     logs_btn.set_valign(gtk::Align::Center);
     logs_btn.set_focus_on_click(false);
     actions_box.append(&logs_btn);
 
     let trigger_btn = gtk::Button::from_icon_name("media-playback-start-symbolic");
-    trigger_btn.set_tooltip_text(Some(tr("Trigger workflow").as_str()));
+    crate::ui::utils::describe_control(&trigger_btn, tr("Trigger workflow").as_str());
     trigger_btn.add_css_class("row-action-btn");
     trigger_btn.add_css_class("run-action");
     trigger_btn.set_valign(gtk::Align::Center);
@@ -405,7 +422,7 @@ pub(crate) fn create_workflow_expander_row(
     actions_box.append(&trigger_btn);
 
     let cancel_btn = gtk::Button::from_icon_name("process-stop-symbolic");
-    cancel_btn.set_tooltip_text(Some(tr("Cancel run").as_str()));
+    crate::ui::utils::describe_control(&cancel_btn, tr("Cancel run").as_str());
     cancel_btn.add_css_class("row-action-btn");
     cancel_btn.add_css_class("cancel-action");
     cancel_btn.set_valign(gtk::Align::Center);
@@ -509,8 +526,8 @@ pub(crate) fn create_workflow_expander_row(
         progress_row,
         progress_bar,
         progress_label,
-        trigger_btn: trigger_btn.clone(),
-        cancel_btn: cancel_btn.clone(),
+        trigger_btn: trigger_btn.downgrade(),
+        cancel_btn: cancel_btn.downgrade(),
         elapsed: Rc::new(RefCell::new(ElapsedTicker::default())),
     };
     run_list.set_row_header(row_header.clone());
@@ -664,7 +681,7 @@ pub(crate) fn create_workflow_expander_row(
     let workflow_display_for_trigger = workflow_display_name.clone();
     let parent_window_for_trigger = parent_window.clone();
     let toast_overlay_for_trigger = toast_overlay.clone();
-    let expander_for_trigger = expander.clone();
+    let expander_for_trigger = expander.downgrade();
     let job_contexts_for_trigger = job_contexts.clone();
     let run_digests_shared = run_digests.clone();
     let notification_manager_shared = notification_manager.clone();
@@ -810,7 +827,9 @@ pub(crate) fn create_workflow_expander_row(
 
     trigger_btn.connect_clicked(move |_| {
         let run_filters_for_dialog = run_filters_for_trigger.clone();
-        let expander = expander_for_trigger.clone();
+        let Some(expander) = expander_for_trigger.upgrade() else {
+            return;
+        };
         let client = client_for_trigger.clone();
         let owner = owner_for_trigger.clone();
         let repo = repo_for_trigger.clone();
@@ -1357,7 +1376,161 @@ pub(crate) fn create_workflow_expander_row(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::api::models::User;
+    use crate::ui::detail_view::filter_controls::FilterControls;
     use crate::ui::test_helpers::gtk_test_guard;
+
+    /// Collects weak refs to every widget in a row, including the pieces hung
+    /// off an expander (its label widget and its child), which a plain
+    /// first_child/next_sibling walk does not reach.
+    fn collect_widget_weaks(
+        widget: &gtk::Widget,
+        out: &mut Vec<(String, glib::WeakRef<gtk::Widget>)>,
+    ) {
+        out.push((widget.type_().name().to_string(), widget.downgrade()));
+
+        if let Some(expander) = widget.downcast_ref::<gtk::Expander>() {
+            if let Some(label) = expander.label_widget() {
+                collect_widget_weaks(&label, out);
+            }
+            if let Some(child) = expander.child() {
+                collect_widget_weaks(&child, out);
+            }
+        }
+
+        let mut child = widget.first_child();
+        while let Some(current) = child {
+            collect_widget_weaks(&current, out);
+            child = current.next_sibling();
+        }
+    }
+
+    fn find_expander(widget: gtk::Widget) -> Option<gtk::Expander> {
+        if let Ok(expander) = widget.clone().downcast::<gtk::Expander>() {
+            return Some(expander);
+        }
+        let mut child = widget.first_child();
+        while let Some(current) = child {
+            if let Some(found) = find_expander(current.clone()) {
+                return Some(found);
+            }
+            child = current.next_sibling();
+        }
+        None
+    }
+
+    fn row_context_stub() -> WorkflowRowContext {
+        let workflows_last_loaded = Arc::new(Mutex::new(std::collections::HashMap::new()));
+        let workflows_loading_runs = Arc::new(Mutex::new(HashSet::new()));
+        let controls = FilterControls::new();
+
+        WorkflowRowContext {
+            client: Arc::new(Mutex::new(
+                crate::api::GitHubClient::new(None).expect("client stub should build"),
+            )),
+            owner: "mak".into(),
+            repo: "actioneer".into(),
+            repo_model: Repo {
+                id: 1,
+                name: "actioneer".into(),
+                full_name: "mak/actioneer".into(),
+                owner: User {
+                    login: "mak".into(),
+                },
+                is_private: false,
+                permissions: None,
+                default_branch: Some("main".into()),
+            },
+            parent_window: adw::ApplicationWindow::builder().build(),
+            toast_overlay: adw::ToastOverlay::new(),
+            job_contexts: Rc::new(RefCell::new(HashMap::new())),
+            run_badge_summaries: Rc::new(RefCell::new(HashMap::new())),
+            workflows_with_active_runs: Arc::new(Mutex::new(HashSet::new())),
+            workflows_last_loaded: workflows_last_loaded.clone(),
+            workflows_loading_runs: workflows_loading_runs.clone(),
+            run_digests: Arc::new(Mutex::new(std::collections::HashMap::new())),
+            notification_manager: None,
+            preferences_manager: None,
+            run_filters: Arc::new(Mutex::new(crate::ui::detail_view::RunFilters::default())),
+            run_load_service: super::super::RunLoadService::new(
+                workflows_last_loaded,
+                workflows_loading_runs,
+            ),
+            header: DetailHeaderState::new(
+                gtk::Label::new(None),
+                gtk::Label::new(None),
+                controls.chips.clone(),
+            ),
+        }
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn workflow_row_is_released_when_dropped() {
+        let Some(_guard) = gtk_test_guard("workflow_row_is_released_when_dropped") else {
+            return;
+        };
+
+        // Regression guard for two cycles that used to pin every workflow row:
+        // the trigger handler capturing its own expander, and the run-list model
+        // holding a header that held the very buttons whose handler owns that
+        // model. While either existed the row's 1s elapsed ticker could never
+        // stop, so rebuilt rows accumulated live timers.
+        // Both the row *and* its expander must die: a cycle that only pins the
+        // expander still leaks the whole subtree hanging off it, while the outer
+        // box is released normally.
+        let mut weaks: Vec<(String, glib::WeakRef<gtk::Widget>)> = Vec::new();
+        let (row_weak, expander_weak) = {
+            let context = row_context_stub();
+            let workflow = Workflow {
+                id: 7,
+                name: "CI".into(),
+                path: ".github/workflows/ci.yml".into(),
+            };
+            let row = create_workflow_expander_row(
+                &workflow,
+                &context,
+                WorkflowRowSettings {
+                    should_expand: false,
+                    initial_expanded_run_ids: Vec::new(),
+                    is_first: true,
+                },
+            );
+            let expander = find_expander(row.clone().upcast::<gtk::Widget>())
+                .expect("workflow row should contain an expander");
+            collect_widget_weaks(&row.clone().upcast::<gtk::Widget>(), &mut weaks);
+            (row.downgrade(), expander.downgrade())
+        };
+
+        while glib::MainContext::default().pending() {
+            let _ = glib::MainContext::default().iteration(false);
+        }
+
+        assert!(
+            row_weak.upgrade().is_none(),
+            "workflow row outlived its last strong reference — a signal handler \
+             is holding it in a reference cycle"
+        );
+        assert!(
+            expander_weak.upgrade().is_none(),
+            "workflow expander outlived its row — a handler on a widget inside \
+             the expander is capturing the expander itself"
+        );
+
+        // Nothing hung off the row may survive either: a cycle can pin a single
+        // button (and through it the run-list model and the pane) while the row
+        // and expander themselves are released normally.
+        let survivors: Vec<&str> = weaks
+            .iter()
+            .filter(|(_, weak)| weak.upgrade().is_some())
+            .map(|(name, _)| name.as_str())
+            .collect();
+        assert!(
+            survivors.is_empty(),
+            "widgets outlived the discarded workflow row: {survivors:?} — a \
+             signal handler is holding them in a reference cycle"
+        );
+    }
 
     #[test]
     #[ignore = "requires GTK display"]

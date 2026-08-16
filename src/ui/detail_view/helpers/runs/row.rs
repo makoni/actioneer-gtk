@@ -193,7 +193,7 @@ fn build_expander(run: &WorkflowRun) -> gtk::Expander {
     );
     let tooltip = format_run_tooltip(run);
     if !tooltip.is_empty() {
-        status_dot.set_tooltip_text(Some(&tooltip));
+        crate::ui::utils::describe_control(&status_dot, &tooltip);
     }
     header_box.append(&status_dot);
 
@@ -451,6 +451,34 @@ mod tests {
             jobs,
             job_summaries: Rc::new(RefCell::new(HashMap::new())),
         }
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn run_row_is_released_when_dropped() {
+        let Some(_guard) = gtk_test_guard("run_row_is_released_when_dropped") else {
+            return;
+        };
+
+        // Regression guard: the row's own box must never be captured strongly by
+        // a handler on a widget it owns. Such a cycle is invisible at runtime —
+        // it silently keeps the row alive, which in turn defeats the weak-ref
+        // guard on its 60s refresh timer and leaves it ticking forever.
+        let weak = {
+            let context = context_stub();
+            let row = create_run_expander_row(&run_stub(), &context, false);
+            row.downgrade()
+        };
+
+        while glib::MainContext::default().pending() {
+            let _ = glib::MainContext::default().iteration(false);
+        }
+
+        assert!(
+            weak.upgrade().is_none(),
+            "run row outlived its last strong reference — a signal handler is \
+             holding it in a reference cycle"
+        );
     }
 
     #[test]

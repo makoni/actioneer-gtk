@@ -110,7 +110,7 @@ pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -
     );
     let job_status_text = job.friendly_status();
     if !job_status_text.is_empty() {
-        dot.set_tooltip_text(Some(&job_status_text));
+        crate::ui::utils::describe_control(&dot, &job_status_text);
     }
     header_row.append(&dot);
 
@@ -141,7 +141,7 @@ pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -
 
     if let Some(ctx) = context {
         let logs_button = gtk::Button::from_icon_name("text-x-generic-symbolic");
-        logs_button.set_tooltip_text(Some(tr("View logs").as_str()));
+        crate::ui::utils::describe_control(&logs_button, tr("View logs").as_str());
         logs_button.add_css_class("row-action-btn");
         logs_button.set_valign(gtk::Align::Center);
         logs_button.set_focus_on_click(false);
@@ -208,7 +208,7 @@ fn create_job_step_row(step: &JobStep, display_number: usize) -> gtk::Box {
     );
     let step_status_text = step.friendly_status();
     if !step_status_text.is_empty() {
-        dot.set_tooltip_text(Some(&step_status_text));
+        crate::ui::utils::describe_control(&dot, &step_status_text);
     }
     row.append(&dot);
 
@@ -235,37 +235,11 @@ fn create_job_step_row(step: &JobStep, display_number: usize) -> gtk::Box {
 }
 
 fn step_status_icon(step: &JobStep) -> &'static str {
-    if let Some(conclusion) = step.conclusion.as_deref() {
-        match conclusion {
-            "success" => "object-select-symbolic",
-            "failure" => "dialog-error-symbolic",
-            "cancelled" => "process-stop-symbolic",
-            _ => "dialog-question-symbolic",
-        }
-    } else if let Some(status) = step.status.as_deref() {
-        match status {
-            "queued" | "waiting" => "alarm-symbolic",
-            "in_progress" => "media-playback-start-symbolic",
-            _ => "dialog-question-symbolic",
-        }
-    } else {
-        "dialog-question-symbolic"
-    }
+    super::formatting::status_presentation(step.status.as_deref(), step.conclusion.as_deref()).0
 }
 
 fn step_status_class(step: &JobStep) -> &'static str {
-    if let Some(conclusion) = step.conclusion.as_deref() {
-        return match conclusion {
-            "success" => "success",
-            "failure" => "error",
-            "cancelled" => "warning",
-            _ => "",
-        };
-    }
-    if let Some("in_progress") = step.status.as_deref() {
-        return "accent";
-    }
-    ""
+    super::formatting::status_presentation(step.status.as_deref(), step.conclusion.as_deref()).1
 }
 
 fn try_begin_job_load(expander: &gtk::Expander) -> bool {
@@ -536,9 +510,15 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
                     let job_summaries_retry = job_summaries.clone();
                     let run_branch_retry = run_branch.clone();
                     let run_title_retry = run_title.clone();
-                    let expander_retry = expander.clone();
+                    // Weak: this button is appended to `jobs_box`, which is the
+                    // expander's own child — a strong capture would close a cycle
+                    // and keep the run row alive after it is discarded.
+                    let expander_retry = expander.downgrade();
 
                     retry_button.connect_clicked(move |_| {
+                        let Some(expander_retry) = expander_retry.upgrade() else {
+                            return;
+                        };
                         let (current_expander, current_jobs_box) = current_retry_widgets(
                             &job_contexts_retry,
                             run_id,

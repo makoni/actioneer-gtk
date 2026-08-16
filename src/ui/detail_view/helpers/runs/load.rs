@@ -154,6 +154,11 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                 if let Some(detail) = task_run_list.detail_header() {
                     detail.record_latest_run(workflow_id, None);
                 }
+                // A workflow with no runs is not active. The repo-wide summary
+                // skips workflows it has no data for, so this is the only place
+                // left that can clear the flag — without it the row would be
+                // polled forever.
+                set_expander_active(&expander, false);
 
                 if should_render_run_list(background_for_ui, expander_expanded, true) {
                     task_run_list.show_empty();

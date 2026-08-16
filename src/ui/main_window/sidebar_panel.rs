@@ -10,7 +10,7 @@ use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
 /// Callback fired after a pill filter changes (used to restore the selection).
-type FilterChangedHandler = Rc<RefCell<Option<Box<dyn Fn()>>>>;
+type FilterChangedHandler = Rc<RefCell<Option<Rc<dyn Fn()>>>>;
 
 #[derive(Clone)]
 pub struct SidebarPanel {
@@ -48,6 +48,11 @@ impl SidebarPanel {
             gtk::FilterListModel::new(Some(repo_store.clone()), Some(filter.clone()));
         let selection = gtk::SingleSelection::builder()
             .model(&filter_model)
+            // Autoselect defaults to true, which makes `set_selected(INVALID)` a
+            // no-op and lets GTK pick a replacement row — a section header, or a
+            // different repo — synchronously inside `filter.changed()`. The
+            // sidebar drives selection explicitly, so it must stay off.
+            .autoselect(false)
             .can_unselect(true)
             .build();
 
@@ -144,7 +149,7 @@ impl SidebarPanel {
     /// Registers a callback fired after a pill filter changes, so the window can
     /// re-apply the selection for the repo that is still open in the detail pane.
     pub fn connect_filter_changed<F: Fn() + 'static>(&self, callback: F) {
-        *self.filter_changed.borrow_mut() = Some(Box::new(callback));
+        *self.filter_changed.borrow_mut() = Some(Rc::new(callback));
     }
 
     pub fn clamp(&self) -> adw::Clamp {
@@ -210,8 +215,11 @@ fn build_filter_pills(
                 // stale index could paint selection styling onto a header row.
                 selection.set_selected(gtk::INVALID_LIST_POSITION);
                 filter.changed(gtk::FilterChange::Different);
-                // Re-select the repo that is still open, if it survived the filter.
-                if let Some(callback) = filter_changed.borrow().as_ref() {
+                // Re-select the repo that is still open, if it survived the
+                // filter. The handler is cloned out first: holding the borrow
+                // across the call would panic if it ever re-registers itself.
+                let callback = filter_changed.borrow().clone();
+                if let Some(callback) = callback {
                     callback();
                 }
             }
@@ -235,6 +243,23 @@ fn create_pill(label: &str) -> gtk::ToggleButton {
 mod tests {
     use super::*;
     use crate::ui::test_helpers::gtk_test_guard;
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn selection_does_not_autoselect() {
+        let Some(_guard) = gtk_test_guard("selection_does_not_autoselect") else {
+            return;
+        };
+        let panel = SidebarPanel::new();
+
+        // With autoselect on, `set_selected(INVALID_LIST_POSITION)` is refused and
+        // GTK picks a replacement row inside `filter.changed()` — which lands the
+        // selection on a section header and swaps the open repo when a pill is
+        // toggled.
+        assert!(!panel.selection().is_autoselect());
+        panel.selection().set_selected(gtk::INVALID_LIST_POSITION);
+        assert_eq!(panel.selection().selected(), gtk::INVALID_LIST_POSITION);
+    }
 
     #[test]
     #[ignore = "requires GTK display"]

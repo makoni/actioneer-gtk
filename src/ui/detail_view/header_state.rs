@@ -204,6 +204,7 @@ pub(crate) fn classify_run(run: &WorkflowRun) -> StatusGroup {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::i18n::{i18n_test_guard, init};
 
     fn run_stub(status: Option<&str>, conclusion: Option<&str>) -> WorkflowRun {
         WorkflowRun {
@@ -268,6 +269,10 @@ mod tests {
 
     #[test]
     fn subtitle_uses_singular_workflow_form() {
+        // `tr()` reads process-global language state that other tests mutate.
+        let _guard = i18n_test_guard();
+        init(None);
+
         assert!(subtitle_text(1, None).starts_with(&tr("1 workflow")));
         assert!(
             subtitle_text(2, None).starts_with(&tr("{count} workflows").replace("{count}", "2"))

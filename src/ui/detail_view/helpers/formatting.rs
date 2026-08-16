@@ -142,6 +142,10 @@ pub(crate) fn populate_run_meta(container: &gtk::Box, run: &WorkflowRun) {
 /// Every documented conclusion is handled: the dot is now the only status signal
 /// on a row, so an unmapped one (e.g. `timed_out`) would silently render as the
 /// neutral "unknown" dot and hide a real failure.
+///
+/// Neutral states use `idle`, never libadwaita's `dim-label`: that class is an
+/// opacity utility (0.55) which would dim the whole dot on top of the glyph's
+/// own alpha, leaving it almost invisible.
 pub(crate) fn status_presentation(
     status: Option<&str>,
     conclusion: Option<&str>,
@@ -152,15 +156,15 @@ pub(crate) fn status_presentation(
             "failure" | "timed_out" | "startup_failure" => ("dialog-error-symbolic", "error"),
             "cancelled" => ("process-stop-symbolic", "warning"),
             "action_required" | "stale" => ("dialog-warning-symbolic", "warning"),
-            "neutral" | "skipped" => ("media-skip-forward-symbolic", "dim-label"),
-            _ => ("dialog-question-symbolic", "dim-label"),
+            "neutral" | "skipped" => ("media-skip-forward-symbolic", "idle"),
+            _ => ("dialog-question-symbolic", "idle"),
         };
     }
 
     match status {
         Some("queued" | "waiting" | "pending" | "requested") => ("alarm-symbolic", "warning"),
         Some("in_progress") => ("media-playback-start-symbolic", "accent"),
-        _ => ("dialog-question-symbolic", "dim-label"),
+        _ => ("dialog-question-symbolic", "idle"),
     }
 }
 
@@ -226,7 +230,7 @@ mod tests {
 
         for conclusion in ["neutral", "skipped"] {
             let (_, class) = status_presentation(Some("completed"), Some(conclusion));
-            assert_eq!(class, "dim-label");
+            assert_eq!(class, "idle");
         }
     }
 

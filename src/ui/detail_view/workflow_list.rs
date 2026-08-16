@@ -193,6 +193,16 @@ pub(super) fn fetch_latest_runs_summary(context: &WorkflowListContext) {
     let repo = context.repo.clone();
     let header = context.header.clone();
     let store = context.store.clone();
+    let known_workflows: HashSet<i64> = collect_workflow_rows(&store)
+        .iter()
+        .flat_map(|row| {
+            let mut ids = Vec::new();
+            super::workflow_refresh::visit_workflow_expanders(row, &mut |_, workflow_id, _| {
+                ids.push(workflow_id);
+            });
+            ids
+        })
+        .collect();
 
     let (sender, receiver) = glib::MainContext::default()
         .channel::<Result<Vec<WorkflowRun>, String>>(glib::Priority::default());
@@ -209,12 +219,18 @@ pub(super) fn fetch_latest_runs_summary(context: &WorkflowListContext) {
         };
 
         // Repo-wide runs arrive newest-first; keep the first hit per workflow.
+        // Runs of workflows that no longer exist are ignored: GitHub keeps them,
+        // and recording them would inflate the header counters above the
+        // "N workflows" subtitle with no rebuild left to clear them.
         let mut seen = HashSet::new();
         let mut latest_runs: Vec<(i64, WorkflowRun)> = Vec::new();
         for run in runs {
             let Some(workflow_id) = run.workflow_id else {
                 continue;
             };
+            if !known_workflows.contains(&workflow_id) {
+                continue;
+            }
             if seen.insert(workflow_id) {
                 latest_runs.push((workflow_id, run));
             }

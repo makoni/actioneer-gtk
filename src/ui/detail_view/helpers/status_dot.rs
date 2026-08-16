@@ -17,6 +17,9 @@ pub(crate) fn build_status_dot(icon_name: &str, status_class: &str, size: i32) -
     dot.set_size_request(size, size);
     dot.set_valign(gtk::Align::Center);
     dot.set_halign(gtk::Align::Center);
+    // Screen readers skip an unnamed generic node; the role plus the label set
+    // by `describe_control` make the status readable without a mouse.
+    dot.set_accessible_role(gtk::AccessibleRole::Img);
     // With a single child, `homogeneous` hands it the box's full width, which is
     // what lets the glyph centre itself. Without it GtkBox only allocates the
     // icon its natural width and packs it against the leading edge, leaving the
@@ -96,6 +99,10 @@ mod tests {
         assert!(!dot.has_css_class("success"));
         assert!(dot.has_css_class("error"));
         assert_eq!(icon.icon_name().as_deref(), Some("dialog-error-symbolic"));
+
+        // The dot must be reachable by assistive tech: an unnamed generic node
+        // is pruned, which would leave a screen reader with no status at all.
+        assert_eq!(dot.accessible_role(), gtk::AccessibleRole::Img);
 
         // Empty status falls back to the neutral "idle" tint.
         set_status_dot_state(&dot, "media-playback-start-symbolic", "");
