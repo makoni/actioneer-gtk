@@ -10,7 +10,7 @@ use gtk4::prelude::*;
 use gtk4::{self as gtk, gio, glib};
 use std::collections::{HashMap, HashSet};
 use std::time::Instant;
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 
 impl RepoDetailPane {
     pub(super) fn workflow_list_context(&self) -> WorkflowListContext {
@@ -194,10 +194,20 @@ pub(super) fn fetch_latest_runs_summary(context: &WorkflowListContext) {
     let header = context.header.clone();
     let store = context.store.clone();
 
-    let (sender, receiver) =
-        glib::MainContext::default().channel::<Vec<WorkflowRun>>(glib::Priority::default());
+    let (sender, receiver) = glib::MainContext::default()
+        .channel::<Result<Vec<WorkflowRun>, String>>(glib::Priority::default());
 
-    receiver.attach(None, move |runs| {
+    receiver.attach(None, move |result| {
+        let runs = match result {
+            Ok(runs) => runs,
+            Err(error) => {
+                // Keep whatever the rows already show: blanking them would relabel
+                // the entire repository as "No runs yet" on a transient API error.
+                warn!("Failed to load repository run summary: {}", error);
+                return glib::ControlFlow::Break;
+            }
+        };
+
         // Repo-wide runs arrive newest-first; keep the first hit per workflow.
         let mut seen = HashSet::new();
         let mut latest_runs: Vec<(i64, WorkflowRun)> = Vec::new();
@@ -218,22 +228,26 @@ pub(super) fn fetch_latest_runs_summary(context: &WorkflowListContext) {
         for row in collect_workflow_rows(&store) {
             super::workflow_refresh::visit_workflow_expanders(
                 &row,
-                &mut |expander, workflow_id, _| {
+                &mut |expander, workflow_id, was_active| {
                     let Some(run_list) = super::workflow_refresh::run_list_for_expander(expander)
                     else {
                         return;
                     };
-                    let latest = header.latest_run(workflow_id);
-                    let summary = latest
-                        .as_ref()
-                        .and_then(|run| run_list.job_summaries().borrow().get(&run.id).cloned());
+                    // The summary only carries the newest run per workflow and is
+                    // capped at one page of repository runs, so a workflow missing
+                    // from it means "no data here", not "never ran" — leave the row
+                    // untouched rather than downgrading it.
+                    let Some(latest) = header.latest_run(workflow_id) else {
+                        return;
+                    };
+                    let summary = run_list.job_summaries().borrow().get(&latest.id).cloned();
                     if let Some(row_header) = run_list.row_header() {
-                        update_workflow_row_header(&row_header, latest.as_ref(), summary.as_ref());
+                        update_workflow_row_header(&row_header, Some(&latest), summary.as_ref());
                     }
-                    set_expander_active(
-                        expander,
-                        latest.as_ref().is_some_and(|run| run.is_active()),
-                    );
+                    // A per-workflow load may have seen an older run still running;
+                    // the newest run alone must not clear that flag, or background
+                    // polling would stop before that run finishes.
+                    set_expander_active(expander, was_active || latest.is_active());
                 },
             );
         }
@@ -246,7 +260,7 @@ pub(super) fn fetch_latest_runs_summary(context: &WorkflowListContext) {
         let runs = client_guard
             .list_repository_runs(&owner, &repo)
             .await
-            .unwrap_or_default();
+            .map_err(|error| error.to_string());
         let _ = sender.send(runs);
     });
 }

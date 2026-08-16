@@ -4,7 +4,7 @@ use crate::ui::detail_view::RunFilters;
 const MAX_VISIBLE_RUNS: usize = 10;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
-pub(super) enum RunStatusFilterKind {
+pub(crate) enum RunStatusFilterKind {
     Success,
     Failed,
     Running,
@@ -45,7 +45,7 @@ pub(super) fn summarize_visible_runs(
     }
 }
 
-pub(super) fn classify_run_status(run: &WorkflowRun) -> RunStatusFilterKind {
+pub(crate) fn classify_run_status(run: &WorkflowRun) -> RunStatusFilterKind {
     if run.is_active() {
         return RunStatusFilterKind::Running;
     }

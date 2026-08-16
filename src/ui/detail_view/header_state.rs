@@ -1,7 +1,9 @@
 use super::filter_controls::FilterChips;
+use super::helpers::runs::filters::{RunStatusFilterKind, classify_run_status};
 use crate::api::models::WorkflowRun;
 use crate::i18n::tr;
-use gtk4::{self as gtk};
+use gtk4::prelude::*;
+use gtk4::{self as gtk, glib};
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -47,11 +49,6 @@ impl DetailHeaderState {
     /// Marks the workflow list as freshly loaded and re-renders the subline.
     pub(crate) fn note_refreshed(&self) {
         *self.last_refresh.borrow_mut() = Some(Instant::now());
-        self.render_subtitle();
-    }
-
-    /// Re-renders the relative "updated …" part (called by a periodic timer).
-    pub(crate) fn refresh_relative_time(&self) {
         self.render_subtitle();
     }
 
@@ -110,37 +107,77 @@ impl DetailHeaderState {
         let (mut success, mut running, mut failed) = (0_usize, 0_usize, 0_usize);
         for run in self.latest_runs.borrow().values() {
             match classify_run(run) {
-                Some(StatusGroup::Success) => success += 1,
-                Some(StatusGroup::Running) => running += 1,
-                Some(StatusGroup::Failed) => failed += 1,
-                None => {}
+                StatusGroup::Success => success += 1,
+                StatusGroup::Running => running += 1,
+                StatusGroup::Failed => failed += 1,
             }
         }
         self.filter_chips.set_counts(success, running, failed);
     }
 
     fn render_subtitle(&self) {
-        let count = self.workflow_count.get();
-        let count_text = tr("{count} workflows").replace("{count}", count.to_string().as_str());
-
-        let updated_text = match *self.last_refresh.borrow() {
-            Some(instant) => {
-                let elapsed = instant.elapsed().as_secs();
-                let when = if elapsed < 60 {
-                    tr("Just now")
-                } else if elapsed < 3600 {
-                    tr("{count}m ago").replace("{count}", (elapsed / 60).to_string().as_str())
-                } else {
-                    tr("{count}h ago").replace("{count}", (elapsed / 3600).to_string().as_str())
-                };
-                tr("Updated {when}").replace("{when}", when.as_str())
-            }
-            None => tr("Not updated yet"),
-        };
-
-        self.subtitle_label
-            .set_text(&format!("{count_text} · {updated_text}"));
+        self.subtitle_label.set_text(&subtitle_text(
+            self.workflow_count.get(),
+            *self.last_refresh.borrow(),
+        ));
     }
+
+    /// Handle for the periodic "updated …" refresh. It holds the label weakly so
+    /// the timer stops once the pane is gone instead of pinning it alive.
+    pub(crate) fn subtitle_ticker(&self) -> SubtitleTicker {
+        SubtitleTicker {
+            subtitle_label: self.subtitle_label.downgrade(),
+            workflow_count: self.workflow_count.clone(),
+            last_refresh: self.last_refresh.clone(),
+        }
+    }
+}
+
+/// Weak-referencing view of the header subline, used by the 30s ticker.
+pub(crate) struct SubtitleTicker {
+    subtitle_label: glib::WeakRef<gtk::Label>,
+    workflow_count: Rc<Cell<usize>>,
+    last_refresh: Rc<RefCell<Option<Instant>>>,
+}
+
+impl SubtitleTicker {
+    /// Re-renders the subline. Returns `false` once the label has been dropped,
+    /// which is the signal for the caller to stop ticking.
+    pub(crate) fn tick(&self) -> bool {
+        let Some(label) = self.subtitle_label.upgrade() else {
+            return false;
+        };
+        label.set_text(&subtitle_text(
+            self.workflow_count.get(),
+            *self.last_refresh.borrow(),
+        ));
+        true
+    }
+}
+
+fn subtitle_text(count: usize, last_refresh: Option<Instant>) -> String {
+    let count_text = if count == 1 {
+        tr("1 workflow")
+    } else {
+        tr("{count} workflows").replace("{count}", count.to_string().as_str())
+    };
+
+    let updated_text = match last_refresh {
+        Some(instant) => {
+            let elapsed = instant.elapsed().as_secs();
+            let when = if elapsed < 60 {
+                tr("Just now")
+            } else if elapsed < 3600 {
+                tr("{count}m ago").replace("{count}", (elapsed / 60).to_string().as_str())
+            } else {
+                tr("{count}h ago").replace("{count}", (elapsed / 3600).to_string().as_str())
+            };
+            tr("Updated {when}").replace("{when}", when.as_str())
+        }
+        None => tr("Not updated yet"),
+    };
+
+    format!("{count_text} · {updated_text}")
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -151,14 +188,16 @@ pub(crate) enum StatusGroup {
 }
 
 /// Buckets a workflow's latest run into the header counter groups.
-pub(crate) fn classify_run(run: &WorkflowRun) -> Option<StatusGroup> {
-    if run.is_active() {
-        return Some(StatusGroup::Running);
-    }
-    match run.conclusion.as_deref() {
-        Some("success") => Some(StatusGroup::Success),
-        Some("failure") => Some(StatusGroup::Failed),
-        _ => None,
+///
+/// This delegates to the same classifier the status chips actually filter on,
+/// so the counts and the filtering can never drift apart: every run lands in
+/// exactly one group (anything finished that is not a success counts as
+/// failed — cancelled, timed out, startup failure and friends included).
+pub(crate) fn classify_run(run: &WorkflowRun) -> StatusGroup {
+    match classify_run_status(run) {
+        RunStatusFilterKind::Success => StatusGroup::Success,
+        RunStatusFilterKind::Running => StatusGroup::Running,
+        RunStatusFilterKind::Failed => StatusGroup::Failed,
     }
 }
 
@@ -191,24 +230,47 @@ mod tests {
     fn classify_run_buckets_statuses() {
         assert_eq!(
             classify_run(&run_stub(Some("completed"), Some("success"))),
-            Some(StatusGroup::Success)
+            StatusGroup::Success
         );
         assert_eq!(
             classify_run(&run_stub(Some("completed"), Some("failure"))),
-            Some(StatusGroup::Failed)
+            StatusGroup::Failed
         );
         assert_eq!(
             classify_run(&run_stub(Some("in_progress"), None)),
-            Some(StatusGroup::Running)
+            StatusGroup::Running
         );
         assert_eq!(
             classify_run(&run_stub(Some("queued"), None)),
-            Some(StatusGroup::Running)
+            StatusGroup::Running
         );
-        assert_eq!(
-            classify_run(&run_stub(Some("completed"), Some("cancelled"))),
-            None
+    }
+
+    #[test]
+    fn classify_run_counts_non_success_conclusions_as_failed() {
+        // These used to fall through to "no group", so the red chip could read 0
+        // while unchecking it still hid the run.
+        for conclusion in [
+            "cancelled",
+            "timed_out",
+            "startup_failure",
+            "action_required",
+            "neutral",
+            "skipped",
+        ] {
+            assert_eq!(
+                classify_run(&run_stub(Some("completed"), Some(conclusion))),
+                StatusGroup::Failed,
+                "conclusion {conclusion} should be counted as failed"
+            );
+        }
+    }
+
+    #[test]
+    fn subtitle_uses_singular_workflow_form() {
+        assert!(subtitle_text(1, None).starts_with(&tr("1 workflow")));
+        assert!(
+            subtitle_text(2, None).starts_with(&tr("{count} workflows").replace("{count}", "2"))
         );
-        assert_eq!(classify_run(&run_stub(None, None)), None);
     }
 }

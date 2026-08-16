@@ -9,6 +9,9 @@ use libadwaita as adw;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
+/// Callback fired after a pill filter changes (used to restore the selection).
+type FilterChangedHandler = Rc<RefCell<Option<Box<dyn Fn()>>>>;
+
 #[derive(Clone)]
 pub struct SidebarPanel {
     clamp: adw::Clamp,
@@ -21,6 +24,7 @@ pub struct SidebarPanel {
     filter_query: Rc<RefCell<String>>,
     #[allow(dead_code)] // read by tests
     filter_mode: Rc<Cell<SidebarFilter>>,
+    filter_changed: FilterChangedHandler,
 }
 
 impl SidebarPanel {
@@ -95,7 +99,8 @@ impl SidebarPanel {
         search_entry.set_margin_start(12);
         search_entry.set_margin_end(12);
 
-        let pills = build_filter_pills(&filter, &filter_mode, &selection);
+        let filter_changed: FilterChangedHandler = Rc::new(RefCell::new(None));
+        let pills = build_filter_pills(&filter, &filter_mode, &selection, &filter_changed);
         pills.set_margin_start(12);
         pills.set_margin_end(12);
         pills.set_margin_bottom(10);
@@ -132,7 +137,14 @@ impl SidebarPanel {
             filter,
             filter_query,
             filter_mode,
+            filter_changed,
         }
+    }
+
+    /// Registers a callback fired after a pill filter changes, so the window can
+    /// re-apply the selection for the repo that is still open in the detail pane.
+    pub fn connect_filter_changed<F: Fn() + 'static>(&self, callback: F) {
+        *self.filter_changed.borrow_mut() = Some(Box::new(callback));
     }
 
     pub fn clamp(&self) -> adw::Clamp {
@@ -170,6 +182,7 @@ fn build_filter_pills(
     filter: &gtk::CustomFilter,
     mode: &Rc<Cell<SidebarFilter>>,
     selection: &gtk::SingleSelection,
+    filter_changed: &FilterChangedHandler,
 ) -> gtk::Box {
     let pills = gtk::Box::new(gtk::Orientation::Horizontal, 6);
 
@@ -189,6 +202,7 @@ fn build_filter_pills(
         let filter = filter.clone();
         let mode = mode.clone();
         let selection = selection.clone();
+        let filter_changed = filter_changed.clone();
         pill.connect_toggled(move |btn| {
             if btn.is_active() {
                 mode.set(pill_mode);
@@ -196,6 +210,10 @@ fn build_filter_pills(
                 // stale index could paint selection styling onto a header row.
                 selection.set_selected(gtk::INVALID_LIST_POSITION);
                 filter.changed(gtk::FilterChange::Different);
+                // Re-select the repo that is still open, if it survived the filter.
+                if let Some(callback) = filter_changed.borrow().as_ref() {
+                    callback();
+                }
             }
         });
     }

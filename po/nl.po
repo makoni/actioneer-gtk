@@ -842,6 +842,9 @@ msgstr "Automatisch vernieuwen is uitgeschakeld."
 msgid "Data refreshes automatically every {seconds} seconds."
 msgstr "Gegevens worden elke {seconds} seconden automatisch vernieuwd."
 
+msgid "1 workflow"
+msgstr "1 workflow"
+
 msgid "{count} workflows"
 msgstr "{count} workflows"
 

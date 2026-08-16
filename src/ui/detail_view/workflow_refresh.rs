@@ -337,15 +337,19 @@ fn refresh_workflows_silent_with_state(
             header: context.header.clone(),
         };
 
-        context.header.note_refreshed();
-
         match result {
             Ok(wf_list) => {
+                context.header.note_refreshed();
                 let current = workflows.lock().clone();
                 if super::workflow_list::workflows_differ(current.as_ref(), wf_list.as_ref()) {
                     info!("Silent refresh detected workflow changes");
                     *workflows.lock() = wf_list.clone();
                     super::workflow_list::update_workflows_list(&ui_context, wf_list.as_ref());
+                } else {
+                    // The workflow set is unchanged, so no rows are rebuilt — but
+                    // their status dots and meta lines still need the newest runs,
+                    // otherwise a collapsed row stays stale until a manual refresh.
+                    super::workflow_list::fetch_latest_runs_summary(&ui_context);
                 }
             }
             Err(e) => {

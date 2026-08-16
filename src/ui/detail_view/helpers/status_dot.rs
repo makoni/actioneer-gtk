@@ -17,9 +17,17 @@ pub(crate) fn build_status_dot(icon_name: &str, status_class: &str, size: i32) -
     dot.set_size_request(size, size);
     dot.set_valign(gtk::Align::Center);
     dot.set_halign(gtk::Align::Center);
+    // With a single child, `homogeneous` hands it the box's full width, which is
+    // what lets the glyph centre itself. Without it GtkBox only allocates the
+    // icon its natural width and packs it against the leading edge, leaving the
+    // glyph visibly off-centre inside the circle. (Expand flags would work too,
+    // but they propagate to the dot and stretch it inside the row.)
+    dot.set_homogeneous(true);
 
     let icon = gtk::Image::from_icon_name(icon_name);
     icon.set_pixel_size(icon_pixel_size(size));
+    icon.set_halign(gtk::Align::Center);
+    icon.set_valign(gtk::Align::Center);
     dot.append(&icon);
 
     set_status_dot_state(&dot, icon_name, status_class);
@@ -75,6 +83,14 @@ mod tests {
             .and_then(|child| child.downcast::<gtk::Image>().ok())
             .expect("status dot should contain an icon");
         assert_eq!(icon.icon_name().as_deref(), Some("object-select-symbolic"));
+
+        // The glyph must be centred inside the fixed-size circle, not packed
+        // against its leading edge — and the dot itself must not expand, or it
+        // would push the row's title sideways.
+        assert!(dot.is_homogeneous());
+        assert_eq!(icon.halign(), gtk::Align::Center);
+        assert_eq!(icon.valign(), gtk::Align::Center);
+        assert!(!dot.hexpands());
 
         set_status_dot_state(&dot, "dialog-error-symbolic", "error");
         assert!(!dot.has_css_class("success"));

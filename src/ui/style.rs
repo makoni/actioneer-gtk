@@ -111,9 +111,14 @@ const APP_CSS: &str = r#"
     background-color: alpha(currentColor, 0.045);
 }
 
+/* Recessed surfaces use a black alpha rather than a scheme-specific override:
+   GTK's `prefers-color-scheme` media query does not follow AdwStyleManager for
+   app-level providers, so a @media block here would apply in the wrong scheme
+   (and is unsupported altogether on the GTK 4.14 snap runtime). A light black
+   wash reads as "deeper than the card" in both light and dark. */
 .workflow-item.expanded,
 .workflow-item.expanded:hover {
-    background-color: alpha(black, 0.16);
+    background-color: alpha(black, 0.12);
 }
 
 .workflow-item.expanded .workflow-detail {
@@ -147,7 +152,7 @@ const APP_CSS: &str = r#"
 }
 
 .runs-card {
-    background-color: alpha(black, 0.22);
+    background-color: alpha(black, 0.14);
     border: 1px solid alpha(currentColor, 0.06);
     border-radius: 10px;
 }
@@ -217,8 +222,8 @@ const APP_CSS: &str = r#"
 }
 
 .row-action-btn.run-action:hover {
-    background-color: @accent_color;
-    color: white;
+    background-color: @accent_bg_color;
+    color: @accent_fg_color;
 }
 
 /* Pane header action buttons (refresh / favorite). */
@@ -307,29 +312,6 @@ const APP_CSS: &str = r#"
     color: @error_color;
 }
 
-/* Light-scheme variants: replace white-alpha overlays with dark-alpha ones. */
-.workflow-item.expanded,
-.workflow-item.expanded:hover {
-    background-color: alpha(black, 0.16);
-}
-
-@media not (prefers-color-scheme: dark) {
-    .workflow-item.expanded,
-    .workflow-item.expanded:hover {
-        background-color: alpha(black, 0.045);
-    }
-
-    .runs-card {
-        background-color: alpha(black, 0.045);
-        border-color: alpha(black, 0.08);
-    }
-
-    .job-card {
-        background-color: alpha(black, 0.02);
-        border-color: alpha(black, 0.08);
-    }
-}
-
 /* Sidebar polish: pill filters + solid-accent selection. */
 .filter-pill {
     border-radius: 999px;
@@ -346,19 +328,22 @@ const APP_CSS: &str = r#"
     font-weight: 700;
 }
 
+/* `@accent_color` is the *foreground* accent and is lightened in dark mode, so
+   using it as a fill with hardcoded white text drops below WCAG AA. The
+   background/foreground pair keeps contrast correct in both schemes. */
 .sidebar-surface listview row:selected,
 .sidebar-surface listview row:selected:hover {
-    background-color: @accent_color;
-    color: white;
+    background-color: @accent_bg_color;
+    color: @accent_fg_color;
     border-radius: 9px;
 }
 
 .sidebar-surface listview row:selected .dim-label {
-    color: alpha(white, 0.72);
+    color: alpha(@accent_fg_color, 0.72);
 }
 
 .sidebar-surface listview row:selected image {
-    color: white;
+    color: @accent_fg_color;
 }
 
 .sidebar-surface listview row:hover:not(:selected) {

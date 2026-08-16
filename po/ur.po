@@ -845,6 +845,9 @@ msgstr "خودکار تازہ کاری غیر فعال ہے۔"
 msgid "Data refreshes automatically every {seconds} seconds."
 msgstr "ڈیٹا ہر {seconds} سیکنڈ میں خودکار طور پر تازہ ہوتا ہے۔"
 
+msgid "1 workflow"
+msgstr "1 ورک فلو"
+
 msgid "{count} workflows"
 msgstr "{count} ورک فلو"
 

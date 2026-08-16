@@ -1,6 +1,6 @@
 mod actions;
 mod digest;
-mod filters;
+pub(crate) mod filters;
 mod list;
 mod load;
 mod row;

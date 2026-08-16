@@ -64,14 +64,28 @@ fn running_duration_string(started_at: Option<&String>) -> Option<String> {
     }
 }
 
+/// `started_at` is also set while a job/step is still queued, so the wall-clock
+/// fallback is only correct once it is actually executing — otherwise a queued
+/// item would show a ticking timer, and one that never completed would show a
+/// value that keeps growing on every refresh.
+fn is_in_progress(status: Option<&str>) -> bool {
+    matches!(status, Some("in_progress"))
+}
+
 fn job_duration_label_text(job: &Job) -> Option<String> {
-    job.duration_string()
-        .or_else(|| running_duration_string(job.started_at.as_ref()))
+    job.duration_string().or_else(|| {
+        is_in_progress(job.status.as_deref())
+            .then(|| running_duration_string(job.started_at.as_ref()))
+            .flatten()
+    })
 }
 
 fn step_duration_label_text(step: &JobStep) -> Option<String> {
-    step.duration_string()
-        .or_else(|| running_duration_string(step.started_at.as_ref()))
+    step.duration_string().or_else(|| {
+        is_in_progress(step.status.as_deref())
+            .then(|| running_duration_string(step.started_at.as_ref()))
+            .flatten()
+    })
 }
 
 pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -> gtk::Box {
@@ -435,13 +449,14 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
             Ok(jobs) if jobs.is_empty() => {
                 job_summaries.borrow_mut().remove(&run_id);
                 update_workflow_progress(&expander, run_id, &job_summaries);
-                if !background {
-                    let no_jobs = tr("No jobs found");
-                    let label = gtk::Label::new(Some(no_jobs.as_str()));
-                    label.add_css_class("dim-label");
-                    label.set_halign(gtk::Align::Start);
-                    jobs_box.append(&label);
-                }
+                // The placeholder must be added on background refreshes too: the
+                // reload guards key off this box's first child, so leaving it
+                // empty would strand the panel blank and unreloadable.
+                let no_jobs = tr("No jobs found");
+                let label = gtk::Label::new(Some(no_jobs.as_str()));
+                label.add_css_class("dim-label");
+                label.set_halign(gtk::Align::Start);
+                jobs_box.append(&label);
             }
             Ok(jobs) => {
                 let summary = JobSummary::from_jobs(jobs.as_ref());
@@ -616,6 +631,67 @@ mod tests {
     use std::cell::RefCell;
     use std::collections::HashMap;
     use std::rc::Rc;
+
+    fn step_stub(status: Option<&str>, started_at: Option<&str>) -> JobStep {
+        JobStep {
+            name: Some("Build".into()),
+            status: status.map(str::to_string),
+            conclusion: None,
+            number: Some(7),
+            started_at: started_at.map(str::to_string),
+            completed_at: None,
+        }
+    }
+
+    #[test]
+    fn duration_fallback_only_applies_while_running() {
+        // A queued step carries `started_at` (queue time) but must not tick.
+        assert_eq!(
+            step_duration_label_text(&step_stub(Some("queued"), Some("2020-01-01T00:00:00Z"))),
+            None
+        );
+        // A step abandoned without `completed_at` must not grow forever either.
+        assert_eq!(
+            step_duration_label_text(&step_stub(Some("completed"), Some("2020-01-01T00:00:00Z"))),
+            None
+        );
+        // An executing step still shows elapsed wall-clock time.
+        assert!(
+            step_duration_label_text(&step_stub(
+                Some("in_progress"),
+                Some("2020-01-01T00:00:00Z")
+            ))
+            .is_some()
+        );
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn step_rows_use_contiguous_display_numbers() {
+        let Some(_guard) = gtk_test_guard("step_rows_use_contiguous_display_numbers") else {
+            return;
+        };
+
+        // GitHub step numbers can be sparse, so rows are numbered by position.
+        let row = create_job_step_row(&step_stub(Some("completed"), None), 3);
+        let index_label = row
+            .first_child()
+            .and_then(|child| child.downcast::<gtk::Label>().ok())
+            .expect("step row should start with its index label");
+        assert_eq!(index_label.text().as_str(), "3");
+
+        let unnamed = JobStep {
+            name: None,
+            ..step_stub(Some("queued"), None)
+        };
+        let row = create_job_step_row(&unnamed, 4);
+        let name_label = row
+            .last_child()
+            .and_then(|child| child.prev_sibling())
+            .and_then(|child| child.downcast::<gtk::Label>().ok())
+            .expect("step row should carry a name label");
+        assert_eq!(name_label.text().as_str(), "#4");
+    }
 
     #[test]
     #[ignore = "requires GTK display"]

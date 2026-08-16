@@ -340,14 +340,17 @@ impl RepoDetailPane {
         self.connect_refresh_button(&refresh_button);
         self.connect_workflow_selected();
 
-        // Keep the "updated …" subline fresh.
-        let header = self.header.clone();
+        // Keep the "updated …" subline fresh. The ticker holds the label weakly
+        // (via SubtitleTicker) rather than cloning the header: the header owns
+        // the filter chips, whose handlers own a pane clone, so a strong capture
+        // here would keep the whole pane alive on paths that close the window
+        // without calling `deactivate()` (e.g. the language-change reload).
+        let ticker = self.header.subtitle_ticker();
         let refresh_active = self.refresh_active.clone();
         glib::timeout_add_seconds_local(30, move || {
-            if !refresh_active.load(Ordering::Relaxed) {
+            if !refresh_active.load(Ordering::Relaxed) || !ticker.tick() {
                 return glib::ControlFlow::Break;
             }
-            header.refresh_relative_time();
             glib::ControlFlow::Continue
         });
     }

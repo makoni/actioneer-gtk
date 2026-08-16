@@ -95,13 +95,18 @@ pub(crate) fn create_run_expander_row(
     };
     expander.set_child(Some(&jobs_box));
 
-    // Highlight the row while the run is expanded.
-    let run_box_for_state = run_box.clone();
+    // Highlight the row while the run is expanded. The reference must be weak:
+    // `run_box` owns the expander, so a strong clone here would form a cycle
+    // that keeps the row (and its refresh timer) alive after it is discarded.
+    let run_box_weak = run_box.downgrade();
     expander.connect_expanded_notify(move |exp| {
+        let Some(run_box) = run_box_weak.upgrade() else {
+            return;
+        };
         if exp.is_expanded() {
-            run_box_for_state.add_css_class("expanded");
+            run_box.add_css_class("expanded");
         } else {
-            run_box_for_state.remove_css_class("expanded");
+            run_box.remove_css_class("expanded");
         }
     });
 

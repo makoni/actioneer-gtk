@@ -136,86 +136,68 @@ pub(crate) fn populate_run_meta(container: &gtk::Box, run: &WorkflowRun) {
     container.set_visible(container.first_child().is_some());
 }
 
-pub(crate) fn get_run_status_icon(run: &WorkflowRun) -> &'static str {
-    if let Some(conclusion) = run.conclusion.as_deref() {
-        match conclusion {
-            "success" => "object-select-symbolic",
-            "failure" => "dialog-error-symbolic",
-            "cancelled" => "process-stop-symbolic",
-            _ => "dialog-question-symbolic",
-        }
-    } else if let Some(status) = run.status.as_deref() {
-        match status {
-            "queued" | "waiting" => "alarm-symbolic",
-            "in_progress" => "media-playback-start-symbolic",
-            _ => "dialog-question-symbolic",
-        }
-    } else {
-        "dialog-question-symbolic"
+/// Maps a GitHub status/conclusion pair onto the icon and tint class used by the
+/// status dots.
+///
+/// Every documented conclusion is handled: the dot is now the only status signal
+/// on a row, so an unmapped one (e.g. `timed_out`) would silently render as the
+/// neutral "unknown" dot and hide a real failure.
+pub(crate) fn status_presentation(
+    status: Option<&str>,
+    conclusion: Option<&str>,
+) -> (&'static str, &'static str) {
+    if let Some(conclusion) = conclusion {
+        return match conclusion {
+            "success" => ("object-select-symbolic", "success"),
+            "failure" | "timed_out" | "startup_failure" => ("dialog-error-symbolic", "error"),
+            "cancelled" => ("process-stop-symbolic", "warning"),
+            "action_required" | "stale" => ("dialog-warning-symbolic", "warning"),
+            "neutral" | "skipped" => ("media-skip-forward-symbolic", "dim-label"),
+            _ => ("dialog-question-symbolic", "dim-label"),
+        };
     }
+
+    match status {
+        Some("queued" | "waiting" | "pending" | "requested") => ("alarm-symbolic", "warning"),
+        Some("in_progress") => ("media-playback-start-symbolic", "accent"),
+        _ => ("dialog-question-symbolic", "dim-label"),
+    }
+}
+
+pub(crate) fn get_run_status_icon(run: &WorkflowRun) -> &'static str {
+    status_presentation(run.status.as_deref(), run.conclusion.as_deref()).0
 }
 
 pub(crate) fn get_run_status_class(run: &WorkflowRun) -> &'static str {
-    if let Some(conclusion) = run.conclusion.as_deref() {
-        return match conclusion {
-            "success" => "success",
-            "failure" => "error",
-            "cancelled" => "warning",
-            _ => "dim-label",
-        };
-    }
-    if let Some("in_progress") = run.status.as_deref() {
-        return "accent";
-    }
-    "dim-label"
+    status_presentation(run.status.as_deref(), run.conclusion.as_deref()).1
 }
 
 pub(crate) fn get_job_status_icon(job: &Job) -> &'static str {
-    if let Some(conclusion) = job.conclusion.as_deref() {
-        match conclusion {
-            "success" => "object-select-symbolic",
-            "failure" => "dialog-error-symbolic",
-            "cancelled" => "process-stop-symbolic",
-            _ => "dialog-question-symbolic",
-        }
-    } else if let Some(status) = job.status.as_deref() {
-        match status {
-            "queued" | "waiting" => "alarm-symbolic",
-            "in_progress" => "media-playback-start-symbolic",
-            _ => "dialog-question-symbolic",
-        }
-    } else {
-        "dialog-question-symbolic"
-    }
+    status_presentation(job.status.as_deref(), job.conclusion.as_deref()).0
 }
 
 pub(crate) fn get_job_status_class(job: &Job) -> &'static str {
-    if let Some(conclusion) = job.conclusion.as_deref() {
-        return match conclusion {
-            "success" => "success",
-            "failure" => "error",
-            "cancelled" => "warning",
-            _ => "",
-        };
-    }
-    if let Some("in_progress") = job.status.as_deref() {
-        return "accent";
-    }
-    ""
+    status_presentation(job.status.as_deref(), job.conclusion.as_deref()).1
 }
 
+/// Human-readable status for a workflow's latest run, paired with the same tint
+/// class the status dot uses (so the tooltip and the dot can never disagree).
 pub(crate) fn workflow_status_text(latest_run: &WorkflowRun) -> (String, &'static str) {
-    match (
-        latest_run.status.as_deref(),
-        latest_run.conclusion.as_deref(),
-    ) {
-        (Some("completed"), Some("success")) => (tr("Success"), "success"),
-        (Some("completed"), Some("failure")) => (tr("Failed"), "error"),
-        (Some("completed"), Some("cancelled")) => (tr("Cancelled"), "warning"),
-        (Some("in_progress"), _) => (tr("In Progress"), "accent"),
-        (Some("queued"), _) | (Some("waiting"), _) => (tr("Queued"), "warning"),
-        _ => (tr("Unknown"), "dim-label"),
-    }
+    let class = get_run_status_class(latest_run);
+
+    let text = if latest_run.conclusion.is_some() {
+        latest_run.friendly_conclusion()
+    } else {
+        match latest_run.status.as_deref() {
+            Some("in_progress") => tr("In Progress"),
+            Some("queued" | "waiting" | "pending" | "requested") => tr("Queued"),
+            _ => latest_run.friendly_status(),
+        }
+    };
+
+    let text = if text.is_empty() { tr("Unknown") } else { text };
+
+    (text, class)
 }
 
 #[cfg(test)]
@@ -225,6 +207,43 @@ mod tests {
     use crate::i18n::{apply_language_preference, i18n_test_guard, init};
     use crate::preferences::LanguagePreference;
     use crate::ui::test_helpers::gtk_test_guard;
+
+    #[test]
+    fn status_presentation_covers_every_failure_conclusion() {
+        // The dot is the only status signal on a row, so none of these may fall
+        // through to the neutral "unknown" presentation.
+        for conclusion in ["failure", "timed_out", "startup_failure"] {
+            let (icon, class) = status_presentation(Some("completed"), Some(conclusion));
+            assert_eq!(class, "error", "{conclusion} should tint as an error");
+            assert_eq!(icon, "dialog-error-symbolic");
+        }
+
+        for conclusion in ["cancelled", "action_required", "stale"] {
+            let (icon, class) = status_presentation(Some("completed"), Some(conclusion));
+            assert_eq!(class, "warning", "{conclusion} should tint as a warning");
+            assert_ne!(icon, "dialog-question-symbolic");
+        }
+
+        for conclusion in ["neutral", "skipped"] {
+            let (_, class) = status_presentation(Some("completed"), Some(conclusion));
+            assert_eq!(class, "dim-label");
+        }
+    }
+
+    #[test]
+    fn status_presentation_maps_pending_states() {
+        assert_eq!(
+            status_presentation(Some("in_progress"), None),
+            ("media-playback-start-symbolic", "accent")
+        );
+        for status in ["queued", "waiting", "pending", "requested"] {
+            assert_eq!(
+                status_presentation(Some(status), None),
+                ("alarm-symbolic", "warning"),
+                "{status} should read as pending"
+            );
+        }
+    }
 
     fn run_stub() -> WorkflowRun {
         WorkflowRun {

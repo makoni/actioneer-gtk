@@ -181,6 +181,9 @@ msgstr ""
 msgid "Data refreshes automatically every {seconds} seconds."
 msgstr ""
 
+msgid "1 workflow"
+msgstr ""
+
 #: src/ui/detail_view/header_state.rs:125
 msgid "{count} workflows"
 msgstr ""

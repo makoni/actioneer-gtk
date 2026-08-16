@@ -19,6 +19,13 @@ impl MainWindow {
             panel.update_filter_query(&text);
             window.restore_repo_selection_async();
         });
+
+        // The pill filters reshuffle the same list, so they need the same
+        // selection restore the search path performs.
+        let window = self.clone();
+        self.sidebar_panel.connect_filter_changed(move || {
+            window.restore_selection_after_filter_async();
+        });
     }
 
     pub(super) fn connect_repo_selection(&self) {
@@ -99,6 +106,27 @@ impl MainWindow {
         let window = self.clone();
         glib::idle_add_local_once(move || {
             window.restore_repo_selection_now();
+        });
+    }
+
+    /// Re-applies the sidebar highlight after a pill filter changed.
+    ///
+    /// Unlike the full restore, this never clears the selection: a repo hidden by
+    /// the filter is still the one open in the detail pane, and closing that pane
+    /// because the sidebar list narrowed would lose the user's place.
+    pub(super) fn restore_selection_after_filter_async(&self) {
+        let window = self.clone();
+        glib::idle_add_local_once(move || {
+            let Some(target) = *window.selected_repo_id.lock() else {
+                return;
+            };
+            let Some(index) = find_repo_index(&window.repo_filter_model, target) else {
+                return;
+            };
+
+            *window.handling_selection.lock() = true;
+            window.repo_selection.set_selected(index);
+            *window.handling_selection.lock() = false;
         });
     }
 

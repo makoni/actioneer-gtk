@@ -850,6 +850,9 @@ msgstr "Автообновление отключено."
 msgid "Data refreshes automatically every {seconds} seconds."
 msgstr "Данные обновляются автоматически каждые {seconds} секунд."
 
+msgid "1 workflow"
+msgstr "1 воркфлоу"
+
 msgid "{count} workflows"
 msgstr "{count} воркфлоу"
 

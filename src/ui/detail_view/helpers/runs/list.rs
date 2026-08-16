@@ -312,6 +312,9 @@ impl WorkflowRunListModel {
         F: Fn() + 'static,
     {
         self.header_label.set_visible(false);
+        // The external counts label belongs to the loaded state; leaving it up
+        // would advertise "Showing 5 of 12" next to an error message.
+        self.set_counts_visible(false);
         self.list_store.remove_all();
         self.error_detail.set_text(&detail);
         *self.retry_handler.borrow_mut() = Some(Box::new(retry));
@@ -526,7 +529,9 @@ fn build_error_placeholder() -> (gtk::Widget, gtk::Label, RetryHandler) {
 
 /// Short "shown N of M" variant for the workflow sub-header.
 fn format_runs_counts(visible_count: usize, filtered_total: usize, overall_total: usize) -> String {
-    if filtered_total == overall_total || visible_count == filtered_total {
+    // Only claim the overall total when no filter is narrowing the set: with
+    // filters on, "of {overall}" would read as if the cap hid the rest.
+    if filtered_total == overall_total {
         tr("Showing {visible} of {overall}")
             .replace("{visible}", visible_count.to_string().as_str())
             .replace("{overall}", overall_total.to_string().as_str())

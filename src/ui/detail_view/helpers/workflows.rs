@@ -528,13 +528,18 @@ pub(crate) fn create_workflow_expander_row(
         update_workflow_row_header(&row_header, latest.as_ref(), summary.as_ref());
     }
 
-    // Highlight the row while the workflow is expanded.
-    let main_box_for_state = main_box.clone();
+    // Highlight the row while the workflow is expanded. The reference must be
+    // weak: `main_box` owns the expander, so a strong clone here would form a
+    // cycle that keeps the row (and its elapsed ticker) alive after a rebuild.
+    let main_box_weak = main_box.downgrade();
     expander.connect_expanded_notify(move |exp| {
+        let Some(main_box) = main_box_weak.upgrade() else {
+            return;
+        };
         if exp.is_expanded() {
-            main_box_for_state.add_css_class("expanded");
+            main_box.add_css_class("expanded");
         } else {
-            main_box_for_state.remove_css_class("expanded");
+            main_box.remove_css_class("expanded");
         }
     });
 
@@ -565,7 +570,7 @@ pub(crate) fn create_workflow_expander_row(
         });
     }
 
-    // Open the logs of the latest run's first job.
+    // Open the logs of the latest run's most relevant job.
     {
         let header_state = context.header.clone();
         let workflow_id_for_logs = workflow.id;
@@ -575,11 +580,15 @@ pub(crate) fn create_workflow_expander_row(
         let repo_model_for_logs = repo_model.clone();
         let parent_window_for_logs = parent_window.clone();
         let toast_overlay_for_logs = toast_overlay.clone();
-        logs_btn.connect_clicked(move |_| {
+        logs_btn.connect_clicked(move |btn| {
             let Some(run) = header_state.latest_run(workflow_id_for_logs) else {
                 toast_overlay_for_logs.add_toast(adw::Toast::new(tr("No runs yet").as_str()));
                 return;
             };
+
+            // Guard against a double click opening two log windows.
+            btn.set_sensitive(false);
+            let btn_for_result = btn.clone();
 
             let (sender, receiver) =
                 glib::MainContext::default()
@@ -593,9 +602,25 @@ pub(crate) fn create_workflow_expander_row(
             let client_for_window = client_for_logs.clone();
             let run_title = super::formatting::format_run_title(&run);
             receiver.attach(None, move |result| {
+                btn_for_result.set_sensitive(true);
                 match result {
                     Ok(jobs) => {
-                        if let Some(job) = jobs.into_iter().next() {
+                        // Prefer the job the user most likely wants to read: the
+                        // one that failed, else the one still running, else the
+                        // first. Opening jobs[0] would show a passing log next to
+                        // a red row.
+                        let pick = jobs
+                            .iter()
+                            .position(|job| {
+                                matches!(job.conclusion.as_deref(), Some(c) if c != "success" && c != "skipped" && c != "neutral")
+                            })
+                            .or_else(|| {
+                                jobs.iter()
+                                    .position(|job| job.conclusion.is_none())
+                            })
+                            .unwrap_or(0);
+
+                        if let Some(job) = jobs.into_iter().nth(pick) {
                             let logs_window = JobLogsWindow::new(
                                 &parent_window,
                                 repo_model.clone(),

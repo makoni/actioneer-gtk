@@ -845,6 +845,9 @@ msgstr "自动刷新已禁用。"
 msgid "Data refreshes automatically every {seconds} seconds."
 msgstr "数据每 {seconds} 秒自动刷新一次。"
 
+msgid "1 workflow"
+msgstr "1 个工作流"
+
 msgid "{count} workflows"
 msgstr "{count} 个工作流"
 

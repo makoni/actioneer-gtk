@@ -845,6 +845,9 @@ msgstr "A atualização automática está desativada."
 msgid "Data refreshes automatically every {seconds} seconds."
 msgstr "Os dados são atualizados automaticamente a cada {seconds} segundos."
 
+msgid "1 workflow"
+msgstr "1 fluxo de trabalho"
+
 msgid "{count} workflows"
 msgstr "{count} fluxos de trabalho"
 

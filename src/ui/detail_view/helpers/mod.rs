@@ -2,7 +2,7 @@ mod context;
 mod formatting;
 mod jobs;
 mod run_loader;
-mod runs;
+pub(crate) mod runs;
 mod status_dot;
 mod workflow_follow_up;
 mod workflows;

@@ -71,61 +71,84 @@ pub fn rebuild_repo_list(store: gio::ListStore, context: RepoListRenderContext) 
     let workflow_snapshot_for_rows = workflow_snapshot.clone();
     let store_ref = store.clone();
 
-    let append_section =
-        move |title: &str, icon_name: &str, repos: Vec<Repo>, favorites_snapshot: &HashSet<i64>| {
-            if repos.is_empty() {
-                return;
-            }
+    let append_section = move |title: &str, repos: Vec<Repo>, favorites_snapshot: &HashSet<i64>| {
+        if repos.is_empty() {
+            return;
+        }
 
-            let header = create_section_header(title, icon_name);
-            store_ref.append(&header);
-
-            let grouped = group_repos_by_owner(repos);
-
-            for (owner, repos) in grouped {
-                let owner_row = create_owner_header(&owner);
-                store_ref.append(&owner_row);
-
-                for repo in repos {
-                    let repo_id = repo.id;
-                    let actions_state = actions_snapshot_for_rows
-                        .get(&repo_id)
-                        .copied()
-                        .unwrap_or(RepoActionsState::Unknown);
-                    let workflow_counts = workflow_snapshot_for_rows
-                        .get(&repo_id)
-                        .cloned()
-                        .unwrap_or_default();
-
-                    let row = build_repo_row(
-                        repo.clone(),
-                        favorites_snapshot.contains(&repo_id),
-                        actions_state,
-                        workflow_counts,
-                        favorites_state_for_rows.clone(),
-                        favorites_manager_for_rows.clone(),
-                    );
-
-                    store_ref.append(&row);
-                }
-            }
+        // Headers carry the aggregated pill flags of the rows beneath them,
+        // so the sidebar filter can hide a header once its group is empty
+        // instead of leaving a heading with nothing under it.
+        let has_active = |repos: &[Repo]| {
+            repos.iter().any(|repo| {
+                workflow_snapshot_for_rows
+                    .get(&repo.id)
+                    .is_some_and(|counts| counts.active > 0)
+            })
         };
+
+        let header = create_section_header(title);
+        set_data(
+            &header,
+            FAVORITE_ROW_KEY,
+            repos
+                .iter()
+                .any(|repo| favorites_snapshot.contains(&repo.id)),
+        );
+        set_data(&header, ACTIVE_RUNS_ROW_KEY, has_active(&repos));
+        store_ref.append(&header);
+
+        let grouped = group_repos_by_owner(repos);
+
+        for (owner, repos) in grouped {
+            let owner_row = create_owner_header(&owner);
+            set_data(
+                &owner_row,
+                FAVORITE_ROW_KEY,
+                repos
+                    .iter()
+                    .any(|repo| favorites_snapshot.contains(&repo.id)),
+            );
+            set_data(&owner_row, ACTIVE_RUNS_ROW_KEY, has_active(&repos));
+            store_ref.append(&owner_row);
+
+            for repo in repos {
+                let repo_id = repo.id;
+                let actions_state = actions_snapshot_for_rows
+                    .get(&repo_id)
+                    .copied()
+                    .unwrap_or(RepoActionsState::Unknown);
+                let workflow_counts = workflow_snapshot_for_rows
+                    .get(&repo_id)
+                    .cloned()
+                    .unwrap_or_default();
+
+                let row = build_repo_row(
+                    repo.clone(),
+                    favorites_snapshot.contains(&repo_id),
+                    actions_state,
+                    workflow_counts,
+                    favorites_state_for_rows.clone(),
+                    favorites_manager_for_rows.clone(),
+                );
+
+                store_ref.append(&row);
+            }
+        }
+    };
 
     append_section(
         tr("Favorites").as_str(),
-        crate::ui::utils::favorite_icon_name(),
         favorites_section,
         &favorites_snapshot,
     );
     append_section(
         tr("Actions Enabled").as_str(),
-        "media-playback-start-symbolic",
         enabled_section,
         &favorites_snapshot,
     );
     append_section(
         tr("Actions Disabled").as_str(),
-        "process-stop-symbolic",
         disabled_section,
         &favorites_snapshot,
     );
@@ -165,17 +188,16 @@ pub enum SidebarFilter {
 
 /// Repo rows only pass a non-`All` pill filter when they carry matching state.
 pub fn row_matches_filter(row: &gtk::Widget, query: &str, filter: SidebarFilter) -> bool {
-    let is_repo_row = repo_id_from_row(row).is_some();
-
-    if is_repo_row {
-        let passes_pill = match filter {
-            SidebarFilter::All => true,
-            SidebarFilter::Favorites => get_data_copy(row, FAVORITE_ROW_KEY).unwrap_or(false),
-            SidebarFilter::Active => get_data_copy(row, ACTIVE_RUNS_ROW_KEY).unwrap_or(false),
-        };
-        if !passes_pill {
-            return false;
-        }
+    // The pill test applies to headers too: they carry the aggregated flags of
+    // their group, so a section/owner heading disappears together with the rows
+    // beneath it instead of being left stranded on its own.
+    let passes_pill = match filter {
+        SidebarFilter::All => true,
+        SidebarFilter::Favorites => get_data_copy(row, FAVORITE_ROW_KEY).unwrap_or(false),
+        SidebarFilter::Active => get_data_copy(row, ACTIVE_RUNS_ROW_KEY).unwrap_or(false),
+    };
+    if !passes_pill {
+        return false;
     }
 
     row_matches_query(row, query)
@@ -415,7 +437,7 @@ pub fn find_first_repo_index(model: &gtk::FilterListModel) -> Option<u32> {
     None
 }
 
-fn create_section_header(title: &str, _icon_name: &str) -> gtk::Box {
+fn create_section_header(title: &str) -> gtk::Box {
     let row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     row.set_can_focus(false);
     row.set_can_target(false);

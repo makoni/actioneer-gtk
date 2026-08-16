@@ -845,6 +845,9 @@ msgstr "التحديث التلقائي معطّل."
 msgid "Data refreshes automatically every {seconds} seconds."
 msgstr "يتم تحديث البيانات تلقائيًا كل {seconds} ثانية."
 
+msgid "1 workflow"
+msgstr "سير عمل واحد"
+
 msgid "{count} workflows"
 msgstr "{count} من سير العمل"
 
