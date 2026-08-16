@@ -373,13 +373,17 @@ impl RepoDetailPane {
         repo_label.add_css_class("title-2");
         title_row.append(&repo_label);
 
-        let visibility_text = if self.repo.is_private {
-            tr("Private").to_uppercase()
-        } else {
-            tr("Public").to_uppercase()
-        };
+        let (visibility_text, plain_script) =
+            crate::ui::utils::section_heading(&if self.repo.is_private {
+                tr("Private")
+            } else {
+                tr("Public")
+            });
         let visibility_badge = gtk::Label::new(Some(&visibility_text));
         visibility_badge.add_css_class("visibility-badge");
+        if plain_script {
+            visibility_badge.add_css_class("no-tracking");
+        }
         visibility_badge.set_valign(gtk::Align::Center);
         title_row.append(&visibility_badge);
 

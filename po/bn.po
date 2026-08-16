@@ -877,3 +877,51 @@ msgstr "সব"
 
 msgid "Active"
 msgstr "সক্রিয়"
+
+msgid "Status"
+msgstr "অবস্থা"
+
+msgid "Conclusion"
+msgstr "ফলাফল"
+
+msgid "Branch"
+msgstr "ব্রাঞ্চ"
+
+msgid "Commit"
+msgstr "কমিট"
+
+msgid "Triggered by"
+msgstr "ট্রিগার করেছেন"
+
+msgid "Event"
+msgstr "ইভেন্ট"
+
+msgid "Duration"
+msgstr "সময়কাল"
+
+msgid "Started"
+msgstr "শুরু হয়েছে"
+
+msgid "Updated"
+msgstr "আপডেট হয়েছে"
+
+msgid "OK"
+msgstr "ঠিক আছে"
+
+msgid "Saving token..."
+msgstr "টোকেন সংরক্ষণ করা হচ্ছে..."
+
+msgid "Set the application language (e.g., ru, en, zh_Hans)"
+msgstr "অ্যাপ্লিকেশনের ভাষা নির্ধারণ করুন (যেমন ru, en, zh_Hans)"
+
+msgid "Start the app with sample demo data"
+msgstr "নমুনা ডেমো ডেটা দিয়ে অ্যাপ চালু করুন"
+
+msgid "No repositories match"
+msgstr "কোনো রিপোজিটরি মেলেনি"
+
+msgid "Activity is gathered as you open repositories."
+msgstr "রিপোজিটরি খুললে কার্যকলাপ সংগ্রহ করা হয়।"
+
+msgid "{count} workflows in this state"
+msgstr "এই অবস্থায় {count}টি ওয়ার্কফ্লো"

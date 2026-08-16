@@ -877,3 +877,51 @@ msgstr "Todos"
 
 msgid "Active"
 msgstr "Ativos"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Conclusion"
+msgstr "Conclusão"
+
+msgid "Branch"
+msgstr "Branch"
+
+msgid "Commit"
+msgstr "Commit"
+
+msgid "Triggered by"
+msgstr "Acionado por"
+
+msgid "Event"
+msgstr "Evento"
+
+msgid "Duration"
+msgstr "Duração"
+
+msgid "Started"
+msgstr "Iniciado"
+
+msgid "Updated"
+msgstr "Atualizado"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Saving token..."
+msgstr "Salvando token..."
+
+msgid "Set the application language (e.g., ru, en, zh_Hans)"
+msgstr "Definir o idioma do aplicativo (ex.: ru, en, zh_Hans)"
+
+msgid "Start the app with sample demo data"
+msgstr "Iniciar o aplicativo com dados de demonstração"
+
+msgid "No repositories match"
+msgstr "Nenhum repositório corresponde"
+
+msgid "Activity is gathered as you open repositories."
+msgstr "A atividade é coletada conforme você abre repositórios."
+
+msgid "{count} workflows in this state"
+msgstr "{count} fluxos de trabalho neste estado"

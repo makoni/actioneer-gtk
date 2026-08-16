@@ -130,6 +130,25 @@ impl MainWindow {
     pub(super) fn restore_repo_selection_now(&self) {
         let target = *self.selected_repo_id.lock();
 
+        // A repo that is open but merely filtered out of the sidebar must stay
+        // open: the plan below falls back to the first visible repo, which would
+        // otherwise swap the detail pane on every list rebuild (a favourite being
+        // toggled, a refresh, a status task completing).
+        let active_repo_id = self
+            .active_detail
+            .borrow()
+            .as_ref()
+            .map(|pane| pane.repo().id);
+        if let (Some(target), Some(active)) = (target, active_repo_id)
+            && target == active
+            && find_repo_index(&self.repo_filter_model, target).is_none()
+        {
+            *self.handling_selection.lock() = true;
+            self.repo_selection.set_selected(gtk::INVALID_LIST_POSITION);
+            *self.handling_selection.lock() = false;
+            return;
+        }
+
         *self.handling_selection.lock() = true;
         let restored_repo_id =
             restore_sidebar_selection(&self.repo_selection, &self.repo_filter_model, target);

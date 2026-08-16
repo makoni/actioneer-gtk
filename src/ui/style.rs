@@ -19,10 +19,6 @@ const APP_CSS: &str = r#"
     background-color: transparent;
 }
 
-.workflow-card {
-    border-radius: 18px;
-}
-
 .hoverless-row,
 .hoverless-row:hover,
 .hoverless-row:selected,
@@ -118,7 +114,7 @@ const APP_CSS: &str = r#"
    wash reads as "deeper than the card" in both light and dark. */
 .workflow-item.expanded,
 .workflow-item.expanded:hover {
-    background-color: alpha(black, 0.12);
+    background-color: alpha(black, 0.06);
 }
 
 .workflow-item.expanded .workflow-detail {
@@ -137,11 +133,9 @@ const APP_CSS: &str = r#"
     font-family: monospace;
 }
 
-/* Expanded workflow area: progress + recent runs card. */
-.workflow-detail {
-    /* aligned under the workflow title (chevron + status dot widths) */
-}
-
+/* Expanded workflow area: progress + recent runs card. The left inset that
+   aligns it under the workflow title is applied in Rust, next to the widths it
+   has to match. */
 .workflow-progress trough {
     min-height: 4px;
 }
@@ -288,7 +282,11 @@ const APP_CSS: &str = r#"
     font-weight: 700;
 }
 
-.filter-segment.seg-success {
+.filter-segment {
+    color: alpha(currentColor, 0.55);
+}
+
+.filter-segment.seg-success:hover {
     color: @success_color;
 }
 .filter-segment.seg-success:checked {
@@ -296,7 +294,7 @@ const APP_CSS: &str = r#"
     color: @success_color;
 }
 
-.filter-segment.seg-running {
+.filter-segment.seg-running:hover {
     color: @warning_color;
 }
 .filter-segment.seg-running:checked {
@@ -304,12 +302,42 @@ const APP_CSS: &str = r#"
     color: @warning_color;
 }
 
-.filter-segment.seg-failed {
-    color: alpha(currentColor, 0.55);
+.filter-segment.seg-failed:hover {
+    color: @error_color;
 }
 .filter-segment.seg-failed:checked {
     background-color: alpha(@error_color, 0.2);
     color: @error_color;
+}
+
+/* Favourite star: dim when off, accented when on — otherwise every repo looks
+   favourited. Scoped so the selected row's own foreground still wins. */
+.sidebar-fav {
+    opacity: 0.45;
+}
+
+.sidebar-fav:checked {
+    opacity: 1;
+    color: @accent_color;
+}
+
+.sidebar-fav:hover {
+    opacity: 0.8;
+}
+
+.sidebar-surface listview row:selected .sidebar-fav {
+    opacity: 0.55;
+}
+
+.sidebar-surface listview row:selected .sidebar-fav:checked {
+    opacity: 1;
+}
+
+/* Scripts without letter case (Arabic, Devanagari, CJK …) are damaged by
+   tracking: it breaks cursive joining and detaches matras. Headings in those
+   scripts opt out. */
+.no-tracking {
+    letter-spacing: 0;
 }
 
 /* Sidebar polish: pill filters + solid-accent selection. */
@@ -358,14 +386,6 @@ const APP_CSS: &str = r#"
     color: alpha(currentColor, 0.55);
 }
 
-.run-row,
-.run-row:hover,
-.run-row:focus,
-.run-row:focus-visible,
-.job-row,
-.job-row:hover,
-.job-row:focus,
-.job-row:focus-visible,
 .section-header,
 .section-header:hover,
 .section-header:focus,

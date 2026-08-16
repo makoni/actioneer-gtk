@@ -874,3 +874,51 @@ msgstr "Alle"
 
 msgid "Active"
 msgstr "Actief"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Conclusion"
+msgstr "Resultaat"
+
+msgid "Branch"
+msgstr "Branch"
+
+msgid "Commit"
+msgstr "Commit"
+
+msgid "Triggered by"
+msgstr "Gestart door"
+
+msgid "Event"
+msgstr "Gebeurtenis"
+
+msgid "Duration"
+msgstr "Duur"
+
+msgid "Started"
+msgstr "Gestart"
+
+msgid "Updated"
+msgstr "Bijgewerkt"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Saving token..."
+msgstr "Token opslaan..."
+
+msgid "Set the application language (e.g., ru, en, zh_Hans)"
+msgstr "Taal van de toepassing instellen (bijv. ru, en, zh_Hans)"
+
+msgid "Start the app with sample demo data"
+msgstr "App starten met voorbeeldgegevens"
+
+msgid "No repositories match"
+msgstr "Geen overeenkomende repository's"
+
+msgid "Activity is gathered as you open repositories."
+msgstr "Activiteit wordt verzameld zodra u repository's opent."
+
+msgid "{count} workflows in this state"
+msgstr "{count} workflows in deze staat"

@@ -450,7 +450,11 @@ fn create_section_header(title: &str) -> gtk::Box {
     set_data(&row, SELECTABLE_KEY, false);
     set_data(&row, ACTIVATABLE_KEY, false);
 
-    let label = gtk::Label::new(Some(&title.to_uppercase()));
+    let (heading, plain_script) = crate::ui::utils::section_heading(title);
+    let label = gtk::Label::new(Some(&heading));
+    if plain_script {
+        label.add_css_class("no-tracking");
+    }
     label.set_halign(gtk::Align::Start);
     label.set_hexpand(true);
     label.add_css_class("sidebar-owner-label");
@@ -473,7 +477,11 @@ fn create_owner_header(owner: &str) -> gtk::Box {
     set_data(&row, SELECTABLE_KEY, false);
     set_data(&row, ACTIVATABLE_KEY, false);
 
-    let label = gtk::Label::new(Some(&owner.to_uppercase()));
+    let (heading, plain_script) = crate::ui::utils::section_heading(owner);
+    let label = gtk::Label::new(Some(&heading));
+    if plain_script {
+        label.add_css_class("no-tracking");
+    }
     label.set_halign(gtk::Align::Start);
     label.add_css_class("sidebar-owner-label");
     row.append(&label);

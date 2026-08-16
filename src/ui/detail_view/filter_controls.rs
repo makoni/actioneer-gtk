@@ -13,10 +13,25 @@ pub struct FilterChips {
 
 impl FilterChips {
     /// Updates the per-status counters shown inside the segmented control.
+    ///
+    /// The number and the action describe different things — the count is how
+    /// many *workflows* currently sit in that state, while toggling the chip
+    /// filters the *runs* listed under each workflow — so the tooltip spells
+    /// both out instead of leaving the number unexplained.
     pub fn set_counts(&self, success: usize, running: usize, failed: usize) {
         self.success_count.set_text(&success.to_string());
         self.running_count.set_text(&running.to_string());
         self.failed_count.set_text(&failed.to_string());
+
+        for (button, action, count) in [
+            (&self.success, tr("Show successful runs"), success),
+            (&self.running, tr("Show running/queued runs"), running),
+            (&self.failed, tr("Show failed runs"), failed),
+        ] {
+            let explanation = tr("{count} workflows in this state")
+                .replace("{count}", count.to_string().as_str());
+            crate::ui::utils::describe_control(button, &format!("{action} · {explanation}"));
+        }
     }
 }
 

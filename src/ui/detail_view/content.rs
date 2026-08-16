@@ -13,7 +13,11 @@ impl RepoDetailPane {
 
         let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
 
-        let section_label = gtk::Label::new(Some(&tr("Workflows").to_uppercase()));
+        let (heading, plain_script) = crate::ui::utils::section_heading(&tr("Workflows"));
+        let section_label = gtk::Label::new(Some(&heading));
+        if plain_script {
+            section_label.add_css_class("no-tracking");
+        }
         section_label.add_css_class("section-label");
         section_label.set_halign(gtk::Align::Start);
         section_label.set_margin_start(4);

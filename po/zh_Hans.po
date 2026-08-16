@@ -877,3 +877,51 @@ msgstr "全部"
 
 msgid "Active"
 msgstr "活跃"
+
+msgid "Status"
+msgstr "状态"
+
+msgid "Conclusion"
+msgstr "结论"
+
+msgid "Branch"
+msgstr "分支"
+
+msgid "Commit"
+msgstr "提交"
+
+msgid "Triggered by"
+msgstr "触发者"
+
+msgid "Event"
+msgstr "事件"
+
+msgid "Duration"
+msgstr "时长"
+
+msgid "Started"
+msgstr "开始时间"
+
+msgid "Updated"
+msgstr "更新时间"
+
+msgid "OK"
+msgstr "确定"
+
+msgid "Saving token..."
+msgstr "正在保存令牌…"
+
+msgid "Set the application language (e.g., ru, en, zh_Hans)"
+msgstr "设置应用语言（例如 ru、en、zh_Hans）"
+
+msgid "Start the app with sample demo data"
+msgstr "使用示例演示数据启动应用"
+
+msgid "No repositories match"
+msgstr "没有匹配的仓库"
+
+msgid "Activity is gathered as you open repositories."
+msgstr "打开仓库后才会收集活动信息。"
+
+msgid "{count} workflows in this state"
+msgstr "{count} 个工作流处于此状态"

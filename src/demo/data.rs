@@ -1,7 +1,7 @@
 use crate::api::GitHubError;
 use crate::api::models::{
-    Branch, BranchCommit, Job, JobStep, RateLimitInfo, Repo, RepoPermissions, User, Workflow,
-    WorkflowRun,
+    Branch, BranchCommit, Job, JobStep, RateLimitInfo, Repo, RepoPermissions, RunHeadCommit, User,
+    Workflow, WorkflowRun,
 };
 use chrono::Utc;
 use std::collections::{HashMap, HashSet};
@@ -97,7 +97,9 @@ impl DemoData {
             owner: User {
                 login: "demo-team".to_string(),
             },
-            is_private: false,
+            // Kept private so the pane header's visibility badge shows both of
+            // its states under `--demo`.
+            is_private: true,
             permissions: standard_permissions,
             default_branch: Some("main".to_string()),
         };
@@ -724,7 +726,7 @@ impl DemoData {
         let runs_infra = vec![WorkflowRun {
             id: 31_001,
             run_number: Some(210),
-            workflow_id: None,
+            workflow_id: Some(workflow_infra.id),
             name: Some("Infrastructure".to_string()),
             display_title: Some("Infra • terraform plan".to_string()),
             head_branch: Some("main".to_string()),
@@ -776,7 +778,7 @@ impl DemoData {
         let runs_edge = vec![WorkflowRun {
             id: 32_101,
             run_number: Some(12),
-            workflow_id: None,
+            workflow_id: Some(workflow_edge.id),
             name: Some("Edge Diagnostics".to_string()),
             display_title: Some("Edge Diagnostics • nightly".to_string()),
             head_branch: Some("main".to_string()),
@@ -956,7 +958,7 @@ impl DemoData {
         let new_run = WorkflowRun {
             id: run_id,
             run_number: Some(run_number),
-            workflow_id: None,
+            workflow_id: Some(workflow_id),
             name: Some("Manual Dispatch".to_string()),
             display_title: Some(format!("{} • {}", reference, reference)),
             head_branch: Some(reference.to_string()),
@@ -1084,7 +1086,10 @@ fn demo_run(
         name: Some(workflow_name.to_string()),
         display_title: Some(title.to_string()),
         head_branch: Some(branch.to_string()),
-        head_commit: None,
+        head_commit: Some(RunHeadCommit {
+            id: format!("{:040x}", id),
+            message: format!("{title}\n\nDemo commit body for {workflow_name}."),
+        }),
         status: Some(status.to_string()),
         conclusion: conclusion.map(str::to_string),
         run_started_at: started.clone(),
@@ -1098,7 +1103,9 @@ fn demo_run(
         actor: Some(User {
             login: actor.to_string(),
         }),
-        triggering_actor: None,
+        triggering_actor: Some(User {
+            login: actor.to_string(),
+        }),
     }
 }
 

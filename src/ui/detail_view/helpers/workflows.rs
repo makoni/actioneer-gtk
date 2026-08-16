@@ -467,7 +467,12 @@ pub(crate) fn create_workflow_expander_row(
     let subheader = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     subheader.set_margin_top(2);
 
-    let recent_label = gtk::Label::new(Some(&tr("Recent runs").to_uppercase()));
+    let (recent_heading, recent_plain_script) =
+        crate::ui::utils::section_heading(&tr("Recent runs"));
+    let recent_label = gtk::Label::new(Some(&recent_heading));
+    if recent_plain_script {
+        recent_label.add_css_class("no-tracking");
+    }
     recent_label.add_css_class("section-label");
     recent_label.set_halign(gtk::Align::Start);
     recent_label.set_hexpand(true);

@@ -877,3 +877,51 @@ msgstr "سب"
 
 msgid "Active"
 msgstr "فعال"
+
+msgid "Status"
+msgstr "حالت"
+
+msgid "Conclusion"
+msgstr "نتیجہ"
+
+msgid "Branch"
+msgstr "برانچ"
+
+msgid "Commit"
+msgstr "کمٹ"
+
+msgid "Triggered by"
+msgstr "چلانے والا"
+
+msgid "Event"
+msgstr "ایونٹ"
+
+msgid "Duration"
+msgstr "دورانیہ"
+
+msgid "Started"
+msgstr "شروع ہوا"
+
+msgid "Updated"
+msgstr "اپ ڈیٹ ہوا"
+
+msgid "OK"
+msgstr "ٹھیک ہے"
+
+msgid "Saving token..."
+msgstr "ٹوکن محفوظ ہو رہا ہے..."
+
+msgid "Set the application language (e.g., ru, en, zh_Hans)"
+msgstr "ایپلیکیشن کی زبان مقرر کریں (مثلاً ru، en، zh_Hans)"
+
+msgid "Start the app with sample demo data"
+msgstr "نمونہ ڈیمو ڈیٹا کے ساتھ ایپ شروع کریں"
+
+msgid "No repositories match"
+msgstr "کوئی ریپوزٹری مماثل نہیں"
+
+msgid "Activity is gathered as you open repositories."
+msgstr "ریپوزٹریز کھولنے پر سرگرمی جمع کی جاتی ہے۔"
+
+msgid "{count} workflows in this state"
+msgstr "اس حالت میں {count} ورک فلو"

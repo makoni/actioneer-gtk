@@ -16,3 +16,6 @@ pub use icons::favorite_icon_name;
 
 mod a11y;
 pub use a11y::describe_control;
+
+mod typography;
+pub use typography::section_heading;

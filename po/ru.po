@@ -882,3 +882,51 @@ msgstr "Все"
 
 msgid "Active"
 msgstr "Активные"
+
+msgid "Status"
+msgstr "Статус"
+
+msgid "Conclusion"
+msgstr "Результат"
+
+msgid "Branch"
+msgstr "Ветка"
+
+msgid "Commit"
+msgstr "Коммит"
+
+msgid "Triggered by"
+msgstr "Запустил"
+
+msgid "Event"
+msgstr "Событие"
+
+msgid "Duration"
+msgstr "Длительность"
+
+msgid "Started"
+msgstr "Начат"
+
+msgid "Updated"
+msgstr "Обновлён"
+
+msgid "OK"
+msgstr "ОК"
+
+msgid "Saving token..."
+msgstr "Сохранение токена..."
+
+msgid "Set the application language (e.g., ru, en, zh_Hans)"
+msgstr "Задать язык приложения (например, ru, en, zh_Hans)"
+
+msgid "Start the app with sample demo data"
+msgstr "Запустить приложение с демонстрационными данными"
+
+msgid "No repositories match"
+msgstr "Нет подходящих репозиториев"
+
+msgid "Activity is gathered as you open repositories."
+msgstr "Активность собирается по мере открытия репозиториев."
+
+msgid "{count} workflows in this state"
+msgstr "{count} воркфлоу в этом состоянии"

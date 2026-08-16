@@ -877,3 +877,51 @@ msgstr "الكل"
 
 msgid "Active"
 msgstr "النشطة"
+
+msgid "Status"
+msgstr "الحالة"
+
+msgid "Conclusion"
+msgstr "النتيجة"
+
+msgid "Branch"
+msgstr "الفرع"
+
+msgid "Commit"
+msgstr "الالتزام"
+
+msgid "Triggered by"
+msgstr "شغّله"
+
+msgid "Event"
+msgstr "الحدث"
+
+msgid "Duration"
+msgstr "المدة"
+
+msgid "Started"
+msgstr "بدأ في"
+
+msgid "Updated"
+msgstr "حُدّث في"
+
+msgid "OK"
+msgstr "موافق"
+
+msgid "Saving token..."
+msgstr "جارٍ حفظ الرمز..."
+
+msgid "Set the application language (e.g., ru, en, zh_Hans)"
+msgstr "تعيين لغة التطبيق (مثل ru أو en أو zh_Hans)"
+
+msgid "Start the app with sample demo data"
+msgstr "تشغيل التطبيق ببيانات تجريبية"
+
+msgid "No repositories match"
+msgstr "لا توجد مستودعات مطابقة"
+
+msgid "Activity is gathered as you open repositories."
+msgstr "يتم جمع النشاط عند فتح المستودعات."
+
+msgid "{count} workflows in this state"
+msgstr "{count} من سير العمل في هذه الحالة"

@@ -9,6 +9,9 @@ use libadwaita as adw;
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 
+const STACK_LIST: &str = "list";
+const STACK_EMPTY: &str = "empty";
+
 /// Callback fired after a pill filter changes (used to restore the selection).
 type FilterChangedHandler = Rc<RefCell<Option<Rc<dyn Fn()>>>>;
 
@@ -116,10 +119,36 @@ impl SidebarPanel {
             .build();
         scrolled.set_child(Some(&repo_view));
 
+        // A filter can legitimately hide every row (no favourites yet, nothing
+        // running). Without this the sidebar just goes blank and reads as broken.
+        let empty_state = build_empty_state();
+        let list_stack = gtk::Stack::new();
+        list_stack.add_named(&scrolled, Some(STACK_LIST));
+        list_stack.add_named(&empty_state, Some(STACK_EMPTY));
+        list_stack.set_visible_child_name(STACK_LIST);
+        list_stack.set_vexpand(true);
+
+        {
+            let list_stack = list_stack.clone();
+            let repo_store = repo_store.clone();
+            let filter_model_for_state = filter_model.clone();
+            let update = move || {
+                let has_rows = filter_model_for_state.n_items() > 0;
+                let has_repos = repo_store.n_items() > 0;
+                list_stack.set_visible_child_name(if has_rows || !has_repos {
+                    STACK_LIST
+                } else {
+                    STACK_EMPTY
+                });
+            };
+            update();
+            filter_model.connect_items_changed(move |_, _, _, _| update());
+        }
+
         let sidebar_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
         sidebar_box.append(&search_entry);
         sidebar_box.append(&pills);
-        sidebar_box.append(&scrolled);
+        sidebar_box.append(&list_stack);
         sidebar_box.set_hexpand(false);
         sidebar_box.set_vexpand(true);
 
@@ -180,6 +209,32 @@ impl SidebarPanel {
         *self.filter_query.borrow_mut() = query.to_lowercase();
         self.filter.changed(gtk::FilterChange::Different);
     }
+}
+
+/// Shown when the active filter matches no repository.
+fn build_empty_state() -> gtk::Box {
+    let container = gtk::Box::new(gtk::Orientation::Vertical, 6);
+    container.set_valign(gtk::Align::Center);
+    container.set_halign(gtk::Align::Center);
+    container.set_margin_start(18);
+    container.set_margin_end(18);
+
+    let title = gtk::Label::new(Some(tr("No repositories match").as_str()));
+    title.add_css_class("dim-label");
+    title.set_wrap(true);
+    title.set_justify(gtk::Justification::Center);
+    container.append(&title);
+
+    let hint = gtk::Label::new(Some(
+        tr("Activity is gathered as you open repositories.").as_str(),
+    ));
+    hint.add_css_class("dim-label");
+    hint.add_css_class("caption");
+    hint.set_wrap(true);
+    hint.set_justify(gtk::Justification::Center);
+    container.append(&hint);
+
+    container
 }
 
 /// The All / Favorites / Active pill row above the repo list.
