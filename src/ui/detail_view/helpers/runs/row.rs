@@ -180,7 +180,6 @@ fn build_expander(run: &WorkflowRun) -> gtk::Expander {
     expander.set_hexpand(true);
     expander.set_valign(gtk::Align::Center);
     expander.set_widget_name(&format!("run_{}", run.id));
-    expander.add_css_class("run-expander");
 
     let header_box = gtk::Box::new(gtk::Orientation::Horizontal, 11);
     header_box.set_hexpand(true);
@@ -493,7 +492,8 @@ mod tests {
             assert!(
                 survivors.is_empty(),
                 "widgets outlived the discarded run row: {survivors:?} — a signal \
-                 handler is holding them in a reference cycle"
+                 handler is holding them in a reference cycle. This covers the \
+                 widget tree only: a leak that pins no widget is invisible here."
             );
         });
     }

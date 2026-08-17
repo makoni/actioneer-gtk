@@ -69,8 +69,14 @@ impl MainWindow {
                 repo.as_ref().map(|r| r.full_name.as_str())
             );
 
-            if new_selection.is_none() && window.active_detail.borrow().is_some() {
-                info!("Ignoring transient deselection (detail pane is active)");
+            // GTK clears the selection synchronously whenever a filter hides the
+            // selected row, so this fires for searches and pill toggles too. The
+            // test is "a repo is open", not "a detail pane object exists": panes
+            // that are placeholders (Actions disabled) take `active_detail`, and
+            // treating their deselect as a real one closed the repo and let the
+            // next rebuild jump to an unrelated one.
+            if new_selection.is_none() && current_selection.is_some() {
+                info!("Ignoring transient deselection (a repository is open)");
                 return;
             }
 

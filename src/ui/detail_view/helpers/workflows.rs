@@ -433,7 +433,6 @@ pub(crate) fn create_workflow_expander_row(
     header_box.append(&actions_box);
 
     let expander = gtk::Expander::new(None);
-    expander.add_css_class("workflow-expander");
     expander.set_label_widget(Some(&header_box));
     expander.set_widget_name(&format!("workflow_{}", workflow.id));
     set_data(&expander, "actioneer-workflow-name", workflow.name.clone());
@@ -467,10 +466,10 @@ pub(crate) fn create_workflow_expander_row(
     let subheader = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     subheader.set_margin_top(2);
 
-    let (recent_heading, recent_plain_script) =
+    let (recent_heading, recent_suppress_tracking) =
         crate::ui::utils::section_heading(&tr("Recent runs"));
     let recent_label = gtk::Label::new(Some(&recent_heading));
-    if recent_plain_script {
+    if recent_suppress_tracking {
         recent_label.add_css_class("no-tracking");
     }
     recent_label.add_css_class("section-label");
@@ -1508,7 +1507,8 @@ mod tests {
             assert!(
                 survivors.is_empty(),
                 "widgets outlived the discarded workflow row: {survivors:?} — a \
-                 signal handler is holding them in a reference cycle"
+                 signal handler is holding them in a reference cycle. List-view \
+                 rows bind lazily and are covered by the run-row test instead."
             );
         });
     }

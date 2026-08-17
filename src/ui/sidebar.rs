@@ -235,7 +235,6 @@ fn build_repo_row(
     row.set_hexpand(true);
     row.set_can_focus(false);
     row.add_css_class("activatable");
-    row.add_css_class("sidebar-repo-row");
 
     let icon = gtk::Image::from_icon_name("folder-symbolic");
     icon.set_pixel_size(16);
@@ -249,7 +248,7 @@ fn build_repo_row(
     favorite_button.add_css_class("sidebar-fav");
     favorite_button.set_valign(gtk::Align::Center);
     favorite_button.set_icon_name(crate::ui::utils::favorite_icon_name());
-    favorite_button.set_tooltip_text(Some(tr("Toggle favorite").as_str()));
+    crate::ui::utils::describe_control(&favorite_button, tr("Toggle favorite").as_str());
     favorite_button.set_active(is_favorite);
 
     let favorites_arc_for_update = favorites_arc.clone();
@@ -450,9 +449,9 @@ fn create_section_header(title: &str) -> gtk::Box {
     set_data(&row, SELECTABLE_KEY, false);
     set_data(&row, ACTIVATABLE_KEY, false);
 
-    let (heading, plain_script) = crate::ui::utils::section_heading(title);
+    let (heading, suppress_tracking) = crate::ui::utils::section_heading(title);
     let label = gtk::Label::new(Some(&heading));
-    if plain_script {
+    if suppress_tracking {
         label.add_css_class("no-tracking");
     }
     label.set_halign(gtk::Align::Start);
@@ -477,9 +476,9 @@ fn create_owner_header(owner: &str) -> gtk::Box {
     set_data(&row, SELECTABLE_KEY, false);
     set_data(&row, ACTIVATABLE_KEY, false);
 
-    let (heading, plain_script) = crate::ui::utils::section_heading(owner);
+    let (heading, suppress_tracking) = crate::ui::utils::section_heading(owner);
     let label = gtk::Label::new(Some(&heading));
-    if plain_script {
+    if suppress_tracking {
         label.add_css_class("no-tracking");
     }
     label.set_halign(gtk::Align::Start);

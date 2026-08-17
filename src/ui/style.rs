@@ -78,11 +78,9 @@ const APP_CSS: &str = r#"
     color: @warning_color;
 }
 
-.status-dot.dim-label,
 .status-dot.idle {
     background-color: alpha(currentColor, 0.07);
 }
-.status-dot.dim-label image,
 .status-dot.idle image {
     color: alpha(currentColor, 0.55);
 }
@@ -114,8 +112,7 @@ const APP_CSS: &str = r#"
    enough to read in dark stacks with the runs card nested inside it and pushes
    light-mode meta text below AA. currentColor lightens in dark and darkens in
    light, and is kept clearly stronger than the hover cue. */
-.workflow-item.expanded,
-.workflow-item.expanded:hover {
+.workflow-item.expanded {
     background-color: alpha(currentColor, 0.09);
 }
 
@@ -168,6 +165,15 @@ const APP_CSS: &str = r#"
 
 .run-number {
     font-weight: 700;
+}
+
+/* `dim-label` is a 0.55 opacity utility; on the recessed run/job cards that puts
+   the meta line below WCAG AA (measured 4.13:1 in dark, 2.56:1 in light). The
+   text is the right thing to fix here — darkening the cards further would only
+   trade one theme's contrast for the other's. */
+.runs-card .dim-label,
+.job-card .dim-label {
+    opacity: 0.78;
 }
 
 /* Job cards inside an expanded run. */
@@ -333,6 +339,10 @@ const APP_CSS: &str = r#"
 
 .sidebar-surface listview row:selected .sidebar-fav:checked {
     opacity: 1;
+}
+
+.sidebar-surface listview row:selected .sidebar-fav:hover:not(:checked) {
+    opacity: 0.8;
 }
 
 /* Sidebar polish: pill filters + solid-accent selection. */

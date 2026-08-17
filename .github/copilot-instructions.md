@@ -92,7 +92,7 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
   - System deps (Ubuntu/Debian): `sudo apt install libgtk-4-dev libadwaita-1-dev pkg-config` (see `README.md`).
   - Build: `cargo build`; Run: `cargo run` (reads `.env` when provided).
   - Tests: `cargo test` (there are unit tests such as token storage lifecycle).
-  - UI tests: UI widget tests live under `src/ui/**` and use `ui::test_helpers::gtk_test_guard`. Run `cargo test -- --ignored` to execute GTK-dependent tests when a display is available.
+  - UI tests: UI widget tests live under `src/ui/**` and use `ui::test_helpers::run_gtk_test`. Run `cargo test -- --ignored` to execute GTK-dependent tests when a display is available.
   - Formatting & linting: `cargo fmt` and `cargo clippy --all-targets --all-features -- -D warnings`. The project aims for zero warnings; a PR should not introduce warnings.
   - After finishing code edits, run the same checks as `.github/workflows/ci.yml` (only fmt, clippy, build, and ignored UI tests when feasible) to ensure the project is buildable and clippy is clean.
 
@@ -132,7 +132,7 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
 - Files to reference when making changes
   - `src/main.rs` (runtime + app bootstrap)
   - `src/ui/main_window.rs` (primary UI patterns)
-  - `src/ui/` (UI widget tests via `gtk_test_guard`)
+  - `src/ui/` (UI widget tests via `run_gtk_test`)
   - `src/storage/token_storage.rs` (keyring usage)
   - `src/api/client.rs` and `src/api/models.rs` (API surface)
   - `README.md` (dev setup and system deps)
@@ -149,7 +149,7 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
 If touching API/caching code, follow the ETag/ResponseHandler pattern in `src/api/http.rs` and respect rate-limit handling.
 
 UI testing guidance
-- UI tests live under `src/ui/**` and are marked ignored by default (they use the Rust test ignore attribute and the `gtk_test_guard` helper). This avoids running UI tests headless on CI without a display. They require an X11/Wayland display or a headless Xvfb/virtual framebuffer in CI.
+- UI tests live under `src/ui/**` and are marked ignored by default (they use the Rust test ignore attribute and the `run_gtk_test` helper). This avoids running UI tests headless on CI without a display. They require an X11/Wayland display or a headless Xvfb/virtual framebuffer in CI.
 - To run locally with a display (Linux):
 
 ```bash

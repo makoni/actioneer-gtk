@@ -224,6 +224,7 @@ impl RepoDetailPane {
         subtitle_label.add_css_class("dim-label");
         subtitle_label.add_css_class("caption");
         subtitle_label.set_halign(gtk::Align::Start);
+        subtitle_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
 
         let footer_label = gtk::Label::new(None);
         footer_label.add_css_class("dim-label");
@@ -371,9 +372,15 @@ impl RepoDetailPane {
 
         let repo_label = gtk::Label::new(Some(&self.repo.full_name));
         repo_label.add_css_class("title-2");
+        // The header row cannot shrink below its labels, and the pane's scroller
+        // has no horizontal bar — without this a long owner/name pushes the
+        // refresh and favourite buttons off the right edge at the app's own
+        // minimum window width.
+        repo_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
+        repo_label.set_halign(gtk::Align::Start);
         title_row.append(&repo_label);
 
-        let (visibility_text, plain_script) =
+        let (visibility_text, suppress_tracking) =
             crate::ui::utils::section_heading(&if self.repo.is_private {
                 tr("Private")
             } else {
@@ -381,7 +388,7 @@ impl RepoDetailPane {
             });
         let visibility_badge = gtk::Label::new(Some(&visibility_text));
         visibility_badge.add_css_class("visibility-badge");
-        if plain_script {
+        if suppress_tracking {
             visibility_badge.add_css_class("no-tracking");
         }
         visibility_badge.set_valign(gtk::Align::Center);

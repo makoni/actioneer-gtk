@@ -13,9 +13,9 @@ impl RepoDetailPane {
 
         let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
 
-        let (heading, plain_script) = crate::ui::utils::section_heading(&tr("Workflows"));
+        let (heading, suppress_tracking) = crate::ui::utils::section_heading(&tr("Workflows"));
         let section_label = gtk::Label::new(Some(&heading));
-        if plain_script {
+        if suppress_tracking {
             section_label.add_css_class("no-tracking");
         }
         section_label.add_css_class("section-label");
@@ -72,6 +72,7 @@ mod tests {
     use crate::ui::test_helpers::run_gtk_test;
 
     #[test]
+    #[ignore = "requires GTK display"]
     fn builds_runs_container_with_clamped_content() {
         run_gtk_test("builds_runs_container_with_clamped_content", || {
             let store = gio::ListStore::new::<gtk::Widget>();

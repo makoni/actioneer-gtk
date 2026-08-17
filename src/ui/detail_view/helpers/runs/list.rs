@@ -158,7 +158,6 @@ impl WorkflowRunListModel {
 
         let list_view = gtk::ListView::new(Some(selection.clone()), Some(factory.clone()));
         list_view.add_css_class("hoverless-list");
-        list_view.add_css_class("runs-list");
         list_view.set_single_click_activate(false);
         list_view.set_valign(gtk::Align::Start);
         list_view.set_vexpand(false);
@@ -297,7 +296,7 @@ impl WorkflowRunListModel {
             counts_label.set_visible(true);
         } else {
             self.header_label.set_visible(true);
-            self.header_label.set_text(&format_runs_header(
+            self.header_label.set_text(&format_runs_counts(
                 visible_count,
                 filtered_total,
                 overall_total,
@@ -542,22 +541,6 @@ fn format_runs_counts(visible_count: usize, filtered_total: usize, overall_total
     }
 }
 
-fn format_runs_header(visible_count: usize, filtered_total: usize, overall_total: usize) -> String {
-    if filtered_total == overall_total || visible_count == filtered_total {
-        if visible_count < overall_total {
-            tr("Recent runs (showing {visible} of {overall})")
-                .replace("{visible}", visible_count.to_string().as_str())
-                .replace("{overall}", overall_total.to_string().as_str())
-        } else {
-            tr("Recent runs ({overall})").replace("{overall}", overall_total.to_string().as_str())
-        }
-    } else {
-        tr("Recent runs (showing {visible} of {filtered} matching filters)")
-            .replace("{visible}", visible_count.to_string().as_str())
-            .replace("{filtered}", filtered_total.to_string().as_str())
-    }
-}
-
 fn state_requires_load(state: Option<glib::GString>) -> bool {
     matches!(
         state.as_deref(),
@@ -642,7 +625,7 @@ mod imp {
 #[cfg(test)]
 mod tests {
     use super::test_run_list_model;
-    use super::{STATE_CONTENT, STATE_ERROR, STATE_IDLE, format_runs_header, state_requires_load};
+    use super::{STATE_CONTENT, STATE_ERROR, STATE_IDLE, format_runs_counts, state_requires_load};
     use crate::api::models::WorkflowRun;
     use crate::i18n::{i18n_test_guard, tr};
     use crate::ui::detail_view::RunFilters;
@@ -651,36 +634,40 @@ mod tests {
     use std::collections::HashSet;
 
     #[test]
-    fn formats_header_with_partial_visible() {
+    fn counts_report_overall_total_when_no_filter_narrows_it() {
         let _guard = i18n_test_guard();
-        let text = format_runs_header(5, 5, 12);
+        let text = format_runs_counts(10, 10, 10);
         assert_eq!(
             text,
-            tr("Recent runs (showing {visible} of {overall})")
-                .replace("{visible}", "5")
-                .replace("{overall}", "12")
+            tr("Showing {visible} of {overall}")
+                .replace("{visible}", "10")
+                .replace("{overall}", "10")
         );
     }
 
     #[test]
-    fn formats_header_with_matching_filters() {
+    fn counts_report_filtered_total_when_filters_hide_runs() {
         let _guard = i18n_test_guard();
-        let text = format_runs_header(3, 4, 10);
+        // 5 of 12 runs match the active status chips, and all 5 fit the cap:
+        // saying "of 12" here would imply the cap hid the other seven.
+        let text = format_runs_counts(5, 5, 12);
         assert_eq!(
             text,
-            tr("Recent runs (showing {visible} of {filtered} matching filters)")
+            tr("Showing {visible} of {filtered} matching filters")
+                .replace("{visible}", "5")
+                .replace("{filtered}", "5")
+        );
+    }
+
+    #[test]
+    fn counts_report_cap_and_filters_together() {
+        let _guard = i18n_test_guard();
+        let text = format_runs_counts(3, 4, 10);
+        assert_eq!(
+            text,
+            tr("Showing {visible} of {filtered} matching filters")
                 .replace("{visible}", "3")
                 .replace("{filtered}", "4")
-        );
-    }
-
-    #[test]
-    fn formats_header_with_exact_count() {
-        let _guard = i18n_test_guard();
-        let text = format_runs_header(10, 10, 10);
-        assert_eq!(
-            text,
-            tr("Recent runs ({overall})").replace("{overall}", "10")
         );
     }
 
