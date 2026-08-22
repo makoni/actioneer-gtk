@@ -1,10 +1,10 @@
 AGENTS.md
 
 Guidance for automated coding agents working on this repository. The companion
-file `.github/copilot-instructions.md` holds the runtime, UI and concurrency
-rules plus a long-form GNOME/libadwaita style guide; read it before your first
-edit. This file covers how to work here: what to read, how to validate, and the
-traps that cost the most time.
+file `docs/agent-guide.md` holds the runtime, UI and concurrency rules plus a
+long-form GNOME/libadwaita style guide; read it before your first edit. This
+file covers how to work here: what to read, how to validate, and the traps that
+cost the most time.
 
 ## Explore with codegraph before reading files
 
@@ -30,10 +30,13 @@ understanding, not for writing.
 
 ## Read next
 
-- `.github/copilot-instructions.md` — runtime, UI, concurrency and API rules.
+- `docs/agent-guide.md` — runtime, UI, concurrency and API rules.
 - `docs/libadwaita/` — widget behaviour and constraints. Prefer these in-repo
   docs over external web pages when working on UI.
 - `TODO.md` — the open backlog (see "Progress tracking" below).
+- `docs/version-bump.md` — the release checklist, if you are cutting a version.
+- `docs/ui-screenshots.md` — capturing the running UI, with or without a
+  desktop session.
 
 ## Validation
 
@@ -165,12 +168,6 @@ Prefer mocks or a dedicated test keyring account.
 when adding endpoints, and keep rate-limit updates intact. For large async fan-
 out, use `for_each_concurrent` with a concurrency cap (see
 `spawn_repo_status_tasks`) rather than spawning per item.
-
-## Hand-off to Copilot Coding Agent
-
-To have an asynchronous agent continue a large task, add the hashtag
-`#github-pull-request_copilot-coding-agent` to the PR description together with
-the task body. The agent will create a branch and follow the instructions.
 
 ## Contact
 

@@ -1,7 +1,4 @@
----
-applyTo: "**/*"
----
-# Copilot: version bump checklist
+# Version bump checklist
 
 ## 1) Update versions
 - `Cargo.toml` — `[package].version`.

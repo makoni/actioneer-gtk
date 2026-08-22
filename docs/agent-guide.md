@@ -1,4 +1,4 @@
-<!-- Actioneer-gtk: Copilot / AI agent instructions -->
+<!-- Actioneer-gtk: instructions for automated coding agents -->
 # Quick guide for automated coding agents
 
 This repository is a native GTK4/libadwaita desktop client for GitHub Actions written in Rust. The notes below focus on the patterns and files an AI coding agent should know to make safe, useful changes quickly.
@@ -108,7 +108,7 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
 
   - Token/keyring safety: `src/storage/token_storage.rs` contains a live keyring test and some operations that may write to or delete entries in the system keyring. Do NOT run or modify those destructive tests on developer machines unless you understand and accept the side-effects. Prefer using mocks or a dedicated test keyring account when adding or changing tests that interact with the system keyring.
 
-  - PR checklist additions: when creating a PR, in addition to the validation checklist above, ensure you have updated `TODO.md` per the repository's `AGENTS.md` rules (mark started items as [🔄] and completed items as [✅], add a brief note in "Recent Updates"). This repo expects `TODO.md` to be kept current by contributors and automated agents.
+  - PR checklist additions: when creating a PR, in addition to the validation checklist above, update `TODO.md` if the *backlog* changed — an open item finished, a new one appeared, or the change is worth a "Recent Updates" line. See `AGENTS.md` ("Progress tracking"); `TODO.md` is not a per-step session journal.
 
 - Project-specific conventions
   - Prefer `parking_lot::Mutex` for shared state; code frequently clones `Arc<Mutex<T>>` before spawning tasks.
