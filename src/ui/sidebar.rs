@@ -247,6 +247,9 @@ fn build_repo_row(
     favorite_button.add_css_class("flat");
     favorite_button.add_css_class("sidebar-fav");
     favorite_button.set_valign(gtk::Align::Center);
+    // Pinned to the trailing edge: packed loosely it trails the name label, so
+    // the column of stars zig-zags with the length of each repository's name.
+    favorite_button.set_halign(gtk::Align::End);
     favorite_button.set_icon_name(crate::ui::utils::favorite_icon_name());
     crate::ui::utils::describe_control(&favorite_button, tr("Toggle favorite").as_str());
     favorite_button.set_active(is_favorite);
@@ -333,6 +336,9 @@ fn build_repo_row(
 
     let content_box = gtk::Box::new(gtk::Orientation::Vertical, 2);
     content_box.set_valign(gtk::Align::Center);
+    // Takes the whole gap between the folder icon and the star, which is what
+    // both keeps the star at the edge and lets the name label ellipsize.
+    content_box.set_hexpand(true);
 
     let name_label = gtk::Label::new(Some(&repo.full_name));
     name_label.set_halign(gtk::Align::Start);
@@ -689,6 +695,74 @@ mod tests {
         let (_, missing_with_truncation) =
             select_latest_runs_for_workflows(&[11, 22, 33], &[run(300, Some(11))], true);
         assert_eq!(missing_with_truncation, vec![22, 33]);
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn favourite_buttons_line_up_regardless_of_name_length() {
+        run_gtk_test(
+            "favourite_buttons_line_up_regardless_of_name_length",
+            || {
+                fn row_for(full_name: &str) -> gtk::Box {
+                    build_repo_row(
+                        Repo {
+                            id: full_name.len() as i64,
+                            name: full_name.rsplit('/').next().unwrap_or(full_name).into(),
+                            full_name: full_name.into(),
+                            owner: User {
+                                login: "makoni".into(),
+                            },
+                            is_private: false,
+                            permissions: None,
+                            default_branch: Some("main".into()),
+                        },
+                        false,
+                        RepoActionsState::Unknown,
+                        WorkflowStatusCounts::default(),
+                        Arc::new(Mutex::new(HashSet::new())),
+                        None,
+                    )
+                }
+
+                // A short name and one long enough to be ellipsized: packed without
+                // hexpand the star trails the label, so the column zig-zags.
+                let rows = [
+                    row_for("makoni/imetrik"),
+                    row_for("makoni/Google-Maps-SDK-for-something-long"),
+                ];
+                let list = gtk::Box::new(gtk::Orientation::Vertical, 0);
+                for row in &rows {
+                    list.append(row);
+                }
+
+                let window = gtk::Window::new();
+                window.set_default_size(320, 200);
+                window.set_child(Some(&list));
+                window.present();
+                while glib::MainContext::default().pending() {
+                    let _ = glib::MainContext::default().iteration(false);
+                }
+
+                let right_edges: Vec<i32> = rows
+                    .iter()
+                    .map(|row| {
+                        let button = row
+                            .last_child()
+                            .and_then(|child| child.downcast::<gtk::ToggleButton>().ok())
+                            .expect("each row ends with its favourite button");
+                        let alloc = button.allocation();
+                        alloc.x() + alloc.width()
+                    })
+                    .collect();
+
+                window.destroy();
+
+                assert_eq!(
+                    right_edges[0], right_edges[1],
+                    "favourite buttons must share a trailing edge, got {right_edges:?}"
+                );
+            },
+        );
     }
 
     #[test]
