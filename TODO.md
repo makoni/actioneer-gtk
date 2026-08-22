@@ -7,7 +7,7 @@ git commits (search the log) and in the previous long-form TODO in repo history.
 
 ## Where to look
 
-- UI: `src/ui/` (main_window, detail_view, run_jobs_window, job_logs_window)
+- UI: `src/ui/` (main_window, detail_view, job_logs_window)
 - API: `src/api/` (client, models, http helpers)
 - Auth & storage: `src/auth/`, `src/storage/token_storage.rs`
 - Tests: `tests/` and unit tests in `src/`
@@ -39,7 +39,7 @@ These are enhancement ideas, not required work — none has been started.
 
 - **Inline job-log drawer** — expandable from each job row instead of opening a separate window.
   - Design a row-level drawer widget (likely `AdwExpanderRow`/`AdwClamp`) that embeds the log viewer.
-  - Ensure logs load lazily per row and reuse the existing log-cache/code paths.
+  - Ensure logs load lazily per row and reuse `JobLogsWindow`'s per-window log cache.
   - Add UI tests (ignored) that open/close drawers to guard against regressions.
 
 - **Compact "Overview" page** — aggregates the last run status for pinned/favorite repositories using multi-pane cards.
