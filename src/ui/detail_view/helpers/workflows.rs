@@ -571,6 +571,7 @@ pub(crate) fn create_workflow_expander_row(
         let client_for_cancel = client.clone();
         let owner_for_cancel = owner.clone();
         let repo_for_cancel = repo.clone();
+        let repo_model_for_cancel = repo_model.clone();
         let parent_window_for_cancel = parent_window.clone();
         let toast_overlay_for_cancel = toast_overlay.clone();
         cancel_btn.connect_clicked(move |btn| {
@@ -584,6 +585,7 @@ pub(crate) fn create_workflow_expander_row(
                 client: client_for_cancel.clone(),
                 owner: owner_for_cancel.clone(),
                 repo: repo_for_cancel.clone(),
+                repo_model: repo_model_for_cancel.clone(),
                 parent_window: parent_window_for_cancel.clone(),
                 toast_overlay: toast_overlay_for_cancel.clone(),
             };
@@ -626,32 +628,25 @@ pub(crate) fn create_workflow_expander_row(
                 btn_for_result.set_sensitive(true);
                 match result {
                     Ok(jobs) => {
-                        // Prefer the job the user most likely wants to read: the
-                        // one that failed, else the one still running, else the
-                        // first. Opening jobs[0] would show a passing log next to
-                        // a red row.
-                        let pick = jobs
-                            .iter()
-                            .position(|job| {
-                                matches!(job.conclusion.as_deref(), Some(c) if c != "success" && c != "skipped" && c != "neutral")
-                            })
-                            .or_else(|| {
-                                jobs.iter()
-                                    .position(|job| job.conclusion.is_none())
-                            })
-                            .unwrap_or(0);
-
-                        if let Some(job) = jobs.into_iter().nth(pick) {
-                            let logs_window = JobLogsWindow::new(
-                                &parent_window,
-                                repo_model.clone(),
-                                run_title.clone(),
-                                job,
-                                client_for_window.clone(),
-                            );
-                            logs_window.present();
-                        } else {
-                            toast_overlay.add_toast(adw::Toast::new(tr("No jobs found").as_str()));
+                        // A run has no log of its own — it is the set of its job
+                        // logs — so the window lists them all and preselects the
+                        // one a reader most likely wants.
+                        match crate::ui::job_logs_window::most_relevant_job(&jobs) {
+                            Some(selected) => {
+                                let logs_window = JobLogsWindow::for_run(
+                                    &parent_window,
+                                    repo_model.clone(),
+                                    run_title.clone(),
+                                    jobs,
+                                    selected,
+                                    client_for_window.clone(),
+                                );
+                                logs_window.present();
+                            }
+                            None => {
+                                toast_overlay
+                                    .add_toast(adw::Toast::new(tr("No jobs found").as_str()));
+                            }
                         }
                     }
                     Err(message) => {

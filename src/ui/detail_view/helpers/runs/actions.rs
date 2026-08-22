@@ -1,6 +1,6 @@
 use super::super::formatting::format_run_title;
 use crate::api::GitHubClient;
-use crate::api::models::WorkflowRun;
+use crate::api::models::{Repo, WorkflowRun};
 use crate::i18n::tr;
 use crate::ui::utils::MainContextChannelExt;
 use gtk4::prelude::*;
@@ -16,6 +16,7 @@ pub(crate) struct RunActionContext {
     pub(crate) client: Arc<Mutex<GitHubClient>>,
     pub(crate) owner: String,
     pub(crate) repo: String,
+    pub(crate) repo_model: Repo,
     pub(crate) parent_window: adw::ApplicationWindow,
     pub(crate) toast_overlay: adw::ToastOverlay,
 }
@@ -46,6 +47,8 @@ pub(super) fn create_actions_box(run: &WorkflowRun, context: &RunActionContext) 
     actions_box.set_halign(gtk::Align::End);
     actions_box.set_margin_top(1);
 
+    actions_box.append(&create_logs_button(run, context));
+
     if run.is_rerunnable() {
         actions_box.append(&create_rerun_button(run, context));
     }
@@ -63,6 +66,78 @@ pub(super) fn create_actions_box(run: &WorkflowRun, context: &RunActionContext) 
     }
 
     actions_box
+}
+
+/// Opens this run's logs: the window lists the run's jobs and shows the one the
+/// reader most likely wants first.
+fn create_logs_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Button {
+    let button = gtk::Button::from_icon_name("text-x-generic-symbolic");
+    crate::ui::utils::describe_control(&button, tr("View logs").as_str());
+    button.add_css_class("row-action-btn");
+    button.set_focus_on_click(false);
+
+    let client = context.client.clone();
+    let owner = context.owner.clone();
+    let repo = context.repo.clone();
+    let repo_model = context.repo_model.clone();
+    let parent_window = context.parent_window.clone();
+    let toast_overlay = context.toast_overlay.clone();
+    let run_id = run.id;
+    let run_title = format_run_title(run);
+
+    button.connect_clicked(move |btn| {
+        btn.set_sensitive(false);
+        let btn_for_result = btn.clone();
+
+        let (sender, receiver) = glib::MainContext::default()
+            .channel::<Result<Vec<crate::api::models::Job>, String>>(glib::Priority::default());
+
+        let parent_window = parent_window.clone();
+        let repo_model = repo_model.clone();
+        let toast_overlay = toast_overlay.clone();
+        let client_for_window = client.clone();
+        let run_title = run_title.clone();
+        receiver.attach(None, move |result| {
+            btn_for_result.set_sensitive(true);
+            match result {
+                Ok(jobs) => match crate::ui::job_logs_window::most_relevant_job(&jobs) {
+                    Some(selected) => {
+                        crate::ui::job_logs_window::JobLogsWindow::for_run(
+                            &parent_window,
+                            repo_model.clone(),
+                            run_title.clone(),
+                            jobs,
+                            selected,
+                            client_for_window.clone(),
+                        )
+                        .present();
+                    }
+                    None => {
+                        toast_overlay.add_toast(adw::Toast::new(tr("No jobs found").as_str()));
+                    }
+                },
+                Err(message) => {
+                    error!("Failed to load jobs for logs: {}", message);
+                    toast_overlay.add_toast(adw::Toast::new(tr("Unable to load jobs").as_str()));
+                }
+            }
+            glib::ControlFlow::Break
+        });
+
+        let client = client.clone();
+        let owner = owner.clone();
+        let repo = repo.clone();
+        crate::runtime_handle().spawn(async move {
+            let client_guard = client.lock().clone();
+            let jobs = client_guard
+                .list_jobs(&owner, &repo, run_id)
+                .await
+                .map_err(|error| error.to_string());
+            let _ = sender.send(jobs);
+        });
+    });
+
+    button
 }
 
 fn create_open_button(url: &str) -> gtk::Button {
@@ -322,7 +397,7 @@ pub(crate) fn confirm_and_cancel_run(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::models::WorkflowRun;
+    use crate::api::models::{Repo, WorkflowRun};
     use crate::ui::test_helpers::run_gtk_test;
 
     fn run_stub() -> WorkflowRun {
@@ -381,6 +456,17 @@ mod tests {
                 client: client.clone(),
                 owner: "owner".to_string(),
                 repo: "repo".to_string(),
+                repo_model: Repo {
+                    id: 1,
+                    name: "repo".into(),
+                    full_name: "owner/repo".into(),
+                    owner: crate::api::models::User {
+                        login: "owner".into(),
+                    },
+                    is_private: false,
+                    permissions: None,
+                    default_branch: Some("main".into()),
+                },
                 parent_window: parent.clone(),
                 toast_overlay: overlay.clone(),
             };

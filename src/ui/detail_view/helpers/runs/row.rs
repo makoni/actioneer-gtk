@@ -61,6 +61,7 @@ impl RunRowContext {
             client: self.client.clone(),
             owner: self.owner.clone(),
             repo: self.repo.clone(),
+            repo_model: self.repo_model.clone(),
             parent_window: self.parent_window.clone(),
             toast_overlay: self.toast_overlay.clone(),
         }

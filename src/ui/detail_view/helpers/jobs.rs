@@ -42,6 +42,9 @@ pub(super) struct JobRowContext {
     pub(super) parent_window: gtk::Window,
     pub(super) repo: Repo,
     pub(super) run_title: String,
+    /// Every job of the run, so the log window can offer the others in its
+    /// sidebar instead of trapping the reader in the one row they clicked.
+    pub(super) run_jobs: Arc<Vec<Job>>,
 }
 
 /// Elapsed `mm:ss` (or `h:mm:ss`) for a job/step that is still running.
@@ -151,12 +154,23 @@ pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -
         let client = ctx.client.clone();
         let job_for_logs = job.clone();
         let run_title = ctx.run_title.clone();
+        let run_jobs = ctx.run_jobs.clone();
         logs_button.connect_clicked(move |_| {
-            let logs_window = JobLogsWindow::new(
+            let jobs = if run_jobs.iter().any(|other| other.id == job_for_logs.id) {
+                run_jobs.as_ref().clone()
+            } else {
+                vec![job_for_logs.clone()]
+            };
+            let selected = jobs
+                .iter()
+                .position(|other| other.id == job_for_logs.id)
+                .unwrap_or(0);
+            let logs_window = JobLogsWindow::for_run(
                 &parent_window,
                 repo_model.clone(),
                 run_title.clone(),
-                job_for_logs.clone(),
+                jobs,
+                selected,
                 client.clone(),
             );
             logs_window.present();
@@ -464,6 +478,7 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
                     parent_window: parent_window.clone(),
                     repo: repo_model.clone(),
                     run_title: run_title.clone(),
+                    run_jobs: jobs.clone(),
                 };
                 for job in jobs.iter() {
                     let job_row = create_job_row_simple(job, Some(row_context.clone()));

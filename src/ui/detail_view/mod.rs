@@ -29,6 +29,7 @@ use favorite_controls::observe_favorites;
 use favorite_controls::setup_favorite_button;
 use filter_controls::{FilterChips, FilterControls};
 use header_state::DetailHeaderState;
+pub(crate) use helpers::build_job_status_dot;
 use helpers::{JobContextMap, RunBadgeSummaryMap, RunDigestStore, RunLoadService};
 
 #[derive(Clone)]

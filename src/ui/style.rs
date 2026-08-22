@@ -406,6 +406,25 @@ const APP_CSS: &str = r#"
 /* Scripts where tracking is harmful (Arabic, Hebrew, Devanagari, Bengali, Thai,
    CJK) opt out of it. This block must stay last: it has the same specificity as
    the heading rules it overrides, so source order is what decides. */
+/* Job picker in the logs window. The reader must see at a glance whose log is
+   on the right, so it reuses the repository sidebar's accent pair. The status
+   dot keeps its own colour: it is the one thing selection must not repaint. */
+.job-sidebar > row:selected,
+.job-sidebar > row:selected:hover {
+    background-color: @accent_bg_color;
+    color: @accent_fg_color;
+    border-radius: 9px;
+}
+
+.job-sidebar > row:selected .dim-label {
+    color: alpha(@accent_fg_color, 0.72);
+}
+
+.job-sidebar > row:hover:not(:selected) {
+    background-color: alpha(currentColor, 0.06);
+    border-radius: 9px;
+}
+
 .no-tracking {
     letter-spacing: 0;
 }
