@@ -9,7 +9,8 @@ use gtk4::{self as gtk, glib};
 use libadwaita as adw;
 use libadwaita::prelude::*;
 use parking_lot::Mutex;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::Arc;
 use tracing::{error, info, warn};
@@ -20,19 +21,55 @@ use render::render_ansi_logs;
 #[derive(Clone)]
 pub struct JobLogsWindow {
     window: adw::Window,
+    ctx: Rc<Ctx>,
+}
+
+/// Everything the header buttons and the job sidebar act on.
+///
+/// It holds the window and its own buttons weakly on purpose: those widgets
+/// carry the handlers that own this `Rc`, so a strong link back would form a
+/// cycle and keep the whole window alive long after it is closed.
+struct Ctx {
     repo: Repo,
     /// Every job of the run, so the sidebar can offer them all. A run has no log
     /// of its own — it is exactly this set of job logs — so "the run's logs"
     /// can only be shown as a list to pick from.
-    jobs: Rc<Vec<Job>>,
-    job: Rc<RefCell<Job>>,
+    jobs: Vec<Job>,
+    selected: Cell<usize>,
     client: Arc<Mutex<GitHubClient>>,
+    window: glib::WeakRef<adw::Window>,
     text_view: gtk::TextView,
-    toast_overlay: adw::ToastOverlay,
+    /// Weak like the window: the overlay is the root of the content, so every
+    /// button whose handler owns this `Ctx` hangs below it.
+    toast_overlay: glib::WeakRef<adw::ToastOverlay>,
     run_title: String,
     job_label: gtk::Label,
-    copy_button: gtk::Button,
-    save_button: gtk::Button,
+    copy_button: glib::WeakRef<gtk::Button>,
+    save_button: glib::WeakRef<gtk::Button>,
+    cache: LogCache,
+}
+
+/// Logs already fetched while this window has been open, keyed by job id.
+///
+/// Stepping back and forth between jobs is the normal way to read a run, and
+/// GitHub hands out a fresh download URL per request, so re-fetching a log the
+/// reader has already seen costs a round trip and an API call for nothing.
+#[derive(Default)]
+struct LogCache(RefCell<HashMap<i64, String>>);
+
+impl LogCache {
+    fn get(&self, job_id: i64) -> Option<String> {
+        self.0.borrow().get(&job_id).cloned()
+    }
+
+    /// Keeps the log only if the job has finished: a running job is still
+    /// writing, so a cached copy would freeze it at whatever the first read
+    /// happened to catch.
+    fn store(&self, job: &Job, logs: &str) {
+        if job.conclusion.is_some() {
+            self.0.borrow_mut().insert(job.id, logs.to_string());
+        }
+    }
 }
 
 struct WindowParts {
@@ -71,12 +108,23 @@ impl JobLogsWindow {
         selected: usize,
         client: Arc<Mutex<GitHubClient>>,
     ) -> Self {
-        let jobs = Rc::new(jobs);
-        let selected = selected.min(jobs.len().saturating_sub(1));
-        let job = jobs
-            .get(selected)
-            .cloned()
-            .unwrap_or_else(|| panic!("JobLogsWindow requires at least one job"));
+        let logs_window = Self::build(parent, repo, run_title, jobs, selected, client);
+        logs_window.ctx.load_logs(false);
+        logs_window
+    }
+
+    /// Assembles the window without touching the network, so tests can build a
+    /// complete one and watch it go away again.
+    fn build(
+        parent: &impl IsA<gtk::Window>,
+        repo: Repo,
+        run_title: String,
+        jobs: Vec<Job>,
+        selected: usize,
+        client: Arc<Mutex<GitHubClient>>,
+    ) -> Self {
+        assert!(!jobs.is_empty(), "JobLogsWindow requires at least one job");
+        let selected = selected.min(jobs.len() - 1);
 
         let window = adw::Window::builder()
             .title(tr("{title} - Logs").replace("{title}", run_title.as_str()))
@@ -104,59 +152,33 @@ impl JobLogsWindow {
             &window,
             &toast_overlay,
             &text_view,
-            &job_display_name(&job),
+            &job_display_name(&jobs[selected]),
             &repo.full_name,
             &jobs,
             selected,
         );
 
-        let logs_window = Self {
-            window: window.clone(),
-            repo: repo.clone(),
-            jobs: jobs.clone(),
-            job: Rc::new(RefCell::new(job)),
-            client: client.clone(),
-            text_view: text_view.clone(),
-            toast_overlay: toast_overlay.clone(),
+        let ctx = Rc::new(Ctx {
+            repo,
+            jobs,
+            selected: Cell::new(selected),
+            client,
+            window: window.downgrade(),
+            text_view,
+            toast_overlay: toast_overlay.downgrade(),
             run_title,
             job_label: parts.job_label.clone(),
-            copy_button: parts.copy.clone(),
-            save_button: parts.save.clone(),
-        };
-
-        logs_window.connect_refresh_button(&parts.refresh);
-        logs_window.connect_copy_button(&parts.copy);
-        logs_window.connect_save_button(&parts.save);
-        logs_window.connect_job_list(&parts.job_list);
-        logs_window.load_logs();
-
-        logs_window
-    }
-
-    /// Swaps the viewer to another job of the same run.
-    fn show_job(&self, index: usize) {
-        let Some(job) = self.jobs.get(index).cloned() else {
-            return;
-        };
-        if job.id == self.job.borrow().id {
-            return;
-        }
-
-        self.job_label.set_text(&job_display_name(&job));
-        *self.job.borrow_mut() = job;
-        self.text_view
-            .buffer()
-            .set_text(tr("Fetching logs...").as_str());
-        self.load_logs();
-    }
-
-    fn connect_job_list(&self, job_list: &gtk::ListBox) {
-        let this = self.clone();
-        job_list.connect_row_selected(move |_, row| {
-            if let Some(row) = row {
-                this.show_job(row.index().max(0) as usize);
-            }
+            copy_button: parts.copy.downgrade(),
+            save_button: parts.save.downgrade(),
+            cache: LogCache::default(),
         });
+
+        ctx.connect_refresh_button(&parts.refresh);
+        ctx.connect_copy_button(&parts.copy);
+        ctx.connect_save_button(&parts.save);
+        ctx.connect_job_list(&parts.job_list);
+
+        Self { window, ctx }
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -251,252 +273,6 @@ impl JobLogsWindow {
         }
     }
 
-    fn load_logs(&self) {
-        self.set_copy_save_enabled(false);
-
-        let client = self.client.clone();
-        let owner = self.repo.owner.login.clone();
-        let repo_name = self.repo.name.clone();
-        let job_id = self.job.borrow().id;
-        let text_view = self.text_view.clone();
-        let copy_button = self.copy_button.clone();
-        let save_button = self.save_button.clone();
-
-        let (sender, receiver) = glib::MainContext::default()
-            .channel::<Result<String, GitHubError>>(glib::Priority::default());
-
-        receiver.attach(None, move |result| {
-            match result {
-                Ok(logs) => {
-                    info!("Loaded logs ({} bytes)", logs.len());
-                    text_view.set_sensitive(true);
-                    render_ansi_logs(&text_view, &logs);
-                    copy_button.set_sensitive(true);
-                    save_button.set_sensitive(true);
-                }
-                Err(GitHubError::NotFound) => {
-                    warn!("Job logs unavailable; job may still be running");
-                    text_view.set_sensitive(false);
-                    text_view.buffer().set_text(tr("Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments.").as_str());
-                    copy_button.set_sensitive(false);
-                    save_button.set_sensitive(false);
-                }
-                Err(GitHubError::Gone) => {
-                    warn!("Job logs expired (410 Gone)");
-                    text_view.set_sensitive(false);
-                    text_view.buffer().set_text(
-                        tr("The logs for this run have expired and are no longer available.")
-                            .as_str(),
-                    );
-                    copy_button.set_sensitive(false);
-                    save_button.set_sensitive(false);
-                }
-                Err(e) => {
-                    error!("Failed to load logs: {}", e);
-                    text_view.set_sensitive(false);
-                    text_view.buffer().set_text(
-                        tr("Unable to load logs right now. Please try again later.\n\nDetails: {error}")
-                            .replace("{error}", e.to_string().as_str())
-                            .as_str(),
-                    );
-                    copy_button.set_sensitive(false);
-                    save_button.set_sensitive(false);
-                }
-            }
-            glib::ControlFlow::Break
-        });
-
-        crate::runtime_handle().spawn(async move {
-            let client_clone = client.lock().clone();
-            let result = client_clone.get_job_logs(&owner, &repo_name, job_id).await;
-            let _ = sender.send(result);
-        });
-    }
-
-    fn connect_refresh_button(&self, button: &gtk::Button) {
-        let client = self.client.clone();
-        let owner = self.repo.owner.login.clone();
-        let repo_name = self.repo.name.clone();
-        let job_id = self.job.borrow().id;
-        let text_view = self.text_view.clone();
-        let copy_button = self.copy_button.clone();
-        let save_button = self.save_button.clone();
-
-        button.connect_clicked(move |_| {
-            let client = client.clone();
-            let owner = owner.clone();
-            let repo_name = repo_name.clone();
-            let tv = text_view.clone();
-            copy_button.set_sensitive(false);
-            save_button.set_sensitive(false);
-
-            let (sender, receiver) = glib::MainContext::default()
-                .channel::<Result<String, GitHubError>>(glib::Priority::default());
-            let tv_for_ui = tv.clone();
-            let copy_for_result = copy_button.clone();
-            let save_for_result = save_button.clone();
-
-            receiver.attach(None, move |result| {
-                match result {
-                    Ok(logs) => {
-                        info!("Refreshed logs ({} bytes)", logs.len());
-                        tv_for_ui.set_sensitive(true);
-                        render_ansi_logs(&tv_for_ui, &logs);
-                        copy_for_result.set_sensitive(true);
-                        save_for_result.set_sensitive(true);
-                    }
-                    Err(GitHubError::NotFound) => {
-                        warn!("Job logs still unavailable during refresh");
-                        tv_for_ui.set_sensitive(false);
-                        tv_for_ui.buffer().set_text(tr("Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments.").as_str());
-                        copy_for_result.set_sensitive(false);
-                        save_for_result.set_sensitive(false);
-                    }
-                    Err(GitHubError::Gone) => {
-                        warn!("Job logs expired during refresh (410 Gone)");
-                        tv_for_ui.set_sensitive(false);
-                        tv_for_ui.buffer().set_text(
-                            tr("The logs for this run have expired and are no longer available.")
-                                .as_str(),
-                        );
-                        copy_for_result.set_sensitive(false);
-                        save_for_result.set_sensitive(false);
-                    }
-                    Err(e) => {
-                        error!("Failed to refresh logs: {}", e);
-                        tv_for_ui.set_sensitive(false);
-                        tv_for_ui.buffer().set_text(
-                            tr("Unable to load logs right now. Please try again later.\n\nDetails: {error}")
-                                .replace("{error}", e.to_string().as_str())
-                                .as_str(),
-                        );
-                        copy_for_result.set_sensitive(false);
-                        save_for_result.set_sensitive(false);
-                    }
-                }
-
-                glib::ControlFlow::Break
-            });
-            crate::runtime_handle().spawn(async move {
-                let client_clone = client.lock().clone();
-                let result = client_clone.get_job_logs(&owner, &repo_name, job_id).await;
-                let _ = sender.send(result);
-            });
-        });
-    }
-
-    fn set_copy_save_enabled(&self, enabled: bool) {
-        self.copy_button.set_sensitive(enabled);
-        self.save_button.set_sensitive(enabled);
-    }
-
-    fn connect_copy_button(&self, button: &gtk::Button) {
-        let text_view = self.text_view.clone();
-        let overlay = self.toast_overlay.clone();
-
-        button.connect_clicked(move |_| {
-            let buffer = text_view.buffer();
-            let text = buffer
-                .text(&buffer.start_iter(), &buffer.end_iter(), true)
-                .to_string();
-
-            if text.is_empty() {
-                let toast = adw::Toast::new(tr("Logs are empty; nothing to copy").as_str());
-                toast.set_timeout(3);
-                overlay.add_toast(toast);
-                return;
-            }
-
-            let display = gdk::Display::default();
-            match display {
-                Some(display) => {
-                    let clipboard = display.clipboard();
-                    clipboard.set_text(&text);
-                    let toast = adw::Toast::new(tr("Logs copied to clipboard").as_str());
-                    toast.set_timeout(3);
-                    overlay.add_toast(toast);
-                }
-                None => {
-                    let toast =
-                        adw::Toast::new(tr("Clipboard unavailable on this system").as_str());
-                    toast.set_timeout(5);
-                    overlay.add_toast(toast);
-                }
-            }
-        });
-    }
-
-    fn connect_save_button(&self, button: &gtk::Button) {
-        let window = self.window.clone();
-        let text_view = self.text_view.clone();
-        let overlay = self.toast_overlay.clone();
-        let run_title = self.run_title.clone();
-        let job_title = job_display_name(&self.job.borrow());
-
-        button.connect_clicked(move |_| {
-            let default_name = JobLogsWindow::default_file_name(&run_title, &job_title);
-            let dialog = JobLogsWindow::build_save_dialog(&default_name);
-
-            let overlay_for_dialog = overlay.clone();
-            let text_for_dialog = text_view.clone();
-
-            dialog.save(Some(&window), gio::Cancellable::NONE, move |result| {
-                let file = match result {
-                    Ok(file) => file,
-                    Err(_) => return,
-                };
-
-                let buffer = text_for_dialog.buffer();
-                let text = buffer
-                    .text(&buffer.start_iter(), &buffer.end_iter(), true)
-                    .to_string();
-
-                if text.is_empty() {
-                    let toast = adw::Toast::new(tr("Logs are empty; nothing saved").as_str());
-                    toast.set_timeout(3);
-                    overlay_for_dialog.add_toast(toast);
-                    return;
-                }
-
-                if let Some(path) = file.path() {
-                    let text_to_write = text.clone();
-                    let (sender, receiver) = glib::MainContext::default()
-                        .channel::<Result<(), String>>(glib::Priority::default());
-                    let overlay_for_result = overlay_for_dialog.clone();
-
-                    receiver.attach(None, move |message| {
-                        match message {
-                            Ok(()) => {
-                                let toast = adw::Toast::new(tr("Logs saved").as_str());
-                                toast.set_timeout(3);
-                                overlay_for_result.add_toast(toast);
-                            }
-                            Err(err) => {
-                                let toast = adw::Toast::new(
-                                    tr("Failed to save logs: {error}")
-                                        .replace("{error}", err.as_str())
-                                        .as_str(),
-                                );
-                                toast.set_timeout(5);
-                                overlay_for_result.add_toast(toast);
-                            }
-                        }
-                        glib::ControlFlow::Break
-                    });
-
-                    crate::runtime_handle().spawn_blocking(move || {
-                        let result = std::fs::write(&path, text_to_write);
-                        let _ = sender.send(result.map_err(|e| e.to_string()));
-                    });
-                } else {
-                    let toast = adw::Toast::new(tr("Unable to determine save location").as_str());
-                    toast.set_timeout(5);
-                    overlay_for_dialog.add_toast(toast);
-                }
-            });
-        });
-    }
-
     fn default_file_name(run_title: &str, job_title: &str) -> String {
         let run_segment =
             Self::sanitize_filename_segment(run_title).unwrap_or_else(|| "run".to_string());
@@ -536,6 +312,234 @@ impl JobLogsWindow {
     pub fn present(&self) {
         self.window.present();
     }
+}
+
+impl Ctx {
+    fn job(&self) -> &Job {
+        &self.jobs[self.selected.get()]
+    }
+
+    /// Swaps the viewer to another job of the same run.
+    fn show_job(self: &Rc<Self>, index: usize) {
+        if index >= self.jobs.len() || index == self.selected.get() {
+            return;
+        }
+
+        self.selected.set(index);
+        self.job_label.set_text(&job_display_name(self.job()));
+        self.load_logs(false);
+    }
+
+    /// `force` skips the cache: Refresh has to reach GitHub even for a log that
+    /// is already on screen, which is the whole point of pressing it.
+    fn load_logs(self: &Rc<Self>, force: bool) {
+        let job_id = self.job().id;
+
+        if !force && let Some(cached) = self.cache.get(job_id) {
+            self.render_logs(&cached);
+            return;
+        }
+
+        self.text_view
+            .buffer()
+            .set_text(tr("Fetching logs...").as_str());
+        self.set_copy_save_enabled(false);
+
+        let (sender, receiver) = glib::MainContext::default()
+            .channel::<Result<String, GitHubError>>(glib::Priority::default());
+
+        let this = self.clone();
+        receiver.attach(None, move |result| {
+            // The reader may have moved on while this was in flight. A stale
+            // reply must not paint over the job now on screen — but it is still
+            // worth keeping, which is exactly what the cache is for.
+            let still_showing = this.job().id == job_id;
+            match result {
+                Ok(logs) => {
+                    info!("Loaded logs ({} bytes)", logs.len());
+                    if let Some(job) = this.jobs.iter().find(|job| job.id == job_id) {
+                        this.cache.store(job, &logs);
+                    }
+                    if still_showing {
+                        this.render_logs(&logs);
+                    }
+                }
+                Err(error) => {
+                    if still_showing {
+                        this.render_error(&error);
+                    }
+                }
+            }
+            glib::ControlFlow::Break
+        });
+
+        let client = self.client.clone();
+        let owner = self.repo.owner.login.clone();
+        let repo_name = self.repo.name.clone();
+        crate::runtime_handle().spawn(async move {
+            let client = client.lock().clone();
+            let result = client.get_job_logs(&owner, &repo_name, job_id).await;
+            let _ = sender.send(result);
+        });
+    }
+
+    fn render_logs(&self, logs: &str) {
+        self.text_view.set_sensitive(true);
+        render_ansi_logs(&self.text_view, logs);
+        self.set_copy_save_enabled(true);
+    }
+
+    fn render_error(&self, error: &GitHubError) {
+        let message = match error {
+            GitHubError::NotFound => {
+                warn!("Job logs unavailable; job may still be running");
+                tr(
+                    "Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments.",
+                )
+            }
+            GitHubError::Gone => {
+                warn!("Job logs expired (410 Gone)");
+                tr("The logs for this run have expired and are no longer available.")
+            }
+            other => {
+                error!("Failed to load logs: {}", other);
+                tr("Unable to load logs right now. Please try again later.\n\nDetails: {error}")
+                    .replace("{error}", other.to_string().as_str())
+            }
+        };
+
+        self.text_view.set_sensitive(false);
+        self.text_view.buffer().set_text(&message);
+        self.set_copy_save_enabled(false);
+    }
+
+    fn set_copy_save_enabled(&self, enabled: bool) {
+        if let Some(button) = self.copy_button.upgrade() {
+            button.set_sensitive(enabled);
+        }
+        if let Some(button) = self.save_button.upgrade() {
+            button.set_sensitive(enabled);
+        }
+    }
+
+    fn connect_job_list(self: &Rc<Self>, job_list: &gtk::ListBox) {
+        let this = self.clone();
+        job_list.connect_row_selected(move |_, row| {
+            if let Some(row) = row {
+                this.show_job(row.index().max(0) as usize);
+            }
+        });
+    }
+
+    fn connect_refresh_button(self: &Rc<Self>, button: &gtk::Button) {
+        let this = self.clone();
+        button.connect_clicked(move |_| this.load_logs(true));
+    }
+
+    fn connect_copy_button(self: &Rc<Self>, button: &gtk::Button) {
+        let this = self.clone();
+        button.connect_clicked(move |_| this.copy_logs());
+    }
+
+    fn copy_logs(&self) {
+        let text = self.logs_text();
+
+        if text.is_empty() {
+            self.toast(tr("Logs are empty; nothing to copy").as_str(), 3);
+            return;
+        }
+
+        match gdk::Display::default() {
+            Some(display) => {
+                display.clipboard().set_text(&text);
+                self.toast(tr("Logs copied to clipboard").as_str(), 3);
+            }
+            None => {
+                error!("No display available for clipboard access");
+                self.toast(tr("Unable to access the clipboard").as_str(), 5);
+            }
+        }
+    }
+
+    fn connect_save_button(self: &Rc<Self>, button: &gtk::Button) {
+        let this = self.clone();
+        button.connect_clicked(move |_| this.save_logs());
+    }
+
+    fn save_logs(&self) {
+        let default_name =
+            JobLogsWindow::default_file_name(&self.run_title, &job_display_name(self.job()));
+        let dialog = JobLogsWindow::build_save_dialog(&default_name);
+
+        let Some(overlay) = self.toast_overlay.upgrade() else {
+            return;
+        };
+        let text = self.logs_text();
+        let window = self.window.upgrade();
+
+        dialog.save(window.as_ref(), gio::Cancellable::NONE, move |result| {
+            let Ok(file) = result else {
+                return;
+            };
+
+            if text.is_empty() {
+                add_toast(&overlay, tr("Logs are empty; nothing saved").as_str(), 3);
+                return;
+            }
+
+            let Some(path) = file.path() else {
+                add_toast(
+                    &overlay,
+                    tr("Unable to determine save location").as_str(),
+                    5,
+                );
+                return;
+            };
+
+            let (sender, receiver) = glib::MainContext::default()
+                .channel::<Result<(), String>>(glib::Priority::default());
+            let overlay_for_result = overlay.clone();
+
+            receiver.attach(None, move |message| {
+                match message {
+                    Ok(()) => add_toast(&overlay_for_result, tr("Logs saved").as_str(), 3),
+                    Err(err) => add_toast(
+                        &overlay_for_result,
+                        tr("Failed to save logs: {error}")
+                            .replace("{error}", err.as_str())
+                            .as_str(),
+                        5,
+                    ),
+                }
+                glib::ControlFlow::Break
+            });
+
+            let text_to_write = text.clone();
+            crate::runtime_handle().spawn_blocking(move || {
+                let result = std::fs::write(&path, text_to_write);
+                let _ = sender.send(result.map_err(|e| e.to_string()));
+            });
+        });
+    }
+
+    fn logs_text(&self) -> String {
+        let buffer = self.text_view.buffer();
+        buffer
+            .text(&buffer.start_iter(), &buffer.end_iter(), true)
+            .to_string()
+    }
+
+    fn toast(&self, message: &str, timeout: u32) {
+        if let Some(overlay) = self.toast_overlay.upgrade() {
+            add_toast(&overlay, message, timeout);
+        }
+    }
+}
+
+fn add_toast(overlay: &adw::ToastOverlay, message: &str, timeout: u32) {
+    let toast = adw::Toast::new(message);
+    toast.set_timeout(timeout);
+    overlay.add_toast(toast);
 }
 
 fn job_display_name(job: &Job) -> String {
@@ -597,6 +601,20 @@ mod tests {
     use super::*;
     use crate::api::models::Job;
     use crate::ui::test_helpers::run_gtk_test;
+
+    fn repo_stub() -> Repo {
+        Repo {
+            id: 1,
+            name: "repo".into(),
+            full_name: "owner/repo".into(),
+            owner: crate::api::models::User {
+                login: "owner".into(),
+            },
+            is_private: false,
+            permissions: None,
+            default_branch: Some("main".into()),
+        }
+    }
 
     fn job_stub(name: &str, conclusion: Option<&str>) -> Job {
         Job {
@@ -660,6 +678,77 @@ mod tests {
             // The failed job is preselected: that is what the reader came for.
             let selected = list.selected_row().expect("a job should be selected");
             assert_eq!(selected.index(), 2);
+        });
+    }
+
+    #[test]
+    fn cache_keeps_finished_jobs_and_skips_running_ones() {
+        let cache = LogCache::default();
+        let finished = job_stub("build", Some("failure"));
+        let running = job_stub("deploy", None);
+
+        cache.store(&finished, "boom");
+        cache.store(&running, "half a log");
+
+        assert_eq!(cache.get(finished.id).as_deref(), Some("boom"));
+        // A running job is still writing: a cached copy would freeze its log at
+        // whatever the first read caught, and Refresh would never move.
+        assert_eq!(cache.get(running.id), None);
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn window_is_released_once_closed() {
+        run_gtk_test("window_is_released_once_closed", || {
+            // The header buttons and the sidebar own the shared state, and that
+            // state reaches back to the window and to those same buttons. Holding
+            // either one strongly would close the loop and leak the whole window,
+            // logs and all, every time the reader opens one.
+            let mut weaks: Vec<(String, glib::WeakRef<gtk::Widget>)> = Vec::new();
+            let parent = gtk::Window::new();
+            let weak = {
+                let logs = JobLogsWindow::build(
+                    &parent,
+                    repo_stub(),
+                    "CI • main #1".to_string(),
+                    vec![
+                        job_stub("build", Some("success")),
+                        job_stub("test", Some("failure")),
+                    ],
+                    1,
+                    Arc::new(Mutex::new(
+                        GitHubClient::new(None).expect("client stub should build"),
+                    )),
+                );
+                let window = logs.window.clone();
+                crate::ui::test_helpers::collect_widget_weaks(
+                    &window.clone().upcast::<gtk::Widget>(),
+                    &mut weaks,
+                );
+                window.destroy();
+                window.downgrade()
+            };
+
+            while glib::MainContext::default().pending() {
+                let _ = glib::MainContext::default().iteration(false);
+            }
+
+            assert!(
+                weak.upgrade().is_none(),
+                "logs window outlived its last strong reference — a handler is \
+                 holding it in a reference cycle"
+            );
+
+            let survivors: Vec<&str> = weaks
+                .iter()
+                .filter(|(_, weak)| weak.upgrade().is_some())
+                .map(|(name, _)| name.as_str())
+                .collect();
+            assert!(
+                survivors.is_empty(),
+                "widgets outlived the closed logs window: {survivors:?} — a signal \
+                 handler is holding them in a reference cycle"
+            );
         });
     }
 
