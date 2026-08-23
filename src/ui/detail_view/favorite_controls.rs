@@ -77,51 +77,51 @@ pub(super) fn observe_favorites(
     repo_id: i64,
     favorites_manager: Option<Arc<FavoritesManager>>,
 ) -> Option<tokio::task::JoinHandle<()>> {
-    if let Some(manager) = favorites_manager {
-        let receiver = manager.subscribe();
-        let button_weak = button.downgrade();
+    let Some(manager) = favorites_manager else {
+        update_detail_favorite_button(button, false);
+        button.set_sensitive(false);
+        return None;
+    };
 
-        let (sender, receiver_channel) =
-            glib::MainContext::default().channel::<bool>(glib::Priority::default());
+    let receiver = manager.subscribe();
+    let button_weak = button.downgrade();
 
-        receiver_channel.attach(None, move |is_favorite| {
-            let Some(button) = button_weak.upgrade() else {
-                return glib::ControlFlow::Break;
-            };
-            if button.is_active() != is_favorite {
-                button.set_active(is_favorite);
+    let (sender, receiver_channel) =
+        glib::MainContext::default().channel::<bool>(glib::Priority::default());
+
+    receiver_channel.attach(None, move |is_favorite| {
+        let Some(button) = button_weak.upgrade() else {
+            return glib::ControlFlow::Break;
+        };
+        if button.is_active() != is_favorite {
+            button.set_active(is_favorite);
+        }
+        update_detail_favorite_button(&button, is_favorite);
+
+        glib::ControlFlow::Continue
+    });
+
+    Some(crate::runtime_handle().spawn(async move {
+        let mut receiver_local = receiver;
+
+        if sender
+            .send(receiver_local.borrow().contains(&repo_id))
+            .is_err()
+        {
+            return;
+        }
+
+        loop {
+            if receiver_local.changed().await.is_err() {
+                break;
             }
-            update_detail_favorite_button(&button, is_favorite);
 
-            glib::ControlFlow::Continue
-        });
-
-        return Some(crate::runtime_handle().spawn(async move {
-            let mut receiver_local = receiver;
-
-            if sender
-                .send(receiver_local.borrow().contains(&repo_id))
-                .is_err()
-            {
-                return;
+            let is_favorite = receiver_local.borrow().contains(&repo_id);
+            if sender.send(is_favorite).is_err() {
+                break;
             }
-
-            loop {
-                if receiver_local.changed().await.is_err() {
-                    break;
-                }
-
-                let is_favorite = receiver_local.borrow().contains(&repo_id);
-                if sender.send(is_favorite).is_err() {
-                    break;
-                }
-            }
-        }));
-    }
-
-    update_detail_favorite_button(button, false);
-    button.set_sensitive(false);
-    None
+        }
+    }))
 }
 
 fn update_detail_favorite_button(button: &gtk::ToggleButton, is_active: bool) {
@@ -140,6 +140,28 @@ fn update_detail_favorite_button(button: &gtk::ToggleButton, is_active: bool) {
 mod tests {
     use super::*;
     use crate::ui::test_helpers::run_gtk_test;
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn observing_favorites_keeps_the_button_sensitive() {
+        run_gtk_test("observing_favorites_keeps_the_button_sensitive", || {
+            crate::init_test_runtime();
+            let manager = FavoritesManager::new().expect("favorites manager builds");
+            let button = gtk::ToggleButton::new();
+            button.set_sensitive(true);
+
+            let observer = observe_favorites(&button, i64::MAX, Some(Arc::new(manager)));
+
+            assert!(
+                button.is_sensitive(),
+                "observing must not disable the favorite button"
+            );
+
+            if let Some(observer) = observer {
+                observer.abort();
+            }
+        });
+    }
 
     #[test]
     #[ignore = "requires GTK display"]
