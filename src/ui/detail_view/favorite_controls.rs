@@ -69,11 +69,14 @@ pub(super) fn setup_favorite_button(
     }
 }
 
+/// Mirrors the favourite state onto `button` until the returned handle is
+/// aborted. Without aborting it, a replaced pane's observer sleeps on the
+/// broadcast channel until the next favourite change anywhere in the app.
 pub(super) fn observe_favorites(
     button: &gtk::ToggleButton,
     repo_id: i64,
     favorites_manager: Option<Arc<FavoritesManager>>,
-) {
+) -> Option<tokio::task::JoinHandle<()>> {
     if let Some(manager) = favorites_manager {
         let receiver = manager.subscribe();
         let button_weak = button.downgrade();
@@ -93,7 +96,7 @@ pub(super) fn observe_favorites(
             glib::ControlFlow::Continue
         });
 
-        crate::runtime_handle().spawn(async move {
+        return Some(crate::runtime_handle().spawn(async move {
             let mut receiver_local = receiver;
 
             if sender
@@ -113,11 +116,12 @@ pub(super) fn observe_favorites(
                     break;
                 }
             }
-        });
-    } else {
-        update_detail_favorite_button(button, false);
-        button.set_sensitive(false);
+        }));
     }
+
+    update_detail_favorite_button(button, false);
+    button.set_sensitive(false);
+    None
 }
 
 fn update_detail_favorite_button(button: &gtk::ToggleButton, is_active: bool) {

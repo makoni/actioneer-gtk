@@ -353,7 +353,7 @@ impl Ctx {
             // The reader may have moved on while this was in flight. A stale
             // reply must not paint over the job now on screen — but it is still
             // worth keeping, which is exactly what the cache is for.
-            let still_showing = this.job().id == job_id;
+            let still_showing = this.job().id == job_id && this.is_on_screen();
             match result {
                 Ok(logs) => {
                     info!("Loaded logs ({} bytes)", logs.len());
@@ -381,6 +381,15 @@ impl Ctx {
             let result = client.get_job_logs(&owner, &repo_name, job_id).await;
             let _ = sender.send(result);
         });
+    }
+
+    /// Whether rendering would be seen. A reply can arrive seconds after the
+    /// reader closed the window, and a run's log runs to megabytes: parsing its
+    /// ANSI into a buffer nobody will look at is pure waste.
+    fn is_on_screen(&self) -> bool {
+        self.window
+            .upgrade()
+            .is_some_and(|window| window.is_visible())
     }
 
     fn render_logs(&self, logs: &str) {
@@ -694,6 +703,39 @@ mod tests {
         // A running job is still writing: a cached copy would freeze its log at
         // whatever the first read caught, and Refresh would never move.
         assert_eq!(cache.get(running.id), None);
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn a_closed_window_is_not_worth_rendering_into() {
+        run_gtk_test("a_closed_window_is_not_worth_rendering_into", || {
+            let parent = gtk::Window::new();
+            let logs = JobLogsWindow::build(
+                &parent,
+                repo_stub(),
+                "CI • main #1".to_string(),
+                vec![job_stub("build", Some("success"))],
+                0,
+                Arc::new(Mutex::new(
+                    GitHubClient::new(None).expect("client stub should build"),
+                )),
+            );
+
+            logs.present();
+            assert!(
+                logs.ctx.is_on_screen(),
+                "a presented window should take its reply"
+            );
+
+            logs.window.close();
+            assert!(
+                !logs.ctx.is_on_screen(),
+                "a reply arriving after the reader closed the window must not be \
+                 parsed and rendered into it"
+            );
+
+            logs.window.destroy();
+        });
     }
 
     #[test]

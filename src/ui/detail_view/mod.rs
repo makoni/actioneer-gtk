@@ -70,6 +70,9 @@ pub struct RepoDetailPane {
     /// they are kept here and cut in `deactivate`: without that the pane, its
     /// whole widget tree and every model hanging off it survive being replaced.
     pane_handlers: Rc<RefCell<Vec<(glib::Object, glib::SignalHandlerId)>>>,
+    /// The favourites observer belonging to this pane, so a replaced pane stops
+    /// listening instead of sleeping on the broadcast channel.
+    favorites_observer: Rc<RefCell<Option<tokio::task::JoinHandle<()>>>>,
     refresh_active: Arc<AtomicBool>,
     expand_first_workflow_on_load: Rc<Cell<bool>>,
     header: DetailHeaderState,
@@ -299,6 +302,7 @@ impl RepoDetailPane {
             notification_manager: notification_manager.clone(),
             lifecycle_token: Rc::new(()),
             pane_handlers: Rc::new(RefCell::new(Vec::new())),
+            favorites_observer: Rc::new(RefCell::new(None)),
             refresh_active: Arc::new(AtomicBool::new(true)),
             expand_first_workflow_on_load: Rc::new(Cell::new(expand_first_workflow_on_load)),
             header,
@@ -313,7 +317,7 @@ impl RepoDetailPane {
             pane.favorites_manager.clone(),
             pane.favorites.clone(),
         );
-        observe_favorites(
+        *pane.favorites_observer.borrow_mut() = observe_favorites(
             &pane.favorite_button,
             pane.repo.id,
             pane.favorites_manager.clone(),
@@ -354,6 +358,9 @@ impl RepoDetailPane {
     }
 
     fn disconnect_pane_handlers(&self) {
+        if let Some(observer) = self.favorites_observer.borrow_mut().take() {
+            observer.abort();
+        }
         for (object, handler) in self.pane_handlers.borrow_mut().drain(..) {
             object.disconnect(handler);
         }
