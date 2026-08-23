@@ -42,6 +42,22 @@ pub fn runtime_handle() -> &'static Handle {
     RUNTIME_HANDLE.get().expect("Runtime not initialized")
 }
 
+/// Gives tests the global runtime the app sets up in `main`, so code paths that
+/// spawn (loading workflows, persisting preferences) can run under `cargo test`.
+#[cfg(test)]
+pub(crate) fn init_test_runtime() {
+    static TEST_RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
+
+    let runtime = TEST_RUNTIME.get_or_init(|| {
+        Builder::new_multi_thread()
+            .worker_threads(1)
+            .enable_all()
+            .build()
+            .expect("test runtime should build")
+    });
+    let _ = RUNTIME_HANDLE.set(runtime.handle().clone());
+}
+
 pub fn apply_text_direction_for_language() {
     let direction = if i18n::current_language_is_rtl() {
         gtk4::TextDirection::Rtl

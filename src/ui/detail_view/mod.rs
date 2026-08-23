@@ -65,6 +65,11 @@ pub struct RepoDetailPane {
     workflows_loading_runs: Arc<Mutex<HashSet<i64>>>, // Track in-flight run loads
     run_load_service: RunLoadService,
     lifecycle_token: Rc<()>,
+    /// Signal handlers whose closures own a clone of this pane (or of a widget
+    /// that contains them). Each one is a reference cycle by construction, so
+    /// they are kept here and cut in `deactivate`: without that the pane, its
+    /// whole widget tree and every model hanging off it survive being replaced.
+    pane_handlers: Rc<RefCell<Vec<(glib::Object, glib::SignalHandlerId)>>>,
     refresh_active: Arc<AtomicBool>,
     expand_first_workflow_on_load: Rc<Cell<bool>>,
     header: DetailHeaderState,
@@ -293,6 +298,7 @@ impl RepoDetailPane {
             run_load_service: run_load_service.clone(),
             notification_manager: notification_manager.clone(),
             lifecycle_token: Rc::new(()),
+            pane_handlers: Rc::new(RefCell::new(Vec::new())),
             refresh_active: Arc::new(AtomicBool::new(true)),
             expand_first_workflow_on_load: Rc::new(Cell::new(expand_first_workflow_on_load)),
             header,
@@ -332,6 +338,29 @@ impl RepoDetailPane {
     pub(crate) fn deactivate(&self) {
         self.refresh_active.store(false, Ordering::Relaxed);
         self.teardown_refresh_timers();
+        self.disconnect_pane_handlers();
+    }
+
+    /// Records a handler that owns a strong reference back into this pane, so
+    /// `deactivate` can cut the cycle it forms.
+    pub(super) fn register_pane_handler(
+        &self,
+        object: &impl IsA<glib::Object>,
+        handler: glib::SignalHandlerId,
+    ) {
+        self.pane_handlers
+            .borrow_mut()
+            .push((object.as_ref().clone(), handler));
+    }
+
+    fn disconnect_pane_handlers(&self) {
+        for (object, handler) in self.pane_handlers.borrow_mut().drain(..) {
+            object.disconnect(handler);
+        }
+        // The rows hold contexts that reach back to this pane's root, and the
+        // store outlives the widget tree, so an emptied store is part of
+        // letting go rather than a cosmetic detail.
+        self.workflow_store.remove_all();
     }
 
     fn build_ui(&self) {
@@ -436,8 +465,87 @@ impl RepoDetailPane {
 #[cfg(test)]
 mod tests {
     use super::should_teardown_refresh_timers;
+    use super::*;
+    use crate::ui::test_helpers::{collect_widget_weaks, run_gtk_test};
     use std::rc::Rc;
     use std::sync::{Arc, atomic::AtomicBool};
+
+    /// Demo data is global: switch it off however the test ends, or an
+    /// unrelated test that builds a client picks up the demo repositories.
+    struct DemoData;
+
+    impl Drop for DemoData {
+        fn drop(&mut self) {
+            crate::demo::disable();
+        }
+    }
+
+    /// Runs the main loop until it goes quiet, so in-flight channels that pin a
+    /// pane clone until their reply arrives are not mistaken for a leak.
+    fn settle() {
+        for _ in 0..200 {
+            while glib::MainContext::default().pending() {
+                let _ = glib::MainContext::default().iteration(false);
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+        while glib::MainContext::default().pending() {
+            let _ = glib::MainContext::default().iteration(false);
+        }
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn detail_pane_is_released_when_dropped() {
+        run_gtk_test("detail_pane_is_released_when_dropped", || {
+            crate::init_test_runtime();
+            let _demo = DemoData;
+            let repos = crate::demo::enable();
+            let repo = repos.first().cloned().expect("demo data has repositories");
+
+            let app = adw::Application::builder()
+                .application_id("me.spaceinbox.actioneer.PaneReleaseTest")
+                .build();
+            let window = adw::ApplicationWindow::new(&app);
+            let client = Arc::new(parking_lot::Mutex::new(
+                crate::api::GitHubClient::new(None).expect("client stub should build"),
+            ));
+
+            let mut weaks: Vec<(String, glib::WeakRef<gtk::Widget>)> = Vec::new();
+            let widget_weak = {
+                let pane = RepoDetailPane::new(
+                    window.clone(),
+                    repo,
+                    client,
+                    RepoDetailDeps {
+                        favorites_manager: None,
+                        preferences_manager: None,
+                        favorites: Arc::new(parking_lot::Mutex::new(HashSet::new())),
+                        notification_manager: None,
+                    },
+                    false,
+                );
+                let widget = pane.widget();
+                settle();
+                collect_widget_weaks(&widget, &mut weaks);
+                pane.deactivate();
+                widget.downgrade()
+            };
+
+            settle();
+
+            let survivors: Vec<&str> = weaks
+                .iter()
+                .filter(|(_, weak)| weak.upgrade().is_some())
+                .map(|(name, _)| name.as_str())
+                .collect();
+            assert!(
+                widget_weak.upgrade().is_none() && survivors.is_empty(),
+                "the detail pane outlived its last strong reference — a signal \
+                 handler is holding it in a reference cycle. Survivors: {survivors:?}"
+            );
+        });
+    }
 
     #[test]
     fn teardown_only_runs_for_last_pane_clone() {

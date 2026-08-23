@@ -48,9 +48,10 @@ impl RepoDetailPane {
 
     fn attach_filter_chip_handler(&self, button: &gtk::ToggleButton, kind: FilterKind) {
         let pane = self.clone();
-        button.connect_toggled(move |btn| {
+        let handler = button.connect_toggled(move |btn| {
             pane.on_filter_chip_toggled(kind, btn.is_active());
         });
+        self.register_pane_handler(button, handler);
     }
 
     fn on_filter_chip_toggled(&self, kind: FilterKind, active: bool) {

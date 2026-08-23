@@ -789,6 +789,11 @@ impl MainWindow {
         }
 
         replacement.present();
+        // The pane's own handlers hold it back, so dropping this window is not
+        // enough to release it: cut them the same way a repo switch does.
+        if let Some(detail) = self.active_detail.borrow_mut().take() {
+            detail.deactivate();
+        }
         self.window.close();
     }
 }

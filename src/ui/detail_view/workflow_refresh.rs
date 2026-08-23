@@ -500,7 +500,7 @@ impl RepoDetailPane {
         let run_badge_summaries = context.run_badge_summaries.clone();
         let run_filters_for_button = run_filters.clone();
 
-        button.connect_clicked(move |_| {
+        let handler = button.connect_clicked(move |_| {
             {
                 let mut guard = loading_guard.lock();
                 if *guard {
@@ -607,6 +607,7 @@ impl RepoDetailPane {
                 notifier.finish(result);
             });
         });
+        self.register_pane_handler(button, handler);
     }
 
     pub(super) fn start_auto_refresh(&self) {
