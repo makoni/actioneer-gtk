@@ -73,6 +73,8 @@ fn locale_for_setlocale(language: &str) -> Option<&'static str> {
         "pt_BR" => Some("pt_BR.UTF-8"),
         "ru" => Some("ru_RU.UTF-8"),
         "ur" => Some("ur_PK.UTF-8"),
+        "it" => Some("it_IT.UTF-8"),
+        "ja" => Some("ja_JP.UTF-8"),
         _ => None,
     }
 }
@@ -105,6 +107,8 @@ pub fn parse_locale_string(locale: &str) -> Option<String> {
         "bn" => Some("bn".to_string()),
         "pt_br" | "pt" => Some("pt_BR".to_string()),
         "ur" => Some("ur".to_string()),
+        "it" | "it_it" => Some("it".to_string()),
+        "ja" | "ja_jp" => Some("ja".to_string()),
         _ => None,
     }
 }
@@ -131,6 +135,8 @@ pub fn language_code(language: LanguagePreference) -> &'static str {
         LanguagePreference::PtBr => "pt_BR",
         LanguagePreference::Ru => "ru",
         LanguagePreference::Ur => "ur",
+        LanguagePreference::It => "it",
+        LanguagePreference::Ja => "ja",
     }
 }
 
@@ -330,6 +336,12 @@ fn normalize_system_locale(raw_locale: &str) -> Option<String> {
     if lowered.starts_with("ur") {
         return Some("ur".to_string());
     }
+    if lowered.starts_with("it") {
+        return Some("it".to_string());
+    }
+    if lowered.starts_with("ja") {
+        return Some("ja".to_string());
+    }
 
     None
 }
@@ -487,6 +499,14 @@ mod tests {
             normalize_system_locale("zh_CN.UTF-8"),
             Some("zh_Hans".to_string())
         );
+        assert_eq!(
+            normalize_system_locale("it_IT.UTF-8"),
+            Some("it".to_string())
+        );
+        assert_eq!(
+            normalize_system_locale("ja_JP.UTF-8"),
+            Some("ja".to_string())
+        );
     }
 
     #[test]
@@ -502,6 +522,14 @@ mod tests {
         assert_eq!(
             resolve_language_preference(LanguagePreference::Nl),
             "nl".to_string()
+        );
+        assert_eq!(
+            resolve_language_preference(LanguagePreference::It),
+            "it".to_string()
+        );
+        assert_eq!(
+            resolve_language_preference(LanguagePreference::Ja),
+            "ja".to_string()
         );
     }
 
@@ -519,6 +547,40 @@ mod tests {
         let previous = current_effective_language();
         let changed = apply_language_preference(LanguagePreference::Ru);
         assert!(changed || current_effective_language() == "ru");
+        let translated = tr("Welcome to Actioneer");
+        assert_ne!(translated, "Welcome to Actioneer");
+        set_effective_language(previous.clone());
+        // SAFETY: process-local env vars in test process.
+        unsafe {
+            std::env::set_var("LANGUAGE", previous.clone());
+            std::env::set_var("ACTIONEER_EFFECTIVE_LANG", previous);
+        }
+    }
+
+    #[test]
+    fn tr_uses_italian_catalog() {
+        let _guard = super::i18n_test_guard();
+        init(None);
+        let previous = current_effective_language();
+        let changed = apply_language_preference(LanguagePreference::It);
+        assert!(changed || current_effective_language() == "it");
+        let translated = tr("Welcome to Actioneer");
+        assert_ne!(translated, "Welcome to Actioneer");
+        set_effective_language(previous.clone());
+        // SAFETY: process-local env vars in test process.
+        unsafe {
+            std::env::set_var("LANGUAGE", previous.clone());
+            std::env::set_var("ACTIONEER_EFFECTIVE_LANG", previous);
+        }
+    }
+
+    #[test]
+    fn tr_uses_japanese_catalog() {
+        let _guard = super::i18n_test_guard();
+        init(None);
+        let previous = current_effective_language();
+        let changed = apply_language_preference(LanguagePreference::Ja);
+        assert!(changed || current_effective_language() == "ja");
         let translated = tr("Welcome to Actioneer");
         assert_ne!(translated, "Welcome to Actioneer");
         set_effective_language(previous.clone());
@@ -613,6 +675,18 @@ msgstr "Sign out"
     #[test]
     fn parses_locale_string_nl_nl() {
         assert_eq!(parse_locale_string("nl_NL"), Some("nl".to_string()));
+    }
+
+    #[test]
+    fn parses_locale_string_it() {
+        assert_eq!(parse_locale_string("it"), Some("it".to_string()));
+        assert_eq!(parse_locale_string("it_IT"), Some("it".to_string()));
+    }
+
+    #[test]
+    fn parses_locale_string_ja() {
+        assert_eq!(parse_locale_string("ja"), Some("ja".to_string()));
+        assert_eq!(parse_locale_string("ja_JP"), Some("ja".to_string()));
     }
 
     #[test]

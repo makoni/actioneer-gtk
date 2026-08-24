@@ -102,6 +102,8 @@ impl PreferencesWindow {
             "Português (Brasil)",
             "Русский",
             "اردو",
+            "Italiano",
+            "日本語",
         ]);
         let language_row = adw::ComboRow::builder()
             .title(tr("Application language"))
@@ -267,6 +269,8 @@ fn language_to_index(language: LanguagePreference) -> u32 {
         LanguagePreference::PtBr => 10,
         LanguagePreference::Ru => 11,
         LanguagePreference::Ur => 12,
+        LanguagePreference::It => 13,
+        LanguagePreference::Ja => 14,
     }
 }
 
@@ -284,6 +288,8 @@ fn index_to_language(index: u32) -> LanguagePreference {
         10 => LanguagePreference::PtBr,
         11 => LanguagePreference::Ru,
         12 => LanguagePreference::Ur,
+        13 => LanguagePreference::It,
+        14 => LanguagePreference::Ja,
         _ => LanguagePreference::System,
     }
 }
@@ -299,5 +305,13 @@ mod tests {
         assert_eq!(language_to_index(LanguagePreference::Nl), 3);
         assert_eq!(index_to_language(2), LanguagePreference::De);
         assert_eq!(index_to_language(3), LanguagePreference::Nl);
+    }
+
+    #[test]
+    fn language_index_mapping_handles_it_and_ja() {
+        assert_eq!(language_to_index(LanguagePreference::It), 13);
+        assert_eq!(language_to_index(LanguagePreference::Ja), 14);
+        assert_eq!(index_to_language(13), LanguagePreference::It);
+        assert_eq!(index_to_language(14), LanguagePreference::Ja);
     }
 }

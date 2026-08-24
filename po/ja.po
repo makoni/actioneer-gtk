@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: actioneer\n"
-"Report-Msgid-Bugs-To: https://github.com/makoni/actioneer-gtk/issues\n"
-"POT-Creation-Date: 2026-02-14 00:00+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-08-16 20:19+0000\n"
 "PO-Revision-Date: 2026-02-14 00:00+0000\n"
 "Last-Translator: Actioneer Contributors\n"
 "Language-Team: Japanese\n"
@@ -12,101 +12,779 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-msgid "Send a test notification when the app starts"
-msgstr "アプリ起動時にテスト通知を送信する"
+#: src/api/models.rs:230 src/api/models.rs:436 src/api/models.rs:506
+#: src/ui/detail_view/helpers/formatting.rs:197
+msgid "Queued"
+msgstr "キュー中"
 
-msgid "Preferences"
-msgstr "設定"
+#: src/api/models.rs:231 src/api/models.rs:437 src/api/models.rs:507
+#: src/ui/detail_view/helpers/formatting.rs:196
+msgid "In Progress"
+msgstr "実行中"
 
-msgid "Refresh"
-msgstr "更新"
+#: src/api/models.rs:236 src/api/models.rs:442 src/api/models.rs:512
+#: src/notifications.rs:225
+msgid "Completed"
+msgstr "完了"
 
-msgid "2 seconds"
-msgstr "2 秒"
+#: src/api/models.rs:239 src/api/models.rs:445 src/api/models.rs:515
+msgid "Waiting"
+msgstr "待機中"
 
-msgid "5 seconds"
-msgstr "5 秒"
+#: src/api/models.rs:240 src/api/models.rs:446 src/api/models.rs:516
+msgid "Requested"
+msgstr "要求済み"
 
-msgid "10 seconds"
-msgstr "10 秒"
+#: src/api/models.rs:241 src/api/models.rs:447 src/api/models.rs:517
+msgid "Pending"
+msgstr "保留中"
 
-msgid "30 seconds"
-msgstr "30 秒"
+#: src/api/models.rs:245 src/api/models.rs:451 src/api/models.rs:521
+#: src/ui/detail_view/helpers/formatting.rs:202
+msgid "Unknown"
+msgstr "不明"
 
-msgid "Auto-refresh interval"
-msgstr "自動更新間隔"
+#: src/api/models.rs:253 src/api/models.rs:459 src/api/models.rs:528
+msgid "Success"
+msgstr "成功"
 
-msgid "How often to check for workflow run updates"
-msgstr "ワークフロー実行の更新を確認する頻度"
+#: src/api/models.rs:254 src/api/models.rs:460 src/api/models.rs:529
+msgid "Failed"
+msgstr "失敗"
 
-msgid "Notifications"
-msgstr "通知"
+#: src/api/models.rs:255 src/api/models.rs:461 src/api/models.rs:530
+#: src/notifications.rs:208
+msgid "Cancelled"
+msgstr "キャンセル済み"
 
-msgid "Desktop Notifications"
-msgstr "デスクトップ通知"
+#: src/api/models.rs:256 src/api/models.rs:462 src/api/models.rs:531
+#: src/notifications.rs:209
+msgid "Skipped"
+msgstr "スキップ"
 
-msgid "Show a notification when a workflow run finishes"
-msgstr "ワークフロー実行が完了したときに通知を表示する"
+#: src/api/models.rs:257 src/api/models.rs:463 src/api/models.rs:532
+#: src/notifications.rs:210
+msgid "Timed Out"
+msgstr "タイムアウト"
 
+#: src/api/models.rs:258 src/api/models.rs:464 src/api/models.rs:533
+#: src/notifications.rs:211 src/notifications.rs:542
+msgid "Action Required"
+msgstr "対応が必要"
+
+#: src/api/models.rs:259 src/api/models.rs:465 src/api/models.rs:534
+#: src/notifications.rs:212
+msgid "Neutral"
+msgstr "中立"
+
+#: src/api/models.rs:260
+msgid "Stale"
+msgstr "古い"
+
+#: src/api/models.rs:357 src/ui/detail_view/header_state.rs:169
+msgid "Just now"
+msgstr "たった今"
+
+#: src/api/models.rs:360 src/ui/detail_view/header_state.rs:171
+msgid "{count}m ago"
+msgstr "{count}分前"
+
+#: src/api/models.rs:363 src/ui/detail_view/header_state.rs:173
+msgid "{count}h ago"
+msgstr "{count}時間前"
+
+#: src/api/models.rs:367
+msgid "Yesterday"
+msgstr "昨日"
+
+#: src/api/models.rs:369
+msgid "{count}d ago"
+msgstr "{count}日前"
+
+#. Welcome title
+#: src/i18n.rs:522 src/ui/welcome_screen.rs:32
+msgid "Welcome to Actioneer"
+msgstr "Actioneer へようこそ"
+
+#: src/notifications.rs:127
+msgid "Workflow Completed: {workflow}"
+msgstr "ワークフロー完了: {workflow}"
+
+#: src/notifications.rs:128
+msgid "{run} - {status}"
+msgstr "{run} - {status}"
+
+#: src/notifications.rs:206
+msgid "Success ✓"
+msgstr "成功 ✓"
+
+#: src/notifications.rs:207
+msgid "Failed ✗"
+msgstr "失敗 ✗"
+
+#: src/ui/detail_placeholder.rs:17
+msgid "Workflows and runs will load in the detail pane."
+msgstr "ワークフローと実行が詳細パネルに表示されます。"
+
+#: src/ui/detail_placeholder.rs:25 src/ui/main_window.rs:122
 msgid "Select a repository"
 msgstr "リポジトリを選択"
 
-msgid "Choose a repository from the sidebar to browse its workflows and runs here."
+#: src/ui/detail_placeholder.rs:27 src/ui/main_window.rs:124
+msgid ""
+"Choose a repository from the sidebar to browse its workflows and runs here."
 msgstr ""
 "ここでワークフローと実行を表示するには、サイドバーからリポジトリを選択してく"
 "ださい。"
 
-msgid "Application menu"
-msgstr "アプリケーションメニュー"
+#: src/ui/detail_placeholder.rs:39
+msgid ""
+"GitHub Actions is disabled for this repository. Enable Actions to view "
+"workflows and runs."
+msgstr "このリポジトリでは GitHub Actions が無効になっています。ワークフローと実行を表示するには Actions を有効にしてください。"
 
-msgid "Keyboard Shortcuts"
-msgstr "キーボードショートカット"
+#: src/ui/detail_view/content.rs:16
+msgid "Workflows"
+msgstr "ワークフロー"
 
-msgid "Help"
-msgstr "ヘルプ"
+#: src/ui/detail_view/favorite_controls.rs:19 src/ui/detail_view/mod.rs:169
+#: src/ui/sidebar.rs:252
+msgid "Toggle favorite"
+msgstr "お気に入りを切り替え"
 
-msgid "Sign out"
-msgstr "サインアウト"
+#: src/ui/detail_view/favorite_controls.rs:67
+msgid "Favorites unavailable"
+msgstr "お気に入りは利用できません"
 
-msgid "Report Issue"
-msgstr "問題を報告"
+#: src/ui/detail_view/filter_controls.rs:27
+#: src/ui/detail_view/filter_controls.rs:54
+msgid "Show successful runs"
+msgstr "成功した実行を表示"
 
-msgid "About Actioneer"
-msgstr "Actioneer について"
+#: src/ui/detail_view/filter_controls.rs:28
+#: src/ui/detail_view/filter_controls.rs:59
+msgid "Show running/queued runs"
+msgstr "実行中/キュー中の実行を表示"
 
+#: src/ui/detail_view/filter_controls.rs:29
+#: src/ui/detail_view/filter_controls.rs:64
+msgid "Show failed runs"
+msgstr "失敗した実行を表示"
+
+#: src/ui/detail_view/filter_controls.rs:31
+msgid "{count} workflows in this state"
+msgstr "この状態のワークフロー: {count}"
+
+#: src/ui/detail_view/header_state.rs:88
+msgid "Auto-refresh is disabled."
+msgstr "自動更新は無効です。"
+
+#: src/ui/detail_view/header_state.rs:91
+msgid "Data refreshes automatically every {seconds} seconds."
+msgstr "データは {seconds} 秒ごとに自動的に更新されます。"
+
+#: src/ui/detail_view/header_state.rs:160
+#: src/ui/detail_view/header_state.rs:276
+msgid "1 workflow"
+msgstr "1 件のワークフロー"
+
+#: src/ui/detail_view/header_state.rs:162
+#: src/ui/detail_view/header_state.rs:278
+msgid "{count} workflows"
+msgstr "{count} 件のワークフロー"
+
+#: src/ui/detail_view/header_state.rs:175
+msgid "Updated {when}"
+msgstr "{when} に更新"
+
+#: src/ui/detail_view/header_state.rs:177
+msgid "Not updated yet"
+msgstr "まだ更新されていません"
+
+#: src/ui/detail_view/helpers/formatting.rs:7
+#: src/ui/detail_view/helpers/runs/row.rs:175
+msgid "Workflow Run"
+msgstr "ワークフロー実行"
+
+#: src/ui/detail_view/helpers/formatting.rs:27
+msgid "Status"
+msgstr "状態"
+
+#: src/ui/detail_view/helpers/formatting.rs:33
+msgid "Conclusion"
+msgstr "結果"
+
+#: src/ui/detail_view/helpers/formatting.rs:38
+msgid "Branch"
+msgstr "ブランチ"
+
+#: src/ui/detail_view/helpers/formatting.rs:42
+msgid "Commit"
+msgstr "コミット"
+
+#: src/ui/detail_view/helpers/formatting.rs:46
+msgid "Triggered by"
+msgstr "トリガー元"
+
+#: src/ui/detail_view/helpers/formatting.rs:50
+msgid "Event"
+msgstr "イベント"
+
+#: src/ui/detail_view/helpers/formatting.rs:54
+msgid "Duration"
+msgstr "所要時間"
+
+#: src/ui/detail_view/helpers/formatting.rs:58
+#: src/ui/detail_view/helpers/formatting.rs:60
+msgid "Started"
+msgstr "開始"
+
+#: src/ui/detail_view/helpers/formatting.rs:64
+msgid "Updated"
+msgstr "更新"
+
+#: src/ui/detail_view/helpers/jobs.rs:117
+msgid "Unnamed job"
+msgstr "名前のないジョブ"
+
+#: src/ui/detail_view/helpers/jobs.rs:144
+#: src/ui/detail_view/helpers/workflows.rs:410
+msgid "View logs"
+msgstr "ログを表示"
+
+#: src/ui/detail_view/helpers/jobs.rs:429
+#: src/ui/detail_view/helpers/workflows.rs:655
+msgid "No jobs found"
+msgstr "ジョブが見つかりません"
+
+#: src/ui/detail_view/helpers/jobs.rs:482
+#: src/ui/detail_view/helpers/workflows.rs:661
+msgid "Unable to load jobs"
+msgstr "ジョブを読み込めませんでした"
+
+#: src/ui/detail_view/helpers/jobs.rs:488
+#: src/ui/detail_view/helpers/runs/load.rs:447 src/ui/auth_window.rs:395
+#: src/ui/auth_window.rs:437
+msgid "Error: {message}"
+msgstr "エラー: {message}"
+
+#: src/ui/detail_view/helpers/jobs.rs:497
+#: src/ui/detail_view/helpers/runs/list.rs:514
+msgid "Retry"
+msgstr "再試行"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:28 src/ui/main_window/auth.rs:41
+msgid "No"
+msgstr "いいえ"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:29 src/ui/main_window/auth.rs:42
+msgid "Yes"
+msgstr "はい"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:70
+msgid "Open in GitHub"
+msgstr "GitHub で開く"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:86
+msgid "Re-run workflow"
+msgstr "ワークフローを再実行"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:100
+msgid "Re-run Workflow"
+msgstr "ワークフローを再実行"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:101
+msgid "Do you want to re-run \"{run}\"?"
+msgstr "\"{run}\" を再実行しますか?"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:133
+msgid "✓ Re-running '{run}'"
+msgstr "✓ '{run}' を再実行中"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:138
+msgid "✗ Failed to re-run workflow"
+msgstr "✗ ワークフローの再実行に失敗しました"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:165
+msgid "Re-run failed jobs"
+msgstr "失敗したジョブを再実行"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:179
+msgid "Re-run Failed Jobs"
+msgstr "失敗したジョブを再実行"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:180
+msgid "Do you want to re-run all failed jobs in \"{run}\"?"
+msgstr "\"{run}\" のすべての失敗したジョブを再実行しますか?"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:211
+msgid "✓ Re-running failed jobs for '{run}'"
+msgstr "✓ '{run}' の失敗したジョブを再実行中"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:213
+msgid "✗ Failed to re-run failed jobs"
+msgstr "✗ 失敗したジョブの再実行に失敗しました"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:241
+#: src/ui/detail_view/helpers/workflows.rs:425
+msgid "Cancel run"
+msgstr "実行をキャンセル"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:263
+msgid "Cancel Workflow Run"
+msgstr "ワークフロー実行をキャンセル"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:264
+msgid ""
+"Do you want to cancel the in-progress run \"{run}\"?\n"
+"\n"
+"This action cannot be undone."
+msgstr "進行中の実行 \"{run}\" をキャンセルしますか?\n\nこの操作は取り消せません。"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:297
+msgid "✓ Cancelled run '{run}'"
+msgstr "✓ 実行 '{run}' をキャンセルしました"
+
+#: src/ui/detail_view/helpers/runs/actions.rs:299
+msgid "✗ Failed to cancel run"
+msgstr "✗ 実行のキャンセルに失敗しました"
+
+#: src/ui/detail_view/helpers/runs/list.rs:453
+msgid "Click to load runs..."
+msgstr "クリックして実行を読み込む..."
+
+#: src/ui/detail_view/helpers/runs/list.rs:465
+msgid "No recent runs"
+msgstr "最近の実行はありません"
+
+#: src/ui/detail_view/helpers/runs/list.rs:471
+msgid "Triggered runs may take 10-30 seconds to appear"
+msgstr "トリガーされた実行が表示されるまで 10〜30 秒かかる場合があります"
+
+#: src/ui/detail_view/helpers/runs/list.rs:484
+msgid "No runs match the current filters"
+msgstr "現在のフィルターに一致する実行がありません"
+
+#: src/ui/detail_view/helpers/runs/list.rs:490
+msgid "Adjust the status chips above to see more runs."
+msgstr "上部の状態フィルターを調整して、さらに多くの実行を表示してください。"
+
+#: src/ui/detail_view/helpers/runs/list.rs:503
+msgid "Unable to load workflow runs"
+msgstr "ワークフロー実行を読み込めませんでした"
+
+#: src/ui/detail_view/helpers/runs/list.rs:535
+msgid "Showing {visible} of {overall}"
+msgstr "{overall} 件中 {visible} 件を表示中"
+
+#: src/ui/detail_view/helpers/runs/list.rs:539
+msgid "Showing {visible} of {filtered} matching filters"
+msgstr "フィルターに一致する {filtered} 件中 {visible} 件を表示中"
+
+#: src/ui/detail_view/helpers/runs/list.rs:548
+#: src/ui/detail_view/helpers/runs/list.rs:659
+msgid "Recent runs (showing {visible} of {overall})"
+msgstr "最近の実行({overall} 件中 {visible} 件を表示中)"
+
+#: src/ui/detail_view/helpers/runs/list.rs:552
+#: src/ui/detail_view/helpers/runs/list.rs:683
+msgid "Recent runs ({overall})"
+msgstr "最近の実行({overall})"
+
+#: src/ui/detail_view/helpers/runs/list.rs:555
+#: src/ui/detail_view/helpers/runs/list.rs:671
+msgid "Recent runs (showing {visible} of {filtered} matching filters)"
+msgstr "最近の実行(フィルターに一致する {filtered} 件中 {visible} 件を表示中)"
+
+#: src/ui/detail_view/helpers/runs/row.rs:257
+msgid "Click to load jobs..."
+msgstr "クリックしてジョブを読み込む..."
+
+#: src/ui/detail_view/helpers/workflows.rs:62 src/ui/auth_window.rs:226
+msgid "Cancel"
+msgstr "キャンセル"
+
+#: src/ui/detail_view/helpers/workflows.rs:63
+msgid "Trigger"
+msgstr "トリガー"
+
+#: src/ui/detail_view/helpers/workflows.rs:117
+msgid "{description} (required)"
+msgstr "{description}(必須)"
+
+#: src/ui/detail_view/helpers/workflows.rs:120
+msgid "Required"
+msgstr "必須"
+
+#: src/ui/detail_view/helpers/workflows.rs:273
+#: src/ui/detail_view/helpers/workflows.rs:305
+#: src/ui/detail_view/helpers/workflows.rs:306
+#: src/ui/detail_view/helpers/workflows.rs:394
+#: src/ui/detail_view/helpers/workflows.rs:607
+msgid "No runs yet"
+msgstr "まだ実行がありません"
+
+#: src/ui/detail_view/helpers/workflows.rs:417
+msgid "Trigger workflow"
+msgstr "ワークフローをトリガー"
+
+#: src/ui/detail_view/helpers/workflows.rs:471
+msgid "Recent runs"
+msgstr "最近の実行"
+
+#: src/ui/detail_view/helpers/workflows.rs:500
+msgid "All on GitHub"
+msgstr "すべてを GitHub で表示"
+
+#: src/ui/detail_view/helpers/workflows.rs:855
+msgid "Trigger Workflow"
+msgstr "ワークフローをトリガー"
+
+#: src/ui/detail_view/helpers/workflows.rs:861
+msgid "This will trigger the \"{workflow}\" workflow."
+msgstr "\"{workflow}\" ワークフローをトリガーします。"
+
+#: src/ui/detail_view/helpers/workflows.rs:863
+msgid "Triggered runs typically appear within 10-30 seconds."
+msgstr "トリガーされた実行は通常 10〜30 秒で表示されます。"
+
+#: src/ui/detail_view/helpers/workflows.rs:870
+msgid "Branch or ref:"
+msgstr "ブランチまたは ref:"
+
+#: src/ui/detail_view/helpers/workflows.rs:874
+msgid "Loading branches..."
+msgstr "ブランチを読み込み中..."
+
+#: src/ui/detail_view/helpers/workflows.rs:881
+msgid "Loading workflow inputs..."
+msgstr "ワークフローの入力を読み込み中..."
+
+#: src/ui/detail_view/helpers/workflows.rs:886
+msgid "Inputs"
+msgstr "入力"
+
+#: src/ui/detail_view/helpers/workflows.rs:984
+msgid "No inputs defined for this workflow."
+msgstr "このワークフローには入力が定義されていません。"
+
+#: src/ui/detail_view/helpers/workflows.rs:1055
+msgid "Workflow inputs could not be loaded."
+msgstr "ワークフローの入力を読み込めませんでした。"
+
+#: src/ui/detail_view/helpers/workflows.rs:1062
+msgid "✗ Failed to load workflow inputs: {error}"
+msgstr "✗ ワークフローの入力の読み込みに失敗しました: {error}"
+
+#: src/ui/detail_view/helpers/workflows.rs:1094
+msgid "Failed to load workflow inputs: {error}"
+msgstr "ワークフローの入力の読み込みに失敗しました: {error}"
+
+#: src/ui/detail_view/helpers/workflows.rs:1159
+msgid "✗ {error}"
+msgstr "✗ {error}"
+
+#: src/ui/detail_view/helpers/workflows.rs:1189
+msgid "Failed to trigger workflow: {error}"
+msgstr "ワークフローのトリガーに失敗しました: {error}"
+
+#: src/ui/detail_view/helpers/workflows.rs:1345
+msgid ""
+"✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear "
+"once GitHub reports it."
+msgstr "✓ ブランチ '{branch}' でワークフロー '{workflow}' をトリガーしました。GitHub が報告すると実行が表示されます。"
+
+#: src/ui/detail_view/helpers/workflows.rs:1361
+msgid "✗ Failed to trigger workflow: {error}"
+msgstr "✗ ワークフローのトリガーに失敗しました: {error}"
+
+#: src/ui/detail_view/workflow_list.rs:92
+msgid "No workflows found."
+msgstr "ワークフローが見つかりませんでした。"
+
+#: src/ui/detail_view/workflow_refresh.rs:456
+msgid "Failed to load workflows: {error}"
+msgstr "ワークフローの読み込みに失敗しました: {error}"
+
+#: src/ui/detail_view/workflow_refresh.rs:793
+#: src/ui/detail_view/workflow_refresh.rs:924
+msgid "Loading workflows..."
+msgstr "ワークフローを読み込み中..."
+
+#: src/ui/detail_view/mod.rs:172
+msgid "Refresh workflows"
+msgstr "ワークフローを更新"
+
+#: src/ui/detail_view/mod.rs:378 src/ui/sidebar.rs:346
+msgid "Private"
+msgstr "非公開"
+
+#: src/ui/detail_view/mod.rs:380 src/ui/sidebar.rs:349
+msgid "Public"
+msgstr "公開"
+
+#: src/ui/sidebar.rs:141 src/ui/main_window/sidebar_panel.rs:276
+msgid "Favorites"
+msgstr "お気に入り"
+
+#: src/ui/sidebar.rs:146
+msgid "Actions Enabled"
+msgstr "Actions 有効"
+
+#: src/ui/sidebar.rs:151
+msgid "Actions Disabled"
+msgstr "Actions 無効"
+
+#: src/ui/sidebar.rs:358
+msgid "Active runs: {count}"
+msgstr "実行中: {count}"
+
+#: src/ui/sidebar.rs:365
+msgid "Failures: {count}"
+msgstr "失敗: {count}"
+
+#: src/ui/welcome_screen.rs:39
+msgid "Manage your GitHub Actions workflows with ease"
+msgstr "GitHub Actions ワークフローをかんたん管理"
+
+#: src/ui/welcome_screen.rs:53
+msgid "Trigger workflows instantly"
+msgstr "ワークフローを即座にトリガー"
+
+#: src/ui/welcome_screen.rs:59
+msgid "Monitor runs in real-time"
+msgstr "実行をリアルタイムで監視"
+
+#: src/ui/welcome_screen.rs:65
+msgid "View detailed logs"
+msgstr "詳細ログを表示"
+
+#: src/ui/welcome_screen.rs:89
+msgid "Sign in with GitHub"
+msgstr "GitHub でサインイン"
+
+#: src/ui/welcome_screen.rs:97
+msgid "Try Demo Mode"
+msgstr "デモモードを試す"
+
+#: src/ui/welcome_screen.rs:100
+msgid "Explore Actioneer with sample data"
+msgstr "サンプルデータで Actioneer を体験"
+
+#: src/ui/welcome_screen.rs:119 src/ui/main_window.rs:391
 msgid "Quit"
 msgstr "終了"
 
-msgid "Send test notification"
-msgstr "テスト通知を送信"
+#: src/ui/auth_window.rs:76 src/ui/auth_window.rs:157
+msgid "Sign in to GitHub"
+msgstr "GitHub にサインイン"
 
-msgid "Preferences are currently unavailable."
-msgstr "現在、設定は利用できません。"
+#: src/ui/auth_window.rs:165 src/ui/auth_window.rs:255
+msgid "Initializing authentication..."
+msgstr "認証を初期化中..."
 
-msgid "General"
-msgstr "一般"
+#: src/ui/auth_window.rs:179
+msgid "Enter this code on GitHub:"
+msgstr "このコードを GitHub に入力してください:"
 
-msgid "Application"
-msgstr "アプリケーション"
+#: src/ui/auth_window.rs:192
+msgid "Copy code to clipboard"
+msgstr "コードをクリップボードにコピー"
 
+#: src/ui/auth_window.rs:220
+msgid "Open GitHub in Browser"
+msgstr "ブラウザで GitHub を開く"
+
+#: src/ui/auth_window.rs:314
+msgid "Open GitHub in your browser and enter the code."
+msgstr "ブラウザで GitHub を開いて、コードを入力してください。"
+
+#: src/ui/auth_window.rs:329 src/ui/auth_window.rs:361
+msgid "Authentication timeout"
+msgstr "認証タイムアウト"
+
+#: src/ui/auth_window.rs:368
+msgid "Access denied"
+msgstr "アクセスが拒否されました"
+
+#: src/ui/auth_window.rs:389
+msgid "Waiting for authorization..."
+msgstr "認可を待っています..."
+
+#: src/ui/auth_window.rs:407
+msgid "Saving token..."
+msgstr "トークンを保存中..."
+
+#: src/ui/auth_window.rs:448
+msgid "Signed in successfully"
+msgstr "サインインに成功しました"
+
+#: src/ui/auth_window.rs:455
+msgid "Error saving token: {message}"
+msgstr "トークンの保存にエラー: {message}"
+
+#: src/ui/job_logs_window.rs:45
+msgid "Job"
+msgstr "ジョブ"
+
+#: src/ui/job_logs_window.rs:53
+msgid "{title} - Logs"
+msgstr "{title} - ログ"
+
+#: src/ui/job_logs_window.rs:71
+msgid "Fetching logs..."
+msgstr "ログを取得中..."
+
+#: src/ui/job_logs_window.rs:116
+msgid "Refresh logs"
+msgstr "ログを更新"
+
+#: src/ui/job_logs_window.rs:121
+msgid "Copy logs to clipboard"
+msgstr "ログをクリップボードにコピー"
+
+#: src/ui/job_logs_window.rs:126
+msgid "Save logs to file"
+msgstr "ログをファイルに保存"
+
+#: src/ui/job_logs_window.rs:195 src/ui/job_logs_window.rs:266
+msgid ""
+"Logs are not yet available for this job. GitHub only provides logs once the "
+"job starts streaming output or completes. Try refreshing in a few moments."
+msgstr "このジョブのログはまだ利用できません。GitHub はジョブが出力のストリーミングを開始するか完了した後にのみログを提供します。しばらくしてから更新してみてください。"
+
+#: src/ui/job_logs_window.rs:203 src/ui/job_logs_window.rs:274
+msgid "The logs for this run have expired and are no longer available."
+msgstr "この実行のログは期限切れとなり、もう利用できません。"
+
+#: src/ui/job_logs_window.rs:213 src/ui/job_logs_window.rs:284
+msgid ""
+"Unable to load logs right now. Please try again later.\n"
+"\n"
+"Details: {error}"
+msgstr "現在ログを読み込めません。しばらくしてからもう一度お試しください。\n\n詳細: {error}"
+
+#: src/ui/job_logs_window.rs:319
+msgid "Logs are empty; nothing to copy"
+msgstr "ログが空です。コピーできるものはありません"
+
+#: src/ui/job_logs_window.rs:330
+msgid "Logs copied to clipboard"
+msgstr "ログをクリップボードにコピーしました"
+
+#: src/ui/job_logs_window.rs:336
+msgid "Clipboard unavailable on this system"
+msgstr "このシステムではクリップボードが利用できません"
+
+#: src/ui/job_logs_window.rs:370
+msgid "Logs are empty; nothing saved"
+msgstr "ログが空です。保存されたものはありません"
+
+#: src/ui/job_logs_window.rs:385
+msgid "Logs saved"
+msgstr "ログを保存しました"
+
+#: src/ui/job_logs_window.rs:391
+msgid "Failed to save logs: {error}"
+msgstr "ログの保存に失敗しました: {error}"
+
+#: src/ui/job_logs_window.rs:407
+msgid "Unable to determine save location"
+msgstr "保存場所を特定できません"
+
+#: src/ui/job_logs_window.rs:426 src/ui/job_logs_window.rs:475
+msgid "Save Logs"
+msgstr "ログを保存"
+
+#: src/ui/job_logs_window.rs:427 src/ui/job_logs_window.rs:476
+msgid "Save"
+msgstr "保存"
+
+#: src/ui/main_window/auth.rs:37
+msgid ""
+"Are you sure you want to sign out?\n"
+"\n"
+"You will need to sign in again to continue."
+msgstr ""
+"サインアウトしてもよろしいですか？\n"
+"\n"
+"続行するには再度サインインが必要です。"
+
+#: src/ui/main_window/header_controls.rs:18
+#: src/ui/main_window/header_controls.rs:63
+#: src/ui/main_window/window_actions.rs:69
 msgid "Refresh repositories"
 msgstr "リポジトリを更新"
 
+#: src/ui/main_window/header_controls.rs:21
+#: src/ui/main_window/header_controls.rs:72 src/ui/utils/rate_limit.rs:40
+msgid "Rate limit: –"
+msgstr "レート制限: –"
+
+#: src/ui/main_window/selection.rs:246
+msgid "Loading repositories..."
+msgstr "リポジトリを読み込み中..."
+
+#: src/ui/main_window/sidebar_panel.rs:104
+#: src/ui/main_window/sidebar_panel.rs:348
+msgid "Search repositories..."
+msgstr "リポジトリを検索..."
+
+#: src/ui/main_window/sidebar_panel.rs:249
+msgid "No repositories match"
+msgstr "一致するリポジトリがありません"
+
+#: src/ui/main_window/sidebar_panel.rs:256
+msgid "Try another filter or search term."
+msgstr "別のフィルターや検索語をお試しください。"
+
+#: src/ui/main_window/sidebar_panel.rs:275
+msgid "All"
+msgstr "すべて"
+
+#: src/ui/main_window/sidebar_panel.rs:277
+msgid "Active"
+msgstr "アクティブ"
+
+#: src/ui/main_window/window_actions.rs:16
+msgid "OK"
+msgstr "OK"
+
+#: src/ui/main_window/window_actions.rs:28
+msgid "Preferences are currently unavailable."
+msgstr "現在、設定は利用できません。"
+
+#: src/ui/main_window/window_actions.rs:55 src/ui/main_window.rs:384
+msgid "Keyboard Shortcuts"
+msgstr "キーボードショートカット"
+
+#: src/ui/main_window/window_actions.rs:73
 msgid "Open preferences"
 msgstr "設定を開く"
 
+#: src/ui/main_window/window_actions.rs:77
 msgid "Show keyboard shortcuts"
 msgstr "キーボードショートカットを表示"
 
+#: src/ui/main_window/window_actions.rs:80
 msgid "Open help"
 msgstr "ヘルプを開く"
 
+#: src/ui/main_window/window_actions.rs:82
 msgid "Quit application"
 msgstr "アプリケーションを終了"
 
+#: src/ui/main_window/window_actions.rs:95
+#: src/ui/main_window/window_actions.rs:192
+#: src/ui/main_window/window_actions.rs:279
+msgid "Close"
+msgstr "閉じる"
+
+#: src/ui/main_window/window_actions.rs:126
 msgid "Actioneer Help"
 msgstr "Actioneer ヘルプ"
 
+#: src/ui/main_window/window_actions.rs:144
 msgid ""
 "Actioneer Help\n"
 "\n"
@@ -125,519 +803,587 @@ msgid ""
 "- If no repos appear, verify your token and network access.\n"
 "- For expired logs, retry from the latest run or trigger a new run.\n"
 "- Use Report Issue from the menu to send diagnostics and steps."
-msgstr "Actioneer ヘルプ\n\nはじめに\n1. ウェルカム画面で GitHub アカウントにサインインします。\n2. 左側のサイドバーでリポジトリを選択します。\n3. ワークフローを展開して最近の実行を確認します。\n\n便利な操作\n- F5 でリポジトリ/ワークフローの状態を更新します。\n- 再生ボタンからワークフローを手動実行します。\n- Ctrl+, で「設定」を開き、更新/通知を調整します。\n- Ctrl+? で「キーボードショートカット」を開き、クイックリファレンスを確認します。\n\nトラブルシューティング\n- リポジトリが表示されない場合は、トークンとネットワークアクセスを確認してください。\n- 期限切れのログは、最新の実行から再試行するか新しい実行を開始してください。\n- 診断情報と再現手順を送るには、メニューの「問題を報告」を使用してください。"
+msgstr ""
+"Actioneer ヘルプ\n"
+"\n"
+"はじめに\n"
+"1. ウェルカム画面で GitHub アカウントにサインインします。\n"
+"2. 左側のサイドバーでリポジトリを選択します。\n"
+"3. ワークフローを展開して最近の実行を確認します。\n"
+"\n"
+"便利な操作\n"
+"- F5 でリポジトリ/ワークフローの状態を更新します。\n"
+"- 再生ボタンからワークフローを手動実行します。\n"
+"- Ctrl+, で「設定」を開き、更新/通知を調整します。\n"
+"- Ctrl+? で「キーボードショートカット」を開き、クイックリファレンスを確認しま"
+"す。\n"
+"\n"
+"トラブルシューティング\n"
+"- リポジトリが表示されない場合は、トークンとネットワークアクセスを確認してく"
+"ださい。\n"
+"- 期限切れのログは、最新の実行から再試行するか新しい実行を開始してくださ"
+"い。\n"
+"- 診断情報と再現手順を送るには、メニューの「問題を報告」を使用してください。"
 
+#: src/ui/main_window/window_actions.rs:166
 msgid "Need more help? Use “Report Issue” in the app menu or visit:"
-msgstr "さらにヘルプが必要ですか？ アプリメニューの「問題を報告」を使うか、次を開いてください:"
+msgstr ""
+"さらにヘルプが必要ですか？ アプリメニューの「問題を報告」を使うか、次を開いて"
+"ください:"
 
-msgid "Close"
-msgstr "閉じる"
-
+#: src/ui/main_window/window_actions.rs:214
 msgid "Failed to open issue tracker in the browser."
 msgstr "ブラウザーで Issue トラッカーを開けませんでした。"
 
-msgid ""
-"Are you sure you want to sign out?\n"
-"\n"
-"You will need to sign in again to continue."
-msgstr ""
-"サインアウトしてもよろしいですか？\n"
-"\n"
-"続行するには再度サインインが必要です。"
+#: src/ui/main_window/window_actions.rs:236
+msgid "Crash report file:"
+msgstr "クラッシュレポートファイル:"
 
+#: src/ui/main_window/window_actions.rs:256
+msgid ""
+"Actioneer detected a crash report from the previous run. You can report it "
+"on GitHub and attach the crash file."
+msgstr "Actioneer が前回の実行からのクラッシュレポートを検出しました。GitHub に報告して、クラッシュファイルを添付できます。"
+
+#: src/ui/main_window/window_actions.rs:277
+msgid "Copy diagnostics"
+msgstr "診断情報をコピー"
+
+#: src/ui/main_window/window_actions.rs:278 src/ui/main_window.rs:387
+msgid "Report Issue"
+msgstr "問題を報告"
+
+#: src/ui/main_window/window_actions.rs:317
+msgid "Failed to open donation page in the browser."
+msgstr "ブラウザで寄付ページを開けませんでした。"
+
+#: src/ui/main_window/window_actions.rs:330 src/ui/main_window.rs:736
 msgid "Actioneer notification test"
 msgstr "Actioneer 通知テスト"
 
+#: src/ui/main_window/window_actions.rs:331
 msgid "If you can read this, GNOME notifications are working."
 msgstr "このメッセージが読める場合、GNOME 通知は正常に動作しています。"
 
+#: src/ui/main_window/window_actions.rs:342
 msgid "Notifications are currently unavailable."
 msgstr "現在、通知は利用できません。"
 
+#: src/ui/main_window.rs:378
+msgid "Application menu"
+msgstr "アプリケーションメニュー"
+
+#: src/ui/main_window.rs:383 src/ui/preferences_window.rs:21
+msgid "Preferences"
+msgstr "設定"
+
+#: src/ui/main_window.rs:385
+msgid "Help"
+msgstr "ヘルプ"
+
+#: src/ui/main_window.rs:386
+msgid "Sign out"
+msgstr "サインアウト"
+
+#: src/ui/main_window.rs:388
+msgid "About Actioneer"
+msgstr "Actioneer について"
+
+#: src/ui/main_window.rs:389
+msgid "Donate"
+msgstr "寄付する"
+
+#: src/ui/main_window.rs:390
+msgid "Debug"
+msgstr "デバッグ"
+
+#: src/ui/main_window.rs:397
+msgid "Send test notification"
+msgstr "テスト通知を送信"
+
+#: src/ui/main_window.rs:398
+msgid "Trigger test crash"
+msgstr "テスト用クラッシュを起こす"
+
+#: src/ui/main_window.rs:737
 msgid "If you see this, notifications are working."
 msgstr "このメッセージが見えていれば、通知は機能しています。"
 
-msgid "Workflow Completed: {workflow}"
-msgstr "ワークフロー完了: {workflow}"
+#: src/ui/preferences_window.rs:31
+msgid "Refresh"
+msgstr "更新"
 
-msgid "{run} - {status}"
-msgstr "{run} - {status}"
+#: src/ui/preferences_window.rs:34
+msgid "2 seconds"
+msgstr "2 秒"
 
-msgid "Success ✓"
-msgstr "成功 ✓"
+#: src/ui/preferences_window.rs:35
+msgid "5 seconds"
+msgstr "5 秒"
 
-msgid "Failed ✗"
-msgstr "失敗 ✗"
+#: src/ui/preferences_window.rs:36
+msgid "10 seconds"
+msgstr "10 秒"
 
-msgid "Cancelled"
-msgstr "キャンセル済み"
+#: src/ui/preferences_window.rs:37
+msgid "30 seconds"
+msgstr "30 秒"
 
-msgid "Skipped"
-msgstr "スキップ"
+#: src/ui/preferences_window.rs:46
+msgid "Auto-refresh interval"
+msgstr "自動更新間隔"
 
-msgid "Timed Out"
-msgstr "タイムアウト"
+#: src/ui/preferences_window.rs:47
+msgid "How often to check for workflow run updates"
+msgstr "ワークフロー実行の更新を確認する頻度"
 
-msgid "Action Required"
-msgstr "対応が必要"
+#: src/ui/preferences_window.rs:53
+msgid "Notifications"
+msgstr "通知"
 
-msgid "Neutral"
-msgstr "中立"
+#: src/ui/preferences_window.rs:57
+msgid "Desktop Notifications"
+msgstr "デスクトップ通知"
 
-msgid "Completed"
-msgstr "完了"
+#: src/ui/preferences_window.rs:58
+msgid "Show a notification when a workflow run finishes"
+msgstr "ワークフロー実行が完了したときに通知を表示する"
 
+#: src/ui/preferences_window.rs:70
 msgid "Appearance"
 msgstr "外観"
 
+#: src/ui/preferences_window.rs:72
 msgid "System"
 msgstr "システム"
 
+#: src/ui/preferences_window.rs:73
 msgid "Light"
 msgstr "ライト"
 
+#: src/ui/preferences_window.rs:74
 msgid "Dark"
 msgstr "ダーク"
 
+#: src/ui/preferences_window.rs:81
 msgid "Theme"
 msgstr "テーマ"
 
+#: src/ui/preferences_window.rs:82
 msgid "Select application theme"
 msgstr "アプリのテーマを選択"
 
+#: src/ui/preferences_window.rs:88
 msgid "Language"
 msgstr "言語"
 
+#: src/ui/preferences_window.rs:90
 msgid "System language (fallback: English)"
 msgstr "システム言語（フォールバック: 英語）"
 
+#: src/ui/preferences_window.rs:107
 msgid "Application language"
 msgstr "アプリの言語"
 
+#: src/ui/preferences_window.rs:108
 msgid "Switch language instantly"
 msgstr "言語をすぐに切り替える"
 
-msgid "Sign in to GitHub"
-msgstr "Sign in to GitHub"
-
-msgid "Initializing authentication..."
-msgstr "Initializing authentication..."
-
-msgid "Enter this code on GitHub:"
-msgstr "Enter this code on GitHub:"
-
-msgid "Copy code to clipboard"
-msgstr "Copy code to clipboard"
-
-msgid "Open GitHub in Browser"
-msgstr "Open GitHub in Browser"
-
-msgid "Cancel"
-msgstr "Cancel"
-
-msgid "Open GitHub in your browser and enter the code."
-msgstr "Open GitHub in your browser and enter the code."
-
-msgid "Authentication timeout"
-msgstr "Authentication timeout"
-
-msgid "Access denied"
-msgstr "Access denied"
-
-msgid "Waiting for authorization..."
-msgstr "Waiting for authorization..."
-
-msgid "Error: {message}"
-msgstr "Error: {message}"
-
-msgid "Signed in successfully"
-msgstr "Signed in successfully"
-
-msgid "Error saving token: {message}"
-msgstr "Error saving token: {message}"
-
-msgid "Welcome to Actioneer"
-msgstr "Welcome to Actioneer"
-
-msgid "Manage your GitHub Actions workflows with ease"
-msgstr "Manage your GitHub Actions workflows with ease"
-
-msgid "Trigger workflows instantly"
-msgstr "Trigger workflows instantly"
-
-msgid "Monitor runs in real-time"
-msgstr "Monitor runs in real-time"
-
-msgid "View detailed logs"
-msgstr "View detailed logs"
-
-msgid "Sign in with GitHub"
-msgstr "Sign in with GitHub"
-
-msgid "Try Demo Mode"
-msgstr "Try Demo Mode"
-
-msgid "Explore Actioneer with sample data"
-msgstr "Explore Actioneer with sample data"
-
-msgid "Workflow Run"
-msgstr "ワークフロー実行"
-
-msgid "{title} - Jobs"
-msgstr "{title} - Jobs"
-
-msgid "Refresh jobs"
-msgstr "Refresh jobs"
-
-msgid "Cancel run"
-msgstr "Cancel run"
-
-msgid "Run cancellation requested successfully."
-msgstr "Run cancellation requested successfully."
-
-msgid "Failed to cancel run: {error}"
-msgstr "Failed to cancel run: {error}"
-
-msgid "Job"
-msgstr "Job"
-
-msgid "Unknown"
-msgstr "不明"
-
-msgid "Workflows and runs will load in the detail pane."
-msgstr "Workflows and runs will load in the detail pane."
-
-msgid "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs."
-msgstr "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs."
-
-msgid "Favorites"
-msgstr "お気に入り"
-
-msgid "Actions Enabled"
-msgstr "Actions 有効"
-
-msgid "Actions Disabled"
-msgstr "Actions 無効"
-
-msgid "Toggle favorite"
-msgstr "お気に入りを切り替え"
-
-msgid "Private"
-msgstr "非公開"
-
-msgid "Public"
-msgstr "公開"
-
-msgid "Active runs: {count}"
-msgstr "実行中: {count}"
-
-msgid "Failures: {count}"
-msgstr "失敗: {count}"
-
-msgid "Fetching logs..."
-msgstr "Fetching logs..."
-
-msgid "Refresh logs"
-msgstr "Refresh logs"
-
-msgid "Copy logs to clipboard"
-msgstr "Copy logs to clipboard"
-
-msgid "Save logs to file"
-msgstr "Save logs to file"
-
-msgid "Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments."
-msgstr "Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments."
-
-msgid "The logs for this run have expired and are no longer available."
-msgstr "The logs for this run have expired and are no longer available."
-
-msgid "Unable to load logs right now. Please try again later.\n"
-"\n"
-"Details: {error}"
-msgstr "Unable to load logs right now. Please try again later.\n"
-"\n"
-"Details: {error}"
-
-msgid "Logs are empty; nothing to copy"
-msgstr "Logs are empty; nothing to copy"
-
-msgid "Logs copied to clipboard"
-msgstr "Logs copied to clipboard"
-
-msgid "Clipboard unavailable on this system"
-msgstr "Clipboard unavailable on this system"
-
-msgid "Save Logs"
-msgstr "Save Logs"
-
-msgid "Save"
-msgstr "Save"
-
-msgid "Logs are empty; nothing saved"
-msgstr "Logs are empty; nothing saved"
-
-msgid "Logs saved"
-msgstr "Logs saved"
-
-msgid "Failed to save logs: {error}"
-msgstr "Failed to save logs: {error}"
-
-msgid "Unable to determine save location"
-msgstr "Unable to determine save location"
-
-msgid "No file selected"
-msgstr "No file selected"
-
-msgid "Loading repositories..."
-msgstr "リポジトリを読み込み中..."
-
-msgid "Search repositories..."
-msgstr "リポジトリを検索..."
-
-msgid "Rate limit: –"
-msgstr "レート制限: –"
-
-msgid "No workflows found."
-msgstr "No workflows found."
-
-msgid "Favorites unavailable"
-msgstr "お気に入りは利用できません"
-
-msgid "Loading workflows..."
-msgstr "ワークフローを読み込み中..."
-
-msgid "Refresh workflows"
-msgstr "ワークフローを更新"
-
-msgid "Private Repository"
-msgstr "非公開リポジトリ"
-
-msgid "Show successful runs"
-msgstr "成功した実行を表示"
-
-msgid "Show failed runs"
-msgstr "失敗した実行を表示"
-
-msgid "Show running/queued runs"
-msgstr "実行中/キュー中の実行を表示"
-
+#: src/ui/utils/rate_limit.rs:16
 msgid "now"
 msgstr "今"
 
+#: src/ui/utils/rate_limit.rs:26
 msgid "Rate limit (low)"
 msgstr "レート制限（低）"
 
+#: src/ui/utils/rate_limit.rs:28
 msgid "Rate limit"
 msgstr "レート制限"
 
+#: src/ui/utils/rate_limit.rs:32
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr "{prefix}: {remaining}/{limit} ({time} でリセット)"
 
-msgid "Unnamed job"
-msgstr "Unnamed job"
+#: src/main.rs:270
+msgid "Send a test notification when the app starts"
+msgstr "アプリ起動時にテスト通知を送信する"
+
+#: src/main.rs:271
+msgid "Set the application language (e.g., ru, en, zh_Hans)"
+msgstr "アプリケーションの言語を設定(例: ru, en, zh_Hans)"
+
+#: src/main.rs:272
+msgid "Start the app with sample demo data"
+msgstr "サンプルデモデータでアプリを起動"
+
+#: data/metainfo.xml.in:6
+msgid "Actioneer"
+msgstr "Actioneer"
+
+#: data/metainfo.xml.in:7
+msgid "Track GitHub Actions runs"
+msgstr "GitHub Actions の実行をトラッキング"
+
+#: data/metainfo.xml.in:9
+msgid ""
+"Actioneer lets you browse GitHub repositories, inspect workflow runs, check "
+"job logs, and refresh status without leaving your desktop."
+msgstr "Actioneer で GitHub リポジトリを閲覧し、ワークフロー実行を確認し、ジョブログを表示して、デスクトップから離れずに状態を更新できます。"
+
+#: data/metainfo.xml.in:11
+msgid "Key features"
+msgstr "主な機能"
+
+#: data/metainfo.xml.in:13
+msgid ""
+"Browse your GitHub repositories and view Actions workflows and recent runs "
+"quickly."
+msgstr "GitHub リポジトリを閲覧し、Actions ワークフローと最近の実行をすばやく表示します。"
+
+#: data/metainfo.xml.in:14
+msgid ""
+"Inspect run status (success, failure, queued, in progress) with clear badges "
+"and counts."
+msgstr "実行状態(成功、失敗、キュー中、進行中)を明瞭なバッジと件数で確認します。"
+
+#: data/metainfo.xml.in:15
+msgid "Filter runs and focus on what matters most."
+msgstr "実行をフィルタリングして、最も重要なものに集中します。"
+
+#: data/metainfo.xml.in:16
+msgid "View job logs: download and preview run logs for quick troubleshooting."
+msgstr "ジョブログを表示: 実行ログをダウンロードしてプレビューし、すばやくトラブルシューティングします。"
+
+#: data/metainfo.xml.in:17
+msgid ""
+"Dispatch workflows, cancel running workflows, and re-run failed runs "
+"directly from the app."
+msgstr "ワークフローをトリガーし、実行中のワークフローをキャンセルし、失敗した実行をアプリから直接再実行できます。"
+
+#: data/metainfo.xml.in:18
+msgid ""
+"Favorites and quick search let you focus on the repositories and workflows "
+"that matter most."
+msgstr "お気に入りやクイック検索で、最も重要なリポジトリとワークフローに集中できます。"
+
+#: data/metainfo.xml.in:19
+msgid ""
+"Desktop notifications for run completions and failures so you never miss "
+"important results."
+msgstr "実行の完了と失敗のデスクトップ通知で、重要な結果を見逃しません。"
+
+#: data/metainfo.xml.in:20
+msgid "Keep recent workflow data available offline."
+msgstr "最近のワークフローデータをオフラインで利用可能にします。"
+
+#: data/metainfo.xml.in:21
+msgid "Fast refreshes that keep the interface responsive."
+msgstr "インターフェースをレスポンシブに保つ高速な更新。"
+
+#: data/metainfo.xml.in:24
+msgid ""
+"This package contains the desktop application, icons and AppStream metadata "
+"required for distribution via Flatpak/Flathub. See the project repository "
+"for source code, contribution guidelines, and additional documentation."
+msgstr "このパッケージには、デスクトップアプリケーション、Flatpak/Flathub 経由での配布に必要なアイコンと AppStream メタデータが含まれます。ソースコード、貢献ガイドライン、追加ドキュメントはプロジェクトリポジトリを参照してください。"
+
+#: data/metainfo.xml.in:33
+msgid "Sergey Armodin"
+msgstr "Sergey Armodin"
+
+#: data/metainfo.xml.in:52
+msgid "GitHub"
+msgstr "GitHub"
+
+#: data/metainfo.xml.in:53
+msgid "Actions"
+msgstr "Actions"
+
+#: data/metainfo.xml.in:54
+msgid "CI"
+msgstr "CI"
+
+#: data/metainfo.xml.in:55
+msgid "workflow"
+msgstr "ワークフロー"
+
+#: data/metainfo.xml.in:56
+msgid "automation"
+msgstr "オートメーション"
+
+#: data/metainfo.xml.in:57
+msgid "DevOps"
+msgstr "DevOps"
+
+#: data/metainfo.xml.in:69
+msgid "Browse Actions workflows."
+msgstr "Actions ワークフローを閲覧します。"
+
+#: data/metainfo.xml.in:73
+msgid "Inspect workflow runs and drill into job details quickly."
+msgstr "ワークフロー実行を確認し、すばやくジョブの詳細にアクセスします。"
+
+#: data/metainfo.xml.in:77
+msgid "Review job logs inline without leaving the app."
+msgstr "アプリを離れずにジョブログをインラインで確認します。"
+
+#: data/metainfo.xml.in:81
+msgid "Run a job on any branch."
+msgstr "任意のブランチでジョブを実行します。"
+
+#: data/metainfo.xml.in:90
+msgid ""
+"Sign-in works more reliably on newer Linux systems thanks to improved secure "
+"token storage compatibility."
+msgstr "セキュアなトークン保存の互換性が向上し、新しい Linux システムではサインインがより確実に動作します。"
+
+#: data/metainfo.xml.in:91
+msgid ""
+"Updated bundled components help keep Actioneer stable, reliable, and up to "
+"date."
+msgstr "更新されたバンドルコンポーネントにより、Actioneer の安定性・信頼性・最新性を保ちます。"
+
+#: data/metainfo.xml.in:98
+msgid ""
+"Closing and reopening Actioneer is more reliable, so you are less likely to "
+"see an unexpected crash report after a normal shutdown."
+msgstr "Actioneer の終了と再開がより確実になり、通常のシャットダウン後に予期しないクラッシュレポートが表示される可能性が低くなります。"
+
+#: data/metainfo.xml.in:99
+msgid ""
+"Sign-in checks and secure storage now recover more gracefully when desktop "
+"services are slow to respond."
+msgstr "デスクトップサービスの応答が遅い場合でも、サインインのチェックとセキュアな保存がよりスムーズに回復します。"
+
+#: data/metainfo.xml.in:100
+msgid "Updated bundled components help keep the app reliable and up to date."
+msgstr "更新されたバンドルコンポーネントにより、アプリの信頼性と最新性を保ちます。"
+
+#: data/metainfo.xml.in:107
+msgid ""
+"Older workflow runs now show dates in your selected app language, making run "
+"history easier to scan."
+msgstr "古いワークフロー実行の日付が選択したアプリの言語で表示され、実行履歴が見やすくなりました。"
+
+#: data/metainfo.xml.in:108
+msgid ""
+"Updated components and build improvements help keep Linux releases more "
+"reliable."
+msgstr "コンポーネントの更新とビルドの改善により、Linux リリースの信頼性が向上します。"
+
+#: data/metainfo.xml.in:115
+msgid ""
+"Refreshed the GNOME desktop libraries and HTTP stack for a more reliable, up-"
+"to-date experience."
+msgstr "より信頼でき、最新のエクスペリエンスのために、GNOME デスクトップライブラリと HTTP スタックを更新しました。"
+
+#: data/metainfo.xml.in:122
+msgid ""
+"Refreshed bundled components for a more reliable and up-to-date experience."
+msgstr "より信頼でき、最新のエクスペリエンスのために、バンドルコンポーネントを更新しました。"
+
+#: data/metainfo.xml.in:129
+msgid ""
+"This release includes an important security update to help keep Actioneer "
+"safer to use."
+msgstr "このリリースには、Actioneer をより安全に使うための重要なセキュリティ更新が含まれます。"
+
+#: data/metainfo.xml.in:130
+msgid ""
+"Bundled components have been refreshed for a more reliable and up-to-date "
+"experience."
+msgstr "より信頼でき、最新のエクスペリエンスのために、バンドルコンポーネントを更新しました。"
+
+#: data/metainfo.xml.in:137
+msgid ""
+"Workflow runs and expanded details are now more stable during background "
+"refreshes, with badges and job summaries preserved while results update."
+msgstr "ワークフロー実行と展開された詳細が、バックグラウンド更新中にバッジとジョブ概要を保持したまま、より安定して更新されます。"
+
+#: data/metainfo.xml.in:138
+msgid ""
+"Completed runs now stay collapsed when you close them, and run detail "
+"actions recover more reliably after temporary loading hiccups."
+msgstr "完了した実行を閉じても畳まれた状態が保持され、一時的な読み込みの不具合後も実行詳細の操作がより確実に回復します。"
+
+#: data/metainfo.xml.in:139
+msgid ""
+"GitHub connectivity is more resilient to API and permission-related "
+"responses, helping keep repository and workflow data visible instead of "
+"unexpectedly signing you out."
+msgstr "GitHub の接続が API や権限に関連する応答に対してより強健になり、予期しないサインアウトの代わりにリポジトリとワークフローデータを表示し続けられます。"
+
+#: data/metainfo.xml.in:146
+msgid ""
+"In-progress workflow runs now stay up to date, so jobs and steps refresh "
+"while a run is still active."
+msgstr "進行中のワークフロー実行が最新に保たれ、実行がまだアクティブな間にジョブとステップが更新されます。"
+
+#: data/metainfo.xml.in:147
+msgid ""
+"Expanded run details are more stable and easier to follow, with clearer job "
+"badges and step numbering."
+msgstr "展開された実行詳細がより安定し、追従しやすくなり、ジョブバッジとステップ番号が明確になりました。"
+
+#: data/metainfo.xml.in:148
+msgid ""
+"Workflow status badges are now translated more consistently across the app."
+msgstr "ワークフロー状態バッジがアプリ全体でより一貫して翻訳されるようになりました。"
+
+#: data/metainfo.xml.in:149
+msgid ""
+"Background refresh is lighter on the GitHub API, which helps preserve your "
+"rate limit."
+msgstr "バックグラウンド更新が GitHub API への負荷を軽減し、レート制限の保護に役立ちます。"
+
+#: data/metainfo.xml.in:156
+msgid ""
+"The app now feels faster and smoother during sign-in, refreshes, and "
+"everyday navigation."
+msgstr "サインイン、更新、日常のナビゲーションで、アプリがより速く、スムーズに感じられます。"
+
+#: data/metainfo.xml.in:157
+msgid ""
+"Notifications and background updates are more reliable, so important run "
+"results are less likely to be missed."
+msgstr "通知とバックグラウンド更新がより信頼でき、重要な実行結果を見逃す可能性が低くなります。"
+
+#: data/metainfo.xml.in:158
+msgid ""
+"German and Dutch translations are now available across the app and listing "
+"metadata."
+msgstr "ドイツ語とオランダ語の翻訳が、アプリ全体とリストのメタデータで利用できるようになりました。"
+
+#: data/metainfo.xml.in:165
+msgid ""
+"Actioneer is now localized in English, German, Dutch, Simplified Chinese, "
+"Hindi, Spanish, French, Arabic, Bengali, Brazilian Portuguese, Russian, and "
+"Urdu."
+msgstr "Actioneer は現在、英語、ドイツ語、オランダ語、簡体字中国語、ヒンディー語、スペイン語、フランス語、アラビア語、ベンガル語、ブラジルポルトガル語、ロシア語、ウルドゥー語でローカライズされています。"
+
+#: data/metainfo.xml.in:166
+msgid ""
+"Added Help and Shortcuts to make in-app guidance and keyboard workflows "
+"easier."
+msgstr "アプリ内ガイドとキーボード操作を簡単にするため、ヘルプとショートカットを追加しました。"
+
+#: data/metainfo.xml.in:167
+msgid "Improved GitHub request stability with client-side timeouts."
+msgstr "クライアント側のタイムアウトにより、GitHub リクエストの安定性が向上しました。"
+
+#: data/metainfo.xml.in:174
+msgid ""
+"Manual workflow triggers now support workflow_dispatch inputs with dynamic "
+"parameter fields."
+msgstr "手動のワークフロートリガーが、動的なパラメータフィールド付きの workflow_dispatch 入力に対応しました。"
+
+#: data/metainfo.xml.in:175
+msgid "Dependency updates for ryu, unicode-ident, and zmij."
+msgstr "ryu、unicode-ident、zmij の依存関係を更新しました。"
+
+#: data/metainfo.xml.in:182
+msgid ""
+"Handle expired job logs (HTTP 410) with clearer messaging instead of a "
+"broken view."
+msgstr "期限切れのジョブログ(HTTP 410)を、壊れたビューの代わりにより明確なメッセージで処理します。"
+
+#: data/metainfo.xml.in:183
+msgid ""
+"Strip BOM markers in job logs so first-line timestamps render correctly."
+msgstr "BOM マーカーを除去し、先頭行のタイムスタンプが正しく表示されるようにしました。"
+
+#: data/metainfo.xml.in:190
+msgid ""
+"Job logs now render ANSI colors, grouped workflow sections, and clearer "
+"command/output formatting."
+msgstr "ジョブログが ANSI カラー、グループ化されたワークフローセクション、より明確なコマンド/出力の書式を表示するようになりました。"
+
+#: data/metainfo.xml.in:191
+msgid ""
+"Aligned timestamps and command prefixes improve scanability, with stronger "
+"error highlighting."
+msgstr "タイムスタンプとコマンド接頭語の整列により見やすさが向上し、エラーハイライトが強まりました。"
+
+#: data/metainfo.xml.in:192
+msgid ""
+"Packaging CI refreshed with multi-arch updates for AppImage/Snap/Flatpak "
+"builds."
+msgstr "AppImage/Snap/Flatpak ビルドのために、Packaging CI をマルチアーキテクチャ対応に更新しました。"
+
+#: data/metainfo.xml.in:193
+msgid "Dependency updates and demo log refreshes for improved accuracy."
+msgstr "正確性の向上のため、依存関係とデモログを更新しました。"
+
+#: data/metainfo.xml.in:200 data/metainfo.xml.in:214
+msgid ""
+"Faster and smoother UI with refreshed repo/workflow lists and improved "
+"scrolling behavior."
+msgstr "リポジトリ/ワークフローリストの刷新とスクロール動作の改善により、より速く、スムーズな UI になりました。"
+
+#: data/metainfo.xml.in:201 data/metainfo.xml.in:215
+msgid ""
+"New run filtering controls with better caching, so switching filters is "
+"instant and doesn't reload data."
+msgstr "より良いキャッシュを備えた新しい実行フィルタリングコントロールにより、フィルターの切り替えが即座に行われ、データの再読み込みは不要です。"
+
+#: data/metainfo.xml.in:202 data/metainfo.xml.in:216
+msgid ""
+"Better workflow auto-refresh and run status updates, including fewer "
+"duplicate fetches."
+msgstr "ワークフローの自動更新と実行状態の更新が改善され、重複フェッチが減少しました。"
+
+#: data/metainfo.xml.in:203 data/metainfo.xml.in:217
+msgid ""
+"Notifications are more reliable across Snap/Flatpak, with improved icon "
+"handling and fallbacks."
+msgstr "Snap/Flatpak 全体で通知がより信頼でき、アイコン処理とフォールバックが改善されました。"
+
+#: data/metainfo.xml.in:204 data/metainfo.xml.in:218
+msgid ""
+"Improved sandboxed credential storage using the secret portal for Snap/"
+"Flatpak."
+msgstr "Snap/Flatpak の secret ポータルを使用したサンドボックス化された認証情報の保存を改善しました。"
+
+#: data/metainfo.xml.in:205 data/metainfo.xml.in:219
+msgid "Offline-friendly cache persistence for workflows, runs, and jobs."
+msgstr "ワークフロー、実行、ジョブのオフライン対応のキャッシュ永続化。"
+
+#: data/metainfo.xml.in:206 data/metainfo.xml.in:220
+msgid ""
+"Packaging and CI updates across Snap, Flatpak, and AppImage for better "
+"compatibility."
+msgstr "より良い互換性のために、Snap、Flatpak、AppImage 全体のパッケージと CI を更新しました。"
+
+#: data/metainfo.xml.in:207 data/metainfo.xml.in:221
+msgid "Dependency updates and stability fixes."
+msgstr "依存関係の更新と安定性の修正。"
+
+#~ msgid "General"
+#~ msgstr "一般"
+
+#~ msgid "{title} - Jobs"
+#~ msgstr "{title} - Jobs"
+
+#~ msgid "Refresh jobs"
+#~ msgstr "Refresh jobs"
+
+#~ msgid "Run cancellation requested successfully."
+#~ msgstr "Run cancellation requested successfully."
+
+#~ msgid "Failed to cancel run: {error}"
+#~ msgstr "Failed to cancel run: {error}"
+
+#~ msgid "No file selected"
+#~ msgstr "No file selected"
+
+#~ msgid "Private Repository"
+#~ msgstr "非公開リポジトリ"
+
+#~ msgid "Open job in GitHub"
+#~ msgstr "Open job in GitHub"
+
+#~ msgid "Showing {count} jobs"
+#~ msgstr "Showing {count} jobs"
 
-msgid "View logs"
-msgstr "View logs"
 
-msgid "Open job in GitHub"
-msgstr "Open job in GitHub"
-
-msgid "No jobs found"
-msgstr "No jobs found"
-
-msgid "Showing {count} jobs"
-msgstr "Showing {count} jobs"
-
-msgid "Unable to load jobs"
-msgstr "Unable to load jobs"
-
-msgid "Retry"
-msgstr "Retry"
-
-msgid "{description} (required)"
-msgstr "{description} (required)"
-
-msgid "Required"
-msgstr "Required"
-
-msgid "Trigger workflow"
-msgstr "Trigger workflow"
-
-msgid "Trigger Workflow"
-msgstr "Trigger Workflow"
-
-msgid "Trigger"
-msgstr "Trigger"
-
-msgid "This will trigger the \"{workflow}\" workflow."
-msgstr "This will trigger the \"{workflow}\" workflow."
-
-msgid "Triggered runs typically appear within 10-30 seconds."
-msgstr "Triggered runs typically appear within 10-30 seconds."
-
-msgid "Branch or ref:"
-msgstr "Branch or ref:"
-
-msgid "Loading branches..."
-msgstr "Loading branches..."
-
-msgid "Loading workflow inputs..."
-msgstr "Loading workflow inputs..."
-
-msgid "Inputs"
-msgstr "Inputs"
-
-msgid "No inputs defined for this workflow."
-msgstr "No inputs defined for this workflow."
-
-msgid "Workflow inputs could not be loaded."
-msgstr "Workflow inputs could not be loaded."
-
-msgid "✗ Failed to load workflow inputs: {error}"
-msgstr "✗ Failed to load workflow inputs: {error}"
-
-msgid "Failed to load workflow inputs: {error}"
-msgstr "Failed to load workflow inputs: {error}"
-
-msgid "✗ {error}"
-msgstr "✗ {error}"
-
-msgid "Failed to trigger workflow: {error}"
-msgstr "Failed to trigger workflow: {error}"
-
-msgid "✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear once GitHub reports it."
-msgstr "✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear once GitHub reports it."
-
-msgid "✗ Failed to trigger workflow: {error}"
-msgstr "✗ Failed to trigger workflow: {error}"
-
-msgid "Open in GitHub"
-msgstr "Open in GitHub"
-
-msgid "Re-run workflow"
-msgstr "Re-run workflow"
-
-msgid "Do you want to re-run \"{run}\"?"
-msgstr "Do you want to re-run \"{run}\"?"
-
-msgid "Re-run Workflow"
-msgstr "Re-run Workflow"
-
-msgid "✓ Re-running '{run}'"
-msgstr "✓ Re-running '{run}'"
-
-msgid "✗ Failed to re-run workflow"
-msgstr "✗ Failed to re-run workflow"
-
-msgid "Re-run failed jobs"
-msgstr "Re-run failed jobs"
-
-msgid "Do you want to re-run all failed jobs in \"{run}\"?"
-msgstr "Do you want to re-run all failed jobs in \"{run}\"?"
-
-msgid "Re-run Failed Jobs"
-msgstr "Re-run Failed Jobs"
-
-msgid "✓ Re-running failed jobs for '{run}'"
-msgstr "✓ Re-running failed jobs for '{run}'"
-
-msgid "✗ Failed to re-run failed jobs"
-msgstr "✗ Failed to re-run failed jobs"
-
-msgid "Do you want to cancel the in-progress run \"{run}\"?\n"
-"\n"
-"This action cannot be undone."
-msgstr "Do you want to cancel the in-progress run \"{run}\"?\n"
-"\n"
-"This action cannot be undone."
-
-msgid "Cancel Workflow Run"
-msgstr "Cancel Workflow Run"
-
-msgid "✓ Cancelled run '{run}'"
-msgstr "✓ Cancelled run '{run}'"
-
-msgid "✗ Failed to cancel run"
-msgstr "✗ Failed to cancel run"
-
-msgid "Click to load jobs..."
-msgstr "Click to load jobs..."
-
-msgid "Click to load runs..."
-msgstr "Click to load runs..."
-
-msgid "No recent runs"
-msgstr "No recent runs"
-
-msgid "Triggered runs may take 10-30 seconds to appear"
-msgstr "Triggered runs may take 10-30 seconds to appear"
-
-msgid "No runs match the current filters"
-msgstr "No runs match the current filters"
-
-msgid "Adjust the status chips above to see more runs."
-msgstr "Adjust the status chips above to see more runs."
-
-msgid "Unable to load workflow runs"
-msgstr "Unable to load workflow runs"
-
-msgid "Recent runs (showing {visible} of {overall})"
-msgstr "Recent runs (showing {visible} of {overall})"
-
-msgid "Recent runs ({overall})"
-msgstr "Recent runs ({overall})"
-
-msgid "Recent runs (showing {visible} of {filtered} matching filters)"
-msgstr "Recent runs (showing {visible} of {filtered} matching filters)"
-
-msgid "Queued"
-msgstr "キュー中"
-
-msgid "In Progress"
-msgstr "実行中"
-
-msgid "Waiting"
-msgstr "待機中"
-
-msgid "Requested"
-msgstr "要求済み"
-
-msgid "Pending"
-msgstr "保留中"
-
-msgid "Success"
-msgstr "成功"
-
-msgid "Failed"
-msgstr "失敗"
-
-msgid "Stale"
-msgstr "古い"
-
-msgid "Just now"
-msgstr "たった今"
-
-msgid "Yesterday"
-msgstr "昨日"
-
-msgid "{count}m ago"
-msgstr "{count}分前"
-
-msgid "{count}h ago"
-msgstr "{count}時間前"
-
-msgid "{count}d ago"
-msgstr "{count}日前"
-
-msgid "{title} - Logs"
-msgstr "{title} - ログ"
-
-msgid "No"
-msgstr "いいえ"
-
-msgid "Yes"
-msgstr "はい"
-
-msgid "Failed to open donation page in the browser."
-msgstr "Failed to open donation page in the browser."
