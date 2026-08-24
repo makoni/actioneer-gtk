@@ -6,6 +6,33 @@ pub struct FilterChips {
     pub success: gtk::ToggleButton,
     pub failed: gtk::ToggleButton,
     pub running: gtk::ToggleButton,
+    success_count: gtk::Label,
+    failed_count: gtk::Label,
+    running_count: gtk::Label,
+}
+
+impl FilterChips {
+    /// Updates the per-status counters shown inside the segmented control.
+    ///
+    /// The number and the action describe different things — the count is how
+    /// many *workflows* currently sit in that state, while toggling the chip
+    /// filters the *runs* listed under each workflow — so the tooltip spells
+    /// both out instead of leaving the number unexplained.
+    pub fn set_counts(&self, success: usize, running: usize, failed: usize) {
+        self.success_count.set_text(&success.to_string());
+        self.running_count.set_text(&running.to_string());
+        self.failed_count.set_text(&failed.to_string());
+
+        for (button, action, count) in [
+            (&self.success, tr("Show successful runs"), success),
+            (&self.running, tr("Show running/queued runs"), running),
+            (&self.failed, tr("Show failed runs"), failed),
+        ] {
+            let explanation = tr("{count} workflows in this state")
+                .replace("{count}", count.to_string().as_str());
+            crate::ui::utils::describe_control(button, &format!("{action} · {explanation}"));
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -16,27 +43,39 @@ pub struct FilterControls {
 
 impl FilterControls {
     pub fn new() -> Self {
-        let container = gtk::Box::new(gtk::Orientation::Horizontal, 4);
+        let container = gtk::Box::new(gtk::Orientation::Horizontal, 0);
         container.add_css_class("linked");
+        container.add_css_class("segmented-status-filter");
         container.set_valign(gtk::Align::Center);
 
-        let success_chip =
-            create_status_toggle("emblem-ok-symbolic", tr("Show successful runs").as_str());
-        let failed_chip =
-            create_status_toggle("dialog-error-symbolic", tr("Show failed runs").as_str());
-        let running_chip = create_status_toggle(
+        let (success_chip, success_count) = create_status_segment(
+            "object-select-symbolic",
+            "seg-success",
+            tr("Show successful runs").as_str(),
+        );
+        let (running_chip, running_count) = create_status_segment(
             "media-playback-start-symbolic",
+            "seg-running",
             tr("Show running/queued runs").as_str(),
         );
+        let (failed_chip, failed_count) = create_status_segment(
+            "dialog-error-symbolic",
+            "seg-failed",
+            tr("Show failed runs").as_str(),
+        );
 
+        // Design order: success, running, failure.
         container.append(&success_chip);
-        container.append(&failed_chip);
         container.append(&running_chip);
+        container.append(&failed_chip);
 
         let chips = FilterChips {
             success: success_chip,
             failed: failed_chip,
             running: running_chip,
+            success_count,
+            failed_count,
+            running_count,
         };
 
         Self { container, chips }
@@ -47,46 +86,79 @@ impl FilterControls {
     }
 }
 
-fn create_status_toggle(icon_name: &str, tooltip: &str) -> gtk::ToggleButton {
+fn create_status_segment(
+    icon_name: &str,
+    segment_class: &str,
+    tooltip: &str,
+) -> (gtk::ToggleButton, gtk::Label) {
+    let content = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    content.set_valign(gtk::Align::Center);
+
+    let icon = gtk::Image::from_icon_name(icon_name);
+    icon.set_pixel_size(13);
+    content.append(&icon);
+
+    let count = gtk::Label::new(Some("0"));
+    count.add_css_class("segment-count");
+    count.add_css_class("caption");
+    content.append(&count);
+
     let button = gtk::ToggleButton::builder()
-        .icon_name(icon_name)
-        .tooltip_text(tooltip)
         .valign(gtk::Align::Center)
+        .child(&content)
         .build();
 
     button.add_css_class("flat");
-    button.add_css_class("circular");
-    button.add_css_class("compact");
-    button.set_focus_on_click(true);
-    button.set_size_request(32, 32);
+    button.add_css_class("filter-segment");
+    button.add_css_class(segment_class);
     button.set_active(true);
-    button
+    // The only visible text is the number, so without an explicit label a screen
+    // reader announces just "7 toggle button".
+    crate::ui::utils::describe_control(&button, tooltip);
+
+    (button, count)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
 
     #[test]
     #[ignore = "requires GTK display"]
     fn filter_controls_build_expected_chips() {
-        let Some(_guard) = gtk_test_guard("filter_controls_build_expected_chips") else {
-            return;
-        };
-        let controls = FilterControls::new();
-        let toolbar = controls.widget();
+        run_gtk_test("filter_controls_build_expected_chips", || {
+            let controls = FilterControls::new();
+            let toolbar = controls.widget();
 
-        let mut count = 0;
-        let mut child = toolbar.first_child();
-        while let Some(widget) = child {
-            count += 1;
-            child = widget.next_sibling();
-        }
-        assert_eq!(count, 3);
+            let mut count = 0;
+            let mut child = toolbar.first_child();
+            while let Some(widget) = child {
+                count += 1;
+                child = widget.next_sibling();
+            }
+            assert_eq!(count, 3);
 
-        assert!(controls.chips.success.is_active());
-        assert!(controls.chips.failed.is_active());
-        assert!(controls.chips.running.is_active());
+            assert!(controls.chips.success.is_active());
+            assert!(controls.chips.failed.is_active());
+            assert!(controls.chips.running.is_active());
+
+            assert!(controls.chips.success.has_css_class("seg-success"));
+            assert!(controls.chips.running.has_css_class("seg-running"));
+            assert!(controls.chips.failed.has_css_class("seg-failed"));
+        });
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn filter_chips_update_counts() {
+        run_gtk_test("filter_chips_update_counts", || {
+            let controls = FilterControls::new();
+            controls.chips.set_counts(7, 1, 2);
+
+            assert_eq!(controls.chips.success_count.text().as_str(), "7");
+            assert_eq!(controls.chips.running_count.text().as_str(), "1");
+            assert_eq!(controls.chips.failed_count.text().as_str(), "2");
+        });
     }
 }

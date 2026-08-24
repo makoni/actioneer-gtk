@@ -1,4 +1,4 @@
-<!-- Actioneer-gtk: Copilot / AI agent instructions -->
+<!-- Actioneer-gtk: instructions for automated coding agents -->
 # Quick guide for automated coding agents
 
 This repository is a native GTK4/libadwaita desktop client for GitHub Actions written in Rust. The notes below focus on the patterns and files an AI coding agent should know to make safe, useful changes quickly.
@@ -92,7 +92,7 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
   - System deps (Ubuntu/Debian): `sudo apt install libgtk-4-dev libadwaita-1-dev pkg-config` (see `README.md`).
   - Build: `cargo build`; Run: `cargo run` (reads `.env` when provided).
   - Tests: `cargo test` (there are unit tests such as token storage lifecycle).
-  - UI tests: UI widget tests live under `src/ui/**` and use `ui::test_helpers::gtk_test_guard`. Run `cargo test -- --ignored` to execute GTK-dependent tests when a display is available.
+  - UI tests: UI widget tests live under `src/ui/**` and use `ui::test_helpers::run_gtk_test`. Run `cargo test -- --ignored` to execute GTK-dependent tests when a display is available.
   - Formatting & linting: `cargo fmt` and `cargo clippy --all-targets --all-features -- -D warnings`. The project aims for zero warnings; a PR should not introduce warnings.
   - After finishing code edits, run the same checks as `.github/workflows/ci.yml` (only fmt, clippy, build, and ignored UI tests when feasible) to ensure the project is buildable and clippy is clean.
 
@@ -108,7 +108,7 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
 
   - Token/keyring safety: `src/storage/token_storage.rs` contains a live keyring test and some operations that may write to or delete entries in the system keyring. Do NOT run or modify those destructive tests on developer machines unless you understand and accept the side-effects. Prefer using mocks or a dedicated test keyring account when adding or changing tests that interact with the system keyring.
 
-  - PR checklist additions: when creating a PR, in addition to the validation checklist above, ensure you have updated `TODO.md` per the repository's `AGENTS.md` rules (mark started items as [🔄] and completed items as [✅], add a brief note in "Recent Updates"). This repo expects `TODO.md` to be kept current by contributors and automated agents.
+  - PR checklist additions: when creating a PR, in addition to the validation checklist above, update `TODO.md` if the *backlog* changed — an open item finished, a new one appeared, or the change is worth a "Recent Updates" line. See `AGENTS.md` ("Progress tracking"); `TODO.md` is not a per-step session journal.
 
 - Project-specific conventions
   - Prefer `parking_lot::Mutex` for shared state; code frequently clones `Arc<Mutex<T>>` before spawning tasks.
@@ -132,7 +132,7 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
 - Files to reference when making changes
   - `src/main.rs` (runtime + app bootstrap)
   - `src/ui/main_window.rs` (primary UI patterns)
-  - `src/ui/` (UI widget tests via `gtk_test_guard`)
+  - `src/ui/` (UI widget tests via `run_gtk_test`)
   - `src/storage/token_storage.rs` (keyring usage)
   - `src/api/client.rs` and `src/api/models.rs` (API surface)
   - `README.md` (dev setup and system deps)
@@ -149,7 +149,7 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
 If touching API/caching code, follow the ETag/ResponseHandler pattern in `src/api/http.rs` and respect rate-limit handling.
 
 UI testing guidance
-- UI tests live under `src/ui/**` and are marked ignored by default (they use the Rust test ignore attribute and the `gtk_test_guard` helper). This avoids running UI tests headless on CI without a display. They require an X11/Wayland display or a headless Xvfb/virtual framebuffer in CI.
+- UI tests live under `src/ui/**` and are marked ignored by default (they use the Rust test ignore attribute and the `run_gtk_test` helper). This avoids running UI tests headless on CI without a display. They require an X11/Wayland display or a headless Xvfb/virtual framebuffer in CI.
 - To run locally with a display (Linux):
 
 ```bash

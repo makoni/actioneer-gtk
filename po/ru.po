@@ -840,3 +840,96 @@ msgstr "Вход в систему на новых версиях Linux рабо
 
 msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
 msgstr "Обновлённые встроенные компоненты помогают поддерживать Actioneer стабильным, надёжным и актуальным."
+
+msgid "Workflows"
+msgstr "Workflows"
+
+msgid "Auto-refresh is disabled."
+msgstr "Автообновление отключено."
+
+msgid "Data refreshes automatically every {seconds} seconds."
+msgstr "Данные обновляются автоматически каждые {seconds} секунд."
+
+msgid "1 workflow"
+msgstr "1 воркфлоу"
+
+msgid "{count} workflows"
+msgstr "{count} воркфлоу"
+
+msgid "Updated {when}"
+msgstr "Обновлено {when}"
+
+msgid "Not updated yet"
+msgstr "Ещё не обновлялось"
+
+msgid "No runs yet"
+msgstr "Пока нет запусков"
+
+msgid "Recent runs"
+msgstr "Недавние запуски"
+
+msgid "All on GitHub"
+msgstr "Все на GitHub"
+
+msgid "Showing {visible} of {overall}"
+msgstr "Показано {visible} из {overall}"
+
+msgid "Showing {visible} of {filtered} matching filters"
+msgstr "Показано {visible} из {filtered} по фильтрам"
+
+msgid "All"
+msgstr "Все"
+
+msgid "Active"
+msgstr "Активные"
+
+msgid "Status"
+msgstr "Статус"
+
+msgid "Conclusion"
+msgstr "Результат"
+
+msgid "Branch"
+msgstr "Ветка"
+
+msgid "Commit"
+msgstr "Коммит"
+
+msgid "Triggered by"
+msgstr "Запустил"
+
+msgid "Event"
+msgstr "Событие"
+
+msgid "Duration"
+msgstr "Длительность"
+
+msgid "Started"
+msgstr "Начат"
+
+msgid "Updated"
+msgstr "Обновлён"
+
+msgid "OK"
+msgstr "ОК"
+
+msgid "Saving token..."
+msgstr "Сохранение токена..."
+
+msgid "Set the application language (e.g., ru, en, zh_Hans)"
+msgstr "Задать язык приложения (например, ru, en, zh_Hans)"
+
+msgid "Start the app with sample demo data"
+msgstr "Запустить приложение с демонстрационными данными"
+
+msgid "No repositories match"
+msgstr "Нет подходящих репозиториев"
+
+msgid "Activity is gathered as you open repositories."
+msgstr "Активность собирается по мере открытия репозиториев."
+
+msgid "{count} workflows in this state"
+msgstr "{count} воркфлоу в этом состоянии"
+
+msgid "Try another filter or search term."
+msgstr "Попробуйте другой фильтр или запрос."

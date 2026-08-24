@@ -402,6 +402,23 @@ fn fallback_localized_numeric_date(date_time: chrono::DateTime<chrono::Local>) -
     }
 }
 
+/// Elapsed seconds as `mm:ss`, or `h:mm:ss` past the hour.
+///
+/// No language-specific units: a run shows the same shape while it is live
+/// (counting from the start) and after it finishes (from the final duration).
+pub fn format_elapsed(seconds: i64) -> String {
+    if seconds < 3600 {
+        format!("{:02}:{:02}", seconds / 60, seconds % 60)
+    } else {
+        format!(
+            "{}:{:02}:{:02}",
+            seconds / 3600,
+            (seconds % 3600) / 60,
+            seconds % 60
+        )
+    }
+}
+
 fn duration_string_from_bounds(
     started: Option<&String>,
     completed: Option<&String>,
@@ -413,19 +430,9 @@ fn duration_string_from_bounds(
     let end_time = chrono::DateTime::parse_from_rfc3339(completed).ok()?;
 
     let duration = end_time.signed_duration_since(start_time);
-    let seconds = duration.num_seconds();
+    let seconds = duration.num_seconds().max(0);
 
-    if seconds < 60 {
-        Some(format!("{}s", seconds))
-    } else if seconds < 3600 {
-        let minutes = seconds / 60;
-        let secs = seconds % 60;
-        Some(format!("{}m {}s", minutes, secs))
-    } else {
-        let hours = seconds / 3600;
-        let minutes = (seconds % 3600) / 60;
-        Some(format!("{}h {}m", hours, minutes))
-    }
+    Some(format_elapsed(seconds))
 }
 
 impl Job {
@@ -470,7 +477,7 @@ impl Job {
         }
     }
 
-    /// Returns a formatted duration string (e.g., "2m 34s")
+    /// Returns a formatted duration string (e.g., "12:34")
     pub fn duration_string(&self) -> Option<String> {
         duration_string_from_bounds(self.started_at.as_ref(), self.completed_at.as_ref())
     }
@@ -799,5 +806,45 @@ mod tests {
 
         assert_eq!(fallback_localized_numeric_date(date_time), "08.01.2024");
         let _ = apply_language_preference(LanguagePreference::En);
+    }
+
+    #[test]
+    fn test_format_elapsed_minutes_then_hours() {
+        assert_eq!(format_elapsed(0), "00:00");
+        assert_eq!(format_elapsed(65), "01:05");
+        assert_eq!(format_elapsed(3599), "59:59");
+        assert_eq!(format_elapsed(3661), "1:01:01");
+    }
+
+    #[test]
+    fn test_run_duration_string_is_minutes_seconds() {
+        let mut run = WorkflowRun {
+            id: 1,
+            run_number: Some(1),
+            workflow_id: None,
+            name: None,
+            display_title: None,
+            head_branch: None,
+            head_commit: None,
+            status: Some("completed".into()),
+            conclusion: Some("success".into()),
+            run_started_at: Some("2024-01-01T00:00:00Z".into()),
+            event: None,
+            created_at: None,
+            updated_at: Some("2024-01-01T00:00:45Z".into()),
+            html_url: None,
+            actor: None,
+            triggering_actor: None,
+        };
+
+        // The final duration matches the live ticker's shape, so no separate
+        // locale-aware units are needed.
+        assert_eq!(run.run_duration_string(), Some("00:45".into()));
+
+        run.updated_at = Some("2024-01-01T01:01:01Z".into());
+        assert_eq!(run.run_duration_string(), Some("1:01:01".into()));
+
+        run.run_started_at = None;
+        assert_eq!(run.run_duration_string(), None);
     }
 }

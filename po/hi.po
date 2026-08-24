@@ -835,3 +835,96 @@ msgstr "सुरक्षित टोकन स्टोरेज संगत
 
 msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
 msgstr "अपडेट किए गए शामिल घटक Actioneer को स्थिर, भरोसेमंद और अद्यतित बनाए रखने में मदद करते हैं।"
+
+msgid "Workflows"
+msgstr "वर्कफ़्लो"
+
+msgid "Auto-refresh is disabled."
+msgstr "स्वतः ताज़ा करना अक्षम है।"
+
+msgid "Data refreshes automatically every {seconds} seconds."
+msgstr "डेटा हर {seconds} सेकंड में स्वचालित रूप से ताज़ा होता है।"
+
+msgid "1 workflow"
+msgstr "1 वर्कफ़्लो"
+
+msgid "{count} workflows"
+msgstr "{count} वर्कफ़्लो"
+
+msgid "Updated {when}"
+msgstr "{when} अपडेट किया गया"
+
+msgid "Not updated yet"
+msgstr "अभी अपडेट नहीं हुआ"
+
+msgid "No runs yet"
+msgstr "अभी कोई रन नहीं"
+
+msgid "Recent runs"
+msgstr "हाल के रन"
+
+msgid "All on GitHub"
+msgstr "GitHub पर सभी"
+
+msgid "Showing {visible} of {overall}"
+msgstr "{overall} में से {visible} दिखाए जा रहे हैं"
+
+msgid "Showing {visible} of {filtered} matching filters"
+msgstr "फ़िल्टर से मेल खाते {filtered} में से {visible} दिखाए जा रहे हैं"
+
+msgid "All"
+msgstr "सभी"
+
+msgid "Active"
+msgstr "सक्रिय"
+
+msgid "Status"
+msgstr "स्थिति"
+
+msgid "Conclusion"
+msgstr "परिणाम"
+
+msgid "Branch"
+msgstr "शाखा"
+
+msgid "Commit"
+msgstr "कमिट"
+
+msgid "Triggered by"
+msgstr "ट्रिगर किया गया"
+
+msgid "Event"
+msgstr "इवेंट"
+
+msgid "Duration"
+msgstr "अवधि"
+
+msgid "Started"
+msgstr "प्रारंभ"
+
+msgid "Updated"
+msgstr "अपडेट किया गया"
+
+msgid "OK"
+msgstr "ठीक है"
+
+msgid "Saving token..."
+msgstr "टोकन सहेजा जा रहा है..."
+
+msgid "Set the application language (e.g., ru, en, zh_Hans)"
+msgstr "एप्लिकेशन की भाषा सेट करें (जैसे ru, en, zh_Hans)"
+
+msgid "Start the app with sample demo data"
+msgstr "नमूना डेमो डेटा के साथ ऐप शुरू करें"
+
+msgid "No repositories match"
+msgstr "कोई रिपॉज़िटरी मेल नहीं खाती"
+
+msgid "Activity is gathered as you open repositories."
+msgstr "रिपॉज़िटरी खोलने पर गतिविधि एकत्र की जाती है।"
+
+msgid "{count} workflows in this state"
+msgstr "इस स्थिति में {count} वर्कफ़्लो"
+
+msgid "Try another filter or search term."
+msgstr "कोई अन्य फ़िल्टर या खोज शब्द आज़माएँ।"

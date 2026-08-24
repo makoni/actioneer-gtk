@@ -1,6 +1,7 @@
 use crate::api::GitHubError;
 use crate::api::models::{
-    Branch, BranchCommit, Job, RateLimitInfo, Repo, RepoPermissions, User, Workflow, WorkflowRun,
+    Branch, BranchCommit, Job, JobStep, RateLimitInfo, Repo, RepoPermissions, RunHeadCommit, User,
+    Workflow, WorkflowRun,
 };
 use chrono::Utc;
 use std::collections::{HashMap, HashSet};
@@ -96,7 +97,9 @@ impl DemoData {
             owner: User {
                 login: "demo-team".to_string(),
             },
-            is_private: false,
+            // Kept private so the pane header's visibility badge shows both of
+            // its states under `--demo`.
+            is_private: true,
             permissions: standard_permissions,
             default_branch: Some("main".to_string()),
         };
@@ -137,220 +140,240 @@ impl DemoData {
             name: "Release".to_string(),
             path: ".github/workflows/release.yml".to_string(),
         };
+        let workflow_appimage = Workflow {
+            id: 21_003,
+            name: "AppImage CI".to_string(),
+            path: ".github/workflows/appimage.yml".to_string(),
+        };
+        let workflow_snap = Workflow {
+            id: 21_004,
+            name: "Snap CI".to_string(),
+            path: ".github/workflows/snap.yml".to_string(),
+        };
+        let workflow_lockfile = Workflow {
+            id: 21_005,
+            name: "Lockfile Sync".to_string(),
+            path: ".github/workflows/lockfile-sync.yml".to_string(),
+        };
+        let workflow_publish = Workflow {
+            id: 21_006,
+            name: "Publish Release".to_string(),
+            path: ".github/workflows/publish.yml".to_string(),
+        };
+        let workflow_copilot_review = Workflow {
+            id: 21_007,
+            name: "Copilot code review".to_string(),
+            path: ".github/workflows/copilot-review.yml".to_string(),
+        };
+        let workflow_copilot_agent = Workflow {
+            id: 21_008,
+            name: "Copilot coding agent".to_string(),
+            path: ".github/workflows/copilot-agent.yml".to_string(),
+        };
         workflows_map.insert(
             key_one.clone(),
-            vec![workflow_ci.clone(), workflow_release.clone()],
+            vec![
+                workflow_ci.clone(),
+                workflow_release.clone(),
+                workflow_appimage.clone(),
+                workflow_snap.clone(),
+                workflow_lockfile.clone(),
+                workflow_publish.clone(),
+                workflow_copilot_review.clone(),
+                workflow_copilot_agent.clone(),
+            ],
         );
+
+        let repo_one_full = repo_one.full_name.clone();
         let runs_ci = vec![
-            WorkflowRun {
-                id: 30_108,
-                run_number: Some(134),
-                workflow_id: None,
-                name: Some("CI".to_string()),
-                display_title: Some("CI • main".to_string()),
-                head_branch: Some("main".to_string()),
-                status: Some("in_progress".to_string()),
-                conclusion: None,
-                run_started_at: Some("2026-01-24T12:10:00Z".to_string()),
-                event: Some("push".to_string()),
-                created_at: Some("2026-01-24T12:09:30Z".to_string()),
-                updated_at: Some("2026-01-24T12:12:20Z".to_string()),
-                actor: None,
-
-                head_commit: None,
-
-                triggering_actor: None,
-
-                html_url: Some(
-                    "https://github.com/demo-org/actioneer-demo-app/actions/runs/30108".to_string(),
-                ),
-            },
-            WorkflowRun {
-                id: 30_107,
-                run_number: Some(133),
-                workflow_id: None,
-                name: Some("CI".to_string()),
-                display_title: Some("CI • feature/refactor".to_string()),
-                head_branch: Some("feature/refactor".to_string()),
-                status: Some("in_progress".to_string()),
-                conclusion: None,
-                run_started_at: Some("2026-01-24T11:20:00Z".to_string()),
-                event: Some("pull_request".to_string()),
-                created_at: Some("2026-01-24T11:19:20Z".to_string()),
-                updated_at: Some("2026-01-24T11:28:10Z".to_string()),
-                actor: None,
-
-                head_commit: None,
-
-                triggering_actor: None,
-
-                html_url: Some(
-                    "https://github.com/demo-org/actioneer-demo-app/actions/runs/30107".to_string(),
-                ),
-            },
-            WorkflowRun {
-                id: 30_106,
-                run_number: Some(132),
-                workflow_id: None,
-                name: Some("CI".to_string()),
-                display_title: Some("CI • main".to_string()),
-                head_branch: Some("main".to_string()),
-                status: Some("queued".to_string()),
-                conclusion: None,
-                run_started_at: None,
-                event: Some("push".to_string()),
-                created_at: Some("2026-01-24T11:12:00Z".to_string()),
-                updated_at: Some("2026-01-24T11:12:20Z".to_string()),
-                actor: None,
-
-                head_commit: None,
-
-                triggering_actor: None,
-
-                html_url: Some(
-                    "https://github.com/demo-org/actioneer-demo-app/actions/runs/30106".to_string(),
-                ),
-            },
-            WorkflowRun {
-                id: 30_105,
-                run_number: Some(131),
-                workflow_id: None,
-                name: Some("CI".to_string()),
-                display_title: Some("CI • release/hotfix".to_string()),
-                head_branch: Some("release/hotfix".to_string()),
-                status: Some("queued".to_string()),
-                conclusion: None,
-                run_started_at: None,
-                event: Some("workflow_dispatch".to_string()),
-                created_at: Some("2026-01-24T11:05:00Z".to_string()),
-                updated_at: Some("2026-01-24T11:05:15Z".to_string()),
-                actor: None,
-
-                head_commit: None,
-
-                triggering_actor: None,
-
-                html_url: Some(
-                    "https://github.com/demo-org/actioneer-demo-app/actions/runs/30105".to_string(),
-                ),
-            },
-            WorkflowRun {
-                id: 30_103,
-                run_number: Some(130),
-                workflow_id: None,
-                name: Some("CI".to_string()),
-                display_title: Some("CI • main".to_string()),
-                head_branch: Some("main".to_string()),
-                status: Some("completed".to_string()),
-                conclusion: Some("success".to_string()),
-                run_started_at: Some("2026-01-24T10:30:00Z".to_string()),
-                event: Some("push".to_string()),
-                created_at: Some("2026-01-24T10:30:00Z".to_string()),
-                updated_at: Some("2026-01-24T10:33:40Z".to_string()),
-                actor: None,
-
-                head_commit: None,
-
-                triggering_actor: None,
-
-                html_url: Some(
-                    "https://github.com/demo-org/actioneer-demo-app/actions/runs/30103".to_string(),
-                ),
-            },
-            WorkflowRun {
-                id: 30_104,
-                run_number: Some(129),
-                workflow_id: None,
-                name: Some("CI".to_string()),
-                display_title: Some("CI • feature/login".to_string()),
-                head_branch: Some("feature/login".to_string()),
-                status: Some("completed".to_string()),
-                conclusion: Some("cancelled".to_string()),
-                run_started_at: Some("2026-01-24T10:41:00Z".to_string()),
-                event: Some("pull_request".to_string()),
-                created_at: Some("2026-01-24T10:41:00Z".to_string()),
-                updated_at: Some("2026-01-24T10:42:10Z".to_string()),
-                actor: None,
-
-                head_commit: None,
-
-                triggering_actor: None,
-
-                html_url: Some(
-                    "https://github.com/demo-org/actioneer-demo-app/actions/runs/30104".to_string(),
-                ),
-            },
-            WorkflowRun {
-                id: 30_101,
-                run_number: Some(128),
-                workflow_id: None,
-                name: Some("CI".to_string()),
-                display_title: Some("CI • main".to_string()),
-                head_branch: Some("main".to_string()),
-                status: Some("completed".to_string()),
-                conclusion: Some("success".to_string()),
-                run_started_at: Some("2025-10-28T07:20:00Z".to_string()),
-                event: Some("push".to_string()),
-                created_at: Some("2025-10-28T07:20:00Z".to_string()),
-                updated_at: Some("2025-10-28T07:25:00Z".to_string()),
-                actor: None,
-
-                head_commit: None,
-
-                triggering_actor: None,
-
-                html_url: Some(
-                    "https://github.com/demo-org/actioneer-demo-app/actions/runs/30101".to_string(),
-                ),
-            },
-            WorkflowRun {
-                id: 30_102,
-                run_number: Some(127),
-                workflow_id: None,
-                name: Some("CI".to_string()),
-                display_title: Some("CI • feature/login".to_string()),
-                head_branch: Some("feature/login".to_string()),
-                status: Some("completed".to_string()),
-                conclusion: Some("failure".to_string()),
-                run_started_at: Some("2025-10-27T18:12:00Z".to_string()),
-                event: Some("pull_request".to_string()),
-                created_at: Some("2025-10-27T18:12:00Z".to_string()),
-                updated_at: Some("2025-10-27T18:18:00Z".to_string()),
-                actor: None,
-
-                head_commit: None,
-
-                triggering_actor: None,
-
-                html_url: Some(
-                    "https://github.com/demo-org/actioneer-demo-app/actions/runs/30102".to_string(),
-                ),
-            },
+            demo_run(
+                &repo_one_full,
+                30_108,
+                134,
+                "CI",
+                "CI • main",
+                "main",
+                "in_progress",
+                None,
+                75,
+                None,
+                "push",
+                "makoni",
+            ),
+            demo_run(
+                &repo_one_full,
+                30_107,
+                133,
+                "CI",
+                "CI • feature/refactor",
+                "feature/refactor",
+                "in_progress",
+                None,
+                480,
+                None,
+                "pull_request",
+                "makoni",
+            ),
+            demo_run(
+                &repo_one_full,
+                30_106,
+                132,
+                "CI",
+                "CI • main",
+                "main",
+                "queued",
+                None,
+                720,
+                None,
+                "push",
+                "makoni",
+            ),
+            demo_run(
+                &repo_one_full,
+                30_105,
+                131,
+                "CI",
+                "CI • release/hotfix",
+                "release/hotfix",
+                "queued",
+                None,
+                900,
+                None,
+                "workflow_dispatch",
+                "makoni",
+            ),
+            demo_run(
+                &repo_one_full,
+                30_103,
+                130,
+                "CI",
+                "CI • main",
+                "main",
+                "completed",
+                Some("success"),
+                7_200,
+                Some(220),
+                "push",
+                "makoni",
+            ),
+            demo_run(
+                &repo_one_full,
+                30_104,
+                129,
+                "CI",
+                "CI • feature/login",
+                "feature/login",
+                "completed",
+                Some("cancelled"),
+                10_800,
+                Some(70),
+                "pull_request",
+                "makoni",
+            ),
+            demo_run(
+                &repo_one_full,
+                30_101,
+                128,
+                "CI",
+                "CI • main",
+                "main",
+                "completed",
+                Some("success"),
+                172_800,
+                Some(300),
+                "push",
+                "makoni",
+            ),
+            demo_run(
+                &repo_one_full,
+                30_102,
+                127,
+                "CI",
+                "CI • feature/login",
+                "feature/login",
+                "completed",
+                Some("failure"),
+                259_200,
+                Some(360),
+                "pull_request",
+                "makoni",
+            ),
         ];
 
-        let runs_release = vec![WorkflowRun {
-            id: 30_201,
-            run_number: Some(46),
-            workflow_id: None,
-            name: Some("Release".to_string()),
-            display_title: Some("Release • v1.0.0".to_string()),
-            head_branch: Some("main".to_string()),
-            status: Some("queued".to_string()),
-            conclusion: None,
-            run_started_at: Some("2025-10-28T09:40:00Z".to_string()),
-            event: Some("workflow_dispatch".to_string()),
-            created_at: Some("2025-10-28T09:38:00Z".to_string()),
-            updated_at: Some("2025-10-28T09:40:00Z".to_string()),
-            actor: None,
+        let runs_release = vec![demo_run(
+            &repo_one_full,
+            30_201,
+            46,
+            "Release",
+            "Release • v1.0.0",
+            "main",
+            "completed",
+            Some("success"),
+            7_200,
+            Some(95),
+            "workflow_dispatch",
+            "makoni",
+        )];
 
-            head_commit: None,
+        let runs_appimage = vec![demo_run(
+            &repo_one_full,
+            30_211,
+            128,
+            "AppImage CI",
+            "Bundle AppImage",
+            "main",
+            "completed",
+            Some("success"),
+            10_800,
+            Some(245),
+            "push",
+            "makoni",
+        )];
 
-            triggering_actor: None,
+        let runs_snap = vec![demo_run(
+            &repo_one_full,
+            30_221,
+            21,
+            "Snap CI",
+            "Build snap package",
+            "main",
+            "completed",
+            Some("success"),
+            93_600,
+            Some(400),
+            "push",
+            "makoni",
+        )];
 
-            html_url: Some(
-                "https://github.com/demo-org/actioneer-demo-app/actions/runs/30201".to_string(),
-            ),
-        }];
+        let runs_lockfile = vec![demo_run(
+            &repo_one_full,
+            30_231,
+            12,
+            "Lockfile Sync",
+            "Sync lockfiles",
+            "main",
+            "completed",
+            Some("failure"),
+            259_200,
+            Some(45),
+            "schedule",
+            "dependabot",
+        )];
+
+        let runs_publish = vec![demo_run(
+            &repo_one_full,
+            30_241,
+            9,
+            "Publish Release",
+            "Publish v1.4.0",
+            "v1.4.0",
+            "completed",
+            Some("success"),
+            432_000,
+            Some(600),
+            "release",
+            "makoni",
+        )];
 
         runs_map.insert(
             WorkflowKey::new(&repo_one.owner.login, &repo_one.name, workflow_ci.id),
@@ -360,173 +383,336 @@ impl DemoData {
             WorkflowKey::new(&repo_one.owner.login, &repo_one.name, workflow_release.id),
             runs_release.clone(),
         );
+        runs_map.insert(
+            WorkflowKey::new(&repo_one.owner.login, &repo_one.name, workflow_appimage.id),
+            runs_appimage.clone(),
+        );
+        runs_map.insert(
+            WorkflowKey::new(&repo_one.owner.login, &repo_one.name, workflow_snap.id),
+            runs_snap.clone(),
+        );
+        runs_map.insert(
+            WorkflowKey::new(&repo_one.owner.login, &repo_one.name, workflow_lockfile.id),
+            runs_lockfile.clone(),
+        );
+        runs_map.insert(
+            WorkflowKey::new(&repo_one.owner.login, &repo_one.name, workflow_publish.id),
+            runs_publish.clone(),
+        );
+
+        // Jobs for the running CI run #134: one finished job, one in progress.
+        jobs_map.insert(
+            30_108,
+            vec![
+                demo_job(
+                    &repo_one_full,
+                    43_081,
+                    30_108,
+                    "prepare",
+                    "completed",
+                    Some("success"),
+                    75,
+                    Some(18),
+                    vec![
+                        demo_step(1, "Set up job", "completed", Some("success"), 75, Some(1)),
+                        demo_step(
+                            2,
+                            "Run actions/checkout@v6.0.2",
+                            "completed",
+                            Some("success"),
+                            74,
+                            Some(2),
+                        ),
+                        demo_step(
+                            3,
+                            "Install flatpak-builder",
+                            "completed",
+                            Some("success"),
+                            72,
+                            Some(14),
+                        ),
+                        demo_step(4, "Complete job", "completed", Some("success"), 58, Some(0)),
+                    ],
+                ),
+                demo_job(
+                    &repo_one_full,
+                    43_082,
+                    30_108,
+                    "bundle",
+                    "in_progress",
+                    None,
+                    55,
+                    None,
+                    vec![
+                        demo_step(1, "Set up job", "completed", Some("success"), 55, Some(1)),
+                        demo_step(2, "Build flatpak bundle", "in_progress", None, 48, None),
+                        demo_step(3, "Upload artifact", "queued", None, 0, None),
+                        demo_step(4, "Complete job", "queued", None, 0, None),
+                    ],
+                ),
+            ],
+        );
+
+        jobs_map.insert(
+            30_107,
+            vec![demo_job(
+                &repo_one_full,
+                43_071,
+                30_107,
+                "Integration tests",
+                "in_progress",
+                None,
+                480,
+                None,
+                vec![
+                    demo_step(1, "Set up job", "completed", Some("success"), 480, Some(2)),
+                    demo_step(2, "Run integration suite", "in_progress", None, 470, None),
+                ],
+            )],
+        );
+
+        jobs_map.insert(
+            30_106,
+            vec![demo_job(
+                &repo_one_full,
+                43_061,
+                30_106,
+                "Queue tests",
+                "queued",
+                None,
+                0,
+                None,
+                Vec::new(),
+            )],
+        );
+
+        jobs_map.insert(
+            30_105,
+            vec![demo_job(
+                &repo_one_full,
+                43_051,
+                30_105,
+                "Queue build",
+                "queued",
+                None,
+                0,
+                None,
+                Vec::new(),
+            )],
+        );
+
+        jobs_map.insert(
+            30_103,
+            vec![demo_job(
+                &repo_one_full,
+                43_031,
+                30_103,
+                "Build & package",
+                "completed",
+                Some("success"),
+                7_200,
+                Some(215),
+                vec![
+                    demo_step(
+                        1,
+                        "Set up job",
+                        "completed",
+                        Some("success"),
+                        7_200,
+                        Some(2),
+                    ),
+                    demo_step(
+                        2,
+                        "Run actions/checkout@v6.0.2",
+                        "completed",
+                        Some("success"),
+                        7_198,
+                        Some(2),
+                    ),
+                    demo_step(
+                        3,
+                        "cargo build --release",
+                        "completed",
+                        Some("success"),
+                        7_196,
+                        Some(180),
+                    ),
+                    demo_step(
+                        4,
+                        "Package artifacts",
+                        "completed",
+                        Some("success"),
+                        7_016,
+                        Some(28),
+                    ),
+                    demo_step(
+                        5,
+                        "Complete job",
+                        "completed",
+                        Some("success"),
+                        6_988,
+                        Some(0),
+                    ),
+                ],
+            )],
+        );
+
+        jobs_map.insert(
+            30_104,
+            vec![demo_job(
+                &repo_one_full,
+                43_041,
+                30_104,
+                "Test suite",
+                "completed",
+                Some("cancelled"),
+                10_800,
+                Some(60),
+                Vec::new(),
+            )],
+        );
 
         jobs_map.insert(
             30_101,
             vec![
-                Job {
-                    id: 43_001,
-                    run_id: 30_101,
-                    status: Some("completed".to_string()),
-                    conclusion: Some("success".to_string()),
-                    started_at: Some("2025-10-28T07:20:05Z".to_string()),
-                    completed_at: Some("2025-10-28T07:22:40Z".to_string()),
-                    name: Some("Build".to_string()),
-                    steps: Vec::new(),
-                    html_url: Some(
-                        "https://github.com/demo-org/actioneer-demo-app/runs/43001".to_string(),
-                    ),
-                },
-                Job {
-                    id: 43_002,
-                    run_id: 30_101,
-                    status: Some("completed".to_string()),
-                    conclusion: Some("success".to_string()),
-                    started_at: Some("2025-10-28T07:22:45Z".to_string()),
-                    completed_at: Some("2025-10-28T07:25:00Z".to_string()),
-                    name: Some("Tests".to_string()),
-                    steps: Vec::new(),
-                    html_url: Some(
-                        "https://github.com/demo-org/actioneer-demo-app/runs/43002".to_string(),
-                    ),
-                },
+                demo_job(
+                    &repo_one_full,
+                    43_001,
+                    30_101,
+                    "Build",
+                    "completed",
+                    Some("success"),
+                    172_800,
+                    Some(155),
+                    Vec::new(),
+                ),
+                demo_job(
+                    &repo_one_full,
+                    43_002,
+                    30_101,
+                    "Tests",
+                    "completed",
+                    Some("success"),
+                    172_645,
+                    Some(135),
+                    Vec::new(),
+                ),
             ],
         );
 
         jobs_map.insert(
             30_102,
-            vec![Job {
-                id: 43_011,
-                run_id: 30_102,
-                status: Some("completed".to_string()),
-                conclusion: Some("failure".to_string()),
-                started_at: Some("2025-10-27T18:12:10Z".to_string()),
-                completed_at: Some("2025-10-27T18:18:00Z".to_string()),
-                name: Some("Lint & unit tests".to_string()),
-                steps: Vec::new(),
-                html_url: Some(
-                    "https://github.com/demo-org/actioneer-demo-app/runs/43011".to_string(),
-                ),
-            }],
-        );
-
-        jobs_map.insert(
-            30_103,
-            vec![Job {
-                id: 43_031,
-                run_id: 30_103,
-                status: Some("completed".to_string()),
-                conclusion: Some("success".to_string()),
-                started_at: Some("2026-01-24T10:30:05Z".to_string()),
-                completed_at: Some("2026-01-24T10:33:40Z".to_string()),
-                name: Some("Build & package".to_string()),
-                steps: Vec::new(),
-                html_url: Some(
-                    "https://github.com/demo-org/actioneer-demo-app/runs/43031".to_string(),
-                ),
-            }],
-        );
-
-        jobs_map.insert(
-            30_104,
-            vec![Job {
-                id: 43_041,
-                run_id: 30_104,
-                status: Some("completed".to_string()),
-                conclusion: Some("cancelled".to_string()),
-                started_at: Some("2026-01-24T10:41:10Z".to_string()),
-                completed_at: Some("2026-01-24T10:42:10Z".to_string()),
-                name: Some("Test suite".to_string()),
-                steps: Vec::new(),
-                html_url: Some(
-                    "https://github.com/demo-org/actioneer-demo-app/runs/43041".to_string(),
-                ),
-            }],
-        );
-
-        jobs_map.insert(
-            30_105,
-            vec![Job {
-                id: 43_051,
-                run_id: 30_105,
-                status: Some("queued".to_string()),
-                conclusion: None,
-                started_at: None,
-                completed_at: None,
-                name: Some("Queue build".to_string()),
-                steps: Vec::new(),
-                html_url: Some(
-                    "https://github.com/demo-org/actioneer-demo-app/runs/43051".to_string(),
-                ),
-            }],
-        );
-
-        jobs_map.insert(
-            30_106,
-            vec![Job {
-                id: 43_061,
-                run_id: 30_106,
-                status: Some("queued".to_string()),
-                conclusion: None,
-                started_at: None,
-                completed_at: None,
-                name: Some("Queue tests".to_string()),
-                steps: Vec::new(),
-                html_url: Some(
-                    "https://github.com/demo-org/actioneer-demo-app/runs/43061".to_string(),
-                ),
-            }],
-        );
-
-        jobs_map.insert(
-            30_107,
-            vec![Job {
-                id: 43_071,
-                run_id: 30_107,
-                status: Some("in_progress".to_string()),
-                conclusion: None,
-                started_at: Some("2026-01-24T11:20:05Z".to_string()),
-                completed_at: None,
-                name: Some("Integration tests".to_string()),
-                steps: Vec::new(),
-                html_url: Some(
-                    "https://github.com/demo-org/actioneer-demo-app/runs/43071".to_string(),
-                ),
-            }],
-        );
-
-        jobs_map.insert(
-            30_108,
-            vec![Job {
-                id: 43_081,
-                run_id: 30_108,
-                status: Some("in_progress".to_string()),
-                conclusion: None,
-                started_at: Some("2026-01-24T12:10:05Z".to_string()),
-                completed_at: None,
-                name: Some("Lint".to_string()),
-                steps: Vec::new(),
-                html_url: Some(
-                    "https://github.com/demo-org/actioneer-demo-app/runs/43081".to_string(),
-                ),
-            }],
+            vec![demo_job(
+                &repo_one_full,
+                43_011,
+                30_102,
+                "Lint & unit tests",
+                "completed",
+                Some("failure"),
+                259_200,
+                Some(350),
+                Vec::new(),
+            )],
         );
 
         jobs_map.insert(
             30_201,
-            vec![Job {
-                id: 43_021,
-                run_id: 30_201,
-                status: Some("queued".to_string()),
-                conclusion: None,
-                started_at: None,
-                completed_at: None,
-                name: Some("Publish artifacts".to_string()),
-                steps: Vec::new(),
-                html_url: Some(
-                    "https://github.com/demo-org/actioneer-demo-app/runs/43021".to_string(),
-                ),
-            }],
+            vec![demo_job(
+                &repo_one_full,
+                43_021,
+                30_201,
+                "Publish artifacts",
+                "completed",
+                Some("success"),
+                7_200,
+                Some(90),
+                vec![
+                    demo_step(
+                        1,
+                        "Set up job",
+                        "completed",
+                        Some("success"),
+                        7_200,
+                        Some(2),
+                    ),
+                    demo_step(
+                        2,
+                        "Upload release assets",
+                        "completed",
+                        Some("success"),
+                        7_198,
+                        Some(80),
+                    ),
+                    demo_step(
+                        3,
+                        "Complete job",
+                        "completed",
+                        Some("success"),
+                        7_118,
+                        Some(0),
+                    ),
+                ],
+            )],
+        );
+
+        jobs_map.insert(
+            30_211,
+            vec![demo_job(
+                &repo_one_full,
+                43_211,
+                30_211,
+                "Build AppImage",
+                "completed",
+                Some("success"),
+                10_800,
+                Some(240),
+                Vec::new(),
+            )],
+        );
+
+        jobs_map.insert(
+            30_221,
+            vec![demo_job(
+                &repo_one_full,
+                43_221,
+                30_221,
+                "Build snap",
+                "completed",
+                Some("success"),
+                93_600,
+                Some(395),
+                Vec::new(),
+            )],
+        );
+
+        jobs_map.insert(
+            30_231,
+            vec![demo_job(
+                &repo_one_full,
+                43_231,
+                30_231,
+                "Sync lockfiles",
+                "completed",
+                Some("failure"),
+                259_200,
+                Some(40),
+                Vec::new(),
+            )],
+        );
+
+        jobs_map.insert(
+            30_241,
+            vec![demo_job(
+                &repo_one_full,
+                43_241,
+                30_241,
+                "Publish release",
+                "completed",
+                Some("success"),
+                432_000,
+                Some(590),
+                Vec::new(),
+            )],
         );
 
         let key_two = RepoKey::new(&repo_two.owner.login, &repo_two.name);
@@ -540,7 +726,7 @@ impl DemoData {
         let runs_infra = vec![WorkflowRun {
             id: 31_001,
             run_number: Some(210),
-            workflow_id: None,
+            workflow_id: Some(workflow_infra.id),
             name: Some("Infrastructure".to_string()),
             display_title: Some("Infra • terraform plan".to_string()),
             head_branch: Some("main".to_string()),
@@ -592,7 +778,7 @@ impl DemoData {
         let runs_edge = vec![WorkflowRun {
             id: 32_101,
             run_number: Some(12),
-            workflow_id: None,
+            workflow_id: Some(workflow_edge.id),
             name: Some("Edge Diagnostics".to_string()),
             display_title: Some("Edge Diagnostics • nightly".to_string()),
             head_branch: Some("main".to_string()),
@@ -664,6 +850,11 @@ impl DemoData {
         logs_map.insert(43_081, include_str!("logs/job-43081.log").to_string());
         logs_map.insert(43_021, include_str!("logs/job-43021.log").to_string());
         logs_map.insert(44_001, include_str!("logs/job-44001.log").to_string());
+        logs_map.insert(43_082, include_str!("logs/job-43081.log").to_string());
+        logs_map.insert(43_211, include_str!("logs/job-43001.log").to_string());
+        logs_map.insert(43_221, include_str!("logs/job-43002.log").to_string());
+        logs_map.insert(43_231, include_str!("logs/job-43011.log").to_string());
+        logs_map.insert(43_241, include_str!("logs/job-43021.log").to_string());
 
         let rate_limit = RateLimitInfo {
             limit: 5000,
@@ -767,7 +958,7 @@ impl DemoData {
         let new_run = WorkflowRun {
             id: run_id,
             run_number: Some(run_number),
-            workflow_id: None,
+            workflow_id: Some(workflow_id),
             name: Some("Manual Dispatch".to_string()),
             display_title: Some(format!("{} • {}", reference, reference)),
             head_branch: Some(reference.to_string()),
@@ -853,6 +1044,125 @@ impl DemoData {
 
     fn workflow_key(owner: &str, name: &str, workflow_id: i64) -> WorkflowKey {
         WorkflowKey::new(owner, name, workflow_id)
+    }
+}
+
+/// RFC 3339 timestamp `seconds` in the past (keeps demo data looking fresh).
+fn iso_ago(seconds: i64) -> String {
+    (Utc::now() - chrono::Duration::seconds(seconds)).to_rfc3339()
+}
+
+#[allow(clippy::too_many_arguments)]
+fn demo_run(
+    repo_full: &str,
+    id: i64,
+    number: i64,
+    workflow_name: &str,
+    title: &str,
+    branch: &str,
+    status: &str,
+    conclusion: Option<&str>,
+    started_secs_ago: i64,
+    duration_secs: Option<i64>,
+    event: &str,
+    actor: &str,
+) -> WorkflowRun {
+    let queued = run_started_at_is_missing(status);
+    let started = if queued {
+        None
+    } else {
+        Some(iso_ago(started_secs_ago))
+    };
+    let updated = match (queued, duration_secs) {
+        (true, _) => Some(iso_ago(started_secs_ago.saturating_sub(15).max(0))),
+        (false, Some(duration)) => Some(iso_ago((started_secs_ago - duration).max(0))),
+        (false, None) => Some(iso_ago(0)),
+    };
+
+    WorkflowRun {
+        id,
+        run_number: Some(number),
+        workflow_id: None,
+        name: Some(workflow_name.to_string()),
+        display_title: Some(title.to_string()),
+        head_branch: Some(branch.to_string()),
+        head_commit: Some(RunHeadCommit {
+            id: format!("{:040x}", id),
+            message: format!("{title}\n\nDemo commit body for {workflow_name}."),
+        }),
+        status: Some(status.to_string()),
+        conclusion: conclusion.map(str::to_string),
+        run_started_at: started.clone(),
+        event: Some(event.to_string()),
+        created_at: Some(started.unwrap_or_else(|| iso_ago(started_secs_ago))),
+        updated_at: updated,
+        html_url: Some(format!(
+            "https://github.com/{}/actions/runs/{}",
+            repo_full, id
+        )),
+        actor: Some(User {
+            login: actor.to_string(),
+        }),
+        triggering_actor: Some(User {
+            login: actor.to_string(),
+        }),
+    }
+}
+
+fn run_started_at_is_missing(status: &str) -> bool {
+    matches!(status, "queued" | "waiting")
+}
+
+#[allow(clippy::too_many_arguments)]
+fn demo_job(
+    repo_full: &str,
+    id: i64,
+    run_id: i64,
+    name: &str,
+    status: &str,
+    conclusion: Option<&str>,
+    started_secs_ago: i64,
+    duration_secs: Option<i64>,
+    steps: Vec<JobStep>,
+) -> Job {
+    let queued = run_started_at_is_missing(status);
+    Job {
+        id,
+        run_id,
+        status: Some(status.to_string()),
+        conclusion: conclusion.map(str::to_string),
+        started_at: if queued {
+            None
+        } else {
+            Some(iso_ago(started_secs_ago))
+        },
+        completed_at: duration_secs.map(|d| iso_ago((started_secs_ago - d).max(0))),
+        name: Some(name.to_string()),
+        steps,
+        html_url: Some(format!("https://github.com/{}/runs/{}", repo_full, id)),
+    }
+}
+
+fn demo_step(
+    number: i64,
+    name: &str,
+    status: &str,
+    conclusion: Option<&str>,
+    started_secs_ago: i64,
+    duration_secs: Option<i64>,
+) -> JobStep {
+    let queued = run_started_at_is_missing(status);
+    JobStep {
+        name: Some(name.to_string()),
+        status: Some(status.to_string()),
+        conclusion: conclusion.map(str::to_string),
+        number: Some(number),
+        started_at: if queued {
+            None
+        } else {
+            Some(iso_ago(started_secs_ago))
+        },
+        completed_at: duration_secs.map(|d| iso_ago((started_secs_ago - d).max(0))),
     }
 }
 

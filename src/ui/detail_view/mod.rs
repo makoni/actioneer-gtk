@@ -20,12 +20,16 @@ use tracing::info;
 mod content;
 mod favorite_controls;
 mod filter_controls;
+pub(crate) mod header_state;
 mod helpers;
 mod run_filters;
 mod workflow_list;
 mod workflow_refresh;
-use favorite_controls::{observe_favorites, setup_favorite_button};
+use favorite_controls::observe_favorites;
+use favorite_controls::setup_favorite_button;
 use filter_controls::{FilterChips, FilterControls};
+use header_state::DetailHeaderState;
+pub(crate) use helpers::build_job_status_dot;
 use helpers::{JobContextMap, RunBadgeSummaryMap, RunDigestStore, RunLoadService};
 
 #[derive(Clone)]
@@ -61,8 +65,17 @@ pub struct RepoDetailPane {
     workflows_loading_runs: Arc<Mutex<HashSet<i64>>>, // Track in-flight run loads
     run_load_service: RunLoadService,
     lifecycle_token: Rc<()>,
+    /// Signal handlers whose closures own a clone of this pane (or of a widget
+    /// that contains them). Each one is a reference cycle by construction, so
+    /// they are kept here and cut in `deactivate`: without that the pane, its
+    /// whole widget tree and every model hanging off it survive being replaced.
+    pane_handlers: Rc<RefCell<Vec<(glib::Object, glib::SignalHandlerId)>>>,
+    /// The favourites observer belonging to this pane, so a replaced pane stops
+    /// listening instead of sleeping on the broadcast channel.
+    favorites_observer: Rc<RefCell<Option<tokio::task::JoinHandle<()>>>>,
     refresh_active: Arc<AtomicBool>,
     expand_first_workflow_on_load: Rc<Cell<bool>>,
+    header: DetailHeaderState,
 }
 
 #[derive(Clone)]
@@ -93,6 +106,7 @@ struct WorkflowListContext {
     run_filters: Arc<Mutex<RunFilters>>,
     run_load_service: RunLoadService,
     expand_first_workflow: Rc<Cell<bool>>,
+    header: DetailHeaderState,
 }
 
 #[derive(Debug, Clone)]
@@ -159,13 +173,13 @@ impl RepoDetailPane {
         let run_badge_summaries = Rc::new(RefCell::new(HashMap::new()));
 
         let favorite_button = gtk::ToggleButton::new();
-        favorite_button.set_icon_name("emblem-favorite-symbolic");
-        favorite_button.add_css_class("flat");
-        favorite_button.set_tooltip_text(Some(tr("Toggle favorite").as_str()));
+        favorite_button.set_icon_name(crate::ui::utils::favorite_icon_name());
+        favorite_button.add_css_class("header-action-btn");
+        crate::ui::utils::describe_control(&favorite_button, tr("Toggle favorite").as_str());
 
         let refresh_button = gtk::Button::from_icon_name("view-refresh-symbolic");
-        refresh_button.set_tooltip_text(Some(tr("Refresh workflows").as_str()));
-        refresh_button.add_css_class("flat");
+        crate::ui::utils::describe_control(&refresh_button, tr("Refresh workflows").as_str());
+        refresh_button.add_css_class("header-action-btn");
 
         let buttons_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         buttons_box.set_valign(gtk::Align::Center);
@@ -196,41 +210,42 @@ impl RepoDetailPane {
             }
         });
         let workflow_view = gtk::ListView::new(Some(workflow_selection), Some(workflow_factory));
-        workflow_view.add_css_class("boxed-list");
+        workflow_view.add_css_class("workflows-card");
         workflow_view.add_css_class("hoverless-list");
         workflow_view.set_single_click_activate(false);
-        workflow_view.set_margin_top(12);
-        workflow_view.set_margin_bottom(12);
-        workflow_view.set_margin_start(12);
-        workflow_view.set_margin_end(12);
-        workflow_view.set_valign(gtk::Align::Fill);
-        workflow_view.set_vexpand(true);
-        // Create ToastOverlay to wrap the content for showing feedback
+        workflow_view.set_valign(gtk::Align::Start);
+        workflow_view.set_vexpand(false);
+        workflow_view.set_overflow(gtk::Overflow::Hidden);
+        // Create ToastOverlay to wrap the content for showing feedback.
+        // The pane header is pinned above the scroll area; only the workflows
+        // content scrolls (see `content.rs`).
         let toast_overlay = adw::ToastOverlay::new();
         let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
         root.set_hexpand(true);
         root.set_vexpand(true);
-
-        let scrolled_window = gtk::ScrolledWindow::builder()
-            .hscrollbar_policy(gtk::PolicyType::Never)
-            .vscrollbar_policy(gtk::PolicyType::Automatic)
-            .hexpand(true)
-            .vexpand(true)
-            .build();
-        scrolled_window.set_propagate_natural_height(true);
-
-        let viewport = gtk::Viewport::builder()
-            .scroll_to_focus(false)
-            .hexpand(true)
-            .vexpand(true)
-            .build();
-        viewport.set_child(Some(&root));
-        scrolled_window.set_child(Some(&viewport));
-        toast_overlay.set_child(Some(&scrolled_window));
+        toast_overlay.set_child(Some(&root));
 
         let filter_controls = FilterControls::new();
         let filter_chips = filter_controls.chips.clone();
         let filter_controls_widget = filter_controls.widget();
+
+        let subtitle_label = gtk::Label::new(None);
+        subtitle_label.add_css_class("dim-label");
+        subtitle_label.add_css_class("caption");
+        subtitle_label.set_halign(gtk::Align::Start);
+        subtitle_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
+
+        let footer_label = gtk::Label::new(None);
+        footer_label.add_css_class("dim-label");
+        footer_label.add_css_class("caption");
+        footer_label.set_halign(gtk::Align::Start);
+
+        let header = DetailHeaderState::new(
+            subtitle_label.clone(),
+            footer_label.clone(),
+            filter_chips.clone(),
+        );
+
         let run_digests = Arc::new(Mutex::new(HashMap::new()));
         let run_filters = Arc::new(Mutex::new(RunFilters::default()));
         let workflows_last_loaded = Arc::new(Mutex::new(HashMap::new()));
@@ -286,8 +301,11 @@ impl RepoDetailPane {
             run_load_service: run_load_service.clone(),
             notification_manager: notification_manager.clone(),
             lifecycle_token: Rc::new(()),
+            pane_handlers: Rc::new(RefCell::new(Vec::new())),
+            favorites_observer: Rc::new(RefCell::new(None)),
             refresh_active: Arc::new(AtomicBool::new(true)),
             expand_first_workflow_on_load: Rc::new(Cell::new(expand_first_workflow_on_load)),
+            header,
         };
 
         pane.build_ui();
@@ -299,7 +317,7 @@ impl RepoDetailPane {
             pane.favorites_manager.clone(),
             pane.favorites.clone(),
         );
-        observe_favorites(
+        *pane.favorites_observer.borrow_mut() = observe_favorites(
             &pane.favorite_button,
             pane.repo.id,
             pane.favorites_manager.clone(),
@@ -324,6 +342,32 @@ impl RepoDetailPane {
     pub(crate) fn deactivate(&self) {
         self.refresh_active.store(false, Ordering::Relaxed);
         self.teardown_refresh_timers();
+        self.disconnect_pane_handlers();
+    }
+
+    /// Records a handler that owns a strong reference back into this pane, so
+    /// `deactivate` can cut the cycle it forms.
+    pub(super) fn register_pane_handler(
+        &self,
+        object: &impl IsA<glib::Object>,
+        handler: glib::SignalHandlerId,
+    ) {
+        self.pane_handlers
+            .borrow_mut()
+            .push((object.as_ref().clone(), handler));
+    }
+
+    fn disconnect_pane_handlers(&self) {
+        if let Some(observer) = self.favorites_observer.borrow_mut().take() {
+            observer.abort();
+        }
+        for (object, handler) in self.pane_handlers.borrow_mut().drain(..) {
+            object.disconnect(handler);
+        }
+        // The rows hold contexts that reach back to this pane's root, and the
+        // store outlives the widget tree, so an emptied store is part of
+        // letting go rather than a cosmetic detail.
+        self.workflow_store.remove_all();
     }
 
     fn build_ui(&self) {
@@ -333,30 +377,62 @@ impl RepoDetailPane {
         let refresh_button = self.refresh_button.clone();
         self.connect_refresh_button(&refresh_button);
         self.connect_workflow_selected();
+
+        // Keep the "updated …" subline fresh. The ticker holds the label weakly
+        // (via SubtitleTicker) rather than cloning the header: the header owns
+        // the filter chips, whose handlers own a pane clone, so a strong capture
+        // here would keep the whole pane alive on paths that close the window
+        // without calling `deactivate()` (e.g. the language-change reload).
+        let ticker = self.header.subtitle_ticker();
+        let refresh_active = self.refresh_active.clone();
+        glib::timeout_add_seconds_local(30, move || {
+            if !refresh_active.load(Ordering::Relaxed) || !ticker.tick() {
+                return glib::ControlFlow::Break;
+            }
+            glib::ControlFlow::Continue
+        });
     }
 
     fn build_header(&self) {
         let header_box = gtk::Box::new(gtk::Orientation::Horizontal, 12);
-        header_box.set_margin_top(24);
-        header_box.set_margin_bottom(12);
+        header_box.set_margin_top(16);
+        header_box.set_margin_bottom(14);
         header_box.set_margin_start(24);
         header_box.set_margin_end(24);
 
-        let info_box = gtk::Box::new(gtk::Orientation::Vertical, 4);
+        let info_box = gtk::Box::new(gtk::Orientation::Vertical, 5);
         info_box.set_hexpand(true);
+        info_box.set_valign(gtk::Align::Center);
+
+        let title_row = gtk::Box::new(gtk::Orientation::Horizontal, 9);
+        title_row.set_valign(gtk::Align::Center);
 
         let repo_label = gtk::Label::new(Some(&self.repo.full_name));
         repo_label.add_css_class("title-2");
+        // The header row cannot shrink below its labels, and the pane's scroller
+        // has no horizontal bar — without this a long owner/name pushes the
+        // refresh and favourite buttons off the right edge at the app's own
+        // minimum window width.
+        repo_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
         repo_label.set_halign(gtk::Align::Start);
-        info_box.append(&repo_label);
+        title_row.append(&repo_label);
 
-        if self.repo.is_private {
-            let private_label = gtk::Label::new(Some(tr("Private Repository").as_str()));
-            private_label.add_css_class("dim-label");
-            private_label.add_css_class("caption");
-            private_label.set_halign(gtk::Align::Start);
-            info_box.append(&private_label);
+        let (visibility_text, suppress_tracking) =
+            crate::ui::utils::section_heading(&if self.repo.is_private {
+                tr("Private")
+            } else {
+                tr("Public")
+            });
+        let visibility_badge = gtk::Label::new(Some(&visibility_text));
+        visibility_badge.add_css_class("visibility-badge");
+        if suppress_tracking {
+            visibility_badge.add_css_class("no-tracking");
         }
+        visibility_badge.set_valign(gtk::Align::Center);
+        title_row.append(&visibility_badge);
+
+        info_box.append(&title_row);
+        info_box.append(&self.header.subtitle_label());
 
         header_box.append(&info_box);
 
@@ -367,6 +443,13 @@ impl RepoDetailPane {
 
         let chips_row = self.filter_controls.clone();
         buttons_box.append(&chips_row);
+
+        let separator = gtk::Separator::new(gtk::Orientation::Vertical);
+        separator.set_margin_start(3);
+        separator.set_margin_end(3);
+        separator.set_margin_top(6);
+        separator.set_margin_bottom(6);
+        buttons_box.append(&separator);
 
         let refresh_button = self.refresh_button.clone();
         refresh_button.set_valign(gtk::Align::Center);
@@ -389,8 +472,87 @@ impl RepoDetailPane {
 #[cfg(test)]
 mod tests {
     use super::should_teardown_refresh_timers;
+    use super::*;
+    use crate::ui::test_helpers::{collect_widget_weaks, run_gtk_test};
     use std::rc::Rc;
     use std::sync::{Arc, atomic::AtomicBool};
+
+    /// Demo data is global: switch it off however the test ends, or an
+    /// unrelated test that builds a client picks up the demo repositories.
+    struct DemoData;
+
+    impl Drop for DemoData {
+        fn drop(&mut self) {
+            crate::demo::disable();
+        }
+    }
+
+    /// Runs the main loop until it goes quiet, so in-flight channels that pin a
+    /// pane clone until their reply arrives are not mistaken for a leak.
+    fn settle() {
+        for _ in 0..200 {
+            while glib::MainContext::default().pending() {
+                let _ = glib::MainContext::default().iteration(false);
+            }
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+        while glib::MainContext::default().pending() {
+            let _ = glib::MainContext::default().iteration(false);
+        }
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn detail_pane_is_released_when_dropped() {
+        run_gtk_test("detail_pane_is_released_when_dropped", || {
+            crate::init_test_runtime();
+            let _demo = DemoData;
+            let repos = crate::demo::enable();
+            let repo = repos.first().cloned().expect("demo data has repositories");
+
+            let app = adw::Application::builder()
+                .application_id("me.spaceinbox.actioneer.PaneReleaseTest")
+                .build();
+            let window = adw::ApplicationWindow::new(&app);
+            let client = Arc::new(parking_lot::Mutex::new(
+                crate::api::GitHubClient::new(None).expect("client stub should build"),
+            ));
+
+            let mut weaks: Vec<(String, glib::WeakRef<gtk::Widget>)> = Vec::new();
+            let widget_weak = {
+                let pane = RepoDetailPane::new(
+                    window.clone(),
+                    repo,
+                    client,
+                    RepoDetailDeps {
+                        favorites_manager: None,
+                        preferences_manager: None,
+                        favorites: Arc::new(parking_lot::Mutex::new(HashSet::new())),
+                        notification_manager: None,
+                    },
+                    false,
+                );
+                let widget = pane.widget();
+                settle();
+                collect_widget_weaks(&widget, &mut weaks);
+                pane.deactivate();
+                widget.downgrade()
+            };
+
+            settle();
+
+            let survivors: Vec<&str> = weaks
+                .iter()
+                .filter(|(_, weak)| weak.upgrade().is_some())
+                .map(|(name, _)| name.as_str())
+                .collect();
+            assert!(
+                widget_weak.upgrade().is_none() && survivors.is_empty(),
+                "the detail pane outlived its last strong reference — a signal \
+                 handler is holding it in a reference cycle. Survivors: {survivors:?}"
+            );
+        });
+    }
 
     #[test]
     fn teardown_only_runs_for_last_pane_clone() {

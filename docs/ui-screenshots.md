@@ -1,10 +1,10 @@
-# Using claw-screenshot for Copilot UI analysis
+# Capturing UI screenshots with claw-screenshot
 
-This document describes how to use the local `claw-screenshot` CLI (provided by the Makoni Claw toolset) to capture screenshots of the running Actioneer GTK UI so Copilot or other automated analysis tools can inspect the UI during development.
+This document describes how to use the local `claw-screenshot` CLI (provided by the Makoni Claw toolset) to capture screenshots of the running Actioneer GTK UI so an automated agent can inspect the UI during development.
 
 Goal
 
-- Provide a repeatable, simple interface Copilot can call to request a screenshot via the desktop portal and receive the saved file path for downstream processing.
+- Provide a repeatable, simple interface an agent can call to request a screenshot via the desktop portal and receive the saved file path for downstream processing.
 
 Requirements
 
@@ -23,7 +23,7 @@ Behavior and contract
 
 - On failure the CLI returns non-zero exit code and prints diagnostic messages to stderr. The helper script expects stdout first line to match `SAVED:…` to consider the capture successful.
 
-Integration points for Copilot
+Integration points
 
 1) Direct invocation from tests or analysis scripts
 
@@ -38,10 +38,10 @@ Integration points for Copilot
     echo "Screenshot failed; see /tmp/claw-screenshot.log"
   fi
 
-2) Use in Copilot-driven UI exploration
+2) Use in agent-driven UI exploration
 
-- Copilot can call the binary whenever it wants a fresh UI capture; the saved filename is typically the portal's original filename (e.g. `Screenshot-8.png`).
-- Recommend Copilot store or copy the screenshot into the workspace for long-term analysis (the claw screenshots folder is ephemeral, but stable).
+- An agent can call the binary whenever it wants a fresh UI capture; the saved filename is typically the portal's original filename (e.g. `Screenshot-8.png`).
+- Copy the screenshot into the workspace for long-term analysis (the claw screenshots folder is ephemeral, but stable).
 
 3) Permission considerations
 
@@ -49,7 +49,7 @@ Integration points for Copilot
 
 4) Recommended wrapping helper (optional)
 
-- If Copilot needs JSON output or richer metadata, wrap `claw-screenshot` with a tiny script that prints JSON:
+- If you need JSON output or richer metadata, wrap `claw-screenshot` with a tiny script that prints JSON:
 
 ```bash
 #!/usr/bin/env bash
@@ -87,15 +87,27 @@ else:
 - Logs: `claw-screenshot` prints diagnostics to stderr (request object path, code, map debug). Save stderr to a file when debugging.
 - If the portal never returns a response, ensure `xdg-desktop-portal` is running in session and that the session is able to display permission dialogs.
 
-Files added/modified by Copilot
+Source tree impact
 
-- No mandatory changes to the Actioneer source tree are required. This doc suggests using the system-installed `claw-screenshot` binary.
+- None. This doc describes the system-installed `claw-screenshot` binary; no changes to the Actioneer source tree are required to use it.
 
 Notes for maintainers
 
 - If you prefer the tool inside the project, copy the `claw-screenshot` binary or add a small wrapper in `scripts/` and reference it in CI/test harnesses.
 - Consider adding a unit test that calls `claw-screenshot` and verifies the SAVED output format (skipped on CI if portal not available).
 
----
+Headless alternative
 
-If you want, I can commit this file into the repo and open a short PR where Copilot's workspace configuration references it.Otherwise, tell me where to place it or how to format it differently.
+- `claw-screenshot` goes through the desktop portal and therefore needs a live
+  session. To capture the UI headlessly (CI, a remote box, a sandbox), run the
+  app under Xvfb with `GSK_RENDERER=cairo` and grab the root window instead:
+
+```bash
+Xvfb :98 -screen 0 1280x1024x24 &
+DISPLAY=:98 GSK_RENDERER=cairo target/debug/actioneer --demo &
+sleep 8
+DISPLAY=:98 import -window root /tmp/actioneer.png
+```
+
+  Without `GSK_RENDERER=cairo` GTK4 fails to produce a capturable frame under a
+  bare Xvfb. See `AGENTS.md` for the AT-SPI-driven variant that can click first.

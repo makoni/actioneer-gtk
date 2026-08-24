@@ -48,9 +48,10 @@ impl RepoDetailPane {
 
     fn attach_filter_chip_handler(&self, button: &gtk::ToggleButton, kind: FilterKind) {
         let pane = self.clone();
-        button.connect_toggled(move |btn| {
+        let handler = button.connect_toggled(move |btn| {
             pane.on_filter_chip_toggled(kind, btn.is_active());
         });
+        self.register_pane_handler(button, handler);
     }
 
     fn on_filter_chip_toggled(&self, kind: FilterKind, active: bool) {
@@ -124,7 +125,6 @@ impl RepoDetailPane {
         for row in super::workflow_list::collect_workflow_rows(&context.store) {
             visit_expanders(&row, &mut |expander, workflow_id| {
                 if let Some(run_list) = run_list_for_expander(expander) {
-                    let status_badge = Self::status_badge_for_expander(expander);
                     let mut preserved_runs: Vec<i64> =
                         run_list.expanded_run_ids().into_iter().collect();
                     if preserved_runs.is_empty() {
@@ -168,7 +168,6 @@ impl RepoDetailPane {
                         workflow_name: workflow_label,
                         run_list,
                         parent_window: parent_window.clone(),
-                        status_badge,
                         expander: expander.clone(),
                         toast_overlay: toast_overlay.clone(),
                         job_contexts: job_contexts.clone(),

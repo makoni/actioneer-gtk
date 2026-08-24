@@ -30,6 +30,8 @@ pub enum LanguagePreference {
     PtBr,
     Ru,
     Ur,
+    It,
+    Ja,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -228,5 +230,21 @@ mod tests {
 
         let prefs = manager.get().await;
         assert_eq!(prefs.refresh_interval, 30);
+    }
+
+    #[test]
+    fn language_preference_serde_round_trip() {
+        let it: LanguagePreference = serde_json::from_str("\"it\"").unwrap();
+        assert_eq!(it, LanguagePreference::It);
+        let ja: LanguagePreference = serde_json::from_str("\"ja\"").unwrap();
+        assert_eq!(ja, LanguagePreference::Ja);
+        assert_eq!(
+            serde_json::to_string(&LanguagePreference::It).unwrap(),
+            "\"it\""
+        );
+        assert_eq!(
+            serde_json::to_string(&LanguagePreference::Ja).unwrap(),
+            "\"ja\""
+        );
     }
 }

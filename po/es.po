@@ -835,3 +835,96 @@ msgstr "El inicio de sesión funciona de forma más fiable en sistemas Linux má
 
 msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
 msgstr "Los componentes incluidos actualizados ayudan a mantener Actioneer estable, fiable y al día."
+
+msgid "Workflows"
+msgstr "Flujos de trabajo"
+
+msgid "Auto-refresh is disabled."
+msgstr "La actualización automática está desactivada."
+
+msgid "Data refreshes automatically every {seconds} seconds."
+msgstr "Los datos se actualizan automáticamente cada {seconds} segundos."
+
+msgid "1 workflow"
+msgstr "1 flujo de trabajo"
+
+msgid "{count} workflows"
+msgstr "{count} flujos de trabajo"
+
+msgid "Updated {when}"
+msgstr "Actualizado {when}"
+
+msgid "Not updated yet"
+msgstr "Aún no actualizado"
+
+msgid "No runs yet"
+msgstr "Aún no hay ejecuciones"
+
+msgid "Recent runs"
+msgstr "Ejecuciones recientes"
+
+msgid "All on GitHub"
+msgstr "Todo en GitHub"
+
+msgid "Showing {visible} of {overall}"
+msgstr "Mostrando {visible} de {overall}"
+
+msgid "Showing {visible} of {filtered} matching filters"
+msgstr "Mostrando {visible} de {filtered} que coinciden con los filtros"
+
+msgid "All"
+msgstr "Todos"
+
+msgid "Active"
+msgstr "Activos"
+
+msgid "Status"
+msgstr "Estado"
+
+msgid "Conclusion"
+msgstr "Resultado"
+
+msgid "Branch"
+msgstr "Rama"
+
+msgid "Commit"
+msgstr "Commit"
+
+msgid "Triggered by"
+msgstr "Activado por"
+
+msgid "Event"
+msgstr "Evento"
+
+msgid "Duration"
+msgstr "Duración"
+
+msgid "Started"
+msgstr "Iniciado"
+
+msgid "Updated"
+msgstr "Actualizado"
+
+msgid "OK"
+msgstr "Aceptar"
+
+msgid "Saving token..."
+msgstr "Guardando el token..."
+
+msgid "Set the application language (e.g., ru, en, zh_Hans)"
+msgstr "Definir el idioma de la aplicación (p. ej., ru, en, zh_Hans)"
+
+msgid "Start the app with sample demo data"
+msgstr "Iniciar la aplicación con datos de demostración"
+
+msgid "No repositories match"
+msgstr "Ningún repositorio coincide"
+
+msgid "Activity is gathered as you open repositories."
+msgstr "La actividad se recopila a medida que abres repositorios."
+
+msgid "{count} workflows in this state"
+msgstr "{count} flujos de trabajo en este estado"
+
+msgid "Try another filter or search term."
+msgstr "Prueba con otro filtro o término de búsqueda."

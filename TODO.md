@@ -7,7 +7,7 @@ git commits (search the log) and in the previous long-form TODO in repo history.
 
 ## Where to look
 
-- UI: `src/ui/` (main_window, detail_view, run_jobs_window, job_logs_window)
+- UI: `src/ui/` (main_window, detail_view, job_logs_window)
 - API: `src/api/` (client, models, http helpers)
 - Auth & storage: `src/auth/`, `src/storage/token_storage.rs`
 - Tests: `tests/` and unit tests in `src/`
@@ -24,6 +24,7 @@ CI runs only on `workflow_dispatch` (see `AGENTS.md`), so validate locally:
 
 ## Recent Updates
 
+- 2026-08-10: Started [🔄] and completed [✅] Workflows view redesign (feature branch `feature/workflows-redesign`): restructured the repo detail pane into a single rounded workflows card with an accordion (workflow → runs → jobs → steps), round tinted status dots (`status-dot`), per-row mono meta lines, a pinned pane header (repo title + visibility badge + "N workflows · updated …" + segmented status-count filter), running-workflow progress bar with live elapsed timer, "Recent runs" sub-header with "shown N of M · All on GitHub" link, ghost row-action buttons (logs/trigger/cancel wired to `JobLogsWindow` and the cancel confirmation), sidebar polish (All/Favorites/Active pills, uppercase owner headers, icon+star rows, solid-accent selection), enriched demo data with relative timestamps and multi-step jobs, and 13 new translated strings across all 11 locales. Verified with `cargo fmt`, `clippy -D warnings`, `cargo test --workspace`, Xvfb UI tests, and `scripts/check-flatpak-lock-sync.sh`.
 - 2026-06-23: Started [🔄] and completed [✅] release bump to `1.0.15` (maintenance): updated version targets, added AppStream + GitHub changelog entries based on commits since `1.0.14`, refreshed gettext/Flatpak artifacts, and ran release validation checks.
 - 2026-06-30: Started [🔄] and completed [✅] dependency maintenance pass: merged pending Dependabot updates, refreshed Cargo deps (`gio`, `gtk4`, `open`, `chacha20poly1305` major), and synchronized Flatpak cargo sources with `Cargo.lock`.
 
@@ -38,7 +39,7 @@ These are enhancement ideas, not required work — none has been started.
 
 - **Inline job-log drawer** — expandable from each job row instead of opening a separate window.
   - Design a row-level drawer widget (likely `AdwExpanderRow`/`AdwClamp`) that embeds the log viewer.
-  - Ensure logs load lazily per row and reuse the existing log-cache/code paths.
+  - Ensure logs load lazily per row and reuse `JobLogsWindow`'s per-window log cache.
   - Add UI tests (ignored) that open/close drawers to guard against regressions.
 
 - **Compact "Overview" page** — aggregates the last run status for pinned/favorite repositories using multi-pane cards.

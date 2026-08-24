@@ -835,3 +835,96 @@ msgstr "Die Anmeldung funktioniert auf neueren Linux-Systemen zuverlässiger dan
 
 msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
 msgstr "Aktualisierte mitgelieferte Komponenten helfen dabei, Actioneer stabil, zuverlässig und aktuell zu halten."
+
+msgid "Workflows"
+msgstr "Workflows"
+
+msgid "Auto-refresh is disabled."
+msgstr "Automatische Aktualisierung ist deaktiviert."
+
+msgid "Data refreshes automatically every {seconds} seconds."
+msgstr "Daten werden alle {seconds} Sekunden automatisch aktualisiert."
+
+msgid "1 workflow"
+msgstr "1 Workflow"
+
+msgid "{count} workflows"
+msgstr "{count} Workflows"
+
+msgid "Updated {when}"
+msgstr "Aktualisiert {when}"
+
+msgid "Not updated yet"
+msgstr "Noch nicht aktualisiert"
+
+msgid "No runs yet"
+msgstr "Noch keine Ausführungen"
+
+msgid "Recent runs"
+msgstr "Letzte Ausführungen"
+
+msgid "All on GitHub"
+msgstr "Alle auf GitHub"
+
+msgid "Showing {visible} of {overall}"
+msgstr "{visible} von {overall} angezeigt"
+
+msgid "Showing {visible} of {filtered} matching filters"
+msgstr "{visible} von {filtered} passend zu den Filtern angezeigt"
+
+msgid "All"
+msgstr "Alle"
+
+msgid "Active"
+msgstr "Aktiv"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Conclusion"
+msgstr "Ergebnis"
+
+msgid "Branch"
+msgstr "Branch"
+
+msgid "Commit"
+msgstr "Commit"
+
+msgid "Triggered by"
+msgstr "Ausgelöst von"
+
+msgid "Event"
+msgstr "Ereignis"
+
+msgid "Duration"
+msgstr "Dauer"
+
+msgid "Started"
+msgstr "Gestartet"
+
+msgid "Updated"
+msgstr "Aktualisiert"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "Saving token..."
+msgstr "Token wird gespeichert …"
+
+msgid "Set the application language (e.g., ru, en, zh_Hans)"
+msgstr "Anwendungssprache festlegen (z. B. ru, en, zh_Hans)"
+
+msgid "Start the app with sample demo data"
+msgstr "App mit Beispieldaten starten"
+
+msgid "No repositories match"
+msgstr "Keine passenden Repositorys"
+
+msgid "Activity is gathered as you open repositories."
+msgstr "Aktivität wird erfasst, sobald Sie Repositorys öffnen."
+
+msgid "{count} workflows in this state"
+msgstr "{count} Workflows in diesem Zustand"
+
+msgid "Try another filter or search term."
+msgstr "Versuchen Sie einen anderen Filter oder Suchbegriff."

@@ -19,6 +19,8 @@ const REPO_FULL_NAME_KEY: &str = "actioneer-repo-full-name";
 const REPO_MODEL_KEY: &str = "actioneer-repo-model";
 const SELECTABLE_KEY: &str = "actioneer-sidebar-selectable";
 const ACTIVATABLE_KEY: &str = "actioneer-sidebar-activatable";
+pub(crate) const FAVORITE_ROW_KEY: &str = "actioneer-sidebar-favorite";
+pub(crate) const ACTIVE_RUNS_ROW_KEY: &str = "actioneer-sidebar-active-runs";
 
 #[derive(Clone)]
 pub struct RepoListRenderContext {
@@ -69,61 +71,84 @@ pub fn rebuild_repo_list(store: gio::ListStore, context: RepoListRenderContext) 
     let workflow_snapshot_for_rows = workflow_snapshot.clone();
     let store_ref = store.clone();
 
-    let append_section =
-        move |title: &str, icon_name: &str, repos: Vec<Repo>, favorites_snapshot: &HashSet<i64>| {
-            if repos.is_empty() {
-                return;
-            }
+    let append_section = move |title: &str, repos: Vec<Repo>, favorites_snapshot: &HashSet<i64>| {
+        if repos.is_empty() {
+            return;
+        }
 
-            let header = create_section_header(title, icon_name);
-            store_ref.append(&header);
-
-            let grouped = group_repos_by_owner(repos);
-
-            for (owner, repos) in grouped {
-                let owner_row = create_owner_header(&owner);
-                store_ref.append(&owner_row);
-
-                for repo in repos {
-                    let repo_id = repo.id;
-                    let actions_state = actions_snapshot_for_rows
-                        .get(&repo_id)
-                        .copied()
-                        .unwrap_or(RepoActionsState::Unknown);
-                    let workflow_counts = workflow_snapshot_for_rows
-                        .get(&repo_id)
-                        .cloned()
-                        .unwrap_or_default();
-
-                    let row = build_repo_row(
-                        repo.clone(),
-                        favorites_snapshot.contains(&repo_id),
-                        actions_state,
-                        workflow_counts,
-                        favorites_state_for_rows.clone(),
-                        favorites_manager_for_rows.clone(),
-                    );
-
-                    store_ref.append(&row);
-                }
-            }
+        // Headers carry the aggregated pill flags of the rows beneath them,
+        // so the sidebar filter can hide a header once its group is empty
+        // instead of leaving a heading with nothing under it.
+        let has_active = |repos: &[Repo]| {
+            repos.iter().any(|repo| {
+                workflow_snapshot_for_rows
+                    .get(&repo.id)
+                    .is_some_and(|counts| counts.active > 0)
+            })
         };
+
+        let header = create_section_header(title);
+        set_data(
+            &header,
+            FAVORITE_ROW_KEY,
+            repos
+                .iter()
+                .any(|repo| favorites_snapshot.contains(&repo.id)),
+        );
+        set_data(&header, ACTIVE_RUNS_ROW_KEY, has_active(&repos));
+        store_ref.append(&header);
+
+        let grouped = group_repos_by_owner(repos);
+
+        for (owner, repos) in grouped {
+            let owner_row = create_owner_header(&owner);
+            set_data(
+                &owner_row,
+                FAVORITE_ROW_KEY,
+                repos
+                    .iter()
+                    .any(|repo| favorites_snapshot.contains(&repo.id)),
+            );
+            set_data(&owner_row, ACTIVE_RUNS_ROW_KEY, has_active(&repos));
+            store_ref.append(&owner_row);
+
+            for repo in repos {
+                let repo_id = repo.id;
+                let actions_state = actions_snapshot_for_rows
+                    .get(&repo_id)
+                    .copied()
+                    .unwrap_or(RepoActionsState::Unknown);
+                let workflow_counts = workflow_snapshot_for_rows
+                    .get(&repo_id)
+                    .cloned()
+                    .unwrap_or_default();
+
+                let row = build_repo_row(
+                    repo.clone(),
+                    favorites_snapshot.contains(&repo_id),
+                    actions_state,
+                    workflow_counts,
+                    favorites_state_for_rows.clone(),
+                    favorites_manager_for_rows.clone(),
+                );
+
+                store_ref.append(&row);
+            }
+        }
+    };
 
     append_section(
         tr("Favorites").as_str(),
-        "emblem-favorite-symbolic",
         favorites_section,
         &favorites_snapshot,
     );
     append_section(
         tr("Actions Enabled").as_str(),
-        "media-playback-start-symbolic",
         enabled_section,
         &favorites_snapshot,
     );
     append_section(
         tr("Actions Disabled").as_str(),
-        "process-stop-symbolic",
         disabled_section,
         &favorites_snapshot,
     );
@@ -152,6 +177,32 @@ pub fn row_matches_query(row: &gtk::Widget, query: &str) -> bool {
     false
 }
 
+/// Pill filter modes shown above the repo list.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum SidebarFilter {
+    #[default]
+    All,
+    Favorites,
+    Active,
+}
+
+/// Repo rows only pass a non-`All` pill filter when they carry matching state.
+pub fn row_matches_filter(row: &gtk::Widget, query: &str, filter: SidebarFilter) -> bool {
+    // The pill test applies to headers too: they carry the aggregated flags of
+    // their group, so a section/owner heading disappears together with the rows
+    // beneath it instead of being left stranded on its own.
+    let passes_pill = match filter {
+        SidebarFilter::All => true,
+        SidebarFilter::Favorites => get_data_copy(row, FAVORITE_ROW_KEY).unwrap_or(false),
+        SidebarFilter::Active => get_data_copy(row, ACTIVE_RUNS_ROW_KEY).unwrap_or(false),
+    };
+    if !passes_pill {
+        return false;
+    }
+
+    row_matches_query(row, query)
+}
+
 pub fn find_label_by_name(widget: &gtk::Widget, name: &str) -> Option<gtk::Label> {
     if widget.widget_name() == name {
         return widget.clone().downcast::<gtk::Label>().ok();
@@ -175,30 +226,39 @@ fn build_repo_row(
     favorites_arc: Arc<Mutex<HashSet<i64>>>,
     favorites_manager: Option<Arc<FavoritesManager>>,
 ) -> gtk::Box {
-    let row = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+    let row = gtk::Box::new(gtk::Orientation::Horizontal, 10);
     let repo_id = repo.id;
-    row.set_margin_top(12);
-    row.set_margin_bottom(12);
-    row.set_margin_start(12);
-    row.set_margin_end(12);
+    row.set_margin_top(8);
+    row.set_margin_bottom(8);
+    row.set_margin_start(10);
+    row.set_margin_end(8);
     row.set_hexpand(true);
     row.set_can_focus(false);
     row.add_css_class("activatable");
 
+    let icon = gtk::Image::from_icon_name("folder-symbolic");
+    icon.set_pixel_size(16);
+    icon.set_valign(gtk::Align::Center);
+    icon.set_halign(gtk::Align::Center);
+    icon.add_css_class("dim-label");
+    row.append(&icon);
+
     let favorite_button = gtk::ToggleButton::new();
     favorite_button.add_css_class("flat");
+    favorite_button.add_css_class("sidebar-fav");
     favorite_button.set_valign(gtk::Align::Center);
-    favorite_button.set_icon_name("emblem-favorite-symbolic");
-    favorite_button.set_tooltip_text(Some(tr("Toggle favorite").as_str()));
+    // Pinned to the trailing edge: packed loosely it trails the name label, so
+    // the column of stars zig-zags with the length of each repository's name.
+    favorite_button.set_halign(gtk::Align::End);
+    favorite_button.set_icon_name(crate::ui::utils::favorite_icon_name());
+    crate::ui::utils::describe_control(&favorite_button, tr("Toggle favorite").as_str());
     favorite_button.set_active(is_favorite);
-    update_favorite_button_visual(&favorite_button, is_favorite);
 
     let favorites_arc_for_update = favorites_arc.clone();
     let favorites_manager_for_update = favorites_manager.clone();
 
     favorite_button.connect_toggled(move |button| {
         let desired_state = button.is_active();
-        update_favorite_button_visual(button, desired_state);
 
         let favorites_arc = favorites_arc_for_update.clone();
         let favorites_manager = favorites_manager_for_update.clone();
@@ -231,7 +291,6 @@ fn build_repo_row(
 
                         if button_clone.is_active() != is_now_favorite {
                             button_clone.set_active(is_now_favorite);
-                            update_favorite_button_visual(&button_clone, is_now_favorite);
                         }
                     }
                     Err((err, stored_state)) => {
@@ -246,7 +305,6 @@ fn build_repo_row(
 
                         if button_clone.is_active() != stored_state {
                             button_clone.set_active(stored_state);
-                            update_favorite_button_visual(&button_clone, stored_state);
                         }
                     }
                 }
@@ -276,18 +334,15 @@ fn build_repo_row(
         }
     });
 
-    row.append(&favorite_button);
-
-    let icon = gtk::Image::from_icon_name("folder-symbolic");
-    icon.set_pixel_size(24);
-    icon.set_valign(gtk::Align::Center);
-    icon.set_halign(gtk::Align::Center);
-    row.append(&icon);
-
-    let content_box = gtk::Box::new(gtk::Orientation::Vertical, 6);
+    let content_box = gtk::Box::new(gtk::Orientation::Vertical, 2);
+    content_box.set_valign(gtk::Align::Center);
+    // Takes the whole gap between the folder icon and the star, which is what
+    // both keeps the star at the edge and lets the name label ellipsize.
+    content_box.set_hexpand(true);
 
     let name_label = gtk::Label::new(Some(&repo.full_name));
     name_label.set_halign(gtk::Align::Start);
+    name_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
     name_label.add_css_class("heading");
     name_label.set_widget_name("repo-name-label");
     content_box.append(&name_label);
@@ -323,12 +378,15 @@ fn build_repo_row(
     }
 
     row.append(&content_box);
+    row.append(&favorite_button);
 
     set_data(&row, REPO_ID_KEY, repo_id);
     set_data(&row, REPO_FULL_NAME_KEY, repo.full_name.clone());
     set_data(&row, REPO_MODEL_KEY, repo);
     set_data(&row, SELECTABLE_KEY, true);
     set_data(&row, ACTIVATABLE_KEY, true);
+    set_data(&row, FAVORITE_ROW_KEY, is_favorite);
+    set_data(&row, ACTIVE_RUNS_ROW_KEY, workflow_counts.active > 0);
 
     row
 }
@@ -384,28 +442,27 @@ pub fn find_first_repo_index(model: &gtk::FilterListModel) -> Option<u32> {
     None
 }
 
-fn create_section_header(title: &str, icon_name: &str) -> gtk::Box {
+fn create_section_header(title: &str) -> gtk::Box {
     let row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     row.set_can_focus(false);
     row.set_can_target(false);
     row.add_css_class("section-header");
     row.add_css_class("hoverless-row");
-    row.set_margin_top(18);
-    row.set_margin_bottom(6);
-    row.set_margin_start(12);
-    row.set_margin_end(12);
+    row.set_margin_top(14);
+    row.set_margin_bottom(4);
+    row.set_margin_start(10);
+    row.set_margin_end(10);
     set_data(&row, SELECTABLE_KEY, false);
     set_data(&row, ACTIVATABLE_KEY, false);
 
-    let icon = gtk::Image::from_icon_name(icon_name);
-    icon.set_pixel_size(16);
-    row.append(&icon);
-
-    let label = gtk::Label::new(Some(title));
+    let (heading, suppress_tracking) = crate::ui::utils::section_heading(title);
+    let label = gtk::Label::new(Some(&heading));
+    if suppress_tracking {
+        label.add_css_class("no-tracking");
+    }
     label.set_halign(gtk::Align::Start);
     label.set_hexpand(true);
-    label.add_css_class("dim-label");
-    label.add_css_class("heading");
+    label.add_css_class("sidebar-owner-label");
 
     row.append(&label);
 
@@ -418,17 +475,20 @@ fn create_owner_header(owner: &str) -> gtk::Box {
     row.set_can_target(false);
     row.add_css_class("owner-header");
     row.add_css_class("hoverless-row");
-    row.set_margin_top(4);
-    row.set_margin_bottom(4);
-    row.set_margin_start(28);
-    row.set_margin_end(12);
+    row.set_margin_top(10);
+    row.set_margin_bottom(3);
+    row.set_margin_start(10);
+    row.set_margin_end(10);
     set_data(&row, SELECTABLE_KEY, false);
     set_data(&row, ACTIVATABLE_KEY, false);
 
-    let label = gtk::Label::new(Some(owner));
+    let (heading, suppress_tracking) = crate::ui::utils::section_heading(owner);
+    let label = gtk::Label::new(Some(&heading));
+    if suppress_tracking {
+        label.add_css_class("no-tracking");
+    }
     label.set_halign(gtk::Align::Start);
-    label.add_css_class("caption");
-    label.add_css_class("dim-label");
+    label.add_css_class("sidebar-owner-label");
     row.append(&label);
     row
 }
@@ -456,18 +516,6 @@ fn create_meta_label(text: String) -> gtk::Label {
     label.add_css_class("dim-label");
     label.add_css_class("caption");
     label
-}
-
-fn update_favorite_button_visual(button: &gtk::ToggleButton, is_active: bool) {
-    if is_active {
-        button.remove_css_class("flat");
-        button.add_css_class("suggested-action");
-        button.set_opacity(1.0);
-    } else {
-        button.remove_css_class("suggested-action");
-        button.add_css_class("flat");
-        button.set_opacity(0.5);
-    }
 }
 
 /// Gather workflow status counts for a repository
@@ -587,7 +635,7 @@ mod tests {
     use super::*;
     use crate::api::models::{Repo, User, WorkflowRun};
     use crate::ui::state::WorkflowStatusCounts;
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
     use gtk4::{self as gtk, gio};
     use parking_lot::Mutex;
     use std::collections::{HashMap, HashSet};
@@ -651,50 +699,115 @@ mod tests {
 
     #[test]
     #[ignore = "requires GTK display"]
+    fn favourite_buttons_line_up_regardless_of_name_length() {
+        run_gtk_test(
+            "favourite_buttons_line_up_regardless_of_name_length",
+            || {
+                fn row_for(full_name: &str) -> gtk::Box {
+                    build_repo_row(
+                        Repo {
+                            id: full_name.len() as i64,
+                            name: full_name.rsplit('/').next().unwrap_or(full_name).into(),
+                            full_name: full_name.into(),
+                            owner: User {
+                                login: "makoni".into(),
+                            },
+                            is_private: false,
+                            permissions: None,
+                            default_branch: Some("main".into()),
+                        },
+                        false,
+                        RepoActionsState::Unknown,
+                        WorkflowStatusCounts::default(),
+                        Arc::new(Mutex::new(HashSet::new())),
+                        None,
+                    )
+                }
+
+                // A short name and one long enough to be ellipsized: packed without
+                // hexpand the star trails the label, so the column zig-zags.
+                let rows = [
+                    row_for("makoni/imetrik"),
+                    row_for("makoni/Google-Maps-SDK-for-something-long"),
+                ];
+                let list = gtk::Box::new(gtk::Orientation::Vertical, 0);
+                for row in &rows {
+                    list.append(row);
+                }
+
+                let window = gtk::Window::new();
+                window.set_default_size(320, 200);
+                window.set_child(Some(&list));
+                window.present();
+                while glib::MainContext::default().pending() {
+                    let _ = glib::MainContext::default().iteration(false);
+                }
+
+                let right_edges: Vec<i32> = rows
+                    .iter()
+                    .map(|row| {
+                        let button = row
+                            .last_child()
+                            .and_then(|child| child.downcast::<gtk::ToggleButton>().ok())
+                            .expect("each row ends with its favourite button");
+                        let alloc = button.allocation();
+                        alloc.x() + alloc.width()
+                    })
+                    .collect();
+
+                window.destroy();
+
+                assert_eq!(
+                    right_edges[0], right_edges[1],
+                    "favourite buttons must share a trailing edge, got {right_edges:?}"
+                );
+            },
+        );
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
     fn repo_rows_use_widget_metadata_without_listbox_rows() {
-        let Some(_guard) = gtk_test_guard("repo_rows_use_widget_metadata_without_listbox_rows")
-        else {
-            return;
-        };
+        run_gtk_test("repo_rows_use_widget_metadata_without_listbox_rows", || {
+            let store = gio::ListStore::new::<gtk::Widget>();
+            let repo = Repo {
+                id: 42,
+                name: "actioneer".into(),
+                full_name: "mak/actioneer".into(),
+                owner: User {
+                    login: "mak".into(),
+                },
+                is_private: false,
+                permissions: None,
+                default_branch: Some("main".into()),
+            };
 
-        let store = gio::ListStore::new::<gtk::Widget>();
-        let repo = Repo {
-            id: 42,
-            name: "actioneer".into(),
-            full_name: "mak/actioneer".into(),
-            owner: User {
-                login: "mak".into(),
-            },
-            is_private: false,
-            permissions: None,
-            default_branch: Some("main".into()),
-        };
+            rebuild_repo_list(
+                store.clone(),
+                RepoListRenderContext {
+                    repos: vec![repo.clone()],
+                    favorites_snapshot: HashSet::new(),
+                    actions_snapshot: HashMap::new(),
+                    workflow_snapshot: HashMap::from([(repo.id, WorkflowStatusCounts::default())]),
+                    favorites_state: Arc::new(Mutex::new(HashSet::new())),
+                    favorites_manager: None,
+                },
+            );
 
-        rebuild_repo_list(
-            store.clone(),
-            RepoListRenderContext {
-                repos: vec![repo.clone()],
-                favorites_snapshot: HashSet::new(),
-                actions_snapshot: HashMap::new(),
-                workflow_snapshot: HashMap::from([(repo.id, WorkflowStatusCounts::default())]),
-                favorites_state: Arc::new(Mutex::new(HashSet::new())),
-                favorites_manager: None,
-            },
-        );
+            let repo_obj = (0..store.n_items())
+                .find_map(|idx| {
+                    store
+                        .item(idx)
+                        .filter(|obj| repo_from_object(obj).is_some())
+                })
+                .expect("repo item should exist");
 
-        let repo_obj = (0..store.n_items())
-            .find_map(|idx| {
-                store
-                    .item(idx)
-                    .filter(|obj| repo_from_object(obj).is_some())
-            })
-            .expect("repo item should exist");
-
-        assert!(repo_obj.downcast_ref::<gtk::ListBoxRow>().is_none());
-        assert_eq!(
-            repo_from_object(&repo_obj).map(|item| item.id),
-            Some(repo.id)
-        );
-        assert!(row_selectable_from_object(repo_obj.as_ref()));
+            assert!(repo_obj.downcast_ref::<gtk::ListBoxRow>().is_none());
+            assert_eq!(
+                repo_from_object(&repo_obj).map(|item| item.id),
+                Some(repo.id)
+            );
+            assert!(row_selectable_from_object(repo_obj.as_ref()));
+        });
     }
 }

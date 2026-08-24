@@ -835,3 +835,96 @@ msgstr "محفوظ ٹوکن اسٹوریج کی بہتر مطابقت کی بد�
 
 msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
 msgstr "تازہ کردہ بنڈلڈ اجزا Actioneer کو مستحکم، قابلِ بھروسا اور تازہ ترین رکھنے میں مدد دیتے ہیں۔"
+
+msgid "Workflows"
+msgstr "ورک فلو"
+
+msgid "Auto-refresh is disabled."
+msgstr "خودکار تازہ کاری غیر فعال ہے۔"
+
+msgid "Data refreshes automatically every {seconds} seconds."
+msgstr "ڈیٹا ہر {seconds} سیکنڈ میں خودکار طور پر تازہ ہوتا ہے۔"
+
+msgid "1 workflow"
+msgstr "1 ورک فلو"
+
+msgid "{count} workflows"
+msgstr "{count} ورک فلو"
+
+msgid "Updated {when}"
+msgstr "{when} اپڈیٹ ہوا"
+
+msgid "Not updated yet"
+msgstr "ابھی اپڈیٹ نہیں ہوا"
+
+msgid "No runs yet"
+msgstr "ابھی کوئی رن نہیں"
+
+msgid "Recent runs"
+msgstr "حالیہ رن"
+
+msgid "All on GitHub"
+msgstr "GitHub پر سب"
+
+msgid "Showing {visible} of {overall}"
+msgstr "{overall} میں سے {visible} دکھائے جا رہے ہیں"
+
+msgid "Showing {visible} of {filtered} matching filters"
+msgstr "فلٹرز سے ملنے والے {filtered} میں سے {visible} دکھائے جا رہے ہیں"
+
+msgid "All"
+msgstr "سب"
+
+msgid "Active"
+msgstr "فعال"
+
+msgid "Status"
+msgstr "حالت"
+
+msgid "Conclusion"
+msgstr "نتیجہ"
+
+msgid "Branch"
+msgstr "برانچ"
+
+msgid "Commit"
+msgstr "کمٹ"
+
+msgid "Triggered by"
+msgstr "چلانے والا"
+
+msgid "Event"
+msgstr "ایونٹ"
+
+msgid "Duration"
+msgstr "دورانیہ"
+
+msgid "Started"
+msgstr "شروع ہوا"
+
+msgid "Updated"
+msgstr "اپ ڈیٹ ہوا"
+
+msgid "OK"
+msgstr "ٹھیک ہے"
+
+msgid "Saving token..."
+msgstr "ٹوکن محفوظ ہو رہا ہے..."
+
+msgid "Set the application language (e.g., ru, en, zh_Hans)"
+msgstr "ایپلیکیشن کی زبان مقرر کریں (مثلاً ru، en، zh_Hans)"
+
+msgid "Start the app with sample demo data"
+msgstr "نمونہ ڈیمو ڈیٹا کے ساتھ ایپ شروع کریں"
+
+msgid "No repositories match"
+msgstr "کوئی ریپوزٹری مماثل نہیں"
+
+msgid "Activity is gathered as you open repositories."
+msgstr "ریپوزٹریز کھولنے پر سرگرمی جمع کی جاتی ہے۔"
+
+msgid "{count} workflows in this state"
+msgstr "اس حالت میں {count} ورک فلو"
+
+msgid "Try another filter or search term."
+msgstr "کوئی اور فلٹر یا تلاش کی اصطلاح آزمائیں۔"

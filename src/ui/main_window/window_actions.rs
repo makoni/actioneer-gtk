@@ -355,45 +355,41 @@ Troubleshooting\n\
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
     use gtk4::glib;
 
     #[test]
     #[ignore = "requires GTK display"]
     fn shortcuts_window_builds_and_closes() {
-        let Some(_guard) = gtk_test_guard("shortcuts_window_builds_and_closes") else {
-            return;
-        };
+        run_gtk_test("shortcuts_window_builds_and_closes", || {
+            let app = adw::Application::builder()
+                .application_id("me.spaceinbox.actioneer.tests.shortcuts")
+                .build();
+            let parent = adw::ApplicationWindow::new(&app);
 
-        let app = adw::Application::builder()
-            .application_id("me.spaceinbox.actioneer.tests.shortcuts")
-            .build();
-        let parent = adw::ApplicationWindow::new(&app);
+            let window = MainWindow::build_shortcuts_window(&parent);
+            window.present();
+            while glib::MainContext::default().pending() {
+                let _ = glib::MainContext::default().iteration(false);
+            }
 
-        let window = MainWindow::build_shortcuts_window(&parent);
-        window.present();
-        while glib::MainContext::default().pending() {
-            let _ = glib::MainContext::default().iteration(false);
-        }
+            window.close();
+            while glib::MainContext::default().pending() {
+                let _ = glib::MainContext::default().iteration(false);
+            }
 
-        window.close();
-        while glib::MainContext::default().pending() {
-            let _ = glib::MainContext::default().iteration(false);
-        }
-
-        assert!(!window.is_visible());
+            assert!(!window.is_visible());
+        });
     }
 
     #[test]
     #[ignore = "requires GTK display"]
     fn info_alert_has_single_ok_response() {
-        let Some(_guard) = gtk_test_guard("info_alert_has_single_ok_response") else {
-            return;
-        };
+        run_gtk_test("info_alert_has_single_ok_response", || {
+            let dialog = MainWindow::info_alert("Something went wrong");
 
-        let dialog = MainWindow::info_alert("Something went wrong");
-
-        assert!(dialog.has_response("ok"));
-        assert_eq!(dialog.default_response().as_deref(), Some("ok"));
+            assert!(dialog.has_response("ok"));
+            assert_eq!(dialog.default_response().as_deref(), Some("ok"));
+        });
     }
 }

@@ -1,20 +1,30 @@
 use super::RunLoadService;
 use super::context::{JobContextMap, RunBadgeSummaryMap};
-use super::runs::{LoadRunsParams, RunDigestStore, RunRowContext, WorkflowRunListModel};
+use super::duration::running_duration_string;
+use super::formatting::{
+    format_workflow_meta, get_run_status_class, get_run_status_icon, workflow_status_text,
+};
+use super::runs::{
+    LoadRunsParams, RunActionContext, RunDigestStore, RunRowContext, WorkflowRunListModel,
+    confirm_and_cancel_run,
+};
+use super::status_dot::{WORKFLOW_DOT_SIZE, build_status_dot, set_status_dot_state};
 use super::workflow_follow_up::{FollowUpRefreshParams, schedule_follow_up_refresh};
 use crate::api::GitHubClient;
 use crate::api::models::{
-    Repo, Workflow, WorkflowDispatchInput, WorkflowDispatchInputType, WorkflowDispatchInputValue,
-    WorkflowRun, build_dispatch_inputs_payload,
+    JobSummary, Repo, Workflow, WorkflowDispatchInput, WorkflowDispatchInputType,
+    WorkflowDispatchInputValue, WorkflowRun, build_dispatch_inputs_payload,
 };
 use crate::i18n::tr;
 use crate::notifications::NotificationManager;
 use crate::preferences::PreferencesManager;
 use crate::ui::detail_view::RunFilters;
+use crate::ui::detail_view::header_state::DetailHeaderState;
+use crate::ui::job_logs_window::JobLogsWindow;
 use crate::ui::utils::MainContextChannelExt;
 use crate::ui::utils::widget_data::{set_data, steal_data};
 use gtk4::prelude::*;
-use gtk4::{self as gtk, glib};
+use gtk4::{self as gtk, glib, pango};
 use libadwaita as adw;
 use libadwaita::prelude::*;
 use parking_lot::Mutex;
@@ -42,6 +52,7 @@ pub(crate) struct WorkflowRowContext {
     pub preferences_manager: Option<Arc<PreferencesManager>>,
     pub run_filters: Arc<Mutex<RunFilters>>,
     pub run_load_service: RunLoadService,
+    pub header: DetailHeaderState,
 }
 
 /// Builds the "Trigger Workflow" dialog shell (form content is attached and the
@@ -61,6 +72,7 @@ fn build_trigger_dialog(heading: &str) -> adw::AlertDialog {
 pub(crate) struct WorkflowRowSettings {
     pub should_expand: bool,
     pub initial_expanded_run_ids: Vec<i64>,
+    pub is_first: bool,
 }
 
 enum DispatchInputWidget {
@@ -111,6 +123,185 @@ fn dispatch_input_subtitle(input: &WorkflowDispatchInput) -> Option<String> {
     }
 }
 
+/// Live widgets of a workflow row that update in place when the workflow's
+/// latest run changes (initial load, expansion, background refreshes).
+#[derive(Clone)]
+pub(crate) struct WorkflowRowHeader {
+    pub status_dot: gtk::Box,
+    pub meta_label: gtk::Label,
+    pub progress_row: gtk::Box,
+    pub progress_bar: gtk::ProgressBar,
+    pub progress_label: gtk::Label,
+    // Weak: `WorkflowRunListModel` holds this header (`set_row_header`) and the
+    // trigger button's handler owns that same model, so strong references here
+    // would form a cycle that keeps the row — and the whole pane — alive.
+    trigger_btn: glib::WeakRef<gtk::Button>,
+    cancel_btn: glib::WeakRef<gtk::Button>,
+    elapsed: Rc<RefCell<ElapsedTicker>>,
+}
+
+impl WorkflowRowHeader {
+    fn trigger_btn(&self) -> Option<gtk::Button> {
+        self.trigger_btn.upgrade()
+    }
+
+    fn cancel_btn(&self) -> Option<gtk::Button> {
+        self.cancel_btn.upgrade()
+    }
+}
+
+#[derive(Default)]
+struct ElapsedTicker {
+    source: Option<glib::SourceId>,
+    started_at: Option<String>,
+    counts: Option<(i32, i32)>,
+}
+
+fn render_progress_label(
+    label: &gtk::Label,
+    started_at: &Option<String>,
+    counts: &Option<(i32, i32)>,
+) {
+    let elapsed = running_duration_string(started_at.as_ref());
+    let text = match (counts, elapsed) {
+        (Some((done, total)), Some(elapsed)) if *total > 0 => {
+            format!("{done} / {total} · {elapsed}")
+        }
+        (Some((done, total)), None) if *total > 0 => format!("{done} / {total}"),
+        (None, Some(elapsed)) => elapsed,
+        _ => String::new(),
+    };
+    label.set_text(&text);
+    label.set_visible(!text.is_empty());
+}
+
+fn stop_elapsed_ticker(header: &WorkflowRowHeader) {
+    let source = header.elapsed.borrow_mut().source.take();
+    if let Some(source) = source {
+        let _ = crate::ui::utils::try_remove_source(source);
+    }
+}
+
+fn start_elapsed_ticker(
+    header: &WorkflowRowHeader,
+    started_at: Option<String>,
+    counts: Option<(i32, i32)>,
+) {
+    {
+        let mut state = header.elapsed.borrow_mut();
+        state.started_at = started_at;
+        state.counts = counts;
+        if state.source.is_some() {
+            return;
+        }
+    }
+
+    let progress_label = header.progress_label.downgrade();
+    let progress_bar = header.progress_bar.downgrade();
+    let progress_row = header.progress_row.downgrade();
+    let elapsed = header.elapsed.clone();
+
+    let source = glib::timeout_add_seconds_local(1, move || {
+        let (Some(label), Some(bar), Some(row)) = (
+            progress_label.upgrade(),
+            progress_bar.upgrade(),
+            progress_row.upgrade(),
+        ) else {
+            elapsed.borrow_mut().source = None;
+            return glib::ControlFlow::Break;
+        };
+
+        if !row.is_visible() {
+            elapsed.borrow_mut().source = None;
+            return glib::ControlFlow::Break;
+        }
+
+        let (started_at, counts) = {
+            let state = elapsed.borrow();
+            (state.started_at.clone(), state.counts)
+        };
+
+        render_progress_label(&label, &started_at, &counts);
+        if counts.is_none() {
+            bar.pulse();
+        }
+
+        glib::ControlFlow::Continue
+    });
+
+    header.elapsed.borrow_mut().source = Some(source);
+}
+
+/// Refreshes a workflow row's status dot, meta line, progress indicator and
+/// action buttons from the workflow's latest run.
+pub(crate) fn update_workflow_row_header(
+    header: &WorkflowRowHeader,
+    latest: Option<&WorkflowRun>,
+    summary: Option<&JobSummary>,
+) {
+    match latest {
+        Some(run) => {
+            set_status_dot_state(
+                &header.status_dot,
+                get_run_status_icon(run),
+                get_run_status_class(run),
+            );
+            let (status_text, _) = workflow_status_text(run);
+            crate::ui::utils::describe_control(&header.status_dot, &status_text);
+
+            let meta = format_workflow_meta(run);
+            if meta.is_empty() {
+                header.meta_label.set_text(tr("No runs yet").as_str());
+            } else {
+                header.meta_label.set_text(&meta);
+            }
+
+            let active = run.is_active();
+            if let Some(trigger) = header.trigger_btn() {
+                trigger.set_visible(!active);
+            }
+            if let Some(cancel) = header.cancel_btn() {
+                cancel.set_visible(active && run.is_cancellable());
+            }
+
+            if active {
+                header.progress_row.set_visible(true);
+                let counts = summary
+                    .filter(|s| !s.is_empty())
+                    .map(|s| (s.completed, s.completed + s.running + s.queued));
+                if let Some((done, total)) = counts
+                    && total > 0
+                {
+                    header.progress_bar.set_fraction(done as f64 / total as f64);
+                }
+                render_progress_label(&header.progress_label, &run.run_started_at, &counts);
+                start_elapsed_ticker(header, run.run_started_at.clone(), counts);
+            } else {
+                header.progress_row.set_visible(false);
+                stop_elapsed_ticker(header);
+            }
+        }
+        None => {
+            set_status_dot_state(&header.status_dot, "window-minimize-symbolic", "idle");
+            crate::ui::utils::describe_control(&header.status_dot, tr("No runs yet").as_str());
+            header.meta_label.set_text(tr("No runs yet").as_str());
+            if let Some(trigger) = header.trigger_btn() {
+                trigger.set_visible(true);
+            }
+            if let Some(cancel) = header.cancel_btn() {
+                cancel.set_visible(false);
+            }
+            header.progress_row.set_visible(false);
+            stop_elapsed_ticker(header);
+        }
+    }
+}
+
+/// Basename of a workflow file path, e.g. `.github/workflows/ci.yml` → `ci.yml`.
+fn workflow_file_name(path: &str) -> &str {
+    path.rsplit('/').next().unwrap_or(path)
+}
+
 pub(crate) fn create_workflow_expander_row(
     workflow: &Workflow,
     context: &WorkflowRowContext,
@@ -137,41 +328,165 @@ pub(crate) fn create_workflow_expander_row(
     let run_load_service_for_signal = run_load_service.clone();
 
     let main_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    main_box.add_css_class("workflow-item");
+    if settings.is_first {
+        main_box.add_css_class("workflow-item-first");
+    }
     let workflow_display_name = format!("{}/{} • {}", owner, repo, workflow.name);
     let workflow_path = workflow.path.clone();
+    let workflow_file = workflow_file_name(&workflow.path).to_string();
 
-    let header_box = gtk::Box::new(gtk::Orientation::Horizontal, 8);
-    header_box.set_margin_top(8);
-    header_box.set_margin_bottom(8);
-    header_box.set_margin_start(12);
-    header_box.set_margin_end(12);
+    // ---- Row header: chevron (expander arrow) + status dot + title/meta + actions
+    let header_box = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+    header_box.set_margin_start(6);
+    header_box.set_margin_end(10);
+    header_box.set_margin_top(12);
+    header_box.set_margin_bottom(12);
+    header_box.set_valign(gtk::Align::Center);
+
+    let status_dot = build_status_dot("window-minimize-symbolic", "idle", WORKFLOW_DOT_SIZE);
+    header_box.append(&status_dot);
+
+    let text_box = gtk::Box::new(gtk::Orientation::Vertical, 3);
+    text_box.set_hexpand(true);
+    text_box.set_valign(gtk::Align::Center);
 
     let workflow_name_label = gtk::Label::new(Some(&workflow.name));
     workflow_name_label.set_halign(gtk::Align::Start);
     workflow_name_label.set_hexpand(true);
-    workflow_name_label.add_css_class("heading");
-    header_box.append(&workflow_name_label);
+    workflow_name_label.set_ellipsize(pango::EllipsizeMode::End);
+    workflow_name_label.add_css_class("workflow-title");
+    text_box.append(&workflow_name_label);
+
+    let meta_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    meta_box.set_halign(gtk::Align::Start);
+
+    let file_label = gtk::Label::new(Some(&workflow_file));
+    file_label.add_css_class("workflow-file");
+    file_label.add_css_class("dim-label");
+    file_label.add_css_class("caption");
+    meta_box.append(&file_label);
+
+    let meta_separator = gtk::Label::new(Some("·"));
+    meta_separator.add_css_class("dim-label");
+    meta_separator.add_css_class("caption");
+    meta_box.append(&meta_separator);
+
+    let meta_label = gtk::Label::new(Some(tr("No runs yet").as_str()));
+    meta_label.add_css_class("dim-label");
+    meta_label.add_css_class("caption");
+    meta_label.set_halign(gtk::Align::Start);
+    meta_label.set_ellipsize(pango::EllipsizeMode::End);
+    meta_box.append(&meta_label);
+
+    text_box.append(&meta_box);
+    header_box.append(&text_box);
+
+    // ---- Trailing actions: logs, trigger (play) / cancel (stop while running)
+    let actions_box = gtk::Box::new(gtk::Orientation::Horizontal, 4);
+    actions_box.set_valign(gtk::Align::Center);
+    actions_box.set_halign(gtk::Align::End);
+
+    let logs_btn = gtk::Button::from_icon_name("text-x-generic-symbolic");
+    crate::ui::utils::describe_control(&logs_btn, tr("View logs").as_str());
+    logs_btn.add_css_class("row-action-btn");
+    logs_btn.set_valign(gtk::Align::Center);
+    logs_btn.set_focus_on_click(false);
+    actions_box.append(&logs_btn);
 
     let trigger_btn = gtk::Button::from_icon_name("media-playback-start-symbolic");
-    trigger_btn.set_tooltip_text(Some(tr("Trigger workflow").as_str()));
-    trigger_btn.add_css_class("flat");
-    trigger_btn.add_css_class("circular");
+    crate::ui::utils::describe_control(&trigger_btn, tr("Trigger workflow").as_str());
+    trigger_btn.add_css_class("row-action-btn");
+    trigger_btn.add_css_class("run-action");
     trigger_btn.set_valign(gtk::Align::Center);
     trigger_btn.set_focus_on_click(false);
-    header_box.append(&trigger_btn);
+    actions_box.append(&trigger_btn);
 
-    let status_badge = gtk::Label::new(None);
-    status_badge.add_css_class("caption");
-    status_badge.add_css_class("badge");
-    status_badge.set_halign(gtk::Align::End);
-    status_badge.set_visible(false);
-    header_box.append(&status_badge);
+    let cancel_btn = gtk::Button::from_icon_name("process-stop-symbolic");
+    crate::ui::utils::describe_control(&cancel_btn, tr("Cancel run").as_str());
+    cancel_btn.add_css_class("row-action-btn");
+    cancel_btn.add_css_class("cancel-action");
+    cancel_btn.set_valign(gtk::Align::Center);
+    cancel_btn.set_focus_on_click(false);
+    cancel_btn.set_visible(false);
+    actions_box.append(&cancel_btn);
+
+    header_box.append(&actions_box);
 
     let expander = gtk::Expander::new(None);
+    // Horizontal breathing room around the disclosure arrow: `margin_start`
+    // insets the arrow from the card edge, the header's own `margin_start`
+    // (set above) leaves a gap between the arrow and the row content.
+    expander.set_margin_start(6);
     expander.set_label_widget(Some(&header_box));
     expander.set_widget_name(&format!("workflow_{}", workflow.id));
     set_data(&expander, "actioneer-workflow-name", workflow.name.clone());
     set_data(&expander, "actioneer-workflow-id", workflow.id);
+
+    // ---- Expanded area: progress + "Recent runs" sub-header + runs card
+    let detail_box = gtk::Box::new(gtk::Orientation::Vertical, 8);
+    detail_box.add_css_class("workflow-detail");
+    detail_box.set_margin_start(62);
+    detail_box.set_margin_end(14);
+    detail_box.set_margin_bottom(14);
+
+    let progress_row = gtk::Box::new(gtk::Orientation::Horizontal, 10);
+    progress_row.set_valign(gtk::Align::Center);
+    progress_row.set_visible(false);
+
+    let progress_bar = gtk::ProgressBar::new();
+    progress_bar.add_css_class("workflow-progress");
+    progress_bar.set_hexpand(true);
+    progress_bar.set_valign(gtk::Align::Center);
+    progress_row.append(&progress_bar);
+
+    let progress_label = gtk::Label::new(None);
+    progress_label.add_css_class("mono");
+    progress_label.add_css_class("dim-label");
+    progress_label.add_css_class("caption");
+    progress_row.append(&progress_label);
+
+    detail_box.append(&progress_row);
+
+    let subheader = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    subheader.set_margin_top(2);
+
+    let (recent_heading, recent_suppress_tracking) =
+        crate::ui::utils::section_heading(&tr("Recent runs"));
+    let recent_label = gtk::Label::new(Some(&recent_heading));
+    if recent_suppress_tracking {
+        recent_label.add_css_class("no-tracking");
+    }
+    recent_label.add_css_class("section-label");
+    recent_label.set_halign(gtk::Align::Start);
+    recent_label.set_hexpand(true);
+    subheader.append(&recent_label);
+
+    let counts_label = gtk::Label::new(None);
+    counts_label.add_css_class("dim-label");
+    counts_label.add_css_class("caption");
+    counts_label.set_visible(false);
+    subheader.append(&counts_label);
+
+    let counts_separator = gtk::Label::new(Some("·"));
+    counts_separator.add_css_class("dim-label");
+    counts_separator.add_css_class("caption");
+    subheader.append(&counts_separator);
+    counts_label
+        .bind_property("visible", &counts_separator, "visible")
+        .sync_create()
+        .build();
+
+    let actions_url = format!(
+        "https://github.com/{}/{}/actions/workflows/{}",
+        owner, repo, workflow_file
+    );
+    let all_link = gtk::LinkButton::with_label(&actions_url, tr("All on GitHub").as_str());
+    all_link.add_css_class("caption");
+    all_link.set_valign(gtk::Align::Center);
+    subheader.append(&all_link);
+
+    detail_box.append(&subheader);
 
     let run_row_context = RunRowContext::new(
         client.clone(),
@@ -185,12 +500,162 @@ pub(crate) fn create_workflow_expander_row(
         context.run_badge_summaries.clone(),
     );
     let run_list = WorkflowRunListModel::new(run_row_context);
-    expander.set_child(Some(&run_list.widget()));
+
+    let runs_card = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    runs_card.add_css_class("runs-card");
+    runs_card.set_overflow(gtk::Overflow::Hidden);
+    runs_card.append(&run_list.widget());
+    detail_box.append(&runs_card);
+
+    expander.set_child(Some(&detail_box));
+
+    let row_header = WorkflowRowHeader {
+        status_dot,
+        meta_label,
+        progress_row,
+        progress_bar,
+        progress_label,
+        trigger_btn: trigger_btn.downgrade(),
+        cancel_btn: cancel_btn.downgrade(),
+        elapsed: Rc::new(RefCell::new(ElapsedTicker::default())),
+    };
+    run_list.set_row_header(row_header.clone());
+    run_list.set_detail_header(context.header.clone());
+    run_list.set_counts_label(counts_label);
     set_data(&expander, "actioneer-run-list", run_list.clone());
     main_box.append(&expander);
 
-    let card = workflow_row_card(&main_box);
-    card.add_css_class("workflow-row");
+    // Render the header from the latest run we already know about (if any).
+    {
+        let latest = context.header.latest_run(workflow.id);
+        let summary = latest
+            .as_ref()
+            .and_then(|run| context.run_badge_summaries.borrow().get(&run.id).cloned());
+        update_workflow_row_header(&row_header, latest.as_ref(), summary.as_ref());
+    }
+
+    // Highlight the row while the workflow is expanded. The reference must be
+    // weak: `main_box` owns the expander, so a strong clone here would form a
+    // cycle that keeps the row (and its elapsed ticker) alive after a rebuild.
+    let main_box_weak = main_box.downgrade();
+    expander.connect_expanded_notify(move |exp| {
+        let Some(main_box) = main_box_weak.upgrade() else {
+            return;
+        };
+        if exp.is_expanded() {
+            main_box.add_css_class("expanded");
+        } else {
+            main_box.remove_css_class("expanded");
+        }
+    });
+
+    // Cancel the workflow's latest (running) run.
+    {
+        let header_state = context.header.clone();
+        let workflow_id_for_cancel = workflow.id;
+        let client_for_cancel = client.clone();
+        let owner_for_cancel = owner.clone();
+        let repo_for_cancel = repo.clone();
+        let repo_model_for_cancel = repo_model.clone();
+        let parent_window_for_cancel = parent_window.clone();
+        let toast_overlay_for_cancel = toast_overlay.clone();
+        cancel_btn.connect_clicked(move |btn| {
+            let Some(run) = header_state.latest_run(workflow_id_for_cancel) else {
+                return;
+            };
+            if !run.is_cancellable() {
+                return;
+            }
+            let action_context = RunActionContext {
+                client: client_for_cancel.clone(),
+                owner: owner_for_cancel.clone(),
+                repo: repo_for_cancel.clone(),
+                repo_model: repo_model_for_cancel.clone(),
+                parent_window: parent_window_for_cancel.clone(),
+                toast_overlay: toast_overlay_for_cancel.clone(),
+            };
+            confirm_and_cancel_run(&run, &action_context, btn);
+        });
+    }
+
+    // Open the logs of the latest run's most relevant job.
+    {
+        let header_state = context.header.clone();
+        let workflow_id_for_logs = workflow.id;
+        let client_for_logs = client.clone();
+        let owner_for_logs = owner.clone();
+        let repo_for_logs = repo.clone();
+        let repo_model_for_logs = repo_model.clone();
+        let parent_window_for_logs = parent_window.clone();
+        let toast_overlay_for_logs = toast_overlay.clone();
+        logs_btn.connect_clicked(move |btn| {
+            let Some(run) = header_state.latest_run(workflow_id_for_logs) else {
+                toast_overlay_for_logs.add_toast(adw::Toast::new(tr("No runs yet").as_str()));
+                return;
+            };
+
+            // Guard against a double click opening two log windows.
+            btn.set_sensitive(false);
+            let btn_for_result = btn.clone();
+
+            let (sender, receiver) =
+                glib::MainContext::default()
+                    .channel::<Result<Vec<crate::api::models::Job>, String>>(
+                        glib::Priority::default(),
+                    );
+
+            let parent_window = parent_window_for_logs.clone();
+            let repo_model = repo_model_for_logs.clone();
+            let toast_overlay = toast_overlay_for_logs.clone();
+            let client_for_window = client_for_logs.clone();
+            let run_title = super::formatting::format_run_title(&run);
+            receiver.attach(None, move |result| {
+                btn_for_result.set_sensitive(true);
+                match result {
+                    Ok(jobs) => {
+                        // A run has no log of its own — it is the set of its job
+                        // logs — so the window lists them all and preselects the
+                        // one a reader most likely wants.
+                        match crate::ui::job_logs_window::most_relevant_job(&jobs) {
+                            Some(selected) => {
+                                let logs_window = JobLogsWindow::for_run(
+                                    &parent_window,
+                                    repo_model.clone(),
+                                    run_title.clone(),
+                                    jobs,
+                                    selected,
+                                    client_for_window.clone(),
+                                );
+                                logs_window.present();
+                            }
+                            None => {
+                                toast_overlay
+                                    .add_toast(adw::Toast::new(tr("No jobs found").as_str()));
+                            }
+                        }
+                    }
+                    Err(message) => {
+                        error!("Failed to load jobs for logs: {}", message);
+                        toast_overlay
+                            .add_toast(adw::Toast::new(tr("Unable to load jobs").as_str()));
+                    }
+                }
+                glib::ControlFlow::Break
+            });
+
+            let client = client_for_logs.clone();
+            let owner = owner_for_logs.clone();
+            let repo = repo_for_logs.clone();
+            crate::runtime_handle().spawn(async move {
+                let client_guard = client.lock().clone();
+                let result = client_guard
+                    .list_jobs(&owner, &repo, run.id)
+                    .await
+                    .map_err(|err| err.to_string());
+                let _ = sender.send(result);
+            });
+        });
+    }
 
     let client_for_trigger = client.clone();
     let owner_for_trigger = owner.clone();
@@ -200,7 +665,7 @@ pub(crate) fn create_workflow_expander_row(
     let workflow_display_for_trigger = workflow_display_name.clone();
     let parent_window_for_trigger = parent_window.clone();
     let toast_overlay_for_trigger = toast_overlay.clone();
-    let expander_for_trigger = expander.clone();
+    let expander_for_trigger = expander.downgrade();
     let job_contexts_for_trigger = job_contexts.clone();
     let run_digests_shared = run_digests.clone();
     let notification_manager_shared = notification_manager.clone();
@@ -219,8 +684,6 @@ pub(crate) fn create_workflow_expander_row(
     let client_shared = client.clone();
     let run_list_shared = run_list.clone();
     let parent_window_shared = parent_window.clone();
-    let status_badge_shared = status_badge.clone();
-    let status_badge_for_reload = status_badge_shared.clone();
     let toast_overlay_shared = toast_overlay.clone();
     let repo_model_shared = repo_model.clone();
     let repo_model_for_signal = repo_model.clone();
@@ -232,7 +695,6 @@ pub(crate) fn create_workflow_expander_row(
     let client_for_signal = client_shared.clone();
     let run_list_for_signal = run_list_shared.clone();
     let parent_window_for_signal = parent_window_shared.clone();
-    let status_badge_for_signal = status_badge_shared.clone();
     let toast_overlay_for_signal = toast_overlay_shared.clone();
     let job_contexts_shared = job_contexts.clone();
     let job_contexts_for_signal = job_contexts_shared.clone();
@@ -285,7 +747,6 @@ pub(crate) fn create_workflow_expander_row(
                 workflow_name: workflow_display_for_signal.clone(),
                 run_list: run_list_for_signal.clone(),
                 parent_window: parent_window_for_signal.clone(),
-                status_badge: Some(status_badge_for_signal.clone()),
                 expander: exp.clone(),
                 toast_overlay: toast_overlay_for_signal.clone(),
                 job_contexts: job_contexts_for_signal.clone(),
@@ -329,7 +790,6 @@ pub(crate) fn create_workflow_expander_row(
                 workflow_name: workflow_display_shared.clone(),
                 run_list: run_list_shared.clone(),
                 parent_window: parent_window_shared.clone(),
-                status_badge: Some(status_badge_shared.clone()),
                 expander: expander.clone(),
                 toast_overlay: toast_overlay_shared.clone(),
                 job_contexts: job_contexts_shared.clone(),
@@ -351,7 +811,9 @@ pub(crate) fn create_workflow_expander_row(
 
     trigger_btn.connect_clicked(move |_| {
         let run_filters_for_dialog = run_filters_for_trigger.clone();
-        let expander = expander_for_trigger.clone();
+        let Some(expander) = expander_for_trigger.upgrade() else {
+            return;
+        };
         let client = client_for_trigger.clone();
         let owner = owner_for_trigger.clone();
         let repo = repo_for_trigger.clone();
@@ -639,7 +1101,6 @@ pub(crate) fn create_workflow_expander_row(
         let run_filters_for_response = run_filters_for_dialog.clone();
         let run_load_service_handle = run_load_service_for_response.clone();
         let input_fields_for_dialog = input_fields.clone();
-        let status_badge_for_dialog = status_badge_for_reload.clone();
         dialog.connect_response(None, move |_dialog, response| {
             if response == "trigger" {
                 let selected_branch = branch_dropdown
@@ -731,9 +1192,7 @@ pub(crate) fn create_workflow_expander_row(
 
                 let run_filters_for_reload = run_filters_for_response.clone();
                 let run_load_service_for_closure = run_load_service_handle.clone();
-                let status_badge_for_response = status_badge_for_dialog.clone();
                 receiver.attach(None, move |result| {
-                    let status_badge_for_receiver = status_badge_for_response.clone();
                     let workflows_loading_for_runs = workflows_loading_for_receiver.clone();
                     let workflows_loading_for_idle = workflows_loading_for_runs.clone();
                     let workflows_loading_for_follow_up = workflows_loading_for_runs.clone();
@@ -791,7 +1250,6 @@ pub(crate) fn create_workflow_expander_row(
                             let run_filters_for_idle = run_filters_for_reload.clone();
                             let run_list_handle = run_list_for_reload.clone();
                             let expander_for_idle = expander.clone();
-                            let status_badge_for_idle = status_badge_for_receiver.clone();
                             glib::idle_add_local_once(move || {
                                 let workflows_with_active = workflows_with_active_idle.clone();
                                 if expander_for_idle.is_expanded() {
@@ -818,7 +1276,6 @@ pub(crate) fn create_workflow_expander_row(
                                         workflow_name: workflow_display_for_runs,
                                         run_list: run_list_handle.clone(),
                                         parent_window: parent_window_for_idle.clone(),
-                                        status_badge: Some(status_badge_for_idle.clone()),
                                         expander: expander_for_idle.clone(),
                                         toast_overlay: toast_overlay_for_idle.clone(),
                                         job_contexts: job_contexts_for_idle.clone(),
@@ -844,7 +1301,6 @@ pub(crate) fn create_workflow_expander_row(
                                 workflow_name: workflow_display_for_reload.clone(),
                                 run_list: run_list_for_reload.clone(),
                                 parent_window: parent_window_for_reload.clone(),
-                                status_badge: Some(status_badge_for_receiver.clone()),
                                 expander: expander.downgrade(),
                                 toast_overlay: toast_overlay_for_reload.clone(),
                                 job_contexts: job_contexts_for_reload.clone(),
@@ -898,49 +1354,162 @@ pub(crate) fn create_workflow_expander_row(
         dialog.present(Some(&parent_window));
     });
 
-    card
-}
-
-pub(crate) fn workflow_row_card<W: IsA<gtk::Widget>>(child: &W) -> gtk::Box {
-    let card = gtk::Box::new(gtk::Orientation::Vertical, 0);
-    card.add_css_class("workflow-card");
-    card.add_css_class("card");
-    card.add_css_class("background");
-    card.set_margin_start(6);
-    card.set_margin_end(6);
-    card.set_margin_top(4);
-    card.set_margin_bottom(4);
-    card.set_hexpand(true);
-    card.set_vexpand(false);
-    card.set_overflow(gtk::Overflow::Hidden);
-    card.append(child);
-    card
+    main_box
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::api::models::User;
+    use crate::ui::detail_view::filter_controls::FilterControls;
+    use crate::ui::test_helpers::run_gtk_test;
+
+    fn find_expander(widget: gtk::Widget) -> Option<gtk::Expander> {
+        if let Ok(expander) = widget.clone().downcast::<gtk::Expander>() {
+            return Some(expander);
+        }
+        let mut child = widget.first_child();
+        while let Some(current) = child {
+            if let Some(found) = find_expander(current.clone()) {
+                return Some(found);
+            }
+            child = current.next_sibling();
+        }
+        None
+    }
+
+    fn row_context_stub() -> WorkflowRowContext {
+        let workflows_last_loaded = Arc::new(Mutex::new(std::collections::HashMap::new()));
+        let workflows_loading_runs = Arc::new(Mutex::new(HashSet::new()));
+        let controls = FilterControls::new();
+
+        WorkflowRowContext {
+            client: Arc::new(Mutex::new(
+                crate::api::GitHubClient::new(None).expect("client stub should build"),
+            )),
+            owner: "mak".into(),
+            repo: "actioneer".into(),
+            repo_model: Repo {
+                id: 1,
+                name: "actioneer".into(),
+                full_name: "mak/actioneer".into(),
+                owner: User {
+                    login: "mak".into(),
+                },
+                is_private: false,
+                permissions: None,
+                default_branch: Some("main".into()),
+            },
+            parent_window: adw::ApplicationWindow::builder().build(),
+            toast_overlay: adw::ToastOverlay::new(),
+            job_contexts: Rc::new(RefCell::new(HashMap::new())),
+            run_badge_summaries: Rc::new(RefCell::new(HashMap::new())),
+            workflows_with_active_runs: Arc::new(Mutex::new(HashSet::new())),
+            workflows_last_loaded: workflows_last_loaded.clone(),
+            workflows_loading_runs: workflows_loading_runs.clone(),
+            run_digests: Arc::new(Mutex::new(std::collections::HashMap::new())),
+            notification_manager: None,
+            preferences_manager: None,
+            run_filters: Arc::new(Mutex::new(crate::ui::detail_view::RunFilters::default())),
+            run_load_service: super::super::RunLoadService::new(
+                workflows_last_loaded,
+                workflows_loading_runs,
+            ),
+            header: DetailHeaderState::new(
+                gtk::Label::new(None),
+                gtk::Label::new(None),
+                controls.chips.clone(),
+            ),
+        }
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn workflow_row_is_released_when_dropped() {
+        run_gtk_test("workflow_row_is_released_when_dropped", || {
+            // Regression guard for two cycles that used to pin every workflow row:
+            // the trigger handler capturing its own expander, and the run-list model
+            // holding a header that held the very buttons whose handler owns that
+            // model. While either existed the row's 1s elapsed ticker could never
+            // stop, so rebuilt rows accumulated live timers.
+            // Both the row *and* its expander must die: a cycle that only pins the
+            // expander still leaks the whole subtree hanging off it, while the outer
+            // box is released normally.
+            let mut weaks: Vec<(String, glib::WeakRef<gtk::Widget>)> = Vec::new();
+            let (row_weak, expander_weak) = {
+                let context = row_context_stub();
+                let workflow = Workflow {
+                    id: 7,
+                    name: "CI".into(),
+                    path: ".github/workflows/ci.yml".into(),
+                };
+                let row = create_workflow_expander_row(
+                    &workflow,
+                    &context,
+                    WorkflowRowSettings {
+                        should_expand: false,
+                        initial_expanded_run_ids: Vec::new(),
+                        is_first: true,
+                    },
+                );
+                let expander = find_expander(row.clone().upcast::<gtk::Widget>())
+                    .expect("workflow row should contain an expander");
+                crate::ui::test_helpers::collect_widget_weaks(
+                    &row.clone().upcast::<gtk::Widget>(),
+                    &mut weaks,
+                );
+                (row.downgrade(), expander.downgrade())
+            };
+
+            while glib::MainContext::default().pending() {
+                let _ = glib::MainContext::default().iteration(false);
+            }
+
+            assert!(
+                row_weak.upgrade().is_none(),
+                "workflow row outlived its last strong reference — a signal handler \
+                 is holding it in a reference cycle"
+            );
+            assert!(
+                expander_weak.upgrade().is_none(),
+                "workflow expander outlived its row — a handler on a widget inside \
+                 the expander is capturing the expander itself"
+            );
+
+            // Nothing hung off the row may survive either: a cycle can pin a single
+            // button (and through it the run-list model and the pane) while the row
+            // and expander themselves are released normally.
+            let survivors: Vec<&str> = weaks
+                .iter()
+                .filter(|(_, weak)| weak.upgrade().is_some())
+                .map(|(name, _)| name.as_str())
+                .collect();
+            assert!(
+                survivors.is_empty(),
+                "widgets outlived the discarded workflow row: {survivors:?} — a \
+                 signal handler is holding them in a reference cycle. List-view \
+                 rows bind lazily and are covered by the run-row test instead."
+            );
+        });
+    }
 
     #[test]
     #[ignore = "requires GTK display"]
     fn trigger_dialog_starts_with_disabled_trigger() {
-        let Some(_guard) = gtk_test_guard("trigger_dialog_starts_with_disabled_trigger") else {
-            return;
-        };
+        run_gtk_test("trigger_dialog_starts_with_disabled_trigger", || {
+            let dialog = build_trigger_dialog("Trigger Workflow");
 
-        let dialog = build_trigger_dialog("Trigger Workflow");
-
-        assert!(dialog.has_response("cancel"));
-        assert!(dialog.has_response("trigger"));
-        assert_eq!(dialog.default_response().as_deref(), Some("trigger"));
-        assert_eq!(dialog.close_response().as_str(), "cancel");
-        assert_eq!(
-            dialog.response_appearance("trigger"),
-            adw::ResponseAppearance::Suggested
-        );
-        // The trigger action is disabled until branches and inputs finish loading.
-        assert!(!dialog.is_response_enabled("trigger"));
-        assert!(dialog.is_response_enabled("cancel"));
+            assert!(dialog.has_response("cancel"));
+            assert!(dialog.has_response("trigger"));
+            assert_eq!(dialog.default_response().as_deref(), Some("trigger"));
+            assert_eq!(dialog.close_response().as_str(), "cancel");
+            assert_eq!(
+                dialog.response_appearance("trigger"),
+                adw::ResponseAppearance::Suggested
+            );
+            // The trigger action is disabled until branches and inputs finish loading.
+            assert!(!dialog.is_response_enabled("trigger"));
+            assert!(dialog.is_response_enabled("cancel"));
+        });
     }
 }

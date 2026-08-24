@@ -835,3 +835,96 @@ msgstr "নিরাপদ টোকেন সংরক্ষণের সাম
 
 msgid "Updated bundled components help keep Actioneer stable, reliable, and up to date."
 msgstr "হালনাগাদ বান্ডেলকৃত কম্পোনেন্টগুলো Actioneer-কে স্থিতিশীল, নির্ভরযোগ্য এবং আপ-টু-ডেট রাখতে সহায়তা করে।"
+
+msgid "Workflows"
+msgstr "ওয়ার্কফ্লো"
+
+msgid "Auto-refresh is disabled."
+msgstr "স্বয়ংক্রিয় রিফ্রেশ নিষ্ক্রিয় আছে।"
+
+msgid "Data refreshes automatically every {seconds} seconds."
+msgstr "প্রতি {seconds} সেকেন্ডে ডেটা স্বয়ংক্রিয়ভাবে রিফ্রেশ হয়।"
+
+msgid "1 workflow"
+msgstr "1টি ওয়ার্কফ্লো"
+
+msgid "{count} workflows"
+msgstr "{count}টি ওয়ার্কফ্লো"
+
+msgid "Updated {when}"
+msgstr "{when} আপডেট হয়েছে"
+
+msgid "Not updated yet"
+msgstr "এখনো আপডেট হয়নি"
+
+msgid "No runs yet"
+msgstr "এখনো কোনো রান নেই"
+
+msgid "Recent runs"
+msgstr "সাম্প্রতিক রান"
+
+msgid "All on GitHub"
+msgstr "GitHub-এ সব"
+
+msgid "Showing {visible} of {overall}"
+msgstr "{overall}-এর মধ্যে {visible}টি দেখানো হচ্ছে"
+
+msgid "Showing {visible} of {filtered} matching filters"
+msgstr "ফিল্টারের সাথে মিলে যাওয়া {filtered}-এর মধ্যে {visible}টি দেখানো হচ্ছে"
+
+msgid "All"
+msgstr "সব"
+
+msgid "Active"
+msgstr "সক্রিয়"
+
+msgid "Status"
+msgstr "অবস্থা"
+
+msgid "Conclusion"
+msgstr "ফলাফল"
+
+msgid "Branch"
+msgstr "ব্রাঞ্চ"
+
+msgid "Commit"
+msgstr "কমিট"
+
+msgid "Triggered by"
+msgstr "ট্রিগার করেছেন"
+
+msgid "Event"
+msgstr "ইভেন্ট"
+
+msgid "Duration"
+msgstr "সময়কাল"
+
+msgid "Started"
+msgstr "শুরু হয়েছে"
+
+msgid "Updated"
+msgstr "আপডেট হয়েছে"
+
+msgid "OK"
+msgstr "ঠিক আছে"
+
+msgid "Saving token..."
+msgstr "টোকেন সংরক্ষণ করা হচ্ছে..."
+
+msgid "Set the application language (e.g., ru, en, zh_Hans)"
+msgstr "অ্যাপ্লিকেশনের ভাষা নির্ধারণ করুন (যেমন ru, en, zh_Hans)"
+
+msgid "Start the app with sample demo data"
+msgstr "নমুনা ডেমো ডেটা দিয়ে অ্যাপ চালু করুন"
+
+msgid "No repositories match"
+msgstr "কোনো রিপোজিটরি মেলেনি"
+
+msgid "Activity is gathered as you open repositories."
+msgstr "রিপোজিটরি খুললে কার্যকলাপ সংগ্রহ করা হয়।"
+
+msgid "{count} workflows in this state"
+msgstr "এই অবস্থায় {count}টি ওয়ার্কফ্লো"
+
+msgid "Try another filter or search term."
+msgstr "অন্য ফিল্টার বা অনুসন্ধান শব্দ চেষ্টা করুন।"

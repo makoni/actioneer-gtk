@@ -1,6 +1,8 @@
 use super::MainWindow;
 use crate::ui::sidebar::{find_first_repo_index, find_repo_index, repo_from_object};
 use gtk4::{self as gtk, glib, prelude::*};
+use parking_lot::Mutex;
+use std::sync::Arc;
 use tracing::info;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -18,6 +20,29 @@ impl MainWindow {
             let text = entry.text().to_lowercase();
             panel.update_filter_query(&text);
             window.restore_repo_selection_async();
+        });
+
+        // The pill filters reshuffle the same list, so they need the same
+        // selection restore the search path performs. The handler captures only
+        // the pieces it needs, never the window: `MainWindow` owns the panel that
+        // stores this handler, so capturing it would form a reference cycle.
+        let selection = self.repo_selection.clone();
+        let model = self.repo_filter_model.clone();
+        let selected_repo_id = self.selected_repo_id.clone();
+        let handling_selection = self.handling_selection.clone();
+        self.sidebar_panel.connect_filter_changed(move || {
+            let selection = selection.clone();
+            let model = model.clone();
+            let selected_repo_id = selected_repo_id.clone();
+            let handling_selection = handling_selection.clone();
+            glib::idle_add_local_once(move || {
+                reapply_selection_after_filter(
+                    &selection,
+                    &model,
+                    &selected_repo_id,
+                    &handling_selection,
+                );
+            });
         });
     }
 
@@ -44,8 +69,14 @@ impl MainWindow {
                 repo.as_ref().map(|r| r.full_name.as_str())
             );
 
-            if new_selection.is_none() && window.active_detail.borrow().is_some() {
-                info!("Ignoring transient deselection (detail pane is active)");
+            // GTK clears the selection synchronously whenever a filter hides the
+            // selected row, so this fires for searches and pill toggles too. The
+            // test is "a repo is open", not "a detail pane object exists": panes
+            // that are placeholders (Actions disabled) take `active_detail`, and
+            // treating their deselect as a real one closed the repo and let the
+            // next rebuild jump to an unrelated one.
+            if new_selection.is_none() && current_selection.is_some() {
+                info!("Ignoring transient deselection (a repository is open)");
                 return;
             }
 
@@ -105,6 +136,31 @@ impl MainWindow {
     pub(super) fn restore_repo_selection_now(&self) {
         let target = *self.selected_repo_id.lock();
 
+        // A repo that is open but merely filtered out of the sidebar must stay
+        // open: the plan below falls back to the first visible repo, which would
+        // otherwise swap the detail pane on every list rebuild (a favourite being
+        // toggled, a refresh, a status task completing).
+        let active_repo_id = self
+            .active_detail
+            .borrow()
+            .as_ref()
+            .map(|pane| pane.repo().id);
+        // `find_repo_index` returning None covers two different situations: the
+        // repo is hidden by the filter (keep it open), or it is gone entirely —
+        // deleted, transferred, access revoked — in which case falling through to
+        // the normal plan is what stops the pane from being stranded on it.
+        let repo_still_exists = self.repos.lock().iter().any(|repo| Some(repo.id) == target);
+        if let (Some(target), Some(active)) = (target, active_repo_id)
+            && target == active
+            && repo_still_exists
+            && find_repo_index(&self.repo_filter_model, target).is_none()
+        {
+            *self.handling_selection.lock() = true;
+            self.repo_selection.set_selected(gtk::INVALID_LIST_POSITION);
+            *self.handling_selection.lock() = false;
+            return;
+        }
+
         *self.handling_selection.lock() = true;
         let restored_repo_id =
             restore_sidebar_selection(&self.repo_selection, &self.repo_filter_model, target);
@@ -113,6 +169,34 @@ impl MainWindow {
 
         self.ensure_detail_matches_selection();
     }
+}
+
+/// Re-applies the sidebar highlight after a pill filter changed.
+///
+/// Unlike the full restore, this never clears the selection: a repo hidden by the
+/// filter is still the one open in the detail pane, and closing that pane because
+/// the sidebar list narrowed would lose the user's place.
+fn reapply_selection_after_filter(
+    selection: &gtk::SingleSelection,
+    model: &gtk::FilterListModel,
+    selected_repo_id: &Arc<Mutex<Option<i64>>>,
+    handling_selection: &Arc<Mutex<bool>>,
+) {
+    let target = *selected_repo_id.lock();
+    let index = target.and_then(|target| find_repo_index(model, target));
+
+    // Held across both branches: a bare deselect notify would reach
+    // `connect_repo_selection` as "user picked nothing", which closes a repo
+    // whose pane is a placeholder (e.g. Actions disabled) rather than a detail.
+    *handling_selection.lock() = true;
+    match index {
+        // The open repo survived the filter — put the highlight back on it.
+        Some(index) => selection.set_selected(index),
+        // It was filtered out: clear the highlight but keep the pane, so the
+        // stale index cannot paint selection styling onto a section header.
+        None => selection.set_selected(gtk::INVALID_LIST_POSITION),
+    }
+    *handling_selection.lock() = false;
 }
 
 pub(super) fn restore_sidebar_selection(

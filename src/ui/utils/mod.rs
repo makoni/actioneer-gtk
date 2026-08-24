@@ -10,3 +10,12 @@ pub use layout::{create_detail_clamp, create_sidebar_clamp};
 pub use rate_limit::update_rate_limit_label;
 pub use source::try_remove_source;
 pub use workflow_run::{is_run_active, is_run_failure};
+
+mod icons;
+pub use icons::favorite_icon_name;
+
+mod a11y;
+pub use a11y::describe_control;
+
+mod typography;
+pub use typography::section_heading;

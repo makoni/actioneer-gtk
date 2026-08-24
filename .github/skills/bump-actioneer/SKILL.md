@@ -203,6 +203,6 @@ At the end, report:
 
 If the release process changes, keep this skill aligned with:
 
-- `.github/instructions/version-bump.instructions.md`
+- `docs/version-bump.md`
 - `release-context.md`
 - the actual version-bearing files in the repository

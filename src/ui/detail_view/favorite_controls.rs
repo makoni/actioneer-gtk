@@ -69,55 +69,59 @@ pub(super) fn setup_favorite_button(
     }
 }
 
+/// Mirrors the favourite state onto `button` until the returned handle is
+/// aborted. Without aborting it, a replaced pane's observer sleeps on the
+/// broadcast channel until the next favourite change anywhere in the app.
 pub(super) fn observe_favorites(
     button: &gtk::ToggleButton,
     repo_id: i64,
     favorites_manager: Option<Arc<FavoritesManager>>,
-) {
-    if let Some(manager) = favorites_manager {
-        let receiver = manager.subscribe();
-        let button_weak = button.downgrade();
-
-        let (sender, receiver_channel) =
-            glib::MainContext::default().channel::<bool>(glib::Priority::default());
-
-        receiver_channel.attach(None, move |is_favorite| {
-            let Some(button) = button_weak.upgrade() else {
-                return glib::ControlFlow::Break;
-            };
-            if button.is_active() != is_favorite {
-                button.set_active(is_favorite);
-            }
-            update_detail_favorite_button(&button, is_favorite);
-
-            glib::ControlFlow::Continue
-        });
-
-        crate::runtime_handle().spawn(async move {
-            let mut receiver_local = receiver;
-
-            if sender
-                .send(receiver_local.borrow().contains(&repo_id))
-                .is_err()
-            {
-                return;
-            }
-
-            loop {
-                if receiver_local.changed().await.is_err() {
-                    break;
-                }
-
-                let is_favorite = receiver_local.borrow().contains(&repo_id);
-                if sender.send(is_favorite).is_err() {
-                    break;
-                }
-            }
-        });
-    } else {
+) -> Option<tokio::task::JoinHandle<()>> {
+    let Some(manager) = favorites_manager else {
         update_detail_favorite_button(button, false);
         button.set_sensitive(false);
-    }
+        return None;
+    };
+
+    let receiver = manager.subscribe();
+    let button_weak = button.downgrade();
+
+    let (sender, receiver_channel) =
+        glib::MainContext::default().channel::<bool>(glib::Priority::default());
+
+    receiver_channel.attach(None, move |is_favorite| {
+        let Some(button) = button_weak.upgrade() else {
+            return glib::ControlFlow::Break;
+        };
+        if button.is_active() != is_favorite {
+            button.set_active(is_favorite);
+        }
+        update_detail_favorite_button(&button, is_favorite);
+
+        glib::ControlFlow::Continue
+    });
+
+    Some(crate::runtime_handle().spawn(async move {
+        let mut receiver_local = receiver;
+
+        if sender
+            .send(receiver_local.borrow().contains(&repo_id))
+            .is_err()
+        {
+            return;
+        }
+
+        loop {
+            if receiver_local.changed().await.is_err() {
+                break;
+            }
+
+            let is_favorite = receiver_local.borrow().contains(&repo_id);
+            if sender.send(is_favorite).is_err() {
+                break;
+            }
+        }
+    }))
 }
 
 fn update_detail_favorite_button(button: &gtk::ToggleButton, is_active: bool) {
@@ -135,25 +139,45 @@ fn update_detail_favorite_button(button: &gtk::ToggleButton, is_active: bool) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn observing_favorites_keeps_the_button_sensitive() {
+        run_gtk_test("observing_favorites_keeps_the_button_sensitive", || {
+            crate::init_test_runtime();
+            let manager = FavoritesManager::new().expect("favorites manager builds");
+            let button = gtk::ToggleButton::new();
+            button.set_sensitive(true);
+
+            let observer = observe_favorites(&button, i64::MAX, Some(Arc::new(manager)));
+
+            assert!(
+                button.is_sensitive(),
+                "observing must not disable the favorite button"
+            );
+
+            if let Some(observer) = observer {
+                observer.abort();
+            }
+        });
+    }
 
     #[test]
     #[ignore = "requires GTK display"]
     fn update_detail_favorite_button_toggles_css_classes() {
-        let Some(_guard) = gtk_test_guard("update_detail_favorite_button_toggles_css_classes")
-        else {
-            return;
-        };
-        let button = gtk::ToggleButton::new();
+        run_gtk_test("update_detail_favorite_button_toggles_css_classes", || {
+            let button = gtk::ToggleButton::new();
 
-        update_detail_favorite_button(&button, true);
-        assert!(button.has_css_class("suggested-action"));
-        assert!(!button.has_css_class("flat"));
-        assert_eq!(button.opacity(), 1.0);
+            update_detail_favorite_button(&button, true);
+            assert!(button.has_css_class("suggested-action"));
+            assert!(!button.has_css_class("flat"));
+            assert_eq!(button.opacity(), 1.0);
 
-        update_detail_favorite_button(&button, false);
-        assert!(button.has_css_class("flat"));
-        assert!(!button.has_css_class("suggested-action"));
-        assert!((button.opacity() - 0.5).abs() < 0.01);
+            update_detail_favorite_button(&button, false);
+            assert!(button.has_css_class("flat"));
+            assert!(!button.has_css_class("suggested-action"));
+            assert!((button.opacity() - 0.5).abs() < 0.01);
+        });
     }
 }

@@ -18,7 +18,6 @@ pub(crate) struct JobRefreshContext {
     run_id: i64,
     expander: gtk::Expander,
     jobs_box: gtk::Box,
-    badges_box: Option<gtk::Box>,
     parent_window: gtk::Window,
     repo_model: Repo,
     branch: Option<String>,
@@ -35,7 +34,6 @@ pub(crate) struct JobRefreshContextParams {
     pub run_id: i64,
     pub expander: gtk::Expander,
     pub jobs_box: gtk::Box,
-    pub badges_box: Option<gtk::Box>,
     pub parent_window: gtk::Window,
     pub repo_model: Repo,
     pub branch: Option<String>,
@@ -54,7 +52,6 @@ impl JobRefreshContext {
             run_id: params.run_id,
             expander: params.expander,
             jobs_box: params.jobs_box,
-            badges_box: params.badges_box,
             parent_window: params.parent_window,
             repo_model: params.repo_model,
             branch: params.branch,
@@ -100,10 +97,6 @@ impl JobRefreshContext {
 
     pub(crate) fn jobs_box(&self) -> gtk::Box {
         self.jobs_box.clone()
-    }
-
-    pub(crate) fn badges_box(&self) -> Option<gtk::Box> {
-        self.badges_box.clone()
     }
 
     pub(crate) fn parent_window(&self) -> gtk::Window {
@@ -156,7 +149,7 @@ mod tests {
     use super::*;
     use crate::api::GitHubClient;
     use crate::api::models::{Repo, User};
-    use crate::ui::test_helpers::gtk_test_guard;
+    use crate::ui::test_helpers::run_gtk_test;
     use parking_lot::Mutex;
     use std::cell::RefCell;
     use std::collections::HashMap;
@@ -192,7 +185,6 @@ mod tests {
             run_id,
             expander: expander.clone(),
             jobs_box: gtk::Box::new(gtk::Orientation::Vertical, 0),
-            badges_box: None,
             parent_window: gtk::Window::new(),
             repo_model: repo_stub(),
             branch: Some("main".into()),
@@ -205,30 +197,34 @@ mod tests {
     #[test]
     #[ignore = "requires GTK display"]
     fn current_job_context_run_ids_only_preserve_expanded_contexts() {
-        let Some(_guard) =
-            gtk_test_guard("current_job_context_run_ids_only_preserve_expanded_contexts")
-        else {
-            return;
-        };
+        run_gtk_test(
+            "current_job_context_run_ids_only_preserve_expanded_contexts",
+            || {
+                // `should_preserve_expansion` also requires the expander to be
+                // rooted, so the tree has to hang off a real window — without one
+                // `root()` is None and every context looks collapsed.
+                let window = gtk::Window::new();
+                let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
+                window.set_child(Some(&root));
 
-        let root = gtk::Box::new(gtk::Orientation::Vertical, 0);
+                let expanded = gtk::Expander::new(None);
+                expanded.set_expanded(true);
+                root.append(&expanded);
 
-        let expanded = gtk::Expander::new(None);
-        expanded.set_expanded(true);
-        root.append(&expanded);
+                let collapsed = gtk::Expander::new(None);
+                collapsed.set_expanded(false);
+                root.append(&collapsed);
 
-        let collapsed = gtk::Expander::new(None);
-        collapsed.set_expanded(false);
-        root.append(&collapsed);
+                let contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
+                contexts
+                    .borrow_mut()
+                    .insert(11, context_for(&expanded, 11, 7));
+                contexts
+                    .borrow_mut()
+                    .insert(22, context_for(&collapsed, 22, 7));
 
-        let contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
-        contexts
-            .borrow_mut()
-            .insert(11, context_for(&expanded, 11, 7));
-        contexts
-            .borrow_mut()
-            .insert(22, context_for(&collapsed, 22, 7));
-
-        assert_eq!(current_job_context_run_ids(&contexts, 7), vec![11]);
+                assert_eq!(current_job_context_run_ids(&contexts, 7), vec![11]);
+            },
+        );
     }
 }
