@@ -22,7 +22,7 @@ pub(crate) fn i18n_test_guard() -> std::sync::MutexGuard<'static, ()> {
 }
 
 pub fn init(cli_locale: Option<&str>) {
-    let _ = setlocale(LocaleCategory::LcAll, "");
+    let _ = unsafe { setlocale(LocaleCategory::LcAll, "") };
     let locale_dir = locale_dir();
     let _ = bindtextdomain(GETTEXT_PACKAGE, &locale_dir);
     let _ = bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
@@ -47,7 +47,7 @@ pub fn apply_language_preference(preference: LanguagePreference) -> bool {
 
     set_effective_language(effective_language);
     let locale = locale_for_setlocale(current_effective_language().as_str()).unwrap_or("");
-    let _ = setlocale(LocaleCategory::LcAll, locale);
+    let _ = unsafe { setlocale(LocaleCategory::LcAll, locale) };
     changed
 }
 
