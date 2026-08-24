@@ -22,7 +22,7 @@ futures = "0.3"
 serde = { version = "1.0", features = ["derive", "rc"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
-base64 = "0.22"
+base64 = "0.23"
 
 # Secret storage
 keyring = "4.1"
