@@ -464,7 +464,12 @@ mod tests {
             let mut weaks: Vec<(String, glib::WeakRef<gtk::Widget>)> = Vec::new();
             let weak = {
                 let context = context_stub();
-                let row = create_run_expander_row(&run_stub(), &context, false);
+                // A running run with a start also runs the wall-clock duration
+                // ticker; the release must survive it.
+                let mut run = run_stub();
+                run.status = Some("in_progress".into());
+                run.run_started_at = Some("2024-01-01T00:00:00Z".into());
+                let row = create_run_expander_row(&run, &context, false);
                 crate::ui::test_helpers::collect_widget_weaks(
                     &row.clone().upcast::<gtk::Widget>(),
                     &mut weaks,

@@ -1,3 +1,4 @@
+use super::duration::{running_duration_string, start_live_text};
 use crate::api::models::{Job, WorkflowRun};
 use crate::i18n::tr;
 use gtk4::prelude::*;
@@ -87,6 +88,53 @@ pub(crate) fn format_workflow_meta(run: &WorkflowRun) -> String {
     parts.join(" · ")
 }
 
+/// The meta of a run row after its branch: `<actor> · <duration> · <when>`.
+///
+/// `live_elapsed` is the wall-clock `mm:ss` while the run is still going; once
+/// it is done, GitHub's own duration applies.
+fn run_meta_rest_text(run: &WorkflowRun, live_elapsed: Option<&str>) -> String {
+    let mut rest = Vec::new();
+    if let Some(actor) = run.actor_login() {
+        rest.push(actor);
+    }
+    if let Some(duration) = live_elapsed
+        .map(str::to_owned)
+        .or_else(|| run.run_duration_string())
+    {
+        rest.push(duration);
+    }
+    let when = run.relative_time_string();
+    if !when.is_empty() {
+        rest.push(when);
+    }
+
+    rest.join(" · ")
+}
+
+/// `Some(started_at)` when a run row should count up from the wall clock.
+///
+/// A dispatched run is active from the moment it appears in the list — first
+/// `queued`, then `in_progress` — but GitHub only reports `run_started_at` once
+/// it actually starts. Count from the real start, falling back to when the run
+/// was created, so the timer is live immediately instead of sitting at `00:00`
+/// until the first job reports in.
+fn run_live_start(run: &WorkflowRun) -> Option<String> {
+    if !run.is_active() {
+        return None;
+    }
+    run.run_started_at
+        .clone()
+        .or_else(|| run.created_at.clone())
+        .or_else(|| run.updated_at.clone())
+}
+
+/// One tick of a live run meta: the elapsed time since the start, re-joined
+/// with the actor and the start time.
+fn run_meta_live_text(run: &WorkflowRun, started_at: &str) -> Option<String> {
+    running_duration_string(Some(&started_at.to_string()))
+        .map(|elapsed| run_meta_rest_text(run, Some(&elapsed)))
+}
+
 /// Fills `container` with the run meta line:
 /// `<branch>` (mono) `· <actor> · <duration> · <when>`.
 pub(crate) fn populate_run_meta(container: &gtk::Box, run: &WorkflowRun) {
@@ -110,19 +158,13 @@ pub(crate) fn populate_run_meta(container: &gtk::Box, run: &WorkflowRun) {
         container.append(&branch_label);
     }
 
-    let mut rest = Vec::new();
-    if let Some(actor) = run.actor_login() {
-        rest.push(actor);
-    }
-    if let Some(duration) = run.run_duration_string() {
-        rest.push(duration);
-    }
-    let when = run.relative_time_string();
-    if !when.is_empty() {
-        rest.push(when);
-    }
+    let live = run_live_start(run);
+    let live_elapsed = live
+        .as_ref()
+        .and_then(|started_at| running_duration_string(Some(started_at)));
+    let rest_text = run_meta_rest_text(run, live_elapsed.as_deref());
 
-    if !rest.is_empty() {
+    if !rest_text.is_empty() {
         if container.first_child().is_some() {
             let separator = gtk::Label::new(Some("·"));
             separator.add_css_class("dim-label");
@@ -130,11 +172,18 @@ pub(crate) fn populate_run_meta(container: &gtk::Box, run: &WorkflowRun) {
             container.append(&separator);
         }
 
-        let rest_label = gtk::Label::new(Some(&rest.join(" · ")));
+        let rest_label = gtk::Label::new(Some(&rest_text));
         rest_label.add_css_class("dim-label");
         rest_label.add_css_class("caption");
         rest_label.set_ellipsize(pango::EllipsizeMode::End);
         container.append(&rest_label);
+
+        if let Some(started_at) = live {
+            let run_for_ticker = run.clone();
+            start_live_text(&rest_label, move || {
+                run_meta_live_text(&run_for_ticker, &started_at)
+            });
+        }
     }
 
     container.set_visible(container.first_child().is_some());
@@ -352,6 +401,129 @@ mod tests {
             assert_eq!(first.text().as_str(), "main");
             assert!(first.has_css_class("mono"));
             assert!(container.is_visible());
+        });
+    }
+
+    #[test]
+    fn run_meta_rest_text_prefers_the_live_elapsed() {
+        let _guard = i18n_test_guard();
+        init(None);
+
+        let mut run = run_stub();
+        run.status = Some("in_progress".into());
+        run.run_started_at = Some("2024-01-01T00:00:00Z".into());
+        run.updated_at = Some("2024-01-01T00:00:05Z".into());
+
+        let text = run_meta_rest_text(&run, Some("01:23"));
+        assert!(
+            text.contains("01:23"),
+            "the live elapsed must show while running"
+        );
+        assert!(
+            !text.contains("00:05"),
+            "the API duration must not leak into a live row"
+        );
+    }
+
+    #[test]
+    fn run_meta_rest_text_falls_back_to_the_api_duration() {
+        let _guard = i18n_test_guard();
+        init(None);
+
+        let mut run = run_stub();
+        run.status = Some("completed".into());
+        run.conclusion = Some("success".into());
+        run.run_started_at = Some("2024-01-01T00:00:00Z".into());
+        run.updated_at = Some("2024-01-01T00:00:45Z".into());
+
+        let text = run_meta_rest_text(&run, None);
+        assert!(
+            text.contains("00:45"),
+            "a finished run shows GitHub's duration"
+        );
+    }
+
+    #[test]
+    fn a_live_run_counts_from_the_best_known_start() {
+        let _guard = i18n_test_guard();
+        init(None);
+
+        let created = "2026-01-24T10:00:00Z".to_string();
+        let started = "2026-01-24T10:00:05Z".to_string();
+        let mut run = run_stub();
+
+        // Finished: GitHub's duration is authoritative, nothing should count.
+        run.status = Some("completed".into());
+        run.run_started_at = Some(started.clone());
+        assert_eq!(run_live_start(&run), None);
+
+        // Executing: count from the real start.
+        run.status = Some("in_progress".into());
+        assert_eq!(run_live_start(&run), Some(started.clone()));
+
+        // Just dispatched: still active, so the timer stays live even before
+        // GitHub confirms the start.
+        run.status = Some("queued".into());
+        assert_eq!(run_live_start(&run), Some(started.clone()));
+
+        // No confirmed start yet (freshly queued): fall back to when the run
+        // was created so it is live from the moment it appears in the list.
+        run.run_started_at = None;
+        run.created_at = Some(created.clone());
+        assert_eq!(run_live_start(&run), Some(created.clone()));
+
+        // No creation time either: last resort is `updated_at`.
+        run.created_at = None;
+        run.updated_at = Some("2026-01-24T10:00:01Z".into());
+        assert_eq!(run_live_start(&run), Some("2026-01-24T10:00:01Z".into()));
+
+        // An active run with no timestamps at all has nothing to count from.
+        run.updated_at = None;
+        assert_eq!(run_live_start(&run), None);
+    }
+
+    #[test]
+    fn run_meta_live_text_counts_from_the_start() {
+        let _guard = i18n_test_guard();
+        init(None);
+
+        let mut run = run_stub();
+        run.status = Some("in_progress".into());
+        let started = (chrono::Utc::now() - chrono::Duration::seconds(65)).to_rfc3339();
+        run.run_started_at = Some(started.clone());
+
+        let live =
+            run_meta_live_text(&run, &started).expect("a running run with a start counts up");
+        assert!(
+            live.contains("01:05") || live.contains("01:06"),
+            "expected the live minute:second count, got {live}"
+        );
+
+        // A start GitHub never reported cannot be counted.
+        assert_eq!(run_meta_live_text(&run, "not a timestamp"), None);
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn run_meta_counts_up_while_the_run_is_live() {
+        run_gtk_test("run_meta_counts_up_while_the_run_is_live", || {
+            let mut run = run_stub();
+            run.status = Some("in_progress".into());
+            run.run_started_at =
+                Some((chrono::Utc::now() - chrono::Duration::seconds(65)).to_rfc3339());
+
+            let container = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+            populate_run_meta(&container, &run);
+
+            let rest = container
+                .last_child()
+                .and_then(|child| child.downcast::<gtk::Label>().ok())
+                .expect("rest label");
+            let text = rest.text();
+            assert!(
+                text.contains("01:05") || text.contains("01:06"),
+                "expected the live minute:second count, got {text}"
+            );
         });
     }
 }

@@ -1,5 +1,6 @@
 use super::RunLoadService;
 use super::context::{JobContextMap, RunBadgeSummaryMap};
+use super::duration::running_duration_string;
 use super::formatting::{
     format_workflow_meta, get_run_status_class, get_run_status_icon, workflow_status_text,
 };
@@ -156,32 +157,12 @@ struct ElapsedTicker {
     counts: Option<(i32, i32)>,
 }
 
-/// Elapsed `mm:ss` (or `h:mm:ss`) since the given RFC 3339 timestamp.
-fn elapsed_since(started_at: &str) -> Option<String> {
-    let started = chrono::DateTime::parse_from_rfc3339(started_at).ok()?;
-    let seconds = chrono::Utc::now()
-        .signed_duration_since(started.with_timezone(&chrono::Utc))
-        .num_seconds()
-        .max(0);
-
-    if seconds < 3600 {
-        Some(format!("{:02}:{:02}", seconds / 60, seconds % 60))
-    } else {
-        Some(format!(
-            "{}:{:02}:{:02}",
-            seconds / 3600,
-            (seconds % 3600) / 60,
-            seconds % 60
-        ))
-    }
-}
-
 fn render_progress_label(
     label: &gtk::Label,
     started_at: &Option<String>,
     counts: &Option<(i32, i32)>,
 ) {
-    let elapsed = started_at.as_deref().and_then(elapsed_since);
+    let elapsed = running_duration_string(started_at.as_ref());
     let text = match (counts, elapsed) {
         (Some((done, total)), Some(elapsed)) if *total > 0 => {
             format!("{done} / {total} · {elapsed}")

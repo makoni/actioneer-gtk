@@ -1,4 +1,5 @@
 mod context;
+mod duration;
 mod formatting;
 mod jobs;
 mod run_loader;

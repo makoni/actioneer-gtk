@@ -1,6 +1,7 @@
 use super::context::{
     JobContextMap, JobRefreshContext, JobRefreshContextParams, RunBadgeSummaryMap,
 };
+use super::duration::{is_in_progress, live_start, running_duration_string, start_live_duration};
 use super::formatting::{get_job_status_class, get_job_status_icon};
 use super::runs::WorkflowRunListModel;
 use super::status_dot::{JOB_DOT_SIZE, STEP_DOT_SIZE, build_status_dot};
@@ -45,82 +46,6 @@ pub(super) struct JobRowContext {
     /// Every job of the run, so the log window can offer the others in its
     /// sidebar instead of trapping the reader in the one row they clicked.
     pub(super) run_jobs: Arc<Vec<Job>>,
-}
-
-/// Elapsed `mm:ss` (or `h:mm:ss`) for a job/step that is still running.
-fn running_duration_string(started_at: Option<&String>) -> Option<String> {
-    let started = chrono::DateTime::parse_from_rfc3339(started_at?).ok()?;
-    let seconds = chrono::Utc::now()
-        .signed_duration_since(started.with_timezone(&chrono::Utc))
-        .num_seconds()
-        .max(0);
-
-    Some(format_elapsed(seconds))
-}
-
-fn format_elapsed(seconds: i64) -> String {
-    if seconds < 3600 {
-        format!("{:02}:{:02}", seconds / 60, seconds % 60)
-    } else {
-        format!(
-            "{}:{:02}:{:02}",
-            seconds / 3600,
-            (seconds % 3600) / 60,
-            seconds % 60
-        )
-    }
-}
-
-/// One tick of a live duration label. Split out from the timer so it can be
-/// tested without waiting on the clock.
-fn tick_duration_label(label: &gtk::Label, started_at: &str) -> glib::ControlFlow {
-    // Job rows are rebuilt wholesale on every refresh. A ticker that kept
-    // running against a detached label would leak one source per refresh, and
-    // each would still be holding its label alive.
-    if label.root().is_none() {
-        return glib::ControlFlow::Break;
-    }
-
-    match running_duration_string(Some(&started_at.to_string())) {
-        Some(text) => {
-            if label.text() != text {
-                label.set_text(&text);
-            }
-            glib::ControlFlow::Continue
-        }
-        None => glib::ControlFlow::Break,
-    }
-}
-
-/// Counts up once a second, so a running job or step shows time passing instead
-/// of freezing at whatever the last poll happened to report.
-fn start_live_duration(label: &gtk::Label, started_at: String) {
-    let label_weak = label.downgrade();
-    glib::timeout_add_seconds_local(1, move || match label_weak.upgrade() {
-        Some(label) => tick_duration_label(&label, &started_at),
-        None => glib::ControlFlow::Break,
-    });
-}
-
-/// `Some(started_at)` when a label should keep counting: the item is executing
-/// and GitHub has not yet reported a final duration for it.
-fn live_start(
-    final_duration: Option<String>,
-    status: Option<&str>,
-    started_at: Option<&String>,
-) -> Option<String> {
-    if final_duration.is_some() || !is_in_progress(status) {
-        return None;
-    }
-    started_at.cloned()
-}
-
-/// `started_at` is also set while a job/step is still queued, so the wall-clock
-/// fallback is only correct once it is actually executing — otherwise a queued
-/// item would show a ticking timer, and one that never completed would show a
-/// value that keeps growing on every refresh.
-fn is_in_progress(status: Option<&str>) -> bool {
-    matches!(status, Some("in_progress"))
 }
 
 fn job_duration_label_text(job: &Job) -> Option<String> {
@@ -701,75 +626,6 @@ mod tests {
     }
 
     #[test]
-    fn elapsed_is_formatted_as_minutes_then_hours() {
-        assert_eq!(format_elapsed(0), "00:00");
-        assert_eq!(format_elapsed(65), "01:05");
-        assert_eq!(format_elapsed(3599), "59:59");
-        assert_eq!(format_elapsed(3661), "1:01:01");
-    }
-
-    #[test]
-    fn only_a_running_item_without_a_final_duration_ticks() {
-        let started = "2026-01-24T10:00:00Z".to_string();
-
-        // Finished: GitHub reported the real duration, so nothing should count.
-        assert_eq!(
-            live_start(Some("18s".into()), Some("completed"), Some(&started)),
-            None
-        );
-        // Queued items carry `started_at` (queue time) but are not executing.
-        assert_eq!(live_start(None, Some("queued"), Some(&started)), None);
-        // Running but GitHub has not told us when — nothing to count from.
-        assert_eq!(live_start(None, Some("in_progress"), None), None);
-
-        assert_eq!(
-            live_start(None, Some("in_progress"), Some(&started)),
-            Some(started)
-        );
-    }
-
-    #[test]
-    #[ignore = "requires GTK display"]
-    fn live_duration_ticks_while_attached_and_stops_once_detached() {
-        run_gtk_test(
-            "live_duration_ticks_while_attached_and_stops_once_detached",
-            || {
-                let label = gtk::Label::new(Some("--"));
-                let window = gtk::Window::new();
-                window.set_child(Some(&label));
-
-                let started = (chrono::Utc::now() - chrono::Duration::seconds(65)).to_rfc3339();
-                assert_eq!(
-                    tick_duration_label(&label, &started),
-                    glib::ControlFlow::Continue
-                );
-                assert!(
-                    ["01:05", "01:06"].contains(&label.text().as_str()),
-                    "expected a live minute:second count, got {:?}",
-                    label.text()
-                );
-
-                // A step that never reported a start cannot be counted: stop rather
-                // than tick forever against nothing.
-                assert_eq!(
-                    tick_duration_label(&label, "not a timestamp"),
-                    glib::ControlFlow::Break
-                );
-
-                // Job rows are rebuilt on every refresh; the old label's ticker has
-                // to die with it or each refresh leaves another source running.
-                window.set_child(None::<&gtk::Widget>);
-                assert_eq!(
-                    tick_duration_label(&label, &started),
-                    glib::ControlFlow::Break
-                );
-
-                window.destroy();
-            },
-        );
-    }
-
-    #[test]
     fn duration_fallback_only_applies_while_running() {
         // A queued step carries `started_at` (queue time) but must not tick.
         assert_eq!(
@@ -871,20 +727,6 @@ mod tests {
             finish_job_load(&expander);
             assert!(try_begin_job_load(&expander));
         });
-    }
-
-    #[test]
-    fn running_duration_formats_mm_ss() {
-        let started = (chrono::Utc::now() - chrono::Duration::seconds(72)).to_rfc3339();
-        assert_eq!(
-            running_duration_string(Some(&started)),
-            Some("01:12".into())
-        );
-
-        let long = (chrono::Utc::now() - chrono::Duration::seconds(3661)).to_rfc3339();
-        assert_eq!(running_duration_string(Some(&long)), Some("1:01:01".into()));
-
-        assert_eq!(running_duration_string(None), None);
     }
 
     #[test]
