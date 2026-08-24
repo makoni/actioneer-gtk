@@ -187,14 +187,6 @@ const APP_CSS: &str = r#"
     font-weight: 700;
 }
 
-.step-row {
-    border-radius: 6px;
-}
-
-.step-row:hover {
-    background-color: alpha(currentColor, 0.05);
-}
-
 /* Small ghost icon buttons used on workflow/run/job rows. */
 .row-action-btn {
     min-width: 30px;

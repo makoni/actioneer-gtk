@@ -69,7 +69,6 @@ pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -
     job_box.set_hexpand(true);
     job_box.set_overflow(gtk::Overflow::Hidden);
     job_box.add_css_class("job-card");
-    job_box.add_css_class("hoverless-row");
 
     let header_row = gtk::Box::new(gtk::Orientation::Horizontal, 10);
     header_row.set_valign(gtk::Align::Center);
@@ -182,7 +181,6 @@ pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -
 fn create_job_step_row(step: &JobStep, display_number: usize) -> gtk::Box {
     let row = gtk::Box::new(gtk::Orientation::Horizontal, 9);
     row.set_hexpand(true);
-    row.add_css_class("step-row");
     row.set_margin_top(1);
     row.set_margin_bottom(1);
 
