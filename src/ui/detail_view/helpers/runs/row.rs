@@ -181,10 +181,15 @@ fn build_expander(run: &WorkflowRun) -> gtk::Expander {
     expander.set_hexpand(true);
     expander.set_valign(gtk::Align::Center);
     expander.set_widget_name(&format!("run_{}", run.id));
+    // Horizontal breathing room around the disclosure arrow: `margin_start`
+    // insets the arrow from the row edge, the header's `margin_start` below
+    // leaves a gap between the arrow and the row content.
+    expander.set_margin_start(6);
 
     let header_box = gtk::Box::new(gtk::Orientation::Horizontal, 11);
     header_box.set_hexpand(true);
     header_box.set_valign(gtk::Align::Center);
+    header_box.set_margin_start(6);
 
     let status_dot = build_status_dot(
         get_run_status_icon(run),
@@ -248,7 +253,10 @@ fn build_expander(run: &WorkflowRun) -> gtk::Expander {
 
 fn build_jobs_placeholder() -> gtk::Box {
     let jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 8);
-    jobs_box.set_margin_start(36);
+    // Keeps the job cards aligned under the run title: the title sits 6px
+    // further in than before (the header's disclosure gap), so the jobs shift
+    // by the same amount to stay in line.
+    jobs_box.set_margin_start(42);
     jobs_box.set_margin_end(12);
     jobs_box.set_margin_top(2);
     jobs_box.set_margin_bottom(12);

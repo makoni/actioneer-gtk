@@ -414,6 +414,10 @@ pub(crate) fn create_workflow_expander_row(
     header_box.append(&actions_box);
 
     let expander = gtk::Expander::new(None);
+    // Horizontal breathing room around the disclosure arrow: `margin_start`
+    // insets the arrow from the card edge, the header's own `margin_start`
+    // (set above) leaves a gap between the arrow and the row content.
+    expander.set_margin_start(6);
     expander.set_label_widget(Some(&header_box));
     expander.set_widget_name(&format!("workflow_{}", workflow.id));
     set_data(&expander, "actioneer-workflow-name", workflow.name.clone());
