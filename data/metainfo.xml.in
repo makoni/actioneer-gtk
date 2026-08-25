@@ -104,6 +104,7 @@
           <li>The workflow detail pane was redesigned: workflows, runs, jobs, and steps now expand inline in one place, without opening extra windows.</li>
           <li>Running jobs and steps now show live durations.</li>
           <li>Italian and Japanese translations added; Actioneer is now available in 14 languages.</li>
+          <li>Reviewed and completed the existing translations: every remaining untranslated string is now translated in all languages, with diacritics and wording corrected.</li>
           <li>Updated bundled components help keep Actioneer reliable and up to date.</li>
         </ul>
       </description>

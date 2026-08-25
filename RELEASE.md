@@ -7,13 +7,14 @@ A redesigned workflow detail pane, live durations, two new languages, and a demo
 - Redesigned the repo detail pane: workflows, runs, jobs, and steps expand inline in one accordion view.
 - Running jobs and steps now show live durations.
 - Italian and Japanese translations added (14 languages total).
+- Audited and completed the existing translations: all remaining untranslated strings are now translated in every language, with diacritics and wording fixes.
 - Added a `--demo` launch mode with sample data for trying the app without an account.
 - Updated bundled components to keep Actioneer reliable and up to date.
 
 ## What's changed
 
 - **Workflows pane redesign**: workflows, runs, jobs, and steps now expand inline in the detail pane — no popup windows — with round tinted status dots, live run/job durations, and per-run actions (logs, trigger, cancel) in place.
-- **Localization**: Italian and Japanese added across the app and listing metadata; 14 languages total.
+- **Localization**: Italian and Japanese added across the app and listing metadata (14 languages total); the existing translations were then audited and completed — every remaining untranslated string is now translated in every language, with diacritics and wording fixes (German umlauts, French/Spanish/Portuguese accents, Dutch loanword consistency).
 - **Demo mode**: launch with `--demo` to explore the full UI with bundled sample repositories, runs, and logs.
 - **Hover cleanup**: non-interactive step rows and job cards no longer light up on hover, matching GNOME guidance for non-actionable rows.
 - **Dependency refresh**: updated `Cargo.lock` (base64 0.23, gettext-rs 0.8, futures 0.3.34, thiserror 2.0.20, keyring 4.1.6, open 5.4.2) and regenerated Flatpak cargo sources.

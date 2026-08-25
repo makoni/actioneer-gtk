@@ -942,6 +942,9 @@ msgid "Italian and Japanese translations added; Actioneer is now available in 14
 msgstr "Italiaanse en Japanse vertoningen toegevoegd; Actioneer is nu beschikbaar in 14 "
 "talen."
 
+msgid "Reviewed and completed the existing translations: every remaining untranslated string is now translated in all languages, with diacritics and wording corrected."
+msgstr "De bestaande vertalingen zijn gecontroleerd en aangevuld: alle nog niet vertaalde teksten zijn nu in elke taal vertaald, met correcties aan diakritische tekens en woordkeuze."
+
 msgid "Updated bundled components help keep Actioneer reliable and up to date."
 msgstr "Bijgewerkede meegeleverde componenten helpen Actioneer betrouwbaar en actueel "
 "te houden."
