@@ -643,6 +643,9 @@ msgstr "Aggiorna log"
 msgid "Copy logs to clipboard"
 msgstr "Copia i log negli appunti"
 
+msgid "Unable to access the clipboard"
+msgstr "Impossibile accedere agli appunti"
+
 #: src/ui/job_logs_window.rs:126
 msgid "Save logs to file"
 msgstr "Salva i log in un file"

@@ -213,43 +213,43 @@ msgid "Switch language instantly"
 msgstr "Cambiar idioma al instante"
 
 msgid "Sign in to GitHub"
-msgstr "Sign in to GitHub"
+msgstr "Iniciar sesión en GitHub"
 
 msgid "Initializing authentication..."
-msgstr "Initializing authentication..."
+msgstr "Iniciando autenticación..."
 
 msgid "Enter this code on GitHub:"
-msgstr "Enter this code on GitHub:"
+msgstr "Introduce este código en GitHub:"
 
 msgid "Copy code to clipboard"
-msgstr "Copy code to clipboard"
+msgstr "Copiar código al portapapeles"
 
 msgid "Open GitHub in Browser"
-msgstr "Open GitHub in Browser"
+msgstr "Abrir GitHub en el navegador"
 
 msgid "Cancel"
-msgstr "Cancel"
+msgstr "Cancelar"
 
 msgid "Open GitHub in your browser and enter the code."
-msgstr "Open GitHub in your browser and enter the code."
+msgstr "Abre GitHub en tu navegador e introduce el código."
 
 msgid "Authentication timeout"
-msgstr "Authentication timeout"
+msgstr "Tiempo de espera de autenticación agotado"
 
 msgid "Access denied"
-msgstr "Access denied"
+msgstr "Acceso denegado"
 
 msgid "Waiting for authorization..."
-msgstr "Waiting for authorization..."
+msgstr "Esperando autorización..."
 
 msgid "Error: {message}"
 msgstr "Error: {message}"
 
 msgid "Signed in successfully"
-msgstr "Signed in successfully"
+msgstr "Sesión iniciada correctamente"
 
 msgid "Error saving token: {message}"
-msgstr "Error saving token: {message}"
+msgstr "Error al guardar el token: {message}"
 
 msgid "Welcome to Actioneer"
 msgstr "Bienvenido a Actioneer"
@@ -285,7 +285,7 @@ msgid "Refresh jobs"
 msgstr "Refresh jobs"
 
 msgid "Cancel run"
-msgstr "Cancel run"
+msgstr "Cancelar ejecución"
 
 msgid "Run cancellation requested successfully."
 msgstr "Run cancellation requested successfully."
@@ -300,10 +300,11 @@ msgid "Unknown"
 msgstr "Desconocido"
 
 msgid "Workflows and runs will load in the detail pane."
-msgstr "Workflows and runs will load in the detail pane."
+msgstr "Los flujos de trabajo y las ejecuciones se cargarán en el panel de detalles."
 
 msgid "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs."
-msgstr "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs."
+msgstr "GitHub Actions está deshabilitado para este repositorio. Habilita Actions para "
+"ver flujos de trabajo y ejecuciones."
 
 msgid "Favorites"
 msgstr "Favoritos"
@@ -330,56 +331,60 @@ msgid "Failures: {count}"
 msgstr "Fallos: {count}"
 
 msgid "Fetching logs..."
-msgstr "Fetching logs..."
+msgstr "Obteniendo registros..."
 
 msgid "Refresh logs"
-msgstr "Refresh logs"
+msgstr "Actualizar registros"
 
 msgid "Copy logs to clipboard"
-msgstr "Copy logs to clipboard"
+msgstr "Copiar registros al portapapeles"
+
+msgid "Unable to access the clipboard"
+msgstr "No se pudo acceder al portapapeles"
 
 msgid "Save logs to file"
-msgstr "Save logs to file"
+msgstr "Guardar registros en archivo"
 
 msgid "Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments."
-msgstr "Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments."
+msgstr "Los registros de este job aún no están disponibles. GitHub solo proporciona "
+"registros cuando el job empieza a emitir salida o se completa. Intenta "
+"actualizar en unos momentos."
 
 msgid "The logs for this run have expired and are no longer available."
-msgstr "The logs for this run have expired and are no longer available."
+msgstr "Los registros de esta ejecución han caducado y ya no están disponibles."
 
 msgid "Unable to load logs right now. Please try again later.\n"
 "\n"
 "Details: {error}"
-msgstr "Unable to load logs right now. Please try again later.\n"
-"\n"
-"Details: {error}"
+msgstr "No se pueden cargar los registros ahora. Inténtalo de nuevo más "
+"tarde.\n\nDetalles: {error}"
 
 msgid "Logs are empty; nothing to copy"
-msgstr "Logs are empty; nothing to copy"
+msgstr "Los registros están vacíos; no hay nada que copiar"
 
 msgid "Logs copied to clipboard"
-msgstr "Logs copied to clipboard"
+msgstr "Registros copiados al portapapeles"
 
 msgid "Clipboard unavailable on this system"
 msgstr "Clipboard unavailable on this system"
 
 msgid "Save Logs"
-msgstr "Save Logs"
+msgstr "Guardar registros"
 
 msgid "Save"
-msgstr "Save"
+msgstr "Guardar"
 
 msgid "Logs are empty; nothing saved"
-msgstr "Logs are empty; nothing saved"
+msgstr "Los registros están vacíos; nada guardado"
 
 msgid "Logs saved"
-msgstr "Logs saved"
+msgstr "Registros guardados"
 
 msgid "Failed to save logs: {error}"
-msgstr "Failed to save logs: {error}"
+msgstr "Error al guardar los registros: {error}"
 
 msgid "Unable to determine save location"
-msgstr "Unable to determine save location"
+msgstr "No se pudo determinar la ubicación de guardado"
 
 msgid "No file selected"
 msgstr "No file selected"
@@ -394,7 +399,7 @@ msgid "Rate limit: –"
 msgstr "Límite de tasa: –"
 
 msgid "No workflows found."
-msgstr "No workflows found."
+msgstr "No se encontraron flujos de trabajo."
 
 msgid "Favorites unavailable"
 msgstr "Favoritos no disponibles"
@@ -433,152 +438,152 @@ msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr "{prefix}: {remaining}/{limit} (se restablece en {time})"
 
 msgid "Unnamed job"
-msgstr "Unnamed job"
+msgstr "Job sin nombre"
 
 msgid "View logs"
-msgstr "View logs"
+msgstr "Ver registros"
 
 msgid "Open job in GitHub"
 msgstr "Open job in GitHub"
 
 msgid "No jobs found"
-msgstr "No jobs found"
+msgstr "No se encontraron jobs"
 
 msgid "Showing {count} jobs"
 msgstr "Showing {count} jobs"
 
 msgid "Unable to load jobs"
-msgstr "Unable to load jobs"
+msgstr "No se pueden cargar los jobs"
 
 msgid "Retry"
-msgstr "Retry"
+msgstr "Reintentar"
 
 msgid "{description} (required)"
-msgstr "{description} (required)"
+msgstr "{description} (obligatorio)"
 
 msgid "Required"
-msgstr "Required"
+msgstr "Obligatorio"
 
 msgid "Trigger workflow"
-msgstr "Trigger workflow"
+msgstr "Activar flujo de trabajo"
 
 msgid "Trigger Workflow"
-msgstr "Trigger Workflow"
+msgstr "Activar flujo de trabajo"
 
 msgid "Trigger"
-msgstr "Trigger"
+msgstr "Activar"
 
 msgid "This will trigger the \"{workflow}\" workflow."
-msgstr "This will trigger the \"{workflow}\" workflow."
+msgstr "Esto activará el flujo de trabajo \"{workflow}\"."
 
 msgid "Triggered runs typically appear within 10-30 seconds."
-msgstr "Triggered runs typically appear within 10-30 seconds."
+msgstr "Las ejecuciones activadas suelen aparecer en 10-30 segundos."
 
 msgid "Branch or ref:"
-msgstr "Branch or ref:"
+msgstr "Rama o referencia:"
 
 msgid "Loading branches..."
-msgstr "Loading branches..."
+msgstr "Cargando ramas..."
 
 msgid "Loading workflow inputs..."
-msgstr "Loading workflow inputs..."
+msgstr "Cargando entradas del flujo de trabajo..."
 
 msgid "Inputs"
-msgstr "Inputs"
+msgstr "Entradas"
 
 msgid "No inputs defined for this workflow."
-msgstr "No inputs defined for this workflow."
+msgstr "No hay entradas definidas para este flujo de trabajo."
 
 msgid "Workflow inputs could not be loaded."
-msgstr "Workflow inputs could not be loaded."
+msgstr "No se pudieron cargar las entradas del flujo de trabajo."
 
 msgid "✗ Failed to load workflow inputs: {error}"
-msgstr "✗ Failed to load workflow inputs: {error}"
+msgstr "✗ Error al cargar las entradas del flujo de trabajo: {error}"
 
 msgid "Failed to load workflow inputs: {error}"
-msgstr "Failed to load workflow inputs: {error}"
+msgstr "Error al cargar las entradas del flujo de trabajo: {error}"
 
 msgid "✗ {error}"
 msgstr "✗ {error}"
 
 msgid "Failed to trigger workflow: {error}"
-msgstr "Failed to trigger workflow: {error}"
+msgstr "Error al activar el flujo de trabajo: {error}"
 
 msgid "✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear once GitHub reports it."
-msgstr "✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear once GitHub reports it."
+msgstr "✓ Flujo de trabajo '{workflow}' activado en la rama '{branch}'. La ejecución "
+"aparecerá cuando GitHub la reporte."
 
 msgid "✗ Failed to trigger workflow: {error}"
-msgstr "✗ Failed to trigger workflow: {error}"
+msgstr "✗ Error al activar el flujo de trabajo: {error}"
 
 msgid "Open in GitHub"
-msgstr "Open in GitHub"
+msgstr "Abrir en GitHub"
 
 msgid "Re-run workflow"
-msgstr "Re-run workflow"
+msgstr "Repetir flujo de trabajo"
 
 msgid "Do you want to re-run \"{run}\"?"
-msgstr "Do you want to re-run \"{run}\"?"
+msgstr "¿Quieres repetir \"{run}\"?"
 
 msgid "Re-run Workflow"
-msgstr "Re-run Workflow"
+msgstr "Repetir flujo de trabajo"
 
 msgid "✓ Re-running '{run}'"
-msgstr "✓ Re-running '{run}'"
+msgstr "✓ Repitiendo '{run}'"
 
 msgid "✗ Failed to re-run workflow"
-msgstr "✗ Failed to re-run workflow"
+msgstr "✗ Error al repetir el flujo de trabajo"
 
 msgid "Re-run failed jobs"
-msgstr "Re-run failed jobs"
+msgstr "Repetir jobs fallidos"
 
 msgid "Do you want to re-run all failed jobs in \"{run}\"?"
-msgstr "Do you want to re-run all failed jobs in \"{run}\"?"
+msgstr "¿Quieres repetir todos los jobs fallidos de \"{run}\"?"
 
 msgid "Re-run Failed Jobs"
-msgstr "Re-run Failed Jobs"
+msgstr "Repetir jobs fallidos"
 
 msgid "✓ Re-running failed jobs for '{run}'"
-msgstr "✓ Re-running failed jobs for '{run}'"
+msgstr "✓ Repitiendo jobs fallidos de '{run}'"
 
 msgid "✗ Failed to re-run failed jobs"
-msgstr "✗ Failed to re-run failed jobs"
+msgstr "✗ Error al repetir los jobs fallidos"
 
 msgid "Do you want to cancel the in-progress run \"{run}\"?\n"
 "\n"
 "This action cannot be undone."
-msgstr "Do you want to cancel the in-progress run \"{run}\"?\n"
-"\n"
-"This action cannot be undone."
+msgstr "¿Quieres cancelar la ejecución en curso \"{run}\"?\n\nEsta acción no se puede "
+"deshacer."
 
 msgid "Cancel Workflow Run"
-msgstr "Cancel Workflow Run"
+msgstr "Cancelar ejecución del flujo de trabajo"
 
 msgid "✓ Cancelled run '{run}'"
-msgstr "✓ Cancelled run '{run}'"
+msgstr "✓ Ejecución '{run}' cancelada"
 
 msgid "✗ Failed to cancel run"
-msgstr "✗ Failed to cancel run"
+msgstr "✗ Error al cancelar la ejecución"
 
 msgid "Click to load jobs..."
-msgstr "Click to load jobs..."
+msgstr "Haz clic para cargar jobs..."
 
 msgid "Click to load runs..."
-msgstr "Click to load runs..."
+msgstr "Haz clic para cargar ejecuciones..."
 
 msgid "No recent runs"
-msgstr "No recent runs"
+msgstr "Sin ejecuciones recientes"
 
 msgid "Triggered runs may take 10-30 seconds to appear"
-msgstr "Triggered runs may take 10-30 seconds to appear"
+msgstr "Las ejecuciones activadas pueden tardar 10-30 segundos en aparecer"
 
 msgid "No runs match the current filters"
-msgstr "No runs match the current filters"
+msgstr "Ninguna ejecución coincide con los filtros actuales"
 
 msgid "Adjust the status chips above to see more runs."
-msgstr "Adjust the status chips above to see more runs."
+msgstr "Ajusta los chips de estado de arriba para ver más ejecuciones."
 
 msgid "Unable to load workflow runs"
-msgstr "Unable to load workflow runs"
+msgstr "No se pueden cargar las ejecuciones del flujo de trabajo"
 
 msgid "Recent runs (showing {visible} of {overall})"
 msgstr "Recent runs (showing {visible} of {overall})"
@@ -641,7 +646,7 @@ msgid "Yes"
 msgstr "Sí"
 
 msgid "Failed to open donation page in the browser."
-msgstr "Failed to open donation page in the browser."
+msgstr "No se pudo abrir la página de donaciones en el navegador."
 
 msgid "Debug"
 msgstr "Depuracion"

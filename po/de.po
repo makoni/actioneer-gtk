@@ -369,6 +369,9 @@ msgstr "Protokolle aktualisieren"
 msgid "Copy logs to clipboard"
 msgstr "Protokolle in Zwischenablage kopieren"
 
+msgid "Unable to access the clipboard"
+msgstr "Zugriff auf die Zwischenablage nicht möglich"
+
 msgid "Save logs to file"
 msgstr "Protokolle in Datei speichern"
 
@@ -688,7 +691,7 @@ msgid "Yes"
 msgstr "Ja"
 
 msgid "Failed to open donation page in the browser."
-msgstr "Failed to open donation page in the browser."
+msgstr "Die Spendenseite konnte nicht im Browser geöffnet werden."
 
 msgid "Debug"
 msgstr "Debug"
@@ -885,7 +888,7 @@ msgid "Conclusion"
 msgstr "Ergebnis"
 
 msgid "Branch"
-msgstr "Branch"
+msgstr "Zweig"
 
 msgid "Commit"
 msgstr "Commit"
@@ -946,3 +949,51 @@ msgid "Updated bundled components help keep Actioneer reliable and up to date."
 msgstr "Aktualisierte mitgelieferte Komponenten helfen, Actioneer zuverlässig und auf "
 "dem neuesten Stand zu halten."
 
+
+msgid "Manual workflow triggers now support workflow_dispatch inputs with dynamic parameter fields."
+msgstr "Manuelle Workflow-Trigger unterstützen jetzt workflow_dispatch-Eingaben mit dynamischen Parameterfeldern."
+
+msgid "Dependency updates for ryu, unicode-ident, and zmij."
+msgstr "Abhängigkeitsupdates für ryu, unicode-ident und zmij."
+
+msgid "Handle expired job logs (HTTP 410) with clearer messaging instead of a broken view."
+msgstr "Abgelaufene Job-Logs (HTTP 410) werden mit klarer Meldung statt einer defekten Ansicht behandelt."
+
+msgid "Strip BOM markers in job logs so first-line timestamps render correctly."
+msgstr "BOM-Markierungen in Job-Logs werden entfernt, damit Zeitstempel der ersten Zeile korrekt dargestellt werden."
+
+msgid "Job logs now render ANSI colors, grouped workflow sections, and clearer command/output formatting."
+msgstr "Job-Logs zeigen jetzt ANSI-Farben, gruppierte Workflow-Abschnitte und ein klareres Befehls-/Ausgabeformat."
+
+msgid "Aligned timestamps and command prefixes improve scanability, with stronger error highlighting."
+msgstr "Ausgerichtete Zeitstempel und Befehlsprefixe verbessern die Übersichtlichkeit, mit stärkerer Hervorhebung von Fehlern."
+
+msgid "Packaging CI refreshed with multi-arch updates for AppImage/Snap/Flatpak builds."
+msgstr "Packaging-CI überarbeitet mit Multi-Arch-Updates für AppImage-/Snap-/Flatpak-Builds."
+
+msgid "Dependency updates and demo log refreshes for improved accuracy."
+msgstr "Abhängigkeitsupdates und aktualisierte Demo-Logs für verbesserte Genauigkeit."
+
+msgid "Faster and smoother UI with refreshed repo/workflow lists and improved scrolling behavior."
+msgstr "Schnellere und flüssigere Oberfläche mit überarbeiteten Repository-/Workflow-Listen und verbessertem Scrollverhalten."
+
+msgid "New run filtering controls with better caching, so switching filters is instant and doesn't reload data."
+msgstr "Neue Filtersteuerungen für Runs mit besserem Caching, sodass Filterwechsel sofort erfolgen und keine Daten neu geladen werden."
+
+msgid "Better workflow auto-refresh and run status updates, including fewer duplicate fetches."
+msgstr "Besserer Workflow-Autorefresh und Laufzeit-Statusaktualisierungen, einschließlich weniger doppelter Abfragen."
+
+msgid "Notifications are more reliable across Snap/Flatpak, with improved icon handling and fallbacks."
+msgstr "Benachrichtigungen sind unter Snap/Flatpak zuverlässiger, mit verbesserter Icon-Verarbeitung und Fallbacks."
+
+msgid "Improved sandboxed credential storage using the secret portal for Snap/Flatpak."
+msgstr "Verbesserte sandgeboxte Speicherung von Anmeldedaten über das Secret-Portal für Snap/Flatpak."
+
+msgid "Offline-friendly cache persistence for workflows, runs, and jobs."
+msgstr "Offline-freundliche Cachespeicherung für Workflows, Runs und Jobs."
+
+msgid "Packaging and CI updates across Snap, Flatpak, and AppImage for better compatibility."
+msgstr "Packaging- und CI-Updates für Snap, Flatpak und AppImage für bessere Kompatibilität."
+
+msgid "Dependency updates and stability fixes."
+msgstr "Abhängigkeitsupdates und Stabilitätsfixes."

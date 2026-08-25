@@ -213,43 +213,43 @@ msgid "Switch language instantly"
 msgstr "بدّل اللغة فورًا"
 
 msgid "Sign in to GitHub"
-msgstr "Sign in to GitHub"
+msgstr "تسجيل الدخول إلى GitHub"
 
 msgid "Initializing authentication..."
-msgstr "Initializing authentication..."
+msgstr "جارٍ تهيئة المصادقة..."
 
 msgid "Enter this code on GitHub:"
-msgstr "Enter this code on GitHub:"
+msgstr "أدخل هذا الرمز في GitHub:"
 
 msgid "Copy code to clipboard"
-msgstr "Copy code to clipboard"
+msgstr "نسخ الرمز إلى الحافظة"
 
 msgid "Open GitHub in Browser"
-msgstr "Open GitHub in Browser"
+msgstr "فتح GitHub في المتصفح"
 
 msgid "Cancel"
-msgstr "Cancel"
+msgstr "إلغاء"
 
 msgid "Open GitHub in your browser and enter the code."
-msgstr "Open GitHub in your browser and enter the code."
+msgstr "افتح GitHub في متصفحك وأدخل الرمز."
 
 msgid "Authentication timeout"
-msgstr "Authentication timeout"
+msgstr "انتهت مهلة المصادقة"
 
 msgid "Access denied"
-msgstr "Access denied"
+msgstr "تم رفض الوصول"
 
 msgid "Waiting for authorization..."
-msgstr "Waiting for authorization..."
+msgstr "بانتظار التفويض..."
 
 msgid "Error: {message}"
 msgstr "Error: {message}"
 
 msgid "Signed in successfully"
-msgstr "Signed in successfully"
+msgstr "تم تسجيل الدخول بنجاح"
 
 msgid "Error saving token: {message}"
-msgstr "Error saving token: {message}"
+msgstr "خطأ في حفظ الرمز: {message}"
 
 msgid "Welcome to Actioneer"
 msgstr "مرحبًا بك في Actioneer"
@@ -285,7 +285,7 @@ msgid "Refresh jobs"
 msgstr "Refresh jobs"
 
 msgid "Cancel run"
-msgstr "Cancel run"
+msgstr "إلغاء التشغيل"
 
 msgid "Run cancellation requested successfully."
 msgstr "Run cancellation requested successfully."
@@ -294,16 +294,16 @@ msgid "Failed to cancel run: {error}"
 msgstr "Failed to cancel run: {error}"
 
 msgid "Job"
-msgstr "Job"
+msgstr "مهمة"
 
 msgid "Unknown"
 msgstr "غير معروف"
 
 msgid "Workflows and runs will load in the detail pane."
-msgstr "Workflows and runs will load in the detail pane."
+msgstr "سيتم تحميل سير العمل والتشغيلات في لوحة التفاصيل."
 
 msgid "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs."
-msgstr "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs."
+msgstr "تم تعطيل GitHub Actions لهذا المستودع. فعّل Actions لعرض سير العمل والتشغيلات."
 
 msgid "Favorites"
 msgstr "المفضلة"
@@ -330,56 +330,58 @@ msgid "Failures: {count}"
 msgstr "الإخفاقات: {count}"
 
 msgid "Fetching logs..."
-msgstr "Fetching logs..."
+msgstr "جارٍ جلب السجلات..."
 
 msgid "Refresh logs"
-msgstr "Refresh logs"
+msgstr "تحديث السجلات"
 
 msgid "Copy logs to clipboard"
-msgstr "Copy logs to clipboard"
+msgstr "نسخ السجلات إلى الحافظة"
+
+msgid "Unable to access the clipboard"
+msgstr "تعذر الوصول إلى الحافظة"
 
 msgid "Save logs to file"
-msgstr "Save logs to file"
+msgstr "حفظ السجلات في ملف"
 
 msgid "Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments."
-msgstr "Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments."
+msgstr "السجلات غير متاحة بعد لهذه المهمة. يتوفر سجل GitHub فقط عندما تبدأ المهمة في بث "
+"المخرجات أو عند اكتمالها. جرّب التحديث بعد لحظات."
 
 msgid "The logs for this run have expired and are no longer available."
-msgstr "The logs for this run have expired and are no longer available."
+msgstr "انتهت صلاحية سجلات هذا التشغيل ولم تعد متاحة."
 
 msgid "Unable to load logs right now. Please try again later.\n"
 "\n"
 "Details: {error}"
-msgstr "Unable to load logs right now. Please try again later.\n"
-"\n"
-"Details: {error}"
+msgstr "تعذر تحميل السجلات حاليًا. يرجى المحاولة مرة أخرى لاحقًا.\n\nالتفاصيل: {error}"
 
 msgid "Logs are empty; nothing to copy"
-msgstr "Logs are empty; nothing to copy"
+msgstr "السجلات فارغة؛ لا شيء للنسخ"
 
 msgid "Logs copied to clipboard"
-msgstr "Logs copied to clipboard"
+msgstr "تم نسخ السجلات إلى الحافظة"
 
 msgid "Clipboard unavailable on this system"
 msgstr "Clipboard unavailable on this system"
 
 msgid "Save Logs"
-msgstr "Save Logs"
+msgstr "حفظ السجلات"
 
 msgid "Save"
-msgstr "Save"
+msgstr "حفظ"
 
 msgid "Logs are empty; nothing saved"
-msgstr "Logs are empty; nothing saved"
+msgstr "السجلات فارغة؛ لم يتم حفظ أي شيء"
 
 msgid "Logs saved"
-msgstr "Logs saved"
+msgstr "تم حفظ السجلات"
 
 msgid "Failed to save logs: {error}"
-msgstr "Failed to save logs: {error}"
+msgstr "فشل حفظ السجلات: {error}"
 
 msgid "Unable to determine save location"
-msgstr "Unable to determine save location"
+msgstr "تعذر تحديد موقع الحفظ"
 
 msgid "No file selected"
 msgstr "No file selected"
@@ -394,7 +396,7 @@ msgid "Rate limit: –"
 msgstr "حد المعدل: –"
 
 msgid "No workflows found."
-msgstr "No workflows found."
+msgstr "لم يتم العثور على سير عمل."
 
 msgid "Favorites unavailable"
 msgstr "المفضلة غير متاحة"
@@ -433,152 +435,151 @@ msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr "{prefix}: {remaining}/{limit} (إعادة الضبط خلال {time})"
 
 msgid "Unnamed job"
-msgstr "Unnamed job"
+msgstr "مهمة بدون اسم"
 
 msgid "View logs"
-msgstr "View logs"
+msgstr "عرض السجلات"
 
 msgid "Open job in GitHub"
 msgstr "Open job in GitHub"
 
 msgid "No jobs found"
-msgstr "No jobs found"
+msgstr "لم يتم العثور على مهام"
 
 msgid "Showing {count} jobs"
 msgstr "Showing {count} jobs"
 
 msgid "Unable to load jobs"
-msgstr "Unable to load jobs"
+msgstr "تعذر تحميل المهام"
 
 msgid "Retry"
-msgstr "Retry"
+msgstr "إعادة المحاولة"
 
 msgid "{description} (required)"
-msgstr "{description} (required)"
+msgstr "{description} (مطلوب)"
 
 msgid "Required"
-msgstr "Required"
+msgstr "مطلوب"
 
 msgid "Trigger workflow"
-msgstr "Trigger workflow"
+msgstr "تشغيل سير العمل"
 
 msgid "Trigger Workflow"
-msgstr "Trigger Workflow"
+msgstr "تشغيل سير العمل"
 
 msgid "Trigger"
-msgstr "Trigger"
+msgstr "تشغيل"
 
 msgid "This will trigger the \"{workflow}\" workflow."
-msgstr "This will trigger the \"{workflow}\" workflow."
+msgstr "سيؤدي هذا إلى تشغيل سير العمل \"{workflow}\"."
 
 msgid "Triggered runs typically appear within 10-30 seconds."
-msgstr "Triggered runs typically appear within 10-30 seconds."
+msgstr "تظهر التشغيلات المُفعلة عادةً خلال 10-30 ثانية."
 
 msgid "Branch or ref:"
-msgstr "Branch or ref:"
+msgstr "الفرع أو المرجع:"
 
 msgid "Loading branches..."
-msgstr "Loading branches..."
+msgstr "جارٍ تحميل الفروع..."
 
 msgid "Loading workflow inputs..."
-msgstr "Loading workflow inputs..."
+msgstr "جارٍ تحميل مدخلات سير العمل..."
 
 msgid "Inputs"
-msgstr "Inputs"
+msgstr "المدخلات"
 
 msgid "No inputs defined for this workflow."
-msgstr "No inputs defined for this workflow."
+msgstr "لم يتم تعريف مدخلات لسير العمل هذا."
 
 msgid "Workflow inputs could not be loaded."
-msgstr "Workflow inputs could not be loaded."
+msgstr "تعذر تحميل مدخلات سير العمل."
 
 msgid "✗ Failed to load workflow inputs: {error}"
-msgstr "✗ Failed to load workflow inputs: {error}"
+msgstr "✗ فشل تحميل مدخلات سير العمل: {error}"
 
 msgid "Failed to load workflow inputs: {error}"
-msgstr "Failed to load workflow inputs: {error}"
+msgstr "فشل تحميل مدخلات سير العمل: {error}"
 
 msgid "✗ {error}"
 msgstr "✗ {error}"
 
 msgid "Failed to trigger workflow: {error}"
-msgstr "Failed to trigger workflow: {error}"
+msgstr "فشل تشغيل سير العمل: {error}"
 
 msgid "✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear once GitHub reports it."
-msgstr "✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear once GitHub reports it."
+msgstr "✓ تم تشغيل سير العمل '{workflow}' على الفرع '{branch}'. سيظهر التشغيل بمجرد "
+"إبلاغ GitHub بذلك."
 
 msgid "✗ Failed to trigger workflow: {error}"
-msgstr "✗ Failed to trigger workflow: {error}"
+msgstr "✗ فشل تشغيل سير العمل: {error}"
 
 msgid "Open in GitHub"
-msgstr "Open in GitHub"
+msgstr "فتح في GitHub"
 
 msgid "Re-run workflow"
-msgstr "Re-run workflow"
+msgstr "إعادة تشغيل سير العمل"
 
 msgid "Do you want to re-run \"{run}\"?"
-msgstr "Do you want to re-run \"{run}\"?"
+msgstr "هل تريد إعادة تشغيل \"{run}\"؟"
 
 msgid "Re-run Workflow"
-msgstr "Re-run Workflow"
+msgstr "إعادة تشغيل سير العمل"
 
 msgid "✓ Re-running '{run}'"
-msgstr "✓ Re-running '{run}'"
+msgstr "✓ جارٍ إعادة تشغيل '{run}'"
 
 msgid "✗ Failed to re-run workflow"
-msgstr "✗ Failed to re-run workflow"
+msgstr "✗ فشل إعادة تشغيل سير العمل"
 
 msgid "Re-run failed jobs"
-msgstr "Re-run failed jobs"
+msgstr "إعادة تشغيل المهام الفاشلة"
 
 msgid "Do you want to re-run all failed jobs in \"{run}\"?"
-msgstr "Do you want to re-run all failed jobs in \"{run}\"?"
+msgstr "هل تريد إعادة تشغيل جميع المهام الفاشلة في \"{run}\"؟"
 
 msgid "Re-run Failed Jobs"
-msgstr "Re-run Failed Jobs"
+msgstr "إعادة تشغيل المهام الفاشلة"
 
 msgid "✓ Re-running failed jobs for '{run}'"
-msgstr "✓ Re-running failed jobs for '{run}'"
+msgstr "✓ جارٍ إعادة تشغيل المهام الفاشلة في '{run}'"
 
 msgid "✗ Failed to re-run failed jobs"
-msgstr "✗ Failed to re-run failed jobs"
+msgstr "✗ فشل إعادة تشغيل المهام الفاشلة"
 
 msgid "Do you want to cancel the in-progress run \"{run}\"?\n"
 "\n"
 "This action cannot be undone."
-msgstr "Do you want to cancel the in-progress run \"{run}\"?\n"
-"\n"
-"This action cannot be undone."
+msgstr "هل تريد إلغاء التشغيل الجاري \"{run}\"؟\n\nلا يمكن التراجع عن هذا الإجراء."
 
 msgid "Cancel Workflow Run"
-msgstr "Cancel Workflow Run"
+msgstr "إلغاء تشغيل سير العمل"
 
 msgid "✓ Cancelled run '{run}'"
-msgstr "✓ Cancelled run '{run}'"
+msgstr "✓ تم إلغاء التشغيل '{run}'"
 
 msgid "✗ Failed to cancel run"
-msgstr "✗ Failed to cancel run"
+msgstr "✗ فشل إلغاء التشغيل"
 
 msgid "Click to load jobs..."
-msgstr "Click to load jobs..."
+msgstr "انقر لتحميل المهام..."
 
 msgid "Click to load runs..."
-msgstr "Click to load runs..."
+msgstr "انقر لتحميل التشغيلات..."
 
 msgid "No recent runs"
-msgstr "No recent runs"
+msgstr "لا توجد تشغيلات حديثة"
 
 msgid "Triggered runs may take 10-30 seconds to appear"
-msgstr "Triggered runs may take 10-30 seconds to appear"
+msgstr "قد تستغرق التشغيلات المُفعلة 10-30 ثانية حتى تظهر"
 
 msgid "No runs match the current filters"
-msgstr "No runs match the current filters"
+msgstr "لا توجد تشغيلات تطابق عوامل التصفية الحالية"
 
 msgid "Adjust the status chips above to see more runs."
-msgstr "Adjust the status chips above to see more runs."
+msgstr "اضبط شرائح الحالة أعلاه لعرض المزيد من التشغيلات."
 
 msgid "Unable to load workflow runs"
-msgstr "Unable to load workflow runs"
+msgstr "تعذر تحميل تشغيلات سير العمل"
 
 msgid "Recent runs (showing {visible} of {overall})"
 msgstr "Recent runs (showing {visible} of {overall})"
@@ -641,7 +642,7 @@ msgid "Yes"
 msgstr "نعم"
 
 msgid "Failed to open donation page in the browser."
-msgstr "Failed to open donation page in the browser."
+msgstr "فشل فتح صفحة التبرع في المتصفح."
 
 msgid "Debug"
 msgstr "تصحيح"

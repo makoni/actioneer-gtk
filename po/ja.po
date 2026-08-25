@@ -643,6 +643,9 @@ msgstr "ログを更新"
 msgid "Copy logs to clipboard"
 msgstr "ログをクリップボードにコピー"
 
+msgid "Unable to access the clipboard"
+msgstr "クリップボードにアクセスできません"
+
 #: src/ui/job_logs_window.rs:126
 msgid "Save logs to file"
 msgstr "ログをファイルに保存"

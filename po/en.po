@@ -338,6 +338,9 @@ msgstr "Refresh logs"
 msgid "Copy logs to clipboard"
 msgstr "Copy logs to clipboard"
 
+msgid "Unable to access the clipboard"
+msgstr "Unable to access the clipboard"
+
 msgid "Save logs to file"
 msgstr "Save logs to file"
 

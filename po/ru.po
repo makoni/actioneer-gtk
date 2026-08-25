@@ -341,6 +341,9 @@ msgstr "Обновить логи"
 msgid "Copy logs to clipboard"
 msgstr "Скопировать логи в буфер обмена"
 
+msgid "Unable to access the clipboard"
+msgstr "Не удалось получить доступ к буферу обмена"
+
 msgid "Save logs to file"
 msgstr "Сохранить логи в файл"
 
@@ -842,7 +845,7 @@ msgid "Updated bundled components help keep Actioneer stable, reliable, and up t
 msgstr "Обновлённые встроенные компоненты помогают поддерживать Actioneer стабильным, надёжным и актуальным."
 
 msgid "Workflows"
-msgstr "Workflows"
+msgstr "Воркфлоу"
 
 msgid "Auto-refresh is disabled."
 msgstr "Автообновление отключено."

@@ -213,43 +213,43 @@ msgid "Switch language instantly"
 msgstr "زبان فوراً تبدیل کریں"
 
 msgid "Sign in to GitHub"
-msgstr "Sign in to GitHub"
+msgstr "GitHub میں سائن ان کریں"
 
 msgid "Initializing authentication..."
-msgstr "Initializing authentication..."
+msgstr "تصدیق تیار ہو رہی ہے..."
 
 msgid "Enter this code on GitHub:"
-msgstr "Enter this code on GitHub:"
+msgstr "GitHub پر یہ کوڈ درج کریں:"
 
 msgid "Copy code to clipboard"
-msgstr "Copy code to clipboard"
+msgstr "کوڈ کو کلپ بورڈ پر کاپی کریں"
 
 msgid "Open GitHub in Browser"
-msgstr "Open GitHub in Browser"
+msgstr "براؤزر میں GitHub کھولیں"
 
 msgid "Cancel"
-msgstr "Cancel"
+msgstr "منسوخ کریں"
 
 msgid "Open GitHub in your browser and enter the code."
-msgstr "Open GitHub in your browser and enter the code."
+msgstr "اپنے براؤزر میں GitHub کھولیں اور کوڈ درج کریں۔"
 
 msgid "Authentication timeout"
-msgstr "Authentication timeout"
+msgstr "تصدیق کا وقت ختم ہو گیا"
 
 msgid "Access denied"
-msgstr "Access denied"
+msgstr "رسائی مسترد ہوئی"
 
 msgid "Waiting for authorization..."
-msgstr "Waiting for authorization..."
+msgstr "اجازت کا انتظار..."
 
 msgid "Error: {message}"
 msgstr "Error: {message}"
 
 msgid "Signed in successfully"
-msgstr "Signed in successfully"
+msgstr "کامیابی سے سائن ان ہو گیا"
 
 msgid "Error saving token: {message}"
-msgstr "Error saving token: {message}"
+msgstr "ٹوکن محفوظ کرتے وقت خرابی: {message}"
 
 msgid "Welcome to Actioneer"
 msgstr "Actioneer میں خوش آمدید"
@@ -285,7 +285,7 @@ msgid "Refresh jobs"
 msgstr "Refresh jobs"
 
 msgid "Cancel run"
-msgstr "Cancel run"
+msgstr "رن منسوخ کریں"
 
 msgid "Run cancellation requested successfully."
 msgstr "Run cancellation requested successfully."
@@ -294,16 +294,17 @@ msgid "Failed to cancel run: {error}"
 msgstr "Failed to cancel run: {error}"
 
 msgid "Job"
-msgstr "Job"
+msgstr "جاب"
 
 msgid "Unknown"
 msgstr "نامعلوم"
 
 msgid "Workflows and runs will load in the detail pane."
-msgstr "Workflows and runs will load in the detail pane."
+msgstr "ورک فلو اور رن تفصیل پینل میں لوڈ ہوں گے۔"
 
 msgid "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs."
-msgstr "GitHub Actions is disabled for this repository. Enable Actions to view workflows and runs."
+msgstr "اس ریپوزٹری کے لیے GitHub Actions غیر فعال ہے۔ ورک فلو اور رن دیکھنے کے لیے "
+"Actions کو فعال کریں۔"
 
 msgid "Favorites"
 msgstr "پسندیدہ"
@@ -330,56 +331,60 @@ msgid "Failures: {count}"
 msgstr "ناکامیاں: {count}"
 
 msgid "Fetching logs..."
-msgstr "Fetching logs..."
+msgstr "لاگ حاصل کیے جا رہے ہیں..."
 
 msgid "Refresh logs"
-msgstr "Refresh logs"
+msgstr "لاگ ریفریش کریں"
 
 msgid "Copy logs to clipboard"
-msgstr "Copy logs to clipboard"
+msgstr "لاگ کو کلپ بورڈ پر کاپی کریں"
+
+msgid "Unable to access the clipboard"
+msgstr "کلپ بورڈ تک رسائی ممکن نہیں ہوئی"
 
 msgid "Save logs to file"
-msgstr "Save logs to file"
+msgstr "لاگ کو فائل میں محفوظ کریں"
 
 msgid "Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments."
-msgstr "Logs are not yet available for this job. GitHub only provides logs once the job starts streaming output or completes. Try refreshing in a few moments."
+msgstr "اس جاب کے لیے لاگ ابھی دستیاب نہیں ہیں۔ GitHub لاگ صرف تب فراہم کرتا ہے جب جاب "
+"آؤٹ پٹ اسٹریم کرنا شروع کر دے یا مکمل ہو جائے۔ چند لمحوں بعد ریفریش کرنے کی "
+"کوشش کریں۔"
 
 msgid "The logs for this run have expired and are no longer available."
-msgstr "The logs for this run have expired and are no longer available."
+msgstr "اس رن کے لاگ کی مدت ختم ہو چکی ہے اور اب دستیاب نہیں ہیں۔"
 
 msgid "Unable to load logs right now. Please try again later.\n"
 "\n"
 "Details: {error}"
-msgstr "Unable to load logs right now. Please try again later.\n"
-"\n"
-"Details: {error}"
+msgstr "فی الحال لاگ لوڈ نہیں کیے جا سکتے۔ برائے مہربانی بعد میں دوبارہ کوشش "
+"کریں。\n\nتفصیل: {error}"
 
 msgid "Logs are empty; nothing to copy"
-msgstr "Logs are empty; nothing to copy"
+msgstr "لاگ خالی ہیں؛ کاپی کرنے کے لیے کوئی چیز نہیں"
 
 msgid "Logs copied to clipboard"
-msgstr "Logs copied to clipboard"
+msgstr "لاگ کو کلپ بورڈ پر کاپی کیا گیا"
 
 msgid "Clipboard unavailable on this system"
 msgstr "Clipboard unavailable on this system"
 
 msgid "Save Logs"
-msgstr "Save Logs"
+msgstr "لاگ محفوظ کریں"
 
 msgid "Save"
-msgstr "Save"
+msgstr "محفوظ کریں"
 
 msgid "Logs are empty; nothing saved"
-msgstr "Logs are empty; nothing saved"
+msgstr "لاگ خالی ہیں؛ کچھ محفوظ نہیں ہوا"
 
 msgid "Logs saved"
-msgstr "Logs saved"
+msgstr "لاگ محفوظ ہو گئے"
 
 msgid "Failed to save logs: {error}"
-msgstr "Failed to save logs: {error}"
+msgstr "لاگ محفوظ کرنے میں ناکام: {error}"
 
 msgid "Unable to determine save location"
-msgstr "Unable to determine save location"
+msgstr "محفوظ کرنے کی جگہ معلوم نہیں ہوئی"
 
 msgid "No file selected"
 msgstr "No file selected"
@@ -394,7 +399,7 @@ msgid "Rate limit: –"
 msgstr "ریٹ حد: –"
 
 msgid "No workflows found."
-msgstr "No workflows found."
+msgstr "کوئی ورک فلو نہیں ملا۔"
 
 msgid "Favorites unavailable"
 msgstr "پسندیدہ دستیاب نہیں"
@@ -433,152 +438,152 @@ msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr "{prefix}: {remaining}/{limit} ({time} میں ری سیٹ)"
 
 msgid "Unnamed job"
-msgstr "Unnamed job"
+msgstr "بے نام جاب"
 
 msgid "View logs"
-msgstr "View logs"
+msgstr "لاگ دیکھیں"
 
 msgid "Open job in GitHub"
 msgstr "Open job in GitHub"
 
 msgid "No jobs found"
-msgstr "No jobs found"
+msgstr "کوئی جاب نہیں ملا"
 
 msgid "Showing {count} jobs"
 msgstr "Showing {count} jobs"
 
 msgid "Unable to load jobs"
-msgstr "Unable to load jobs"
+msgstr "جاب لوڈ نہیں کیے جا سکے"
 
 msgid "Retry"
-msgstr "Retry"
+msgstr "دوبارہ کوشش کریں"
 
 msgid "{description} (required)"
-msgstr "{description} (required)"
+msgstr "{description} (لازمی)"
 
 msgid "Required"
-msgstr "Required"
+msgstr "لازمی"
 
 msgid "Trigger workflow"
-msgstr "Trigger workflow"
+msgstr "ورک فلو ٹریگر کریں"
 
 msgid "Trigger Workflow"
-msgstr "Trigger Workflow"
+msgstr "ورک فلو ٹریگر کریں"
 
 msgid "Trigger"
-msgstr "Trigger"
+msgstr "ٹریگر کریں"
 
 msgid "This will trigger the \"{workflow}\" workflow."
-msgstr "This will trigger the \"{workflow}\" workflow."
+msgstr "اس سے \"{workflow}\" ورک فلو ٹریگر ہو گا۔"
 
 msgid "Triggered runs typically appear within 10-30 seconds."
-msgstr "Triggered runs typically appear within 10-30 seconds."
+msgstr "ٹریگر کیے گئے رن عام طور پر 10-30 سیکنڈ میں ظاہر ہوتے ہیں۔"
 
 msgid "Branch or ref:"
-msgstr "Branch or ref:"
+msgstr "برانچ یا ref:"
 
 msgid "Loading branches..."
-msgstr "Loading branches..."
+msgstr "برانچ لوڈ ہو رہی ہیں..."
 
 msgid "Loading workflow inputs..."
-msgstr "Loading workflow inputs..."
+msgstr "ورک فلو انپٹ لوڈ ہو رہے ہیں..."
 
 msgid "Inputs"
-msgstr "Inputs"
+msgstr "انپٹ"
 
 msgid "No inputs defined for this workflow."
-msgstr "No inputs defined for this workflow."
+msgstr "اس ورک فلو کے لیے کوئی انپٹ تعریف نہیں کیا گیا۔"
 
 msgid "Workflow inputs could not be loaded."
-msgstr "Workflow inputs could not be loaded."
+msgstr "ورک فلو انپٹ لوڈ نہیں کیے جا سکے۔"
 
 msgid "✗ Failed to load workflow inputs: {error}"
-msgstr "✗ Failed to load workflow inputs: {error}"
+msgstr "✗ ورک فلو انپٹ لوڈ کرنے میں ناکام: {error}"
 
 msgid "Failed to load workflow inputs: {error}"
-msgstr "Failed to load workflow inputs: {error}"
+msgstr "ورک فلو انپٹ لوڈ کرنے میں ناکام: {error}"
 
 msgid "✗ {error}"
 msgstr "✗ {error}"
 
 msgid "Failed to trigger workflow: {error}"
-msgstr "Failed to trigger workflow: {error}"
+msgstr "ورک فلو ٹریگر کرنے میں ناکام: {error}"
 
 msgid "✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear once GitHub reports it."
-msgstr "✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear once GitHub reports it."
+msgstr "✓ '{branch}' برانچ پر '{workflow}' ورک فلو ٹریگر ہو گیا۔ GitHub کے اطلاع دینے "
+"پر رن ظاہر ہو گا۔"
 
 msgid "✗ Failed to trigger workflow: {error}"
-msgstr "✗ Failed to trigger workflow: {error}"
+msgstr "✗ ورک فلو ٹریگر کرنے میں ناکام: {error}"
 
 msgid "Open in GitHub"
-msgstr "Open in GitHub"
+msgstr "GitHub میں کھولیں"
 
 msgid "Re-run workflow"
-msgstr "Re-run workflow"
+msgstr "ورک فلو دوبارہ چلائیں"
 
 msgid "Do you want to re-run \"{run}\"?"
-msgstr "Do you want to re-run \"{run}\"?"
+msgstr "کیا آپ \"{run}\" دوبارہ چلانا چاہتے ہیں؟"
 
 msgid "Re-run Workflow"
-msgstr "Re-run Workflow"
+msgstr "ورک فلو دوبارہ چلائیں"
 
 msgid "✓ Re-running '{run}'"
-msgstr "✓ Re-running '{run}'"
+msgstr "✓ '{run}' دوبارہ چلا رہا ہے"
 
 msgid "✗ Failed to re-run workflow"
-msgstr "✗ Failed to re-run workflow"
+msgstr "✗ ورک فلو دوبارہ چلانے میں ناکام"
 
 msgid "Re-run failed jobs"
-msgstr "Re-run failed jobs"
+msgstr "ناکام جاب دوبارہ چلائیں"
 
 msgid "Do you want to re-run all failed jobs in \"{run}\"?"
-msgstr "Do you want to re-run all failed jobs in \"{run}\"?"
+msgstr "کیا آپ \"{run}\" میں تمام ناکام جاب دوبارہ چلانا چاہتے ہیں؟"
 
 msgid "Re-run Failed Jobs"
-msgstr "Re-run Failed Jobs"
+msgstr "ناکام جاب دوبارہ چلائیں"
 
 msgid "✓ Re-running failed jobs for '{run}'"
-msgstr "✓ Re-running failed jobs for '{run}'"
+msgstr "✓ '{run}' کی ناکام جاب دوبارہ چلائی جا رہی ہیں"
 
 msgid "✗ Failed to re-run failed jobs"
-msgstr "✗ Failed to re-run failed jobs"
+msgstr "✗ ناکام جاب دوبارہ چلانے میں ناکام"
 
 msgid "Do you want to cancel the in-progress run \"{run}\"?\n"
 "\n"
 "This action cannot be undone."
-msgstr "Do you want to cancel the in-progress run \"{run}\"?\n"
-"\n"
-"This action cannot be undone."
+msgstr "کیا آپ جاری رن \"{run}\" کو منسوخ کرنا چاہتے ہیں؟\n\nاس عمل کو واپس نہیں کیا جا "
+"سکتا۔"
 
 msgid "Cancel Workflow Run"
-msgstr "Cancel Workflow Run"
+msgstr "ورک فلو رن منسوخ کریں"
 
 msgid "✓ Cancelled run '{run}'"
-msgstr "✓ Cancelled run '{run}'"
+msgstr "✓ رن '{run}' منسوخ ہو گیا"
 
 msgid "✗ Failed to cancel run"
-msgstr "✗ Failed to cancel run"
+msgstr "✗ رن منسوخ کرنے میں ناکام"
 
 msgid "Click to load jobs..."
-msgstr "Click to load jobs..."
+msgstr "جاب لوڈ کرنے کے لیے کلک کریں..."
 
 msgid "Click to load runs..."
-msgstr "Click to load runs..."
+msgstr "رن لوڈ کرنے کے لیے کلک کریں..."
 
 msgid "No recent runs"
-msgstr "No recent runs"
+msgstr "کوئی حالیہ رن نہیں"
 
 msgid "Triggered runs may take 10-30 seconds to appear"
-msgstr "Triggered runs may take 10-30 seconds to appear"
+msgstr "ٹریگر کیے گئے رن ظاہر ہونے میں 10-30 سیکنڈ لگ سکتے ہیں"
 
 msgid "No runs match the current filters"
-msgstr "No runs match the current filters"
+msgstr "کوئی رن موجودہ فلٹر سے مطابقت نہیں رکھتا"
 
 msgid "Adjust the status chips above to see more runs."
-msgstr "Adjust the status chips above to see more runs."
+msgstr "مزید رن دیکھنے کے لیے اوپر کی حالت چپس کو ایڈجسٹ کریں۔"
 
 msgid "Unable to load workflow runs"
-msgstr "Unable to load workflow runs"
+msgstr "ورک فلو رن لوڈ نہیں کیے جا سکے"
 
 msgid "Recent runs (showing {visible} of {overall})"
 msgstr "Recent runs (showing {visible} of {overall})"
@@ -641,7 +646,7 @@ msgid "Yes"
 msgstr "ہاں"
 
 msgid "Failed to open donation page in the browser."
-msgstr "Failed to open donation page in the browser."
+msgstr "براؤزر میں عطیہ صفحہ کھولنے میں ناکام۔"
 
 msgid "Debug"
 msgstr "ڈی بگ"
