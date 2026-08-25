@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-25 11:18+0000\n"
+"POT-Creation-Date: 2026-08-25 12:50+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -994,356 +994,356 @@ msgstr ""
 msgid "Track GitHub Actions runs"
 msgstr ""
 
-#: data/metainfo.xml.in:9
+#: data/metainfo.xml.in:23
 msgid ""
 "Actioneer lets you browse GitHub repositories, inspect workflow runs, check "
 "job logs, and refresh status without leaving your desktop."
 msgstr ""
 
-#: data/metainfo.xml.in:11
+#: data/metainfo.xml.in:25
 msgid "Key features"
 msgstr ""
 
-#: data/metainfo.xml.in:13
+#: data/metainfo.xml.in:27
 msgid ""
 "Browse your GitHub repositories and view Actions workflows and recent runs "
 "quickly."
 msgstr ""
 
-#: data/metainfo.xml.in:14
+#: data/metainfo.xml.in:28
 msgid ""
 "Inspect run status (success, failure, queued, in progress) with clear badges "
 "and counts."
 msgstr ""
 
-#: data/metainfo.xml.in:15
+#: data/metainfo.xml.in:29
 msgid "Filter runs and focus on what matters most."
 msgstr ""
 
-#: data/metainfo.xml.in:16
+#: data/metainfo.xml.in:30
 msgid "View job logs: download and preview run logs for quick troubleshooting."
 msgstr ""
 
-#: data/metainfo.xml.in:17
+#: data/metainfo.xml.in:31
 msgid ""
 "Dispatch workflows, cancel running workflows, and re-run failed runs "
 "directly from the app."
 msgstr ""
 
-#: data/metainfo.xml.in:18
+#: data/metainfo.xml.in:32
 msgid ""
 "Favorites and quick search let you focus on the repositories and workflows "
 "that matter most."
 msgstr ""
 
-#: data/metainfo.xml.in:19
+#: data/metainfo.xml.in:33
 msgid ""
 "Desktop notifications for run completions and failures so you never miss "
 "important results."
 msgstr ""
 
-#: data/metainfo.xml.in:20
+#: data/metainfo.xml.in:34
 msgid "Keep recent workflow data available offline."
 msgstr ""
 
-#: data/metainfo.xml.in:21
+#: data/metainfo.xml.in:35
 msgid "Fast refreshes that keep the interface responsive."
 msgstr ""
 
-#: data/metainfo.xml.in:24
+#: data/metainfo.xml.in:38
 msgid ""
 "This package contains the desktop application, icons and AppStream metadata "
 "required for distribution via Flatpak/Flathub. See the project repository "
 "for source code, contribution guidelines, and additional documentation."
 msgstr ""
 
-#: data/metainfo.xml.in:33
+#: data/metainfo.xml.in:47
 msgid "Sergey Armodin"
 msgstr ""
 
-#: data/metainfo.xml.in:52
+#: data/metainfo.xml.in:66
 msgid "GitHub"
 msgstr ""
 
-#: data/metainfo.xml.in:53
+#: data/metainfo.xml.in:67
 msgid "Actions"
 msgstr ""
 
-#: data/metainfo.xml.in:54
+#: data/metainfo.xml.in:68
 msgid "CI"
 msgstr ""
 
-#: data/metainfo.xml.in:55
+#: data/metainfo.xml.in:69
 msgid "workflow"
 msgstr ""
 
-#: data/metainfo.xml.in:56
+#: data/metainfo.xml.in:70
 msgid "automation"
 msgstr ""
 
-#: data/metainfo.xml.in:57
+#: data/metainfo.xml.in:71
 msgid "DevOps"
 msgstr ""
 
-#: data/metainfo.xml.in:69
+#: data/metainfo.xml.in:83
 msgid "Browse Actions workflows."
 msgstr ""
 
-#: data/metainfo.xml.in:73
+#: data/metainfo.xml.in:87
 msgid "Inspect workflow runs and drill into job details quickly."
 msgstr ""
 
-#: data/metainfo.xml.in:77
+#: data/metainfo.xml.in:91
 msgid "Review job logs inline without leaving the app."
 msgstr ""
 
-#: data/metainfo.xml.in:81
+#: data/metainfo.xml.in:95
 msgid "Run a job on any branch."
 msgstr ""
 
-#: data/metainfo.xml.in:90
+#: data/metainfo.xml.in:104
 msgid ""
 "The workflow detail pane was redesigned: workflows, runs, jobs, and steps "
 "now expand inline in one place, without opening extra windows."
 msgstr ""
 
-#: data/metainfo.xml.in:91
+#: data/metainfo.xml.in:105
 msgid "Running jobs and steps now show live durations."
 msgstr ""
 
-#: data/metainfo.xml.in:92
+#: data/metainfo.xml.in:106
 msgid ""
 "Italian and Japanese translations added; Actioneer is now available in 14 "
 "languages."
 msgstr ""
 
-#: data/metainfo.xml.in:93
+#: data/metainfo.xml.in:107
 msgid "Updated bundled components help keep Actioneer reliable and up to date."
 msgstr ""
 
-#: data/metainfo.xml.in:100
+#: data/metainfo.xml.in:114
 msgid ""
 "Sign-in works more reliably on newer Linux systems thanks to improved secure "
 "token storage compatibility."
 msgstr ""
 
-#: data/metainfo.xml.in:101
+#: data/metainfo.xml.in:115
 msgid ""
 "Updated bundled components help keep Actioneer stable, reliable, and up to "
 "date."
 msgstr ""
 
-#: data/metainfo.xml.in:108
+#: data/metainfo.xml.in:122
 msgid ""
 "Closing and reopening Actioneer is more reliable, so you are less likely to "
 "see an unexpected crash report after a normal shutdown."
 msgstr ""
 
-#: data/metainfo.xml.in:109
+#: data/metainfo.xml.in:123
 msgid ""
 "Sign-in checks and secure storage now recover more gracefully when desktop "
 "services are slow to respond."
 msgstr ""
 
-#: data/metainfo.xml.in:110
+#: data/metainfo.xml.in:124
 msgid "Updated bundled components help keep the app reliable and up to date."
 msgstr ""
 
-#: data/metainfo.xml.in:117
+#: data/metainfo.xml.in:131
 msgid ""
 "Older workflow runs now show dates in your selected app language, making run "
 "history easier to scan."
 msgstr ""
 
-#: data/metainfo.xml.in:118
+#: data/metainfo.xml.in:132
 msgid ""
 "Updated components and build improvements help keep Linux releases more "
 "reliable."
 msgstr ""
 
-#: data/metainfo.xml.in:125
+#: data/metainfo.xml.in:139
 msgid ""
 "Refreshed the GNOME desktop libraries and HTTP stack for a more reliable, up-"
 "to-date experience."
 msgstr ""
 
-#: data/metainfo.xml.in:132
+#: data/metainfo.xml.in:146
 msgid ""
 "Refreshed bundled components for a more reliable and up-to-date experience."
 msgstr ""
 
-#: data/metainfo.xml.in:139
+#: data/metainfo.xml.in:153
 msgid ""
 "This release includes an important security update to help keep Actioneer "
 "safer to use."
 msgstr ""
 
-#: data/metainfo.xml.in:140
+#: data/metainfo.xml.in:154
 msgid ""
 "Bundled components have been refreshed for a more reliable and up-to-date "
 "experience."
 msgstr ""
 
-#: data/metainfo.xml.in:147
+#: data/metainfo.xml.in:161
 msgid ""
 "Workflow runs and expanded details are now more stable during background "
 "refreshes, with badges and job summaries preserved while results update."
 msgstr ""
 
-#: data/metainfo.xml.in:148
+#: data/metainfo.xml.in:162
 msgid ""
 "Completed runs now stay collapsed when you close them, and run detail "
 "actions recover more reliably after temporary loading hiccups."
 msgstr ""
 
-#: data/metainfo.xml.in:149
+#: data/metainfo.xml.in:163
 msgid ""
 "GitHub connectivity is more resilient to API and permission-related "
 "responses, helping keep repository and workflow data visible instead of "
 "unexpectedly signing you out."
 msgstr ""
 
-#: data/metainfo.xml.in:156
+#: data/metainfo.xml.in:170
 msgid ""
 "In-progress workflow runs now stay up to date, so jobs and steps refresh "
 "while a run is still active."
 msgstr ""
 
-#: data/metainfo.xml.in:157
+#: data/metainfo.xml.in:171
 msgid ""
 "Expanded run details are more stable and easier to follow, with clearer job "
 "badges and step numbering."
 msgstr ""
 
-#: data/metainfo.xml.in:158
+#: data/metainfo.xml.in:172
 msgid ""
 "Workflow status badges are now translated more consistently across the app."
 msgstr ""
 
-#: data/metainfo.xml.in:159
+#: data/metainfo.xml.in:173
 msgid ""
 "Background refresh is lighter on the GitHub API, which helps preserve your "
 "rate limit."
 msgstr ""
 
-#: data/metainfo.xml.in:166
+#: data/metainfo.xml.in:180
 msgid ""
 "The app now feels faster and smoother during sign-in, refreshes, and "
 "everyday navigation."
 msgstr ""
 
-#: data/metainfo.xml.in:167
+#: data/metainfo.xml.in:181
 msgid ""
 "Notifications and background updates are more reliable, so important run "
 "results are less likely to be missed."
 msgstr ""
 
-#: data/metainfo.xml.in:168
+#: data/metainfo.xml.in:182
 msgid ""
 "German and Dutch translations are now available across the app and listing "
 "metadata."
 msgstr ""
 
-#: data/metainfo.xml.in:175
+#: data/metainfo.xml.in:189
 msgid ""
 "Actioneer is now localized in English, German, Dutch, Simplified Chinese, "
 "Hindi, Spanish, French, Arabic, Bengali, Brazilian Portuguese, Russian, and "
 "Urdu."
 msgstr ""
 
-#: data/metainfo.xml.in:176
+#: data/metainfo.xml.in:190
 msgid ""
 "Added Help and Shortcuts to make in-app guidance and keyboard workflows "
 "easier."
 msgstr ""
 
-#: data/metainfo.xml.in:177
+#: data/metainfo.xml.in:191
 msgid "Improved GitHub request stability with client-side timeouts."
 msgstr ""
 
-#: data/metainfo.xml.in:184
+#: data/metainfo.xml.in:198
 msgid ""
 "Manual workflow triggers now support workflow_dispatch inputs with dynamic "
 "parameter fields."
 msgstr ""
 
-#: data/metainfo.xml.in:185
+#: data/metainfo.xml.in:199
 msgid "Dependency updates for ryu, unicode-ident, and zmij."
 msgstr ""
 
-#: data/metainfo.xml.in:192
+#: data/metainfo.xml.in:206
 msgid ""
 "Handle expired job logs (HTTP 410) with clearer messaging instead of a "
 "broken view."
 msgstr ""
 
-#: data/metainfo.xml.in:193
+#: data/metainfo.xml.in:207
 msgid ""
 "Strip BOM markers in job logs so first-line timestamps render correctly."
 msgstr ""
 
-#: data/metainfo.xml.in:200
+#: data/metainfo.xml.in:214
 msgid ""
 "Job logs now render ANSI colors, grouped workflow sections, and clearer "
 "command/output formatting."
 msgstr ""
 
-#: data/metainfo.xml.in:201
+#: data/metainfo.xml.in:215
 msgid ""
 "Aligned timestamps and command prefixes improve scanability, with stronger "
 "error highlighting."
 msgstr ""
 
-#: data/metainfo.xml.in:202
+#: data/metainfo.xml.in:216
 msgid ""
 "Packaging CI refreshed with multi-arch updates for AppImage/Snap/Flatpak "
 "builds."
 msgstr ""
 
-#: data/metainfo.xml.in:203
+#: data/metainfo.xml.in:217
 msgid "Dependency updates and demo log refreshes for improved accuracy."
 msgstr ""
 
-#: data/metainfo.xml.in:210 data/metainfo.xml.in:224
+#: data/metainfo.xml.in:224 data/metainfo.xml.in:238
 msgid ""
 "Faster and smoother UI with refreshed repo/workflow lists and improved "
 "scrolling behavior."
 msgstr ""
 
-#: data/metainfo.xml.in:211 data/metainfo.xml.in:225
+#: data/metainfo.xml.in:225 data/metainfo.xml.in:239
 msgid ""
 "New run filtering controls with better caching, so switching filters is "
 "instant and doesn't reload data."
 msgstr ""
 
-#: data/metainfo.xml.in:212 data/metainfo.xml.in:226
+#: data/metainfo.xml.in:226 data/metainfo.xml.in:240
 msgid ""
 "Better workflow auto-refresh and run status updates, including fewer "
 "duplicate fetches."
 msgstr ""
 
-#: data/metainfo.xml.in:213 data/metainfo.xml.in:227
+#: data/metainfo.xml.in:227 data/metainfo.xml.in:241
 msgid ""
 "Notifications are more reliable across Snap/Flatpak, with improved icon "
 "handling and fallbacks."
 msgstr ""
 
-#: data/metainfo.xml.in:214 data/metainfo.xml.in:228
+#: data/metainfo.xml.in:228 data/metainfo.xml.in:242
 msgid ""
 "Improved sandboxed credential storage using the secret portal for Snap/"
 "Flatpak."
 msgstr ""
 
-#: data/metainfo.xml.in:215 data/metainfo.xml.in:229
+#: data/metainfo.xml.in:229 data/metainfo.xml.in:243
 msgid "Offline-friendly cache persistence for workflows, runs, and jobs."
 msgstr ""
 
-#: data/metainfo.xml.in:216 data/metainfo.xml.in:230
+#: data/metainfo.xml.in:230 data/metainfo.xml.in:244
 msgid ""
 "Packaging and CI updates across Snap, Flatpak, and AppImage for better "
 "compatibility."
 msgstr ""
 
-#: data/metainfo.xml.in:217 data/metainfo.xml.in:231
+#: data/metainfo.xml.in:231 data/metainfo.xml.in:245
 msgid "Dependency updates and stability fixes."
 msgstr ""

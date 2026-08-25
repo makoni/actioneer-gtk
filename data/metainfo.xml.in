@@ -5,6 +5,20 @@
   <metadata_license>MIT</metadata_license>
   <name>Actioneer</name>
   <summary>Track GitHub Actions runs</summary>
+  <lang>ar</lang>
+  <lang>bn</lang>
+  <lang>de</lang>
+  <lang>en</lang>
+  <lang>es</lang>
+  <lang>fr</lang>
+  <lang>hi</lang>
+  <lang>it</lang>
+  <lang>ja</lang>
+  <lang>nl</lang>
+  <lang>pt</lang>
+  <lang>ru</lang>
+  <lang>ur</lang>
+  <lang>zh</lang>
   <description>
     <p>Actioneer lets you browse GitHub repositories, inspect workflow runs, check job logs, and refresh status without leaving your desktop.</p>
 
