@@ -649,16 +649,16 @@ msgid "Failed to open donation page in the browser."
 msgstr "Não foi possível abrir a página de doação no navegador."
 
 msgid "Debug"
-msgstr "Depuracao"
+msgstr "Depuração"
 
 msgid "Trigger test crash"
 msgstr "Disparar falha de teste"
 
 msgid "Actioneer detected a crash report from the previous run. You can report it on GitHub and attach the crash file."
-msgstr "O Actioneer detectou um relatorio de falha da execucao anterior. Voce pode reportar no GitHub e anexar o arquivo de falha."
+msgstr "O Actioneer detectou um relatório de falha da execução anterior. Você pode reportar no GitHub e anexar o arquivo de falha."
 
 msgid "Crash report file:"
-msgstr "Arquivo do relatorio de falha:"
+msgstr "Arquivo do relatório de falha:"
 
 msgid "Copy diagnostics"
 msgstr "Copiar diagnosticos"
@@ -721,25 +721,25 @@ msgid "Run a job on any branch."
 msgstr "Execute um job em qualquer branch."
 
 msgid "This release includes an important security update to help keep Actioneer safer to use."
-msgstr "Esta versao inclui uma importante atualizacao de seguranca para ajudar a manter o Actioneer mais seguro de usar."
+msgstr "Esta versão inclui uma importante atualização de segurança para ajudar a manter o Actioneer mais seguro de usar."
 
 msgid "Bundled components have been refreshed for a more reliable and up-to-date experience."
-msgstr "Os componentes incluidos foram atualizados para oferecer uma experiencia mais confiavel e atual."
+msgstr "Os componentes incluídos foram atualizados para oferecer uma experiência mais confiável e atual."
 
 msgid "Workflow runs and expanded details are now more stable during background refreshes, with badges and job summaries preserved while results update."
-msgstr "Execucoes de workflow e detalhes expandidos agora ficam mais estaveis durante atualizacoes em segundo plano, preservando badges e resumos de jobs enquanto os resultados sao atualizados."
+msgstr "Execuções de workflow e detalhes expandidos agora ficam mais estáveis durante atualizações em segundo plano, preservando badges e resumos de jobs enquanto os resultados são atualizados."
 
 msgid "Completed runs now stay collapsed when you close them, and run detail actions recover more reliably after temporary loading hiccups."
-msgstr "Execucoes concluidas agora permanecem recolhidas quando voce as fecha, e as acoes nos detalhes do run se recuperam com mais confiabilidade apos falhas temporarias de carregamento."
+msgstr "Execuções concluídas agora permanecem recolhidas quando você as fecha, e as ações nos detalhes do run se recuperam com mais confiabilidade após falhas temporárias de carregamento."
 
 msgid "GitHub connectivity is more resilient to API and permission-related responses, helping keep repository and workflow data visible instead of unexpectedly signing you out."
-msgstr "A conexao com o GitHub agora lida melhor com respostas de API e permissoes, ajudando a manter visiveis os dados de repositorios e workflows em vez de encerrar a sessao inesperadamente."
+msgstr "A conexão com o GitHub agora lida melhor com respostas de API e permissões, ajudando a manter visíveis os dados de repositórios e workflows em vez de encerrar a sessão inesperadamente."
 
 msgid "In-progress workflow runs now stay up to date, so jobs and steps refresh while a run is still active."
 msgstr "As execuções de workflow em andamento agora permanecem atualizadas, então jobs e etapas são atualizados enquanto a execução ainda está ativa."
 
 msgid "Expanded run details are more stable and easier to follow, with clearer job badges and step numbering."
-msgstr "Os detalhes das execucoes expandidas agora estao mais estaveis e faceis de acompanhar, com badges de jobs e numeracao de etapas mais claros."
+msgstr "Os detalhes das execuções expandidas agora estão mais estáveis e fáceis de acompanhar, com badges de jobs e numeração de etapas mais claros."
 
 msgid "Workflow status badges are now translated more consistently across the app."
 msgstr "Os badges de status dos workflows agora têm traduções mais consistentes em todo o app."

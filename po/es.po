@@ -655,7 +655,7 @@ msgid "Trigger test crash"
 msgstr "Provocar fallo de prueba"
 
 msgid "Actioneer detected a crash report from the previous run. You can report it on GitHub and attach the crash file."
-msgstr "Actioneer detecto un informe de fallo de la ejecucion anterior. Puedes reportarlo en GitHub y adjuntar el archivo de fallo."
+msgstr "Actioneer detectó un informe de fallo de la ejecución anterior. Puedes reportarlo en GitHub y adjuntar el archivo de fallo."
 
 msgid "Crash report file:"
 msgstr "Archivo del informe de fallo:"
@@ -721,10 +721,10 @@ msgid "Run a job on any branch."
 msgstr "Ejecuta un job en cualquier rama."
 
 msgid "This release includes an important security update to help keep Actioneer safer to use."
-msgstr "Esta version incluye una importante actualizacion de seguridad para ayudar a que Actioneer siga siendo mas seguro de usar."
+msgstr "Esta versión incluye una importante actualización de seguridad para ayudar a que Actioneer siga siendo más seguro de usar."
 
 msgid "Bundled components have been refreshed for a more reliable and up-to-date experience."
-msgstr "Los componentes incluidos se han actualizado para ofrecer una experiencia mas fiable y al dia."
+msgstr "Los componentes incluidos se han actualizado para ofrecer una experiencia más fiable y al día."
 
 msgid "Workflow runs and expanded details are now more stable during background refreshes, with badges and job summaries preserved while results update."
 msgstr "Las ejecuciones de workflow y sus detalles expandidos ahora son más estables durante las actualizaciones en segundo plano, y conservan los badges y resúmenes de jobs mientras se actualizan los resultados."
