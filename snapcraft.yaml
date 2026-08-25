@@ -64,6 +64,8 @@ parts:
       install -Dm644 "$CRAFT_PART_SRC/icons/icons/hicolor/scalable/apps/me.spaceinbox.actioneer.svg" "$SNAPCRAFT_PART_INSTALL/meta/gui/me.spaceinbox.actioneer.svg"
       install -Dm644 "$CRAFT_PART_SRC/icons/icons/hicolor/scalable/apps/actioneer.svg" "$SNAPCRAFT_PART_INSTALL/meta/gui/actioneer.svg"
       install -Dm644 "$CRAFT_PART_SRC/icons/icons/hicolor/scalable/apps/me.spaceinbox.actioneer.svg" "$SNAPCRAFT_PART_INSTALL/usr/share/icons/hicolor/scalable/apps/me.spaceinbox.actioneer.svg"
+      install -d "$SNAPCRAFT_PART_INSTALL/usr/share/actioneer/po"
+      cp -a "$CRAFT_PART_SRC/po"/*.po "$SNAPCRAFT_PART_INSTALL/usr/share/actioneer/po/"
     prime:
       # Drop development-only ICU helpers that trigger snap lint warnings but aren't needed at runtime
       - -usr/lib/aarch64-linux-gnu/libicutest.so.74.2
