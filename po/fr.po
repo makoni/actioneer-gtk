@@ -81,11 +81,11 @@ msgstr "Envoyer une notification de test"
 msgid "Preferences are currently unavailable."
 msgstr "Les préférences sont actuellement indisponibles."
 
-msgid "General"
-msgstr "Général"
+#~ msgid "General"
+#~ msgstr "Général"
 
-msgid "Application"
-msgstr "Application"
+#~ msgid "Application"
+#~ msgstr "Application"
 
 msgid "Refresh repositories"
 msgstr "Actualiser les dépôts"
@@ -273,25 +273,25 @@ msgid "Try Demo Mode"
 msgstr "Essayer le mode démo"
 
 msgid "Explore Actioneer with sample data"
-msgstr "Découvrez Actioneer avec des données d'exemple"
+msgstr "Découvrez Actioneer avec des données d’exemple"
 
 msgid "Workflow Run"
 msgstr "Exécution de workflow"
 
-msgid "{title} - Jobs"
-msgstr "{title} - Jobs"
+#~ msgid "{title} - Jobs"
+#~ msgstr "{title} - Jobs"
 
-msgid "Refresh jobs"
-msgstr "Refresh jobs"
+#~ msgid "Refresh jobs"
+#~ msgstr "Refresh jobs"
 
 msgid "Cancel run"
 msgstr "Annuler l’exécution"
 
-msgid "Run cancellation requested successfully."
-msgstr "Run cancellation requested successfully."
+#~ msgid "Run cancellation requested successfully."
+#~ msgstr "Run cancellation requested successfully."
 
-msgid "Failed to cancel run: {error}"
-msgstr "Failed to cancel run: {error}"
+#~ msgid "Failed to cancel run: {error}"
+#~ msgstr "Failed to cancel run: {error}"
 
 msgid "Job"
 msgstr "Job"
@@ -365,8 +365,8 @@ msgstr "Les journaux sont vides ; rien à copier"
 msgid "Logs copied to clipboard"
 msgstr "Journaux copiés dans le presse-papiers"
 
-msgid "Clipboard unavailable on this system"
-msgstr "Clipboard unavailable on this system"
+#~ msgid "Clipboard unavailable on this system"
+#~ msgstr "Clipboard unavailable on this system"
 
 msgid "Save Logs"
 msgstr "Enregistrer les journaux"
@@ -386,8 +386,8 @@ msgstr "Échec de l’enregistrement des journaux : {error}"
 msgid "Unable to determine save location"
 msgstr "Impossible de déterminer l’emplacement d’enregistrement"
 
-msgid "No file selected"
-msgstr "No file selected"
+#~ msgid "No file selected"
+#~ msgstr "No file selected"
 
 msgid "Loading repositories..."
 msgstr "Chargement des dépôts..."
@@ -413,8 +413,8 @@ msgstr "Échec du chargement des workflows : {error}"
 msgid "Refresh workflows"
 msgstr "Actualiser les workflows"
 
-msgid "Private Repository"
-msgstr "Dépôt privé"
+#~ msgid "Private Repository"
+#~ msgstr "Dépôt privé"
 
 msgid "Show successful runs"
 msgstr "Afficher les exécutions réussies"
@@ -423,7 +423,7 @@ msgid "Show failed runs"
 msgstr "Afficher les exécutions échouées"
 
 msgid "Show running/queued runs"
-msgstr "Afficher les exécutions en cours/en file d'attente"
+msgstr "Afficher les exécutions en cours/en file d’attente"
 
 msgid "now"
 msgstr "maintenant"
@@ -443,14 +443,14 @@ msgstr "Job sans nom"
 msgid "View logs"
 msgstr "Voir les journaux"
 
-msgid "Open job in GitHub"
-msgstr "Open job in GitHub"
+#~ msgid "Open job in GitHub"
+#~ msgstr "Open job in GitHub"
 
 msgid "No jobs found"
 msgstr "Aucun job trouvé"
 
-msgid "Showing {count} jobs"
-msgstr "Showing {count} jobs"
+#~ msgid "Showing {count} jobs"
+#~ msgstr "Showing {count} jobs"
 
 msgid "Unable to load jobs"
 msgstr "Impossible de charger les jobs"
@@ -585,17 +585,17 @@ msgstr "Ajustez les pastilles d’état ci-dessus pour voir plus d’exécutions
 msgid "Unable to load workflow runs"
 msgstr "Impossible de charger les exécutions du workflow"
 
-msgid "Recent runs (showing {visible} of {overall})"
-msgstr "Recent runs (showing {visible} of {overall})"
+#~ msgid "Recent runs (showing {visible} of {overall})"
+#~ msgstr "Recent runs (showing {visible} of {overall})"
 
-msgid "Recent runs ({overall})"
-msgstr "Recent runs ({overall})"
+#~ msgid "Recent runs ({overall})"
+#~ msgstr "Recent runs ({overall})"
 
-msgid "Recent runs (showing {visible} of {filtered} matching filters)"
-msgstr "Recent runs (showing {visible} of {filtered} matching filters)"
+#~ msgid "Recent runs (showing {visible} of {filtered} matching filters)"
+#~ msgstr "Recent runs (showing {visible} of {filtered} matching filters)"
 
 msgid "Queued"
-msgstr "En file d'attente"
+msgstr "En file d’attente"
 
 msgid "In Progress"
 msgstr "En cours"
@@ -619,7 +619,7 @@ msgid "Stale"
 msgstr "Obsolète"
 
 msgid "Just now"
-msgstr "À l'instant"
+msgstr "À l’instant"
 
 msgid "Yesterday"
 msgstr "Hier"
@@ -663,11 +663,11 @@ msgstr "Fichier de rapport de crash :"
 msgid "Copy diagnostics"
 msgstr "Copier les diagnostics"
 
-msgid "Open crash folder"
-msgstr "Ouvrir le dossier de crash"
+#~ msgid "Open crash folder"
+#~ msgstr "Ouvrir le dossier de crash"
 
-msgid "Dismiss"
-msgstr "Fermer"
+#~ msgid "Dismiss"
+#~ msgstr "Fermer"
 
 msgid "Track GitHub Actions runs"
 msgstr "Suivez les exécutions GitHub Actions"
@@ -721,10 +721,10 @@ msgid "Run a job on any branch."
 msgstr "Exécutez un job sur n’importe quelle branche."
 
 msgid "This release includes an important security update to help keep Actioneer safer to use."
-msgstr "Cette version inclut une importante mise a jour de securite afin de rendre Actioneer plus sur a l'usage."
+msgstr "Cette version inclut une importante mise à jour de sécurité afin de rendre Actioneer plus sûr à l’usage."
 
 msgid "Bundled components have been refreshed for a more reliable and up-to-date experience."
-msgstr "Les composants integres ont ete actualises pour offrir une experience plus fiable et plus a jour."
+msgstr "Les composants intégrés ont été actualisés pour offrir une expérience plus fiable et plus à jour."
 
 msgid "Workflow runs and expanded details are now more stable during background refreshes, with badges and job summaries preserved while results update."
 msgstr "Les runs de workflow et leurs détails ouverts sont désormais plus stables pendant les actualisations en arrière-plan, avec conservation des badges et des résumés de jobs pendant la mise à jour des résultats."
@@ -733,7 +733,7 @@ msgid "Completed runs now stay collapsed when you close them, and run detail act
 msgstr "Les runs terminés restent maintenant repliés quand vous les refermez, et les actions des détails de run se rétablissent plus fiablement après de brefs problèmes de chargement."
 
 msgid "GitHub connectivity is more resilient to API and permission-related responses, helping keep repository and workflow data visible instead of unexpectedly signing you out."
-msgstr "La connexion a GitHub est desormais plus robuste face aux reponses liees a l'API et aux permissions, ce qui aide a garder visibles les donnees des depots et des workflows au lieu de provoquer une deconnexion inattendue."
+msgstr "La connexion à GitHub est désormais plus robuste face aux réponses liées à l’API et aux permissions, ce qui aide à garder visibles les données des dépôts et des workflows au lieu de provoquer une déconnexion inattendue."
 
 msgid "In-progress workflow runs now stay up to date, so jobs and steps refresh while a run is still active."
 msgstr "Les exécutions de workflow en cours restent désormais à jour, de sorte que les jobs et les étapes se rafraîchissent pendant qu’un run est encore actif."
@@ -845,7 +845,7 @@ msgid "Workflows"
 msgstr "Workflows"
 
 msgid "Auto-refresh is disabled."
-msgstr "L'actualisation automatique est désactivée."
+msgstr "L’actualisation automatique est désactivée."
 
 msgid "Data refreshes automatically every {seconds} seconds."
 msgstr "Les données sont actualisées automatiquement toutes les {seconds} secondes."
@@ -863,7 +863,7 @@ msgid "Not updated yet"
 msgstr "Pas encore mis à jour"
 
 msgid "No runs yet"
-msgstr "Aucune exécution pour l'instant"
+msgstr "Aucune exécution pour l’instant"
 
 msgid "Recent runs"
 msgstr "Exécutions récentes"
@@ -917,16 +917,16 @@ msgid "Saving token..."
 msgstr "Enregistrement du jeton…"
 
 msgid "Set the application language (e.g., ru, en, zh_Hans)"
-msgstr "Définir la langue de l'application (par ex. ru, en, zh_Hans)"
+msgstr "Définir la langue de l’application (par ex. ru, en, zh_Hans)"
 
 msgid "Start the app with sample demo data"
-msgstr "Lancer l'application avec des données de démonstration"
+msgstr "Lancer l’application avec des données de démonstration"
 
 msgid "No repositories match"
 msgstr "Aucun dépôt correspondant"
 
-msgid "Activity is gathered as you open repositories."
-msgstr "L'activité est collectée à mesure que vous ouvrez des dépôts."
+#~ msgid "Activity is gathered as you open repositories."
+#~ msgstr "L'activité est collectée à mesure que vous ouvrez des dépôts."
 
 msgid "{count} workflows in this state"
 msgstr "{count} workflows dans cet état"

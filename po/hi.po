@@ -81,11 +81,11 @@ msgstr "परीक्षण सूचना भेजें"
 msgid "Preferences are currently unavailable."
 msgstr "प्राथमिकताएँ फिलहाल उपलब्ध नहीं हैं।"
 
-msgid "General"
-msgstr "सामान्य"
+#~ msgid "General"
+#~ msgstr "सामान्य"
 
-msgid "Application"
-msgstr "एप्लिकेशन"
+#~ msgid "Application"
+#~ msgstr "एप्लिकेशन"
 
 msgid "Refresh repositories"
 msgstr "रिपॉज़िटरियाँ रीफ़्रेश करें"
@@ -278,20 +278,20 @@ msgstr "सैंपल डेटा के साथ Actioneer का अनु
 msgid "Workflow Run"
 msgstr "वर्कफ़्लो रन"
 
-msgid "{title} - Jobs"
-msgstr "{title} - Jobs"
+#~ msgid "{title} - Jobs"
+#~ msgstr "{title} - Jobs"
 
-msgid "Refresh jobs"
-msgstr "Refresh jobs"
+#~ msgid "Refresh jobs"
+#~ msgstr "Refresh jobs"
 
 msgid "Cancel run"
 msgstr "रन रद्द करें"
 
-msgid "Run cancellation requested successfully."
-msgstr "Run cancellation requested successfully."
+#~ msgid "Run cancellation requested successfully."
+#~ msgstr "Run cancellation requested successfully."
 
-msgid "Failed to cancel run: {error}"
-msgstr "Failed to cancel run: {error}"
+#~ msgid "Failed to cancel run: {error}"
+#~ msgstr "Failed to cancel run: {error}"
 
 msgid "Job"
 msgstr "जॉब"
@@ -364,8 +364,8 @@ msgstr "लॉग खाली हैं; कॉपी करने के ल�
 msgid "Logs copied to clipboard"
 msgstr "लॉग को क्लिपबोर्ड पर कॉपी किया गया"
 
-msgid "Clipboard unavailable on this system"
-msgstr "Clipboard unavailable on this system"
+#~ msgid "Clipboard unavailable on this system"
+#~ msgstr "Clipboard unavailable on this system"
 
 msgid "Save Logs"
 msgstr "लॉग सहेजें"
@@ -385,8 +385,8 @@ msgstr "लॉग सहेजने में विफल: {error}"
 msgid "Unable to determine save location"
 msgstr "सहेजने की स्थिति निर्धारित नहीं की जा सकी"
 
-msgid "No file selected"
-msgstr "No file selected"
+#~ msgid "No file selected"
+#~ msgstr "No file selected"
 
 msgid "Loading repositories..."
 msgstr "रिपॉजिटरी लोड हो रही हैं..."
@@ -412,8 +412,8 @@ msgstr "वर्कफ़्लो लोड करने में विफ�
 msgid "Refresh workflows"
 msgstr "वर्कफ़्लो रीफ़्रेश करें"
 
-msgid "Private Repository"
-msgstr "निजी रिपॉजिटरी"
+#~ msgid "Private Repository"
+#~ msgstr "निजी रिपॉजिटरी"
 
 msgid "Show successful runs"
 msgstr "सफल रन दिखाएँ"
@@ -442,14 +442,14 @@ msgstr "अनाम जॉब"
 msgid "View logs"
 msgstr "लॉग देखें"
 
-msgid "Open job in GitHub"
-msgstr "Open job in GitHub"
+#~ msgid "Open job in GitHub"
+#~ msgstr "Open job in GitHub"
 
 msgid "No jobs found"
 msgstr "कोई जॉब नहीं मिला"
 
-msgid "Showing {count} jobs"
-msgstr "Showing {count} jobs"
+#~ msgid "Showing {count} jobs"
+#~ msgstr "Showing {count} jobs"
 
 msgid "Unable to load jobs"
 msgstr "जॉब लोड नहीं की जा सकीं"
@@ -584,14 +584,14 @@ msgstr "और रन देखने के लिए ऊपर स्थित
 msgid "Unable to load workflow runs"
 msgstr "वर्कफ़्लो रन लोड नहीं किए जा सकें"
 
-msgid "Recent runs (showing {visible} of {overall})"
-msgstr "Recent runs (showing {visible} of {overall})"
+#~ msgid "Recent runs (showing {visible} of {overall})"
+#~ msgstr "Recent runs (showing {visible} of {overall})"
 
-msgid "Recent runs ({overall})"
-msgstr "Recent runs ({overall})"
+#~ msgid "Recent runs ({overall})"
+#~ msgstr "Recent runs ({overall})"
 
-msgid "Recent runs (showing {visible} of {filtered} matching filters)"
-msgstr "Recent runs (showing {visible} of {filtered} matching filters)"
+#~ msgid "Recent runs (showing {visible} of {filtered} matching filters)"
+#~ msgstr "Recent runs (showing {visible} of {filtered} matching filters)"
 
 msgid "Queued"
 msgstr "कतार में"
@@ -662,11 +662,11 @@ msgstr "क्रैश रिपोर्ट फ़ाइल:"
 msgid "Copy diagnostics"
 msgstr "डायग्नोस्टिक्स कॉपी करें"
 
-msgid "Open crash folder"
-msgstr "क्रैश फ़ोल्डर खोलें"
+#~ msgid "Open crash folder"
+#~ msgstr "क्रैश फ़ोल्डर खोलें"
 
-msgid "Dismiss"
-msgstr "बंद करें"
+#~ msgid "Dismiss"
+#~ msgstr "बंद करें"
 
 msgid "Track GitHub Actions runs"
 msgstr "GitHub Actions रन ट्रैक करें"
@@ -924,8 +924,8 @@ msgstr "नमूना डेमो डेटा के साथ ऐप शु
 msgid "No repositories match"
 msgstr "कोई रिपॉज़िटरी मेल नहीं खाती"
 
-msgid "Activity is gathered as you open repositories."
-msgstr "रिपॉज़िटरी खोलने पर गतिविधि एकत्र की जाती है।"
+#~ msgid "Activity is gathered as you open repositories."
+#~ msgstr "रिपॉज़िटरी खोलने पर गतिविधि एकत्र की जाती है।"
 
 msgid "{count} workflows in this state"
 msgstr "इस स्थिति में {count} वर्कफ़्लो"

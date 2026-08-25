@@ -381,20 +381,20 @@ msgstr "Mostra {visible} di {overall}"
 msgid "Showing {visible} of {filtered} matching filters"
 msgstr "Mostra {visible} di {filtered} che corrispondono ai filtri"
 
-#: src/ui/detail_view/helpers/runs/list.rs:548
-#: src/ui/detail_view/helpers/runs/list.rs:659
-msgid "Recent runs (showing {visible} of {overall})"
-msgstr "Esecuzioni recenti (mostra {visible} di {overall})"
+#~ #: src/ui/detail_view/helpers/runs/list.rs:548
+#~ #: src/ui/detail_view/helpers/runs/list.rs:659
+#~ msgid "Recent runs (showing {visible} of {overall})"
+#~ msgstr "Esecuzioni recenti (mostra {visible} di {overall})"
 
-#: src/ui/detail_view/helpers/runs/list.rs:552
-#: src/ui/detail_view/helpers/runs/list.rs:683
-msgid "Recent runs ({overall})"
-msgstr "Esecuzioni recenti ({overall})"
+#~ #: src/ui/detail_view/helpers/runs/list.rs:552
+#~ #: src/ui/detail_view/helpers/runs/list.rs:683
+#~ msgid "Recent runs ({overall})"
+#~ msgstr "Esecuzioni recenti ({overall})"
 
-#: src/ui/detail_view/helpers/runs/list.rs:555
-#: src/ui/detail_view/helpers/runs/list.rs:671
-msgid "Recent runs (showing {visible} of {filtered} matching filters)"
-msgstr "Esecuzioni recenti (mostra {visible} di {filtered} che corrispondono ai filtri)"
+#~ #: src/ui/detail_view/helpers/runs/list.rs:555
+#~ #: src/ui/detail_view/helpers/runs/list.rs:671
+#~ msgid "Recent runs (showing {visible} of {filtered} matching filters)"
+#~ msgstr "Esecuzioni recenti (mostra {visible} di {filtered} che corrispondono ai filtri)"
 
 #: src/ui/detail_view/helpers/runs/row.rs:257
 msgid "Click to load jobs..."
@@ -675,9 +675,9 @@ msgstr "I log sono vuoti; nulla da copiare"
 msgid "Logs copied to clipboard"
 msgstr "Log copiati negli appunti"
 
-#: src/ui/job_logs_window.rs:336
-msgid "Clipboard unavailable on this system"
-msgstr "Appunti non disponibili su questo sistema"
+#~ #: src/ui/job_logs_window.rs:336
+#~ msgid "Clipboard unavailable on this system"
+#~ msgstr "Appunti non disponibili su questo sistema"
 
 #: src/ui/job_logs_window.rs:370
 msgid "Logs are empty; nothing saved"

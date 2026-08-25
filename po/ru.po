@@ -81,11 +81,11 @@ msgstr "Отправить тестовое уведомление"
 msgid "Preferences are currently unavailable."
 msgstr "Настройки сейчас недоступны."
 
-msgid "General"
-msgstr "Общие"
+#~ msgid "General"
+#~ msgstr "Общие"
 
-msgid "Application"
-msgstr "Приложение"
+#~ msgid "Application"
+#~ msgstr "Приложение"
 
 msgid "Refresh repositories"
 msgstr "Обновить репозитории"
@@ -281,20 +281,20 @@ msgstr "Ознакомьтесь с Actioneer на примере тестовы
 msgid "Workflow Run"
 msgstr "Запуск workflow"
 
-msgid "{title} - Jobs"
-msgstr "{title} - Задания"
+#~ msgid "{title} - Jobs"
+#~ msgstr "{title} - Задания"
 
-msgid "Refresh jobs"
-msgstr "Обновить задания"
+#~ msgid "Refresh jobs"
+#~ msgstr "Обновить задания"
 
 msgid "Cancel run"
 msgstr "Отменить запуск"
 
-msgid "Run cancellation requested successfully."
-msgstr "Запрос на отмену запуска успешно отправлен."
+#~ msgid "Run cancellation requested successfully."
+#~ msgstr "Запрос на отмену запуска успешно отправлен."
 
-msgid "Failed to cancel run: {error}"
-msgstr "Не удалось отменить запуск: {error}"
+#~ msgid "Failed to cancel run: {error}"
+#~ msgstr "Не удалось отменить запуск: {error}"
 
 msgid "Job"
 msgstr "Задание"
@@ -367,8 +367,8 @@ msgstr "Логи пусты; копировать нечего"
 msgid "Logs copied to clipboard"
 msgstr "Логи скопированы в буфер обмена"
 
-msgid "Clipboard unavailable on this system"
-msgstr "Буфер обмена недоступен в этой системе"
+#~ msgid "Clipboard unavailable on this system"
+#~ msgstr "Буфер обмена недоступен в этой системе"
 
 msgid "Save Logs"
 msgstr "Сохранить логи"
@@ -388,8 +388,8 @@ msgstr "Не удалось сохранить логи: {error}"
 msgid "Unable to determine save location"
 msgstr "Не удалось определить место сохранения"
 
-msgid "No file selected"
-msgstr "Файл не выбран"
+#~ msgid "No file selected"
+#~ msgstr "Файл не выбран"
 
 msgid "Loading repositories..."
 msgstr "Загрузка репозиториев..."
@@ -415,8 +415,8 @@ msgstr "Не удалось загрузить рабочие процессы: 
 msgid "Refresh workflows"
 msgstr "Обновить workflow"
 
-msgid "Private Repository"
-msgstr "Приватный репозиторий"
+#~ msgid "Private Repository"
+#~ msgstr "Приватный репозиторий"
 
 msgid "Show successful runs"
 msgstr "Показывать успешные запуски"
@@ -445,14 +445,14 @@ msgstr "Задание без названия"
 msgid "View logs"
 msgstr "Просмотреть логи"
 
-msgid "Open job in GitHub"
-msgstr "Открыть задание в GitHub"
+#~ msgid "Open job in GitHub"
+#~ msgstr "Открыть задание в GitHub"
 
 msgid "No jobs found"
 msgstr "Задания не найдены"
 
-msgid "Showing {count} jobs"
-msgstr "Показано {count} заданий"
+#~ msgid "Showing {count} jobs"
+#~ msgstr "Показано {count} заданий"
 
 msgid "Unable to load jobs"
 msgstr "Не удалось загрузить задания"
@@ -588,14 +588,14 @@ msgstr "Измените фильтры статусов выше, чтобы у
 msgid "Unable to load workflow runs"
 msgstr "Не удалось загрузить запуски workflow"
 
-msgid "Recent runs (showing {visible} of {overall})"
-msgstr "Недавние запуски (показано {visible} из {overall})"
+#~ msgid "Recent runs (showing {visible} of {overall})"
+#~ msgstr "Недавние запуски (показано {visible} из {overall})"
 
-msgid "Recent runs ({overall})"
-msgstr "Недавние запуски ({overall})"
+#~ msgid "Recent runs ({overall})"
+#~ msgstr "Недавние запуски ({overall})"
 
-msgid "Recent runs (showing {visible} of {filtered} matching filters)"
-msgstr "Недавние запуски (показано {visible} из {filtered}, соответствующих фильтрам)"
+#~ msgid "Recent runs (showing {visible} of {filtered} matching filters)"
+#~ msgstr "Недавние запуски (показано {visible} из {filtered}, соответствующих фильтрам)"
 
 msgid "Queued"
 msgstr "В очереди"
@@ -666,11 +666,11 @@ msgstr "Файл отчёта о сбое:"
 msgid "Copy diagnostics"
 msgstr "Скопировать диагностику"
 
-msgid "Open crash folder"
-msgstr "Открыть папку со сбоями"
+#~ msgid "Open crash folder"
+#~ msgstr "Открыть папку со сбоями"
 
-msgid "Dismiss"
-msgstr "Закрыть"
+#~ msgid "Dismiss"
+#~ msgstr "Закрыть"
 
 msgid "Track GitHub Actions runs"
 msgstr "Отслеживайте запуски GitHub Actions"
@@ -928,8 +928,8 @@ msgstr "Запустить приложение с демонстрационн�
 msgid "No repositories match"
 msgstr "Нет подходящих репозиториев"
 
-msgid "Activity is gathered as you open repositories."
-msgstr "Активность собирается по мере открытия репозиториев."
+#~ msgid "Activity is gathered as you open repositories."
+#~ msgstr "Активность собирается по мере открытия репозиториев."
 
 msgid "{count} workflows in this state"
 msgstr "{count} воркфлоу в этом состоянии"

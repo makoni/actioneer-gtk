@@ -381,20 +381,20 @@ msgstr "{overall} 件中 {visible} 件を表示中"
 msgid "Showing {visible} of {filtered} matching filters"
 msgstr "フィルターに一致する {filtered} 件中 {visible} 件を表示中"
 
-#: src/ui/detail_view/helpers/runs/list.rs:548
-#: src/ui/detail_view/helpers/runs/list.rs:659
-msgid "Recent runs (showing {visible} of {overall})"
-msgstr "最近の実行({overall} 件中 {visible} 件を表示中)"
+#~ #: src/ui/detail_view/helpers/runs/list.rs:548
+#~ #: src/ui/detail_view/helpers/runs/list.rs:659
+#~ msgid "Recent runs (showing {visible} of {overall})"
+#~ msgstr "最近の実行({overall} 件中 {visible} 件を表示中)"
 
-#: src/ui/detail_view/helpers/runs/list.rs:552
-#: src/ui/detail_view/helpers/runs/list.rs:683
-msgid "Recent runs ({overall})"
-msgstr "最近の実行({overall})"
+#~ #: src/ui/detail_view/helpers/runs/list.rs:552
+#~ #: src/ui/detail_view/helpers/runs/list.rs:683
+#~ msgid "Recent runs ({overall})"
+#~ msgstr "最近の実行({overall})"
 
-#: src/ui/detail_view/helpers/runs/list.rs:555
-#: src/ui/detail_view/helpers/runs/list.rs:671
-msgid "Recent runs (showing {visible} of {filtered} matching filters)"
-msgstr "最近の実行(フィルターに一致する {filtered} 件中 {visible} 件を表示中)"
+#~ #: src/ui/detail_view/helpers/runs/list.rs:555
+#~ #: src/ui/detail_view/helpers/runs/list.rs:671
+#~ msgid "Recent runs (showing {visible} of {filtered} matching filters)"
+#~ msgstr "最近の実行(フィルターに一致する {filtered} 件中 {visible} 件を表示中)"
 
 #: src/ui/detail_view/helpers/runs/row.rs:257
 msgid "Click to load jobs..."
@@ -675,9 +675,9 @@ msgstr "ログが空です。コピーできるものはありません"
 msgid "Logs copied to clipboard"
 msgstr "ログをクリップボードにコピーしました"
 
-#: src/ui/job_logs_window.rs:336
-msgid "Clipboard unavailable on this system"
-msgstr "このシステムではクリップボードが利用できません"
+#~ #: src/ui/job_logs_window.rs:336
+#~ msgid "Clipboard unavailable on this system"
+#~ msgstr "このシステムではクリップボードが利用できません"
 
 #: src/ui/job_logs_window.rs:370
 msgid "Logs are empty; nothing saved"

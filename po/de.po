@@ -86,11 +86,11 @@ msgstr "Testbenachrichtigung senden"
 msgid "Preferences are currently unavailable."
 msgstr "Einstellungen sind derzeit nicht verfügbar."
 
-msgid "General"
-msgstr "Allgemein"
+#~ msgid "General"
+#~ msgstr "Allgemein"
 
-msgid "Application"
-msgstr "Anwendung"
+#~ msgid "Application"
+#~ msgstr "Anwendung"
 
 msgid "Refresh repositories"
 msgstr "Repositories aktualisieren"
@@ -305,20 +305,20 @@ msgstr "Actioneer mit Beispieldaten erkunden"
 msgid "Workflow Run"
 msgstr "Workflow-Lauf"
 
-msgid "{title} - Jobs"
-msgstr "{title} - Aufgaben"
+#~ msgid "{title} - Jobs"
+#~ msgstr "{title} - Aufgaben"
 
-msgid "Refresh jobs"
-msgstr "Jobs aktualisieren"
+#~ msgid "Refresh jobs"
+#~ msgstr "Jobs aktualisieren"
 
 msgid "Cancel run"
 msgstr "Lauf abbrechen"
 
-msgid "Run cancellation requested successfully."
-msgstr "Abbruch des Laufs erfolgreich angefordert."
+#~ msgid "Run cancellation requested successfully."
+#~ msgstr "Abbruch des Laufs erfolgreich angefordert."
 
-msgid "Failed to cancel run: {error}"
-msgstr "Lauf konnte nicht abgebrochen werden: {error}"
+#~ msgid "Failed to cancel run: {error}"
+#~ msgstr "Lauf konnte nicht abgebrochen werden: {error}"
 
 msgid "Job"
 msgstr "Aufgabe"
@@ -402,8 +402,8 @@ msgstr "Protokolle sind leer; nichts zum Kopieren"
 msgid "Logs copied to clipboard"
 msgstr "Protokolle in Zwischenablage kopiert"
 
-msgid "Clipboard unavailable on this system"
-msgstr "Zwischenablage auf diesem System nicht verfügbar"
+#~ msgid "Clipboard unavailable on this system"
+#~ msgstr "Zwischenablage auf diesem System nicht verfügbar"
 
 msgid "Save Logs"
 msgstr "Protokolle speichern"
@@ -423,8 +423,8 @@ msgstr "Protokolle konnten nicht gespeichert werden: {error}"
 msgid "Unable to determine save location"
 msgstr "Speicherort konnte nicht ermittelt werden"
 
-msgid "No file selected"
-msgstr "Keine Datei ausgewählt"
+#~ msgid "No file selected"
+#~ msgstr "Keine Datei ausgewählt"
 
 msgid "Loading repositories..."
 msgstr "Repositories werden geladen..."
@@ -450,8 +450,8 @@ msgstr "Fehler beim Laden der Workflows: {error}"
 msgid "Refresh workflows"
 msgstr "Workflows aktualisieren"
 
-msgid "Private Repository"
-msgstr "Privates Repository"
+#~ msgid "Private Repository"
+#~ msgstr "Privates Repository"
 
 msgid "Show successful runs"
 msgstr "Erfolgreiche Läufe anzeigen"
@@ -480,14 +480,14 @@ msgstr "Unbenannter Job"
 msgid "View logs"
 msgstr "Protokolle anzeigen"
 
-msgid "Open job in GitHub"
-msgstr "Job in GitHub öffnen"
+#~ msgid "Open job in GitHub"
+#~ msgstr "Job in GitHub öffnen"
 
 msgid "No jobs found"
 msgstr "Keine Jobs gefunden"
 
-msgid "Showing {count} jobs"
-msgstr "{count} Jobs werden angezeigt"
+#~ msgid "Showing {count} jobs"
+#~ msgstr "{count} Jobs werden angezeigt"
 
 msgid "Unable to load jobs"
 msgstr "Jobs können nicht geladen werden"
@@ -629,15 +629,15 @@ msgstr "Passe die Status-Chips oben an, um mehr Läufe zu sehen."
 msgid "Unable to load workflow runs"
 msgstr "Workflow-Läufe können nicht geladen werden"
 
-msgid "Recent runs (showing {visible} of {overall})"
-msgstr "Aktuelle Läufe ({visible} von {overall} angezeigt)"
+#~ msgid "Recent runs (showing {visible} of {overall})"
+#~ msgstr "Aktuelle Läufe ({visible} von {overall} angezeigt)"
 
-msgid "Recent runs ({overall})"
-msgstr "Aktuelle Läufe ({overall})"
+#~ msgid "Recent runs ({overall})"
+#~ msgstr "Aktuelle Läufe ({overall})"
 
-msgid "Recent runs (showing {visible} of {filtered} matching filters)"
-msgstr ""
-"Aktuelle Läufe ({visible} von {filtered} entsprechend den Filtern angezeigt)"
+#~ msgid "Recent runs (showing {visible} of {filtered} matching filters)"
+#~ msgstr ""
+#~ "Aktuelle Läufe ({visible} von {filtered} entsprechend den Filtern angezeigt)"
 
 msgid "Queued"
 msgstr "In Warteschlange"
@@ -697,10 +697,10 @@ msgid "Debug"
 msgstr "Debug"
 
 msgid "Trigger test crash"
-msgstr "Testabsturz ausloesen"
+msgstr "Testabsturz auslösen"
 
 msgid "Actioneer detected a crash report from the previous run. You can report it on GitHub and attach the crash file."
-msgstr "Actioneer hat einen Absturzbericht vom vorherigen Start erkannt. Sie koennen ihn auf GitHub melden und die Absturzdatei anhaengen."
+msgstr "Actioneer hat einen Absturzbericht vom vorherigen Start erkannt. Sie können ihn auf GitHub melden und die Absturzdatei anhängen."
 
 msgid "Crash report file:"
 msgstr "Absturzberichtdatei:"
@@ -708,11 +708,11 @@ msgstr "Absturzberichtdatei:"
 msgid "Copy diagnostics"
 msgstr "Diagnosedaten kopieren"
 
-msgid "Open crash folder"
-msgstr "Absturzordner oeffnen"
+#~ msgid "Open crash folder"
+#~ msgstr "Absturzordner oeffnen"
 
-msgid "Dismiss"
-msgstr "Schliessen"
+#~ msgid "Dismiss"
+#~ msgstr "Schliessen"
 
 msgid "Track GitHub Actions runs"
 msgstr "GitHub-Actions-Ausführungen verfolgen"
@@ -757,37 +757,37 @@ msgid "Browse Actions workflows."
 msgstr "Actions-Workflows durchsuchen."
 
 msgid "Inspect workflow runs and drill into job details quickly."
-msgstr "Workflow-Ausführungen pruefen und schnell zu Job-Details springen."
+msgstr "Workflow-Ausführungen prüfen und schnell zu Job-Details springen."
 
 msgid "Review job logs inline without leaving the app."
-msgstr "Job-Protokolle direkt in der App pruefen."
+msgstr "Job-Protokolle direkt in der App prüfen."
 
 msgid "Run a job on any branch."
 msgstr "Einen Job auf jedem Branch ausführen."
 
 msgid "This release includes an important security update to help keep Actioneer safer to use."
-msgstr "Dieses Release enthaelt ein wichtiges Sicherheitsupdate, damit Actioneer sicherer nutzbar bleibt."
+msgstr "Dieses Release enthält ein wichtiges Sicherheitsupdate, damit Actioneer sicherer nutzbar bleibt."
 
 msgid "Bundled components have been refreshed for a more reliable and up-to-date experience."
-msgstr "Gebuendelte Komponenten wurden fuer ein zuverlaessigeres und aktuelleres Nutzungserlebnis aktualisiert."
+msgstr "Gebündelte Komponenten wurden für ein zuverlässigeres und aktuelleres Nutzungserlebnis aktualisiert."
 
 msgid "Workflow runs and expanded details are now more stable during background refreshes, with badges and job summaries preserved while results update."
-msgstr "Workflow-Laeufe und geoeffnete Details bleiben bei Hintergrundaktualisierungen jetzt stabiler; Badges und Job-Zusammenfassungen bleiben waehrend der Aktualisierung erhalten."
+msgstr "Workflow-Läufe und geöffnete Details bleiben bei Hintergrundaktualisierungen jetzt stabiler; Badges und Job-Zusammenfassungen bleiben während der Aktualisierung erhalten."
 
 msgid "Completed runs now stay collapsed when you close them, and run detail actions recover more reliably after temporary loading hiccups."
-msgstr "Abgeschlossene Laeufe bleiben jetzt eingeklappt, wenn Sie sie schliessen, und Detailaktionen erholen sich zuverlaessiger nach kurzen Ladeproblemen."
+msgstr "Abgeschlossene Läufe bleiben jetzt eingeklappt, wenn Sie sie schließen, und Detailaktionen erholen sich zuverlässiger nach kurzen Ladeproblemen."
 
 msgid "GitHub connectivity is more resilient to API and permission-related responses, helping keep repository and workflow data visible instead of unexpectedly signing you out."
 msgstr "Die GitHub-Anbindung reagiert robuster auf API- und Berechtigungsantworten, sodass Repository- und Workflow-Daten sichtbar bleiben, statt unerwartet eine Abmeldung auszulösen."
 
 msgid "In-progress workflow runs now stay up to date, so jobs and steps refresh while a run is still active."
-msgstr "Laufende Workflow-Ausfuehrungen bleiben jetzt aktuell, sodass Jobs und Schritte aktualisiert werden, waehrend ein Lauf noch aktiv ist."
+msgstr "Laufende Workflow-Ausführungen bleiben jetzt aktuell, sodass Jobs und Schritte aktualisiert werden, während ein Lauf noch aktiv ist."
 
 msgid "Expanded run details are more stable and easier to follow, with clearer job badges and step numbering."
-msgstr "Die Details erweiterter Laeufe sind jetzt stabiler und leichter zu verfolgen, mit klareren Job-Badges und einer verstaendlicheren Schrittnummerierung."
+msgstr "Die Details erweiterter Läufe sind jetzt stabiler und leichter zu verfolgen, mit klareren Job-Badges und einer verständlicheren Schrittnummerierung."
 
 msgid "Workflow status badges are now translated more consistently across the app."
-msgstr "Workflow-Status-Badges sind jetzt in der gesamten App einheitlicher uebersetzt."
+msgstr "Workflow-Status-Badges sind jetzt in der gesamten App einheitlicher übersetzt."
 
 msgid "Background refresh is lighter on the GitHub API, which helps preserve your rate limit."
 msgstr "Hintergrundaktualisierungen belasten die GitHub-API jetzt weniger, was beim Schonen des Rate Limits hilft."
@@ -923,8 +923,8 @@ msgstr "App mit Beispieldaten starten"
 msgid "No repositories match"
 msgstr "Keine passenden Repositorys"
 
-msgid "Activity is gathered as you open repositories."
-msgstr "Aktivität wird erfasst, sobald Sie Repositorys öffnen."
+#~ msgid "Activity is gathered as you open repositories."
+#~ msgstr "Aktivität wird erfasst, sobald Sie Repositorys öffnen."
 
 msgid "{count} workflows in this state"
 msgstr "{count} Workflows in diesem Zustand"
