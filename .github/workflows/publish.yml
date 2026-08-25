@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Git tag for the draft release (e.g., v1.0.0)
+        description: Git tag for the draft release (e.g., 1.0.0)
         required: true
       name:
         description: Optional release title (defaults to the tag)
