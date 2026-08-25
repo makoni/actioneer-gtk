@@ -928,3 +928,19 @@ msgstr "اس حالت میں {count} ورک فلو"
 
 msgid "Try another filter or search term."
 msgstr "کوئی اور فلٹر یا تلاش کی اصطلاح آزمائیں۔"
+msgid "The workflow detail pane was redesigned: workflows, runs, jobs, and steps now "
+"expand inline in one place, without opening extra windows."
+msgstr "ورک فلو تفصیلات کے پینل کو دوبارہ ڈیزائن کیا گیا: ورک فلو، رنز، جابز اور اسٹیپس "
+"اب ایک ہی جگہ پر ان لائن کھلتے ہیں، بغیر کسی اضافی ونڈو کھولے۔"
+
+msgid "Running jobs and steps now show live durations."
+msgstr "چل رہی جابز اور اسٹیپس اب لائیو مدت دکھاتی ہیں۔"
+
+msgid "Italian and Japanese translations added; Actioneer is now available in 14 "
+"languages."
+msgstr "اطالوی اور جاپانی تراجم شامل کر دی گئیں؛ Actioneer اب 14 زبانوں میں دستیاب ہے۔"
+
+msgid "Updated bundled components help keep Actioneer reliable and up to date."
+msgstr "اپ ڈیٹ شدہ بندلڈ اجزاء Actioneer کو قابلِ اعتماد اور تازہ رکھنے میں مدد دیتے "
+"ہیں۔"
+

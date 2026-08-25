@@ -67,23 +67,33 @@
     <!-- Referencing screenshots added under data/screenshots/ -->
     <screenshot type="default">
       <caption>Browse Actions workflows.</caption>
-      <image type="source" width="2246" height="1404">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-1.png</image>
+      <image type="source" width="2826" height="1886">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-1.png</image>
     </screenshot>
     <screenshot type="detail">
       <caption>Inspect workflow runs and drill into job details quickly.</caption>
-      <image type="source" width="2880" height="1800">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-2.png</image>
+      <image type="source" width="2826" height="1886">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-2.png</image>
     </screenshot>
     <screenshot type="detail">
       <caption>Review job logs inline without leaving the app.</caption>
-      <image type="source" width="2880" height="1800">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-3.png</image>
+      <image type="source" width="2460" height="1500">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-3.png</image>
     </screenshot>
     <screenshot type="detail">
       <caption>Run a job on any branch.</caption>
-      <image type="source" width="2880" height="1800">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-4.png</image>
+      <image type="source" width="2826" height="1886">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-4.png</image>
     </screenshot>
   </screenshots>
 
   <releases>
+    <release version="1.1.0" date="2026-08-25">
+      <description>
+        <ul>
+          <li>The workflow detail pane was redesigned: workflows, runs, jobs, and steps now expand inline in one place, without opening extra windows.</li>
+          <li>Running jobs and steps now show live durations.</li>
+          <li>Italian and Japanese translations added; Actioneer is now available in 14 languages.</li>
+          <li>Updated bundled components help keep Actioneer reliable and up to date.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.0.15" date="2026-06-23">
       <description>
         <ul>

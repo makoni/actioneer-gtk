@@ -1356,6 +1356,23 @@ msgstr "Aggiornamenti di packaging e CI per Snap, Flatpak e AppImage per una mig
 #: data/metainfo.xml.in:207 data/metainfo.xml.in:221
 msgid "Dependency updates and stability fixes."
 msgstr "Aggiornamenti delle dipendenze e correzioni di stabilità."
+msgid "The workflow detail pane was redesigned: workflows, runs, jobs, and steps now "
+"expand inline in one place, without opening extra windows."
+msgstr "Il pannello di dettaglio dei workflow è stato ridisegnato: workflow, "
+"esecuzioni, job e passaggi si espandono ora inline in un unico punto, senza "
+"aprire finestre aggiuntive."
+
+msgid "Running jobs and steps now show live durations."
+msgstr "I job e i passaggi in esecuzione mostrano ora le durate in tempo reale."
+
+msgid "Italian and Japanese translations added; Actioneer is now available in 14 "
+"languages."
+msgstr "Traduzioni in italiano e in giapponese aggiunte; Actioneer è ora disponibile in "
+"14 lingue."
+
+msgid "Updated bundled components help keep Actioneer reliable and up to date."
+msgstr "I componenti integrati aggiornati aiutano a mantenere Actioneer affidabile e "
+"aggiornato."
 
 #~ msgid "General"
 #~ msgstr "Generale"

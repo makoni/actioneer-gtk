@@ -1358,6 +1358,19 @@ msgstr "より良い互換性のために、Snap、Flatpak、AppImage 全体の�
 #: data/metainfo.xml.in:207 data/metainfo.xml.in:221
 msgid "Dependency updates and stability fixes."
 msgstr "依存関係の更新と安定性の修正。"
+msgid "The workflow detail pane was redesigned: workflows, runs, jobs, and steps now "
+"expand inline in one place, without opening extra windows."
+msgstr "ワークフロー詳細ペインを再設計しました：ワークフロー、実行、ジョブ、ステップはすべて余計なウィンドウを開かずに1か所でインライン展開できます。"
+
+msgid "Running jobs and steps now show live durations."
+msgstr "実行中のジョブとステップで、経過時間がリアルタイムで表示されるようになりました。"
+
+msgid "Italian and Japanese translations added; Actioneer is now available in 14 "
+"languages."
+msgstr "イタリア語と日本語の翻訳を追加。Actioneerは14言語に対応しました。"
+
+msgid "Updated bundled components help keep Actioneer reliable and up to date."
+msgstr "同梱コンポーネントの更新により、Actioneerの信頼性と最新性を保ちます。"
 
 #~ msgid "General"
 #~ msgstr "一般"

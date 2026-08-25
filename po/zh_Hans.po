@@ -928,3 +928,17 @@ msgstr "{count} 个工作流处于此状态"
 
 msgid "Try another filter or search term."
 msgstr "请尝试其他筛选条件或搜索词。"
+msgid "The workflow detail pane was redesigned: workflows, runs, jobs, and steps now "
+"expand inline in one place, without opening extra windows."
+msgstr "工作流详情窗格已重新设计：工作流、运行、作业和步骤现在可以在一处内联展开，无需打开额外窗口。"
+
+msgid "Running jobs and steps now show live durations."
+msgstr "正在运行的作业和步骤现在会显示实时时长。"
+
+msgid "Italian and Japanese translations added; Actioneer is now available in 14 "
+"languages."
+msgstr "新增意大利语和日语翻译；Actioneer 现已提供 14 种语言。"
+
+msgid "Updated bundled components help keep Actioneer reliable and up to date."
+msgstr "更新内置组件，让 Actioneer 保持可靠且持续更新。"
+

@@ -928,3 +928,19 @@ msgstr "इस स्थिति में {count} वर्कफ़्लो"
 
 msgid "Try another filter or search term."
 msgstr "कोई अन्य फ़िल्टर या खोज शब्द आज़माएँ।"
+msgid "The workflow detail pane was redesigned: workflows, runs, jobs, and steps now "
+"expand inline in one place, without opening extra windows."
+msgstr "वर्कफ़्लो विवरण पैनल को फिर से डिज़ाइन किया गया: वर्कफ़्लो, रन, जॉब्स और चरण अब "
+"एक ही जगह पर इनलाइन खोलते हैं, बिना किसी अतिरिक्त विंडो खोले।"
+
+msgid "Running jobs and steps now show live durations."
+msgstr "चल रहे जॉब्स और चरण अब लाइव अवधि दिखाते हैं।"
+
+msgid "Italian and Japanese translations added; Actioneer is now available in 14 "
+"languages."
+msgstr "इतालवी और जापानी अनुवाद जोड़े गए; Actioneer अब 14 भाषाओं में उपलब्ध है।"
+
+msgid "Updated bundled components help keep Actioneer reliable and up to date."
+msgstr "अपडेटेड बंडल्ड कंपोनेंट Actioneer को विश्वसनीय और अप-टू-डेट रखने में मदद करते "
+"हैं।"
+

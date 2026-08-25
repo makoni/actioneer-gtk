@@ -928,3 +928,18 @@ msgstr "{count} من سير العمل في هذه الحالة"
 
 msgid "Try another filter or search term."
 msgstr "جرّب مرشّحًا أو مصطلح بحث آخر."
+msgid "The workflow detail pane was redesigned: workflows, runs, jobs, and steps now "
+"expand inline in one place, without opening extra windows."
+msgstr "أعيد تصميم لوحة تفاصيل سير العمل: يتم الآن توسيع سلاسل العمل وتشغيلاتها ومهامها "
+"وخطواتها مضمّنةً في مكان واحد دون فتح نوافذ إضافية."
+
+msgid "Running jobs and steps now show live durations."
+msgstr "تعرض المهام والخطوات قيد التنفيذ الآن مدتها الفورية."
+
+msgid "Italian and Japanese translations added; Actioneer is now available in 14 "
+"languages."
+msgstr "أُضيفت الترجمات الإيطالية واليابانية؛ Actioneer متاح الآن بـ14 لغة."
+
+msgid "Updated bundled components help keep Actioneer reliable and up to date."
+msgstr "المكوّنات المضمّنة المحدّثة تساعد على إبقاء Actioneer موثوقاً وحديثاً."
+
