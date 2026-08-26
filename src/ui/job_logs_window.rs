@@ -33,8 +33,9 @@ struct Ctx {
     repo: Repo,
     /// Every job of the run, so the sidebar can offer them all. A run has no log
     /// of its own — it is exactly this set of job logs — so "the run's logs"
-    /// can only be shown as a list to pick from.
-    jobs: Vec<Job>,
+    /// can only be shown as a list to pick from. Refresh replaces the snapshot
+    /// with fresh data; `selected` tracks the reader's place by job id.
+    jobs: Rc<RefCell<Vec<Job>>>,
     selected: Cell<usize>,
     client: Arc<Mutex<GitHubClient>>,
     window: glib::WeakRef<adw::Window>,
@@ -43,7 +44,16 @@ struct Ctx {
     /// button whose handler owns this `Ctx` hangs below it.
     toast_overlay: glib::WeakRef<adw::ToastOverlay>,
     run_title: String,
+    /// Addressed by it for the job re-fetch. A property of the run, not of
+    /// whatever row happens to be first in the snapshot.
+    run_id: i64,
     job_label: gtk::Label,
+    /// Weak, for the same reason: the sidebar's row-selected handler owns this
+    /// `Rc`, so a strong link would close a cycle that outlives the window.
+    job_list: glib::WeakRef<gtk::ListBox>,
+    /// Set while the sidebar is being rebuilt, so the row-selected signals the
+    /// rebuild itself fires are not mistaken for the reader's choice.
+    rebuilding: Cell<bool>,
     copy_button: glib::WeakRef<gtk::Button>,
     save_button: glib::WeakRef<gtk::Button>,
     cache: LogCache,
@@ -125,6 +135,7 @@ impl JobLogsWindow {
     ) -> Self {
         assert!(!jobs.is_empty(), "JobLogsWindow requires at least one job");
         let selected = selected.min(jobs.len() - 1);
+        let run_id = jobs[0].run_id;
 
         let window = adw::Window::builder()
             .title(tr("{title} - Logs").replace("{title}", run_title.as_str()))
@@ -161,14 +172,17 @@ impl JobLogsWindow {
 
         let ctx = Rc::new(Ctx {
             repo,
-            jobs,
+            jobs: Rc::new(RefCell::new(jobs)),
             selected: Cell::new(selected),
             client,
             window: window.downgrade(),
             text_view,
             toast_overlay: toast_overlay.downgrade(),
             run_title,
+            run_id,
             job_label: parts.job_label.clone(),
+            job_list: parts.job_list.downgrade(),
+            rebuilding: Cell::new(false),
             copy_button: parts.copy.downgrade(),
             save_button: parts.save.downgrade(),
             cache: LogCache::default(),
@@ -316,25 +330,34 @@ impl JobLogsWindow {
 }
 
 impl Ctx {
-    fn job(&self) -> &Job {
-        &self.jobs[self.selected.get()]
+    fn selected_job_id(&self) -> i64 {
+        self.jobs.borrow()[self.selected.get()].id
+    }
+
+    fn selected_job_name(&self) -> String {
+        job_display_name(&self.jobs.borrow()[self.selected.get()])
     }
 
     /// Swaps the viewer to another job of the same run.
     fn show_job(self: &Rc<Self>, index: usize) {
-        if index >= self.jobs.len() || index == self.selected.get() {
+        // A rebuild fires row-selected too; that is the refresh, not the reader.
+        if self.rebuilding.get() {
+            return;
+        }
+        if index >= self.jobs.borrow().len() || index == self.selected.get() {
             return;
         }
 
         self.selected.set(index);
-        self.job_label.set_text(&job_display_name(self.job()));
+        self.job_label
+            .set_text(&job_display_name(&self.jobs.borrow()[index]));
         self.load_logs(false);
     }
 
     /// `force` skips the cache: Refresh has to reach GitHub even for a log that
     /// is already on screen, which is the whole point of pressing it.
     fn load_logs(self: &Rc<Self>, force: bool) {
-        let job_id = self.job().id;
+        let job_id = self.selected_job_id();
 
         if !force && let Some(cached) = self.cache.get(job_id) {
             self.render_logs(&cached);
@@ -354,11 +377,11 @@ impl Ctx {
             // The reader may have moved on while this was in flight. A stale
             // reply must not paint over the job now on screen — but it is still
             // worth keeping, which is exactly what the cache is for.
-            let still_showing = this.job().id == job_id && this.is_on_screen();
+            let still_showing = this.selected_job_id() == job_id && this.is_on_screen();
             match result {
                 Ok(logs) => {
                     info!("Loaded logs ({} bytes)", logs.len());
-                    if let Some(job) = this.jobs.iter().find(|job| job.id == job_id) {
+                    if let Some(job) = this.jobs.borrow().iter().find(|job| job.id == job_id) {
                         this.cache.store(job, &logs);
                     }
                     if still_showing {
@@ -382,6 +405,88 @@ impl Ctx {
             let result = client.get_job_logs(&owner, &repo_name, job_id).await;
             let _ = sender.send(result);
         });
+    }
+
+    /// Refresh re-fetches both the run's jobs and the current log. The sidebar
+    /// is a snapshot taken when the window opened, and without the job re-fetch
+    /// a finished job's duration would keep counting and its dot would stay
+    /// "in progress" for as long as the window stays open.
+    fn refresh(self: &Rc<Self>) {
+        self.fetch_jobs();
+        self.load_logs(true);
+    }
+
+    /// Re-fetches the run's jobs so the sidebar learns what happened since the
+    /// window opened. Best effort: on a failure the reader simply stays on the
+    /// old snapshot, and the log fetch reports its own errors.
+    fn fetch_jobs(self: &Rc<Self>) {
+        let (sender, receiver) = glib::MainContext::default()
+            .channel::<Result<Vec<Job>, GitHubError>>(glib::Priority::default());
+
+        let this = self.clone();
+        receiver.attach(None, move |result| {
+            if let Ok(jobs) = result {
+                this.apply_jobs(jobs);
+            }
+            glib::ControlFlow::Break
+        });
+
+        let client = self.client.clone();
+        let owner = self.repo.owner.login.clone();
+        let repo_name = self.repo.name.clone();
+        let run_id = self.run_id;
+        crate::runtime_handle().spawn(async move {
+            let client = client.lock().clone();
+            let result = client.list_jobs(&owner, &repo_name, run_id).await;
+            let _ = sender.send(result);
+        });
+    }
+
+    /// Replaces the sidebar's snapshot with fresh jobs, keeping the reader on
+    /// the job they are looking at (by id: a retry can reorder the run). The
+    /// rebuilt rows carry the fresh durations, and each rebuilt row's ticker —
+    /// if any — dies with the old label it was counting on.
+    ///
+    /// An empty answer is a legitimate one for a run that has no jobs left or
+    /// none yet: like a network failure, it leaves the reader on the old
+    /// snapshot.
+    fn apply_jobs(self: &Rc<Self>, jobs: Vec<Job>) {
+        if jobs.is_empty() || !self.is_on_screen() {
+            return;
+        }
+
+        let current_id = self.selected_job_id();
+        let found = jobs.iter().position(|job| job.id == current_id);
+        let selected = found.unwrap_or(0);
+        self.selected.set(selected);
+        *self.jobs.borrow_mut() = jobs;
+
+        let Some(list) = self.job_list.upgrade() else {
+            return;
+        };
+        self.rebuilding.replace(true);
+        let mut child = list.first_child();
+        while let Some(row) = child {
+            let next = row.next_sibling();
+            list.remove(&row);
+            child = next;
+        }
+        for job in self.jobs.borrow().iter() {
+            append_job_row(&list, job);
+        }
+        if let Some(row) = list.row_at_index(selected as i32) {
+            list.select_row(Some(&row));
+        }
+        self.rebuilding.replace(false);
+
+        if found.is_none() {
+            // The reader's job left the run. The rebuild guard blocked
+            // show_job, so without this the title and log would keep
+            // describing a job the sidebar no longer has.
+            self.job_label
+                .set_text(&job_display_name(&self.jobs.borrow()[selected]));
+            self.load_logs(false);
+        }
     }
 
     /// Whether rendering would be seen. A reply can arrive seconds after the
@@ -443,7 +548,7 @@ impl Ctx {
 
     fn connect_refresh_button(self: &Rc<Self>, button: &gtk::Button) {
         let this = self.clone();
-        button.connect_clicked(move |_| this.load_logs(true));
+        button.connect_clicked(move |_| this.refresh());
     }
 
     fn connect_copy_button(self: &Rc<Self>, button: &gtk::Button) {
@@ -477,8 +582,8 @@ impl Ctx {
     }
 
     fn save_logs(&self) {
-        let default_name =
-            JobLogsWindow::default_file_name(&self.run_title, &job_display_name(self.job()));
+        let name = self.selected_job_name();
+        let default_name = JobLogsWindow::default_file_name(&self.run_title, &name);
         let dialog = JobLogsWindow::build_save_dialog(&default_name);
 
         let Some(overlay) = self.toast_overlay.upgrade() else {
@@ -567,36 +672,7 @@ fn build_job_list(jobs: &[Job], selected: usize) -> gtk::ListBox {
     list.set_selection_mode(gtk::SelectionMode::Single);
 
     for job in jobs {
-        let row = gtk::ListBoxRow::new();
-        let content = gtk::Box::new(gtk::Orientation::Horizontal, 8);
-        content.set_margin_top(6);
-        content.set_margin_bottom(6);
-        content.set_margin_start(6);
-        content.set_margin_end(6);
-
-        let dot = crate::ui::detail_view::build_job_status_dot(job);
-        content.append(&dot);
-
-        let text = gtk::Box::new(gtk::Orientation::Vertical, 1);
-        text.set_hexpand(true);
-
-        let name = gtk::Label::new(Some(&job_display_name(job)));
-        name.set_halign(gtk::Align::Start);
-        name.set_ellipsize(gtk::pango::EllipsizeMode::End);
-        text.append(&name);
-
-        if let Some(duration) = job.duration_string() {
-            let duration_label = gtk::Label::new(Some(&duration));
-            duration_label.add_css_class("dim-label");
-            duration_label.add_css_class("caption");
-            duration_label.add_css_class("mono");
-            duration_label.set_halign(gtk::Align::Start);
-            text.append(&duration_label);
-        }
-
-        content.append(&text);
-        row.set_child(Some(&content));
-        list.append(&row);
+        append_job_row(&list, job);
     }
 
     if let Some(row) = list.row_at_index(selected as i32) {
@@ -604,6 +680,43 @@ fn build_job_list(jobs: &[Job], selected: usize) -> gtk::ListBox {
     }
 
     list
+}
+
+fn append_job_row(list: &gtk::ListBox, job: &Job) {
+    let row = gtk::ListBoxRow::new();
+    let content = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+    content.set_margin_top(6);
+    content.set_margin_bottom(6);
+    content.set_margin_start(6);
+    content.set_margin_end(6);
+
+    let dot = crate::ui::detail_view::build_job_status_dot(job);
+    content.append(&dot);
+
+    let text = gtk::Box::new(gtk::Orientation::Vertical, 1);
+    text.set_hexpand(true);
+
+    let name = gtk::Label::new(Some(&job_display_name(job)));
+    name.set_halign(gtk::Align::Start);
+    name.set_ellipsize(gtk::pango::EllipsizeMode::End);
+    text.append(&name);
+
+    let (duration, live) = crate::ui::utils::duration::job_duration_label(job);
+    if let Some(duration) = duration {
+        let duration_label = gtk::Label::new(Some(&duration));
+        duration_label.add_css_class("dim-label");
+        duration_label.add_css_class("caption");
+        duration_label.add_css_class("mono");
+        duration_label.set_halign(gtk::Align::Start);
+        if let Some(started_at) = live {
+            crate::ui::utils::duration::start_live_duration(&duration_label, started_at);
+        }
+        text.append(&duration_label);
+    }
+
+    content.append(&text);
+    row.set_child(Some(&content));
+    list.append(&row);
 }
 
 #[cfg(test)]
@@ -624,6 +737,26 @@ mod tests {
             permissions: None,
             default_branch: Some("main".into()),
         }
+    }
+
+    /// The duration label is the only `mono` label in a row, so hunt it by
+    /// class rather than by position in the row's layout.
+    fn mono_labels_in(row: &gtk::Widget) -> Vec<gtk::Label> {
+        let mut found = Vec::new();
+        let mut stack = vec![row.clone()];
+        while let Some(widget) = stack.pop() {
+            if let Ok(label) = widget.clone().downcast::<gtk::Label>()
+                && label.has_css_class("mono")
+            {
+                found.push(label);
+            }
+            let mut child = widget.first_child();
+            while let Some(next) = child {
+                stack.push(next.clone());
+                child = next.next_sibling();
+            }
+        }
+        found
     }
 
     fn job_stub(name: &str, conclusion: Option<&str>) -> Job {
@@ -689,6 +822,321 @@ mod tests {
             let selected = list.selected_row().expect("a job should be selected");
             assert_eq!(selected.index(), 2);
         });
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn sidebar_ticks_the_duration_of_a_running_job() {
+        run_gtk_test("sidebar_ticks_the_duration_of_a_running_job", || {
+            let started = (chrono::Utc::now() - chrono::Duration::seconds(72)).to_rfc3339();
+            let running = Job {
+                id: 1,
+                run_id: 1,
+                name: Some("build".into()),
+                status: Some("in_progress".into()),
+                conclusion: None,
+                started_at: Some(started.clone()),
+                completed_at: None,
+                html_url: None,
+                steps: Vec::new(),
+            };
+            let queued = Job {
+                id: 2,
+                run_id: 1,
+                name: Some("deploy".into()),
+                status: Some("queued".into()),
+                conclusion: None,
+                started_at: Some(started),
+                completed_at: None,
+                html_url: None,
+                steps: Vec::new(),
+            };
+
+            let list = build_job_list(&[running, queued], 0);
+            // The ticker only runs while its label is inside a toplevel, so the
+            // floating list needs a window of its own here.
+            let window = gtk::Window::new();
+            window.set_child(Some(&list));
+
+            let running_row = list.row_at_index(0).expect("a running job row");
+            let queued_row = list.row_at_index(1).expect("a queued job row");
+
+            // A running job shows its wall-clock elapsed time, like the main window.
+            let running_labels = mono_labels_in(running_row.upcast_ref::<gtk::Widget>());
+            assert_eq!(
+                running_labels.len(),
+                1,
+                "a running job shows exactly one duration label"
+            );
+            let initial = running_labels[0].text();
+            assert!(
+                ["01:12", "01:13"].contains(&initial.as_str()),
+                "expected a live mm:ss count, got {initial:?}"
+            );
+
+            // And it keeps counting: the label must be attached to the ticker,
+            // not merely show the initial value. Pump non-blocking with a sleep
+            // between passes: a blocking iteration would wait on a scheduler
+            // that is not there in the failure case this assertion guards.
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(3);
+            while running_labels[0].text() == initial && std::time::Instant::now() < deadline {
+                glib::MainContext::default().iteration(false);
+                std::thread::sleep(std::time::Duration::from_millis(50));
+            }
+            assert_ne!(
+                running_labels[0].text(),
+                initial,
+                "the running job's duration must keep counting"
+            );
+
+            // A queued job has not started executing: no timer of any kind.
+            assert!(
+                mono_labels_in(queued_row.upcast_ref::<gtk::Widget>()).is_empty(),
+                "a queued job shows no duration"
+            );
+        });
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn apply_jobs_rebuilds_the_sidebar_and_keeps_the_reader() {
+        run_gtk_test(
+            "apply_jobs_rebuilds_the_sidebar_and_keeps_the_reader",
+            || {
+                let running = Job {
+                    id: 1,
+                    run_id: 7,
+                    name: Some("build".into()),
+                    status: Some("in_progress".into()),
+                    conclusion: None,
+                    started_at: Some(
+                        (chrono::Utc::now() - chrono::Duration::seconds(72)).to_rfc3339(),
+                    ),
+                    completed_at: None,
+                    html_url: None,
+                    steps: Vec::new(),
+                };
+                let queued = Job {
+                    id: 2,
+                    run_id: 7,
+                    name: Some("deploy".into()),
+                    status: Some("queued".into()),
+                    conclusion: None,
+                    started_at: None,
+                    completed_at: None,
+                    html_url: None,
+                    steps: Vec::new(),
+                };
+                let parent = gtk::Window::new();
+                let logs = JobLogsWindow::build(
+                    &parent,
+                    repo_stub(),
+                    "CI • main #1".to_string(),
+                    vec![running, queued],
+                    0,
+                    Arc::new(Mutex::new(
+                        GitHubClient::new(None).expect("client stub should build"),
+                    )),
+                );
+                logs.present();
+
+                // The run changed while the reader was watching: their job finished
+                // and a retry pushed it to the back of the list. The sidebar must
+                // follow the job by id and swap the live counter for the final duration.
+                let retry = Job {
+                    id: 3,
+                    run_id: 7,
+                    name: Some("retry".into()),
+                    status: Some("completed".into()),
+                    conclusion: Some("success".into()),
+                    started_at: None,
+                    completed_at: None,
+                    html_url: None,
+                    steps: Vec::new(),
+                };
+                let finished = Job {
+                    id: 1,
+                    run_id: 7,
+                    name: Some("build".into()),
+                    status: Some("completed".into()),
+                    conclusion: Some("success".into()),
+                    started_at: Some("2026-01-24T10:00:00Z".into()),
+                    completed_at: Some("2026-01-24T10:00:18Z".into()),
+                    html_url: None,
+                    steps: Vec::new(),
+                };
+                logs.ctx.apply_jobs(vec![retry, finished]);
+
+                let list = logs
+                    .ctx
+                    .job_list
+                    .upgrade()
+                    .expect("the sidebar is on screen");
+                let mut rows = 0;
+                let mut child = list.first_child();
+                while let Some(row) = child {
+                    rows += 1;
+                    child = row.next_sibling();
+                }
+                assert_eq!(rows, 2, "the sidebar is rebuilt from the fresh jobs");
+                let selected = list
+                    .selected_row()
+                    .expect("the reader's job stays selected");
+                assert_eq!(
+                    selected.index(),
+                    1,
+                    "reselection follows the job by id, not by position"
+                );
+
+                // The live counter is gone: the label carries the final duration.
+                let labels = mono_labels_in(selected.upcast_ref::<gtk::Widget>());
+                assert_eq!(labels.len(), 1);
+                assert_eq!(
+                    labels[0].text().as_str(),
+                    "00:18",
+                    "a finished job shows its final duration, not wall-clock time"
+                );
+            },
+        );
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn apply_jobs_keeps_the_snapshot_on_an_empty_answer() {
+        run_gtk_test("apply_jobs_keeps_the_snapshot_on_an_empty_answer", || {
+            let parent = gtk::Window::new();
+            let logs = JobLogsWindow::build(
+                &parent,
+                repo_stub(),
+                "CI • main #1".to_string(),
+                vec![job_stub("build", Some("success")), job_stub("test", None)],
+                1,
+                Arc::new(Mutex::new(
+                    GitHubClient::new(None).expect("client stub should build"),
+                )),
+            );
+            logs.present();
+
+            // Retention can empty a run between opening and refresh, and GitHub
+            // answers that with an empty array, not an error. The reader stays
+            // on the old snapshot, and the window must not walk a job out of
+            // an empty vector on the next refresh, save, or log reply.
+            logs.ctx.apply_jobs(Vec::new());
+            logs.window.close();
+
+            let jobs = logs.ctx.jobs.borrow();
+            assert_eq!(jobs.len(), 2, "the old snapshot is kept");
+            assert_eq!(logs.ctx.selected.get(), 1);
+            assert_eq!(
+                logs.ctx.selected_job_id(),
+                jobs[1].id,
+                "an empty answer must not leave the window without a job"
+            );
+            drop(jobs);
+
+            let list = logs
+                .ctx
+                .job_list
+                .upgrade()
+                .expect("the sidebar is on screen");
+            let mut rows = 0;
+            let mut child = list.first_child();
+            while let Some(row) = child {
+                rows += 1;
+                child = row.next_sibling();
+            }
+            assert_eq!(rows, 2, "the sidebar is untouched");
+        });
+    }
+
+    /// Demo data is global: switch it off however the test ends, or an
+    /// unrelated test that builds a client picks up the demo data.
+    struct DemoData;
+
+    impl Drop for DemoData {
+        fn drop(&mut self) {
+            crate::demo::disable();
+        }
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn apply_jobs_resyncs_when_the_readers_job_leaves_the_run() {
+        run_gtk_test(
+            "apply_jobs_resyncs_when_the_readers_job_leaves_the_run",
+            || {
+                let _demo = DemoData;
+                crate::demo::enable();
+                // The reader is watching the in-progress job of the demo's
+                // running CI run.
+                let jobs = crate::demo::list_jobs("demo-org", "actioneer-demo-app", 30_108)
+                    .expect("demo data has the running CI run's jobs");
+                let reader_job = jobs
+                    .iter()
+                    .find(|job| job.status.as_deref() == Some("in_progress"))
+                    .expect("the demo run has an in-progress job");
+                let selected = jobs
+                    .iter()
+                    .position(|job| job.id == reader_job.id)
+                    .expect("the reader's job is in the list");
+                let remaining: Vec<Job> = jobs
+                    .iter()
+                    .filter(|job| job.id != reader_job.id)
+                    .cloned()
+                    .collect();
+
+                let parent = gtk::Window::new();
+                let logs = JobLogsWindow::build(
+                    &parent,
+                    repo_stub(),
+                    "CI • main #134".to_string(),
+                    jobs.clone(),
+                    selected,
+                    Arc::new(Mutex::new(
+                        GitHubClient::new(None).expect("client stub should build"),
+                    )),
+                );
+                logs.present();
+                logs.ctx.text_view.buffer().set_text("the old job's log");
+
+                // Pre-store the survivor's log: the resync's load_logs(false)
+                // must take the cache path and render synchronously. A spawned
+                // fetch would race the DemoData guard at the end of this test
+                // and, losing the race, fall through to the real API.
+                let survivor = remaining
+                    .first()
+                    .expect("a job remains after the reader's job is gone");
+                logs.ctx.cache.store(survivor, "prepare's log");
+
+                // Retention ate the job the reader was on. The window must resync
+                // to what is left: the title, the log, and the selection.
+                logs.ctx.apply_jobs(remaining);
+
+                let list = logs
+                    .ctx
+                    .job_list
+                    .upgrade()
+                    .expect("the sidebar is on screen");
+                let selected = list.selected_row().expect("a fallback row is selected");
+                assert_eq!(
+                    selected.index(),
+                    0,
+                    "the fallback row is the first of the jobs that remain"
+                );
+                assert_eq!(
+                    logs.ctx.job_label.text().as_str(),
+                    "prepare",
+                    "the title follows the reader to the job that remains"
+                );
+                let buffer = logs.ctx.text_view.buffer();
+                let (start, end) = buffer.bounds();
+                assert_eq!(
+                    buffer.text(&start, &end, false).as_str(),
+                    "prepare's log",
+                    "the vanished job's log is replaced by the survivor's"
+                );
+            },
+        );
     }
 
     #[test]

@@ -1,6 +1,5 @@
 use super::RunLoadService;
 use super::context::{JobContextMap, RunBadgeSummaryMap};
-use super::duration::running_duration_string;
 use super::formatting::{
     format_workflow_meta, get_run_status_class, get_run_status_icon, workflow_status_text,
 };
@@ -22,6 +21,7 @@ use crate::ui::detail_view::RunFilters;
 use crate::ui::detail_view::header_state::DetailHeaderState;
 use crate::ui::job_logs_window::JobLogsWindow;
 use crate::ui::utils::MainContextChannelExt;
+use crate::ui::utils::duration::running_duration_string;
 use crate::ui::utils::widget_data::{set_data, steal_data};
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib, pango};

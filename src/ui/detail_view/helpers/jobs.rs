@@ -1,7 +1,6 @@
 use super::context::{
     JobContextMap, JobRefreshContext, JobRefreshContextParams, RunBadgeSummaryMap,
 };
-use super::duration::{is_in_progress, live_start, running_duration_string, start_live_duration};
 use super::formatting::{get_job_status_class, get_job_status_icon};
 use super::runs::WorkflowRunListModel;
 use super::status_dot::{JOB_DOT_SIZE, STEP_DOT_SIZE, build_status_dot};
@@ -10,6 +9,7 @@ use crate::api::{GitHubClient, GitHubError};
 use crate::i18n::tr;
 use crate::ui::job_logs_window::JobLogsWindow;
 use crate::ui::utils::MainContextChannelExt;
+use crate::ui::utils::duration::{job_duration_label, start_live_duration, step_duration_label};
 use crate::ui::utils::widget_data::{get_data_clone, get_data_copy, set_data};
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
@@ -46,22 +46,6 @@ pub(super) struct JobRowContext {
     /// Every job of the run, so the log window can offer the others in its
     /// sidebar instead of trapping the reader in the one row they clicked.
     pub(super) run_jobs: Arc<Vec<Job>>,
-}
-
-fn job_duration_label_text(job: &Job) -> Option<String> {
-    job.duration_string().or_else(|| {
-        is_in_progress(job.status.as_deref())
-            .then(|| running_duration_string(job.started_at.as_ref()))
-            .flatten()
-    })
-}
-
-fn step_duration_label_text(step: &JobStep) -> Option<String> {
-    step.duration_string().or_else(|| {
-        is_in_progress(step.status.as_deref())
-            .then(|| running_duration_string(step.started_at.as_ref()))
-            .flatten()
-    })
 }
 
 pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -> gtk::Box {
@@ -105,17 +89,14 @@ pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -
     right_box.set_halign(gtk::Align::End);
     right_box.set_hexpand(false);
 
-    if let Some(duration) = job_duration_label_text(job) {
+    let (duration, live) = job_duration_label(job);
+    if let Some(duration) = duration {
         let duration_label = gtk::Label::new(Some(&duration));
         duration_label.add_css_class("mono");
         duration_label.add_css_class("dim-label");
         duration_label.add_css_class("caption");
         duration_label.set_valign(gtk::Align::Center);
-        if let Some(started_at) = live_start(
-            job.duration_string(),
-            job.status.as_deref(),
-            job.started_at.as_ref(),
-        ) {
+        if let Some(started_at) = live {
             start_live_duration(&duration_label, started_at);
         }
         right_box.append(&duration_label);
@@ -214,18 +195,14 @@ fn create_job_step_row(step: &JobStep, display_number: usize) -> gtk::Box {
     name_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
     row.append(&name_label);
 
-    let duration_text = step_duration_label_text(step).unwrap_or_else(|| "–".to_string());
-    let duration_label = gtk::Label::new(Some(&duration_text));
+    let (duration, live) = step_duration_label(step);
+    let duration_label = gtk::Label::new(Some(duration.as_deref().unwrap_or("–")));
     duration_label.add_css_class("mono");
     duration_label.add_css_class("dim-label");
     duration_label.add_css_class("caption");
     duration_label.set_halign(gtk::Align::End);
     duration_label.set_valign(gtk::Align::Center);
-    if let Some(started_at) = live_start(
-        step.duration_string(),
-        step.status.as_deref(),
-        step.started_at.as_ref(),
-    ) {
+    if let Some(started_at) = live {
         start_live_duration(&duration_label, started_at);
     }
     row.append(&duration_label);
@@ -621,28 +598,6 @@ mod tests {
             started_at: started_at.map(str::to_string),
             completed_at: None,
         }
-    }
-
-    #[test]
-    fn duration_fallback_only_applies_while_running() {
-        // A queued step carries `started_at` (queue time) but must not tick.
-        assert_eq!(
-            step_duration_label_text(&step_stub(Some("queued"), Some("2020-01-01T00:00:00Z"))),
-            None
-        );
-        // A step abandoned without `completed_at` must not grow forever either.
-        assert_eq!(
-            step_duration_label_text(&step_stub(Some("completed"), Some("2020-01-01T00:00:00Z"))),
-            None
-        );
-        // An executing step still shows elapsed wall-clock time.
-        assert!(
-            step_duration_label_text(&step_stub(
-                Some("in_progress"),
-                Some("2020-01-01T00:00:00Z")
-            ))
-            .is_some()
-        );
     }
 
     #[test]

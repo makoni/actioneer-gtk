@@ -1,4 +1,5 @@
 pub mod channel;
+pub mod duration;
 pub mod layout;
 pub mod rate_limit;
 pub mod source;
