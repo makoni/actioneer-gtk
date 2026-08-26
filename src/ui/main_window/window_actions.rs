@@ -268,6 +268,7 @@ Troubleshooting\n\
         let text_view = gtk::TextView::new();
         text_view.set_editable(false);
         text_view.set_monospace(true);
+        text_view.set_direction(gtk::TextDirection::Ltr);
         text_view.set_wrap_mode(gtk::WrapMode::WordChar);
         text_view.buffer().set_text(report_text.as_str());
         scrolled.set_child(Some(&text_view));

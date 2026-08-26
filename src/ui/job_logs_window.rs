@@ -145,6 +145,7 @@ impl JobLogsWindow {
             .bottom_margin(12)
             .wrap_mode(gtk::WrapMode::Word)
             .build();
+        text_view.set_direction(gtk::TextDirection::Ltr);
         text_view.buffer().set_text(tr("Fetching logs...").as_str());
 
         let toast_overlay = adw::ToastOverlay::new();
@@ -791,6 +792,45 @@ mod tests {
                 "widgets outlived the closed logs window: {survivors:?} — a signal \
                  handler is holding them in a reference cycle"
             );
+        });
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn log_viewer_stays_left_to_right_in_rtl_languages() {
+        run_gtk_test("log_viewer_stays_left_to_right_in_rtl_languages", || {
+            // An Arabic or Urdu session runs the whole UI with the RTL default
+            // direction; the log itself is machine output and must not follow it.
+            // The guard restores the default however this test ends: the GTK
+            // worker is shared, so a panic here would leave every later UI test
+            // running right-to-left.
+            struct DirectionGuard(gtk::TextDirection);
+
+            impl Drop for DirectionGuard {
+                fn drop(&mut self) {
+                    gtk::Widget::set_default_direction(self.0);
+                }
+            }
+
+            let _guard = DirectionGuard(gtk::Widget::default_direction());
+            gtk::Widget::set_default_direction(gtk::TextDirection::Rtl);
+            let parent = gtk::Window::new();
+            let logs = JobLogsWindow::build(
+                &parent,
+                repo_stub(),
+                "CI • main #1".to_string(),
+                vec![job_stub("build", Some("success"))],
+                0,
+                Arc::new(Mutex::new(
+                    GitHubClient::new(None).expect("client stub should build"),
+                )),
+            );
+            assert_eq!(
+                logs.ctx.text_view.direction(),
+                gtk::TextDirection::Ltr,
+                "log output is code: it must read left-to-right even when the UI is RTL"
+            );
+            logs.window.destroy();
         });
     }
 
