@@ -634,7 +634,7 @@ msgid "{count}d ago"
 msgstr "{count}دن پہلے"
 
 msgid "{title} - Logs"
-msgstr "{title} - لاگز"
+msgstr "لاگز - {title}"
 
 msgid "Donate"
 msgstr "عطیہ دیں"

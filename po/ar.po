@@ -630,7 +630,7 @@ msgid "{count}d ago"
 msgstr "قبل {count}ي"
 
 msgid "{title} - Logs"
-msgstr "{title} - السجلات"
+msgstr "السجلات - {title}"
 
 msgid "Donate"
 msgstr "تبرع"
