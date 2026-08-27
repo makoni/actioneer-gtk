@@ -6,7 +6,6 @@
 - `snapcraft.yaml` — `version`.
 - `docs/flatpak.md` — example tag (`vX.Y.Z`).
 - `src/demo/logs/job-43021.log` — update the release command example if the version appears.
-- `TODO.md` — add a Recent Updates entry.
 
 ## 2) Update Flatpak sources
 ```bash

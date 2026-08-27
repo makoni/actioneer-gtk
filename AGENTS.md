@@ -89,13 +89,13 @@ is not one. Note also that GTK4 buttons surface with role name `button`, not
 ## Progress tracking
 
 `TODO.md` is the **open backlog**, not a session journal: it tracks work that is
-not yet done, plus a short "Recent Updates" log. The full history of completed
-work lives in git commits.
+not yet done. The history of completed work lives in git commits — do not
+restate it in the file.
 
 - Track your own in-session steps with your task/todo tooling, not by editing
   `TODO.md` on every step.
-- Update `TODO.md` when the *backlog* changes: an open item is finished, a new
-  one appears, or a landed change is worth a "Recent Updates" line.
+- Update `TODO.md` when the *backlog* changes: an open item is finished, or a
+  new one appears.
 - Keep its "Where to look" pointers accurate when you move or delete modules.
 
 ## Threading and reference cycles

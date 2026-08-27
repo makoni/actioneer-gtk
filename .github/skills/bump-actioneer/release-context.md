@@ -11,7 +11,6 @@ Update these files for every Actioneer release bump:
 - `snapcraft.yaml` — `version`
 - `docs/flatpak.md` — example release tag
 - `src/demo/logs/job-43021.log` — example `gh release create vX.Y.Z ...` command if present
-- `TODO.md` — add a `Recent Updates` entry documenting the release bump work
 - `RELEASE.md` — GitHub release notes / draft body
 
 ## AppStream release target

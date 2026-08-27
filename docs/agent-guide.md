@@ -108,7 +108,7 @@ glib::MainContext::default().spawn_local(async move { /* refresh widgets */ });
 
   - Token/keyring safety: `src/storage/token_storage.rs` contains a live keyring test and some operations that may write to or delete entries in the system keyring. Do NOT run or modify those destructive tests on developer machines unless you understand and accept the side-effects. Prefer using mocks or a dedicated test keyring account when adding or changing tests that interact with the system keyring.
 
-  - PR checklist additions: when creating a PR, in addition to the validation checklist above, update `TODO.md` if the *backlog* changed — an open item finished, a new one appeared, or the change is worth a "Recent Updates" line. See `AGENTS.md` ("Progress tracking"); `TODO.md` is not a per-step session journal.
+  - PR checklist additions: when creating a PR, in addition to the validation checklist above, update `TODO.md` if the *backlog* changed — an open item finished, or a new one appeared. See `AGENTS.md` ("Progress tracking"); `TODO.md` is not a per-step session journal, and completed work belongs in the commit history rather than in the file.
 
 - Project-specific conventions
   - Prefer `parking_lot::Mutex` for shared state; code frequently clones `Arc<Mutex<T>>` before spawning tasks.

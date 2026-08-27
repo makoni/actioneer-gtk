@@ -71,7 +71,6 @@ At minimum, that currently includes:
 - `snapcraft.yaml`
 - `docs/flatpak.md`
 - `src/demo/logs/job-43021.log`
-- `TODO.md` (Recent Updates entry)
 - `RELEASE.md`
 
 If the repo later adds new release-version surfaces, update `release-context.md` and include them in the bump as well.
