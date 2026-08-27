@@ -14,19 +14,30 @@ names it returns the verbatim, line-numbered source of the relevant symbols
 grouped by file, the call path among them, and a blast-radius list of what
 depends on them (including "no covering tests found" warnings).
 
-- Call it **first** for almost anything: "how does X work", "where is X",
-  surveying an area, and — just as important — before editing a symbol, so you
-  see the callers you are about to break.
-- One call usually answers the whole question. Do **not** follow it with a
-  grep/Read sweep over the same files: the source it printed is current on-disk
-  content, already read.
-- The index lives in `.codegraph/` (git-ignored, ~10 MB, local to each machine)
-  and trails writes by about a second, so it reflects edits you just made.
-- Fall back to Grep/Read only when the server is unavailable or when you need a
-  file it does not cover (workflows, `po/`, scripts, docs).
+In Claude Code the tool is deferred: it is not in the session's tool list until
+you load it with `ToolSearch("select:mcp__codegraph__codegraph_explore")`. That
+one extra call is the whole cost of using it.
 
-Use the normal file tools for editing — codegraph is for finding and
-understanding, not for writing.
+Reach for it when the answer spans more than one place:
+
+- "how does X work", "where is X", surveying a subsystem you have not read yet;
+- before editing a symbol — the blast-radius list names the callers you are
+  about to break, which a grep for the symbol will not rank for you;
+- when you know roughly what you want but not which file holds it.
+
+Read/Grep stay right for the opposite case: you already know the file and the
+symbol, you need one value or one line, or the file is outside the index
+(workflows, `po/`, scripts, docs, `Cargo.toml`).
+
+Two rules once you have called it:
+
+- Do **not** follow it with a grep/Read sweep over the same files. The source it
+  printed is current on-disk content — treat it as already read.
+- Use the normal file tools for editing. Codegraph is for finding and
+  understanding, not for writing.
+
+The index lives in `.codegraph/` (git-ignored, ~10 MB, local to each machine)
+and trails writes by about a second, so it reflects edits you just made.
 
 ## Read next
 
