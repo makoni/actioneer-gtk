@@ -84,8 +84,17 @@ pub(crate) fn create_run_expander_row(
     let expander = build_expander(run);
     let actions_box = create_actions_box(run, &context.actions_context());
 
+    // The action buttons live inside the expander's header rather than beside
+    // it. Side by side they would take their width out of the expander, and the
+    // expander is what the expanded job list sits in — the jobs would then stop
+    // short of the row's edge, exactly under the buttons, and the block would
+    // look pushed to one side.
+    if let Some(header) = expander.label_widget()
+        && let Ok(header) = header.downcast::<gtk::Box>()
+    {
+        header.append(&actions_box);
+    }
     row_container.append(&expander);
-    row_container.append(&actions_box);
     run_box.append(&row_container);
 
     let jobs_box = if let Some(existing) = existing_jobs_box {
@@ -251,13 +260,20 @@ fn build_expander(run: &WorkflowRun) -> gtk::Expander {
     expander
 }
 
+/// Inset of the job cards inside an expanded run, on both sides: the leading
+/// one aligns them under the run title, and the trailing one matches it so the
+/// block sits square in the row.
+const JOBS_BOX_INSET: i32 = 42;
+
 fn build_jobs_placeholder() -> gtk::Box {
     let jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 8);
     // Keeps the job cards aligned under the run title: the title sits 6px
     // further in than before (the header's disclosure gap), so the jobs shift
-    // by the same amount to stay in line.
-    jobs_box.set_margin_start(42);
-    jobs_box.set_margin_end(12);
+    // by the same amount to stay in line. The trailing inset matches the
+    // leading one — the mockup had them differ (37 vs 12), which reads as the
+    // block having slipped sideways rather than as a deliberate indent.
+    jobs_box.set_margin_start(JOBS_BOX_INSET);
+    jobs_box.set_margin_end(JOBS_BOX_INSET);
     jobs_box.set_margin_top(2);
     jobs_box.set_margin_bottom(12);
     jobs_box.set_hexpand(true);

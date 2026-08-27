@@ -48,6 +48,11 @@ pub(super) struct JobRowContext {
     pub(super) run_jobs: Arc<Vec<Job>>,
 }
 
+/// Inset of a job card's contents, on both sides. Equal by design: the header
+/// and the step rows share it, so the card's text column and its trailing
+/// durations sit the same distance from the card's edges.
+const JOB_CARD_INSET: i32 = 11;
+
 pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -> gtk::Box {
     let job_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
     job_box.set_hexpand(true);
@@ -57,8 +62,8 @@ pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -
     let header_row = gtk::Box::new(gtk::Orientation::Horizontal, 10);
     header_row.set_valign(gtk::Align::Center);
     header_row.set_hexpand(true);
-    header_row.set_margin_start(11);
-    header_row.set_margin_end(8);
+    header_row.set_margin_start(JOB_CARD_INSET);
+    header_row.set_margin_end(JOB_CARD_INSET);
     header_row.set_margin_top(8);
     header_row.set_margin_bottom(8);
 
@@ -144,8 +149,8 @@ pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -
 
     if !job.steps.is_empty() {
         let steps_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        steps_box.set_margin_start(11);
-        steps_box.set_margin_end(8);
+        steps_box.set_margin_start(JOB_CARD_INSET);
+        steps_box.set_margin_end(JOB_CARD_INSET);
         steps_box.set_margin_bottom(8);
         steps_box.set_hexpand(true);
 
