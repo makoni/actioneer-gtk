@@ -1,12 +1,12 @@
 use crate::favorites::FavoritesManager;
 use crate::i18n::tr;
 use crate::ui::utils::MainContextChannelExt;
+use crate::ui::utils::apply_favorite_result;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use parking_lot::Mutex;
 use std::collections::HashSet;
 use std::sync::Arc;
-use tracing::warn;
 
 pub(super) fn setup_favorite_button(
     button: &gtk::ToggleButton,
@@ -23,40 +23,45 @@ pub(super) fn setup_favorite_button(
 
         button.connect_toggled(move |button| {
             let is_active = button.is_active();
+
+            let favorites_state = favorites_state.clone();
+            let previous_state = {
+                let favorites = favorites_state.lock();
+                favorites.contains(&repo_id)
+            };
+
             update_detail_favorite_button(button, is_active);
 
-            let manager = manager_for_toggle.clone();
-            let favorites_state = favorites_state.clone();
+            // The error-path revert below calls `set_active`, which re-enters this
+            // handler. Once the live cache matches the button's state the toggle
+            // is done, so bail out instead of spawning another write — a failed
+            // write used to chain into a runaway loop of failed writes.
+            if previous_state == is_active {
+                return;
+            }
+
             let button_clone = button.clone();
-            let (sender, receiver) = glib::MainContext::default()
-                .channel::<Result<(), anyhow::Error>>(glib::Priority::default());
+            let (sender, receiver) =
+                glib::MainContext::default()
+                    .channel::<Result<bool, (anyhow::Error, bool)>>(glib::Priority::default());
 
             receiver.attach(None, move |result| {
-                match result {
-                    Ok(()) => {
-                        let mut favorites = favorites_state.lock();
-                        if is_active {
-                            favorites.insert(repo_id);
-                        } else {
-                            favorites.remove(&repo_id);
-                        }
-                    }
-                    Err(err) => {
-                        warn!("Failed to update favorite {}: {}", repo_id, err);
-                        let revert_state = !is_active;
-                        button_clone.set_active(revert_state);
-                        update_detail_favorite_button(&button_clone, revert_state);
-                    }
-                }
-
+                apply_favorite_result(&favorites_state, repo_id, &button_clone, result);
                 glib::ControlFlow::Break
             });
 
+            let manager_for_task = manager_for_toggle.clone();
             crate::runtime_handle().spawn(async move {
-                let outcome = if is_active {
-                    manager.add_favorite(repo_id).await
+                let outcome = match if is_active {
+                    manager_for_task.add_favorite(repo_id).await
                 } else {
-                    manager.remove_favorite(repo_id).await
+                    manager_for_task.remove_favorite(repo_id).await
+                } {
+                    Ok(next_state) => Ok(next_state),
+                    Err(err) => {
+                        let current_state = manager_for_task.is_favorite(repo_id).await;
+                        Err((err, current_state))
+                    }
                 };
 
                 let _ = sender.send(outcome);
@@ -139,7 +144,7 @@ fn update_detail_favorite_button(button: &gtk::ToggleButton, is_active: bool) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ui::test_helpers::run_gtk_test;
+    use crate::ui::test_helpers::{pump_frames, run_gtk_test};
 
     #[test]
     #[ignore = "requires GTK display"]
@@ -178,6 +183,41 @@ mod tests {
             assert!(button.has_css_class("flat"));
             assert!(!button.has_css_class("suggested-action"));
             assert!((button.opacity() - 0.5).abs() < 0.01);
+        });
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn revert_set_active_does_not_spawn_a_favorite_write() {
+        run_gtk_test("revert_set_active_does_not_spawn_a_favorite_write", || {
+            crate::init_test_runtime();
+            let manager = FavoritesManager::new().expect("favorites manager builds");
+            let updates = manager.subscribe();
+            let repo_id = i64::MAX;
+            let favorites = Arc::new(Mutex::new(HashSet::new()));
+            let button = gtk::ToggleButton::new();
+            // An "on" star over an empty cache is the pending-write moment: the
+            // user just asked to favorite it and the write is still in flight.
+            button.set_active(true);
+
+            setup_favorite_button(&button, repo_id, Some(Arc::new(manager)), favorites.clone());
+
+            // The error path reverts the star to its stored state with a plain
+            // `set_active`, which re-enters `toggled`. The live cache already
+            // matches the star, so the handler must bail — not spawn the next
+            // write (the runaway loop) or wedge the GTK thread.
+            button.set_active(false);
+            pump_frames();
+
+            assert!(!button.is_active(), "the reverted star stays off");
+            assert!(
+                !favorites.lock().contains(&repo_id),
+                "the cache is left clean"
+            );
+            assert!(
+                !updates.has_changed().unwrap_or(false),
+                "the re-entrant revert must not spawn another favorite write"
+            );
         });
     }
 }

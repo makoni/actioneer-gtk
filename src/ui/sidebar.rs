@@ -3,6 +3,7 @@ use crate::favorites::FavoritesManager;
 use crate::i18n::tr;
 use crate::ui::state::{RepoActionsState, WorkflowStatusCounts};
 use crate::ui::utils::MainContextChannelExt;
+use crate::ui::utils::apply_favorite_result;
 use crate::ui::utils::widget_data::{get_data_clone, get_data_copy, set_data};
 use gtk::prelude::*;
 use gtk4::{self as gtk, gio, glib};
@@ -432,41 +433,6 @@ fn find_label_by_name(widget: &gtk::Widget, name: &str) -> Option<gtk::Label> {
         child = current.next_sibling();
     }
     None
-}
-
-/// Applies a favorite-toggle result to the shared favorite cache and the row's
-/// star.
-///
-/// The cache lock is scoped to the match so the guard is dropped *before*
-/// `button.set_active`: that call re-enters the star's `toggled` handler, which
-/// locks this same non-reentrant `parking_lot::Mutex` to read `previous_state`,
-/// so holding the guard across it wedges the GTK thread.
-fn apply_favorite_result(
-    favorites: &Arc<Mutex<HashSet<i64>>>,
-    repo_id: i64,
-    button: &gtk::ToggleButton,
-    result: Result<bool, (anyhow::Error, bool)>,
-) {
-    let target_state = {
-        let mut favorites = favorites.lock();
-        let state = match result {
-            Ok(is_now_favorite) => is_now_favorite,
-            Err((err, stored_state)) => {
-                warn!("Failed to update favorite {repo_id}: {err}");
-                stored_state
-            }
-        };
-        if state {
-            favorites.insert(repo_id);
-        } else {
-            favorites.remove(&repo_id);
-        }
-        state
-    };
-
-    if button.is_active() != target_state {
-        button.set_active(target_state);
-    }
 }
 
 fn build_repo_row(
@@ -1121,7 +1087,6 @@ mod tests {
     // `GTK_TEST_TIMEOUT` (30 s), is marked wedged, and every GTK test queued after
     // it fails too, so the whole UI suite looks collapsed. A red `favorite_*` test
     // here means the favorites path broke; start the hunt here, not in the cascade.
-    #[test]
     #[ignore = "requires GTK display"]
     fn favorite_err_result_applied_to_button_does_not_deadlock() {
         run_gtk_test(

@@ -60,20 +60,26 @@ impl FavoritesManager {
         Ok(is_now_favorite)
     }
 
-    pub async fn add_favorite(&self, repo_id: i64) -> anyhow::Result<()> {
+    pub async fn add_favorite(&self, repo_id: i64) -> anyhow::Result<bool> {
         let mut data = self.data.write().await;
         data.repo_ids.insert(repo_id);
         self.save(&data)?;
         self.emit_update(&data.repo_ids);
-        Ok(())
+        // The insert above makes the resulting state `true` by construction — this
+        // literal is the slot a server-confirmed state fills once the manager is
+        // remote.
+        Ok(true)
     }
 
-    pub async fn remove_favorite(&self, repo_id: i64) -> anyhow::Result<()> {
+    pub async fn remove_favorite(&self, repo_id: i64) -> anyhow::Result<bool> {
         let mut data = self.data.write().await;
         data.repo_ids.remove(&repo_id);
         self.save(&data)?;
         self.emit_update(&data.repo_ids);
-        Ok(())
+        // The remove above makes the resulting state `false` by construction — this
+        // literal is the slot a server-confirmed state fills once the manager is
+        // remote.
+        Ok(false)
     }
 
     pub async fn get_all(&self) -> HashSet<i64> {
