@@ -1,59 +1,84 @@
 # TODO: Backlog
 
-Status: ✅ Feature parity with the macOS client achieved — core work complete.
-
 This file tracks **open** work only. The full history of completed work lives in
 git commits (search the log) and in the previous long-form TODO in repo history.
 
-## Where to look
-
-- UI: `src/ui/` (main_window, detail_view, job_logs_window)
-- API: `src/api/` (client, models, http helpers)
-- Auth & storage: `src/auth/`, `src/storage/token_storage.rs`
-- Tests: `tests/` and unit tests in `src/`
-
-## Quick validation (local)
-
-CI runs only on `workflow_dispatch` (see `AGENTS.md`), so validate locally:
-
-1. Format: `cargo fmt`
-2. Lint: `cargo clippy --all-targets --all-features`
-3. Unit & logic tests: `cargo test`
-4. UI tests (requires display): `cargo test -- --ignored` (or `xvfb-run`)
-5. If `Cargo.lock` changed: `scripts/regenerate-flatpak-sources.sh` then `scripts/check-flatpak-lock-sync.sh`
-
-## Recent Updates
-
-- 2026-08-27: Round 3 over the Step D scroll fix. Fixed a **real star-receiver deadlock**: the favorite star's channel receiver held the favorites `Arc` lock across `button.set_active(...)`, which re-enters the star's `toggled` handler and locks the same non-reentrant `parking_lot::Mutex` — wedging the GTK thread on any failed favorite write (the `Err` path, where `stored_state` usually differs from the clicked star). The apply-logic is now `apply_favorite_result` (lock scoped to the match, dropped before `set_active`), with a regression test `favorite_err_result_applied_to_button_does_not_deadlock`. Hardened the vacuous counters test (now asserts `upper()` grows when the meta rows appear) and proved all three scroll tests fail on distinct asserts when row reuse is disabled. Confirmed the pending flag can't actually stick (`toggle_favorite` can't panic → task always sends → flag always cleared). All green: fmt, clippy `-D warnings`, 190 unit + 7 logic, 49 GTK under Xvfb.
-- 2026-08-27: Second review pass over the Step D scroll fix (14 points), all landed. Row identity is now a typed `RowIdentity` (repo by id, section by kind, owner by (kind, login)) so section/owner headers are no longer keyed off the translated title (a language switch no longer recreates them); a genuine favorite toggle marks the star pending so a concurrent rebuild no longer blinks it back to the stale persisted state (and the favorites `Arc` lock is scoped to one statement to avoid a `parking_lot` deadlock); `sync_store` gained an O(n) no-op fast path; row labels are stashed and refreshed in place (`update_meta_box`), so a rebuild never allocates a new widget; and `rebuild_repo_list` is now the sole entry point (the `rebuild_repo_list_preserving_scroll` wrapper is gone). Tests: `rebuild_reuses_header_rows` now parks the anchor on the owner header via `ListView::scroll_to` with a non-no-op rebuild, and a new `rebuild_holds_position_when_workflow_counters_arrive` covers row-height growth. The *Favorites* pill is a filter, not a section — zero favourites shows the existing "No repositories match" empty state. All green: fmt, clippy `-D warnings`, 190 unit + 7 logic, 48 GTK under Xvfb (rebuild tests stable across 3 runs).
-- 2026-08-27: Step D review follow-ups (3 fixes). (1) **Header rows are now reused too, not just repo rows**: the row snapshot keys off a per-row identity string (`ROW_IDENTITY_KEY`) and covers every row type — repos by id, section headers by title, owner headers by (section, owner) — so a no-op rebuild recreates *nothing* (the anchor tracker, which can sit on a section header, survives); a new test `rebuild_reuses_header_rows` asserts the whole row subtree (repos + both header types) is pointer-identical before/after. (2) **Favorite state is read live, not from a snapshot**: `RepoListRenderContext` dropped `favorites_snapshot`, so `rebuild_repo_list` reads the same `Arc` the observer mutates — this lets the sidebar's programmatic star-button `set_active` be caught by the handler's `previous_state == desired_state` guard (one source of truth), killing the spurious favorites request on a no-op rebuild and fixing the "favorite visually lost" window. (3) **`pump_frames` reworked** to drain the main context for a bounded 300 ms duration instead of counting frame ticks (the layout settles on the frame clock, which advances over time, not per tick) — the two scroll tests drop from ~20 s to ~3 s, stable across runs. All green: fmt, clippy `-D warnings`, 190 unit + 7 logic tests, 47 GTK tests under Xvfb.
-- 2026-08-27: Removed the *Favorites* section from the sidebar: favoriting a repository is now a pure indicator (the row's star + `FAVORITE_ROW_KEY`) and no longer moves the row into a top section — the "Favorites" pill above the list filters on `FAVORITE_ROW_KEY` to show favourites, which already existed. This removes the main reorder source at the root, so neither favoriting, nor a Refresh, nor a status update reorders the list (repos are ordered by owner + name, which is stable); the widget-identity diff stays as the safety net for when a repository is actually added or removed. The GTK test `rebuild_keeps_the_top_visible_repo_in_place` now asserts the repository order in the store is unchanged across a favorite toggle (plus the scroll did not jump). All green: fmt, clippy `-D warnings`, 190 unit + 7 logic tests, 46 GTK tests under Xvfb.
-- 2026-08-27: Started [🔄] and completed [✅] the sidebar scroll fix, simplified (Step D): instead of saving/restoring the scroll pixel (or a remembered row) on a second frame tick, the rebuild now **preserves each repo row's widget identity**, so `GtkListBase`'s own scroll anchor — a tracker bound to a row's widget — survives the model change and holds the list in place with no restore code at all. `rebuild_repo_list` snapshots the existing rows, reuses + refreshes them in place (only section/owner headers are recreated), and `sync_store` applies a minimal LCS-by-identity diff (matched rows never touched, stale headers removed, missing rows inserted). Deleted the manual-restore helpers (`restore_repo_list_scroll`, `row_content_y`, `probe_rows`, `topmost_visible_repo_id`). Root cause confirmed from the GTK 4.14.5 source: `remove_all()` + append invalidates the anchor tracker → `value = 0` (the top-snap). The GTK test now asserts the scroll did not jump to the top and moved by no more than a few rows; proof-of-failure verified by forcing fresh row widgets (the list snaps to the top). All green: fmt, clippy `-D warnings`, 190 unit + 7 logic tests, 46 GTK tests under Xvfb.
-- 2026-08-26: Started [🔄] and completed [✅] the sidebar scroll-position fix: every repo-list rebuild (`schedule_repo_list_refresh`) now goes through `rebuild_repo_list_preserving_scroll`, which saves the scroll position, rebuilds, restores the selection, and puts the position back on the second frame tick (the first tick is the frame that allocates the rebuilt rows and re-zeroes the adjustment; by the second the range is final). Favoriting a repo, Refresh, status updates and the initial load no longer yank the list to the top. Covered by a new GTK test that scrolls a 40-repo list to mid-range, rebuilds it with one favorite added, and asserts the position survived (proof-of-failure verified with the restore disabled); `pump_frames` added to `ui/test_helpers` for deterministic frame waits in tests.
-- 2026-08-26: Decided the GTK floor: raise the `gtk4` feature `v4_10` → `v4_14` — the effective minimum across our three packagings is GTK 4.14 (Snap `core24` = Ubuntu 24.04 = GNOME 46; the AppImage bundles the build-environment GTK 4.14 from `ubuntu-24.04` CI runners), while Flatpak's `org.gnome.Platform "50"` (≈GTK 4.22) is far ahead. Also investigated making the AppImage carry the same newest GTK as the Flatpak — options and risks are in the Active section above.
-- 2026-08-26: Started [🔄] and completed [✅] the log window catch-up: the job sidebar now shows a live `mm:ss` counter for running jobs (the shared duration helpers moved from the detail view to `ui/utils` so both views render a job's time through one code path), and Refresh now re-fetches the run's jobs along with the log — finished jobs get their final duration and status dot, the selection follows the job by id across retries, an empty answer (retention) keeps the old snapshot like a network failure, and if the reader's job leaves the run the title and log resync to the fallback job. GTK tests cover the ticker, the reselect by id, the empty answer, and the resync (demo data plus a pre-stored cache entry, so no test in the suite opens a network connection).
-- 2026-08-25: Cleanup pass over pre-existing translation issues found in review: marked the 17 out-of-source strings (old jobs-window, crash-report and settings labels) obsolete (`#~`) in the 12 legacy catalogs (16 in `en`, 4 in `it`/`ja`, which already carried 9 earlier ones), restored proper umlauts in 11 German live strings (the 16 release-notes bullets backfilled for `1.1.0` plus `auslösen`, `können`/`anhängen`, `prüfen`), restored missing accents in 3 French release-notes bullets (`sécurité/à jour`, `intégrés/été`, `désormais/liées/données/dépôts/déconnexion`) and normalized straight to typographic apostrophes in 8 live French strings, and aligned the Dutch `werkstroomdetailpaneel`/`werkstromen` outlier to the catalog-standard `workflow` loanword. All `.mo` catalogs recompiled; `msgfmt -c` clean; `cargo` suite green.
-- 2026-08-25: Started [🔄] and completed [✅] localization audit and gap fixes: staged `po/*.po` into the Snap build (`snapcraft.yaml`) so the in-house `.po` catalog resolution works for snaps (mirroring the Flatpak layout), translated all remaining live English placeholders in every locale (~700 strings across es/fr/pt_BR/zh_Hans/hi/ar/bn/ur plus the last stragglers in de/nl/ru, following each catalog's existing terminology), added the previously missing `Unable to access the clipboard` string to all 14 catalogs, backfilled the 16 older release-notes bullets absent from `de`/`nl`, added the `<lang>` list (14 languages) to `data/metainfo.xml.in`, and recompiled all `.mo` catalogs. Remaining source-identical strings are intentional (brand names, AppStream keywords, and standard loanwords like `Commit`/`Status`/`workflows`).
-- 2026-08-25: Started [🔄] and completed [✅] release prep for `1.1.0`: bumped Cargo/Snap versions (`1.0.15` → `1.1.0`), updated `Cargo.lock` via `cargo update -p actioneer`, regenerated Flatpak cargo sources from the new lock, added the `1.1.0` AppStream changelog entry (translated to all 13 non-English locales, now including Italian and Japanese) with re-shot screenshot dimensions, rewrote `RELEASE.md` notes with commits since `1.0.15`, dropped the stale `v` tag prefix from `docs/flatpak.md`, the demo log, and the publish workflow input description to match real tag naming, and ran the release validation checks.
-- 2026-08-10: Started [🔄] and completed [✅] Workflows view redesign (feature branch `feature/workflows-redesign`): restructured the repo detail pane into a single rounded workflows card with an accordion (workflow → runs → jobs → steps), round tinted status dots (`status-dot`), per-row mono meta lines, a pinned pane header (repo title + visibility badge + "N workflows · updated …" + segmented status-count filter), running-workflow progress bar with live elapsed timer, "Recent runs" sub-header with "shown N of M · All on GitHub" link, ghost row-action buttons (logs/trigger/cancel wired to `JobLogsWindow` and the cancel confirmation), sidebar polish (All/Favorites/Active pills, uppercase owner headers, icon+star rows, solid-accent selection), enriched demo data with relative timestamps and multi-step jobs, and 13 new translated strings across all 11 locales. Verified with `cargo fmt`, `clippy -D warnings`, `cargo test --workspace`, Xvfb UI tests, and `scripts/check-flatpak-lock-sync.sh`.
-- 2026-06-23: Started [🔄] and completed [✅] release bump to `1.0.15` (maintenance): updated version targets, added AppStream + GitHub changelog entries based on commits since `1.0.14`, refreshed gettext/Flatpak artifacts, and ran release validation checks.
-- 2026-06-30: Started [🔄] and completed [✅] dependency maintenance pass: merged pending Dependabot updates, refreshed Cargo deps (`gio`, `gtk4`, `open`, `chacha20poly1305` major), and synchronized Flatpak cargo sources with `Cargo.lock`.
+Where the code lives and how to validate a change are documented once, in
+`AGENTS.md` and `docs/agent-guide.md` — not repeated here, where the copy only
+drifts.
 
 ## Open items (optional / low priority)
 
-These are enhancement ideas, not required work — none has been started.
+Neither is required work, and neither has been started.
 
-- **Enhanced streaming job logs (advanced viewer)**
-  - Prototype incremental log streaming in the API client (chunked transfer, retries, resume markers).
-  - Build a streaming log viewer widget with live append and search affordances.
-  - Add integration tests that simulate slow/partial streams so we don't regress buffering or cancellation.
+### Sidebar header rows show a hover highlight
 
-- **Inline job-log drawer** — expandable from each job row instead of opening a separate window.
-  - Design a row-level drawer widget (likely `AdwExpanderRow`/`AdwClamp`) that embeds the log viewer.
-  - Ensure logs load lazily per row and reuse `JobLogsWindow`'s per-window log cache.
-  - Add UI tests (ignored) that open/close drawers to guard against regressions.
+The non-interactive section headers ("Actions enabled"/"Actions disabled") and
+the owner-name headers in the repository list pick up the list-row `:hover`
+background on mouse-over even though clicking them does nothing, so they read as
+clickable.
 
-- **Compact "Overview" page** — aggregates the last run status for pinned/favorite repositories using multi-pane cards.
-  - Define the summary data structure (favorite repo -> last run digest) and extend the cache to supply it.
-  - Build an `OverviewPage` with cards + refresh controls, adapting to narrow/wide layouts.
-  - Add smoke tests ensuring the overview reflects cache updates and respects offline data.
+Note that giving the headers a CSS class will not fix it: they already carry
+`section-header` / `owner-header` / `hoverless-row`, and those already paint
+their own background transparent (`style.rs`). The highlight belongs to their
+*parent*, the `ListItemWidget` the factory binds them into, drawn by
+`.sidebar-surface listview row:hover:not(:selected)` (`style.rs:374`). A class
+on the child cannot reach it, and GTK CSS has no `:has()`.
+
+Move the hover off the list row and onto the thing that is actually
+interactive: the repository row's own box, which already has the `activatable`
+class and no hover rule of its own (`build_repo_row` in `src/ui/sidebar.rs`).
+Headers then stop highlighting because nothing highlights them, rather than
+because of an exception.
+
+Check while you are there that the selected repository still gets its accent
+background — that rule (`.sidebar-surface listview row:selected`) is on the
+list row too, and only the hover half should move.
+
+### AppImage: bundle the newest GTK the way Flatpak does
+
+Question: Flatpak gets "latest GTK" declaratively (`org.gnome.Platform "50"`);
+the AppImage bundles whatever the CI runner has (4.14) — four GNOME minors
+behind (46 → 50), and on unpinned tooling.
+
+How the plugin works (read from `linuxdeploy-plugin-gtk.sh`, master):
+- GTK 4 path: `gtk4_libdir = $(pkg-config --variable=libdir gtk4)/gtk-4.0` of
+  the *build environment*, copied into the AppDir; same for the gdk-pixbuf
+  loaders, gobject/gio/rsvg/pango. The version is 100% determined by the
+  runner's `libgtk-4-dev`.
+- Only overrides: `LD_GTK_LIBRARY_PATH` (library source dir) and
+  `DEPLOY_GTK_VERSION` (major only). No "fetch GTK from elsewhere" mode.
+- Environment tools the plugin requires: `pkg-config`, `file`, `find`, `ldd`,
+  `realpath`, `glib-compile-schemas`, `gdk-pixbuf-query-loaders`, and
+  `dpkg-architecture` (hard exit when `/etc/os-release` says debian/ubuntu).
+- Our workflow pins nothing: `linuxdeploy` from `continuous`, the plugin from
+  `master` (`appimage-ci.yml:80-81`).
+
+Options:
+1. **(recommended) run the packaging step inside the Flatpak runtime** —
+   install the runtime ref (e.g. `flatpak install flathub
+   org.gnome.Platform/50`) and run `flatpak run --command=/usr/bin/bash
+   org.gnome.Platform/50 -c "linuxdeploy … --plugin gtk"` on the shared
+   workspace. Inside the sandbox the plugin's `pkg-config` resolves the
+   runtime's `gtk4.pc` (≈4.22) and copies *the runtime's* libraries — the
+   AppImage then carries the same GTK as the Flatpak build. One version
+   variable for both packagings: bumping the runtime in the Flatpak manifest
+   lifts the AppImage automatically.
+   To verify on implementation day: `flatpak` on GH runners (apt + flathub
+   remote, cache `~/.local/share/flatpak` — the runtime is hundreds of MB);
+   the runtime must ship the plugin's toolchain (org.gnome.Platform is built
+   on freedesktop-sdk, a full dev environment — check `pkg-config`,
+   `dpkg-architecture`, `ldd`, `glib-compile-schemas`,
+   `gdk-pixbuf-query-loaders`); linuxdeploy must run in extracted mode
+   (`APPIMAGE_EXTRACT_AND_RUN=1`, already exported in the workflow);
+   aarch64 runner parity (`ubuntu-24.04-arm` is native arm64).
+2. Newer build environment (runner/container with GTK ≥ 4.22): GH-hosted
+   runners top out at ubuntu-24.04 → 4.14. Self-hosted / Arch container is
+   fragile. Rejected.
+3. Keep 4.14, but **pin** `linuxdeploy` + `linuxdeploy-plugin-gtk` to tags and
+   add a CI assertion that the bundled `libgtk-4.so` version ≥ the compile
+   floor. Do it anyway (defense in depth), independent of the 1-vs-3 decision.
+
+Decision needed: option 1 (full parity with Flatpak) vs option 3 (honest 4.14,
+pinned + asserted).
+
