@@ -922,6 +922,9 @@ msgstr "Definir el idioma de la aplicación (p. ej., ru, en, zh_Hans)"
 msgid "Start the app with sample demo data"
 msgstr "Iniciar la aplicación con datos de demostración"
 
+msgid "Print the version of Actioneer and the GTK stack it runs on"
+msgstr "Mostrar la versión de Actioneer y la de GTK que utiliza"
+
 msgid "No repositories match"
 msgstr "Ningún repositorio coincide"
 

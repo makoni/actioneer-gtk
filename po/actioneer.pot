@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-25 14:45+0000\n"
+"POT-Creation-Date: 2026-08-27 18:33+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -151,11 +151,11 @@ msgid "Workflows"
 msgstr ""
 
 #: src/ui/detail_view/favorite_controls.rs:19 src/ui/detail_view/mod.rs:178
-#: src/ui/sidebar.rs:254
+#: src/ui/sidebar.rs:470
 msgid "Toggle favorite"
 msgstr ""
 
-#: src/ui/detail_view/favorite_controls.rs:67
+#: src/ui/detail_view/favorite_controls.rs:72
 msgid "Favorites unavailable"
 msgstr ""
 
@@ -205,7 +205,7 @@ msgid "Not updated yet"
 msgstr ""
 
 #: src/ui/detail_view/helpers/formatting.rs:8
-#: src/ui/detail_view/helpers/runs/row.rs:176
+#: src/ui/detail_view/helpers/runs/row.rs:185
 msgid "Workflow Run"
 msgstr ""
 
@@ -246,35 +246,35 @@ msgstr ""
 msgid "Updated"
 msgstr ""
 
-#: src/ui/detail_view/helpers/jobs.rs:92
+#: src/ui/detail_view/helpers/jobs.rs:81
 msgid "Unnamed job"
 msgstr ""
 
-#: src/ui/detail_view/helpers/jobs.rs:126
+#: src/ui/detail_view/helpers/jobs.rs:112
 #: src/ui/detail_view/helpers/runs/actions.rs:75
 #: src/ui/detail_view/helpers/workflows.rs:391
 msgid "View logs"
 msgstr ""
 
-#: src/ui/detail_view/helpers/jobs.rs:428
+#: src/ui/detail_view/helpers/jobs.rs:410
 #: src/ui/detail_view/helpers/runs/actions.rs:116
 #: src/ui/detail_view/helpers/workflows.rs:633
 msgid "No jobs found"
 msgstr ""
 
-#: src/ui/detail_view/helpers/jobs.rs:482
+#: src/ui/detail_view/helpers/jobs.rs:464
 #: src/ui/detail_view/helpers/runs/actions.rs:121
 #: src/ui/detail_view/helpers/workflows.rs:640
 msgid "Unable to load jobs"
 msgstr ""
 
-#: src/ui/detail_view/helpers/jobs.rs:488
+#: src/ui/detail_view/helpers/jobs.rs:470
 #: src/ui/detail_view/helpers/runs/load.rs:447 src/ui/auth_window.rs:395
 #: src/ui/auth_window.rs:437
 msgid "Error: {message}"
 msgstr ""
 
-#: src/ui/detail_view/helpers/jobs.rs:497
+#: src/ui/detail_view/helpers/jobs.rs:479
 #: src/ui/detail_view/helpers/runs/list.rs:513
 msgid "Retry"
 msgstr ""
@@ -390,7 +390,7 @@ msgstr ""
 msgid "Showing {visible} of {filtered} matching filters"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/row.rs:265
+#: src/ui/detail_view/helpers/runs/row.rs:281
 msgid "Click to load jobs..."
 msgstr ""
 
@@ -509,31 +509,27 @@ msgstr ""
 msgid "Refresh workflows"
 msgstr ""
 
-#: src/ui/detail_view/mod.rs:422 src/ui/sidebar.rs:351
+#: src/ui/detail_view/mod.rs:422 src/ui/sidebar.rs:546 src/ui/sidebar.rs:599
 msgid "Private"
 msgstr ""
 
-#: src/ui/detail_view/mod.rs:424 src/ui/sidebar.rs:354
+#: src/ui/detail_view/mod.rs:424 src/ui/sidebar.rs:548 src/ui/sidebar.rs:601
 msgid "Public"
 msgstr ""
 
-#: src/ui/sidebar.rs:141 src/ui/main_window/sidebar_panel.rs:274
-msgid "Favorites"
-msgstr ""
-
-#: src/ui/sidebar.rs:146
+#: src/ui/sidebar.rs:68
 msgid "Actions Enabled"
 msgstr ""
 
-#: src/ui/sidebar.rs:151
+#: src/ui/sidebar.rs:69
 msgid "Actions Disabled"
 msgstr ""
 
-#: src/ui/sidebar.rs:363
+#: src/ui/sidebar.rs:769
 msgid "Active runs: {count}"
 msgstr ""
 
-#: src/ui/sidebar.rs:370
+#: src/ui/sidebar.rs:782
 msgid "Failures: {count}"
 msgstr ""
 
@@ -617,80 +613,80 @@ msgstr ""
 msgid "Error saving token: {message}"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:130
+#: src/ui/job_logs_window.rs:141
 msgid "{title} - Logs"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:148 src/ui/job_logs_window.rs:345
+#: src/ui/job_logs_window.rs:160 src/ui/job_logs_window.rs:369
 msgid "Fetching logs..."
 msgstr ""
 
-#: src/ui/job_logs_window.rs:198
+#: src/ui/job_logs_window.rs:213
 msgid "Refresh logs"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:202
+#: src/ui/job_logs_window.rs:217
 msgid "Copy logs to clipboard"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:206
+#: src/ui/job_logs_window.rs:221
 msgid "Save logs to file"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:287 src/ui/job_logs_window.rs:808
+#: src/ui/job_logs_window.rs:302 src/ui/job_logs_window.rs:1296
 msgid "Save Logs"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:288 src/ui/job_logs_window.rs:809
+#: src/ui/job_logs_window.rs:303 src/ui/job_logs_window.rs:1297
 msgid "Save"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:406
+#: src/ui/job_logs_window.rs:512
 msgid ""
 "Logs are not yet available for this job. GitHub only provides logs once the "
 "job starts streaming output or completes. Try refreshing in a few moments."
 msgstr ""
 
-#: src/ui/job_logs_window.rs:411
+#: src/ui/job_logs_window.rs:517
 msgid "The logs for this run have expired and are no longer available."
 msgstr ""
 
-#: src/ui/job_logs_window.rs:415
+#: src/ui/job_logs_window.rs:521
 msgid ""
 "Unable to load logs right now. Please try again later.\n"
 "\n"
 "Details: {error}"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:457
+#: src/ui/job_logs_window.rs:563
 msgid "Logs are empty; nothing to copy"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:464
+#: src/ui/job_logs_window.rs:570
 msgid "Logs copied to clipboard"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:468
+#: src/ui/job_logs_window.rs:574
 msgid "Unable to access the clipboard"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:495
+#: src/ui/job_logs_window.rs:601
 msgid "Logs are empty; nothing saved"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:502
+#: src/ui/job_logs_window.rs:608
 msgid "Unable to determine save location"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:514
+#: src/ui/job_logs_window.rs:620
 msgid "Logs saved"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:517
+#: src/ui/job_logs_window.rs:623
 msgid "Failed to save logs: {error}"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:558
+#: src/ui/job_logs_window.rs:664
 msgid "Job"
 msgstr ""
 
@@ -716,24 +712,28 @@ msgstr ""
 msgid "Loading repositories..."
 msgstr ""
 
-#: src/ui/main_window/sidebar_panel.rs:104
-#: src/ui/main_window/sidebar_panel.rs:343
+#: src/ui/main_window/sidebar_panel.rs:109
+#: src/ui/main_window/sidebar_panel.rs:353
 msgid "Search repositories..."
 msgstr ""
 
-#: src/ui/main_window/sidebar_panel.rs:249
+#: src/ui/main_window/sidebar_panel.rs:254
 msgid "No repositories match"
 msgstr ""
 
-#: src/ui/main_window/sidebar_panel.rs:255
+#: src/ui/main_window/sidebar_panel.rs:260
 msgid "Try another filter or search term."
 msgstr ""
 
-#: src/ui/main_window/sidebar_panel.rs:273
+#: src/ui/main_window/sidebar_panel.rs:278
 msgid "All"
 msgstr ""
 
-#: src/ui/main_window/sidebar_panel.rs:275
+#: src/ui/main_window/sidebar_panel.rs:279
+msgid "Favorites"
+msgstr ""
+
+#: src/ui/main_window/sidebar_panel.rs:280
 msgid "Active"
 msgstr ""
 
@@ -767,7 +767,7 @@ msgstr ""
 
 #: src/ui/main_window/window_actions.rs:95
 #: src/ui/main_window/window_actions.rs:192
-#: src/ui/main_window/window_actions.rs:279
+#: src/ui/main_window/window_actions.rs:280
 msgid "Close"
 msgstr ""
 
@@ -814,27 +814,27 @@ msgid ""
 "on GitHub and attach the crash file."
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:277
+#: src/ui/main_window/window_actions.rs:278
 msgid "Copy diagnostics"
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:278 src/ui/main_window.rs:387
+#: src/ui/main_window/window_actions.rs:279 src/ui/main_window.rs:387
 msgid "Report Issue"
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:317
+#: src/ui/main_window/window_actions.rs:318
 msgid "Failed to open donation page in the browser."
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:330 src/ui/main_window.rs:736
+#: src/ui/main_window/window_actions.rs:331 src/ui/main_window.rs:736
 msgid "Actioneer notification test"
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:331
+#: src/ui/main_window/window_actions.rs:332
 msgid "If you can read this, GNOME notifications are working."
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:342
+#: src/ui/main_window/window_actions.rs:343
 msgid "Notifications are currently unavailable."
 msgstr ""
 
@@ -974,16 +974,20 @@ msgstr ""
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr ""
 
-#: src/main.rs:286
+#: src/main.rs:316
 msgid "Send a test notification when the app starts"
 msgstr ""
 
-#: src/main.rs:287
+#: src/main.rs:317
 msgid "Set the application language (e.g., ru, en, zh_Hans)"
 msgstr ""
 
-#: src/main.rs:288
+#: src/main.rs:318
 msgid "Start the app with sample demo data"
+msgstr ""
+
+#: src/main.rs:319
+msgid "Print the version of Actioneer and the GTK stack it runs on"
 msgstr ""
 
 #: data/metainfo.xml.in:6

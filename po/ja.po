@@ -1020,6 +1020,9 @@ msgstr "アプリケーションの言語を設定(例: ru, en, zh_Hans)"
 msgid "Start the app with sample demo data"
 msgstr "サンプルデモデータでアプリを起動"
 
+msgid "Print the version of Actioneer and the GTK stack it runs on"
+msgstr "Actioneer と使用中の GTK のバージョンを表示する"
+
 #: data/metainfo.xml.in:6
 msgid "Actioneer"
 msgstr "Actioneer"

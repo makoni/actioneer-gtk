@@ -26,14 +26,26 @@ jobs:
           - arch: x86_64
             runner: ubuntu-24.04
             linuxdeploy_suffix: x86_64
+            linuxdeploy_sha256: c20cd71e3a4e3b80c3483cef793cda3f4e990aca14014d23c544ca3ce1270b4d
           - arch: aarch64
             runner: ubuntu-24.04-arm
             linuxdeploy_suffix: aarch64
+            linuxdeploy_sha256: 620095110d693282b8ebeb244a95b5e911cf8f65f76c88b4b47d16ae6346fcff
     outputs:
       run-id: ${{ steps.expose-run-id.outputs.run_id }}
     env:
       APPDIR: build/AppDir
       LINUXDEPLOY_PLUGIN_GTK: ${{ github.workspace }}/linuxdeploy-plugin-gtk.sh
+      # Pinned, with checksums: a release artifact must not depend on whatever
+      # sat on someone else's branch the day it was built. linuxdeploy has no
+      # stable channel, so this is its newest non-prerelease tag; the GTK plugin
+      # publishes no releases at all, so it is pinned by commit.
+      LINUXDEPLOY_VERSION: 1-alpha-20251107-1
+      LINUXDEPLOY_PLUGIN_GTK_COMMIT: 7a3fbc31a9e5075073ff8790f26effbac5f84453
+      LINUXDEPLOY_PLUGIN_GTK_SHA256: b0f4cbc684a0103a9651f0955b635eaea0096b3a66c0f5a2c2aa337960375171
+      # The GTK the AppImage must ship: the floor the crate compiles against
+      # (`gtk4` feature `v4_14`). Anything older would load but lack symbols.
+      MIN_BUNDLED_GTK: "4.14"
     steps:
       - uses: actions/checkout@v7.0.1
 
@@ -77,8 +89,10 @@ jobs:
       - name: Download linuxdeploy and GTK plugin
         run: |
           set -euo pipefail
-          curl -L "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${{ matrix.linuxdeploy_suffix }}.AppImage" -o linuxdeploy.AppImage
-          curl -L "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh" -o "$LINUXDEPLOY_PLUGIN_GTK"
+          curl -fL "https://github.com/linuxdeploy/linuxdeploy/releases/download/${LINUXDEPLOY_VERSION}/linuxdeploy-${{ matrix.linuxdeploy_suffix }}.AppImage" -o linuxdeploy.AppImage
+          curl -fL "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/${LINUXDEPLOY_PLUGIN_GTK_COMMIT}/linuxdeploy-plugin-gtk.sh" -o "$LINUXDEPLOY_PLUGIN_GTK"
+          echo "${{ matrix.linuxdeploy_sha256 }}  linuxdeploy.AppImage" | sha256sum --check --strict
+          echo "${LINUXDEPLOY_PLUGIN_GTK_SHA256}  ${LINUXDEPLOY_PLUGIN_GTK}" | sha256sum --check --strict
           chmod +x linuxdeploy.AppImage "$LINUXDEPLOY_PLUGIN_GTK"
 
       - name: Build AppImage with linuxdeploy
@@ -103,6 +117,45 @@ jobs:
           OUTPUT_FILE=$(ls -1 Actioneer-*.AppImage | head -n 1)
           DEST="dist/actioneer-${{ steps.get_version.outputs.version }}-${{ matrix.arch }}.AppImage"
           mv "$OUTPUT_FILE" "$DEST"
+
+      - name: Verify the AppImage runs and carries its own GTK
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          APPIMAGE="dist/actioneer-${{ steps.get_version.outputs.version }}-${{ matrix.arch }}.AppImage"
+
+          # 1. The bundle must actually contain GTK. If the plugin silently
+          #    stops copying it, the AppImage would fall back to the host's GTK
+          #    on machines that have one and fail outright on machines that do
+          #    not — both of which look fine on this runner.
+          bundled=$(find "$APPDIR" -name 'libgtk-4.so*' -printf '%f\n' | head -n 1)
+          if [ -z "$bundled" ]; then
+            echo "No libgtk-4 in the AppDir: the GTK plugin did not run" >&2
+            find "$APPDIR/usr/lib" -maxdepth 1 -name 'lib*' -printf '  %f\n' | head -n 20 >&2
+            exit 1
+          fi
+          echo "Bundled GTK library: $bundled"
+
+          # 2. It must start, and report the GTK it loaded. `--version` prints
+          #    the runtime's numbers, so this checks the library that answers at
+          #    run time rather than the file that happens to sit in the AppDir.
+          reported=$(APPIMAGE_EXTRACT_AND_RUN=1 "./$APPIMAGE" --version)
+          echo "AppImage reports: $reported"
+
+          gtk_version=$(printf '%s' "$reported" | sed -n 's/.*gtk \([0-9][0-9.]*\).*/\1/p')
+          if [ -z "$gtk_version" ]; then
+            echo "Could not read a GTK version out of: $reported" >&2
+            exit 1
+          fi
+
+          # 3. And it must not be older than what the crate compiles against.
+          lowest=$(printf '%s\n%s\n' "$MIN_BUNDLED_GTK" "$gtk_version" | sort -V | head -n 1)
+          if [ "$lowest" != "$MIN_BUNDLED_GTK" ]; then
+            echo "Bundled GTK $gtk_version is older than the $MIN_BUNDLED_GTK the build needs" >&2
+            exit 1
+          fi
+          echo "GTK $gtk_version satisfies the $MIN_BUNDLED_GTK floor"
 
       - name: Upload AppImage artifact
         uses: actions/upload-artifact@v7

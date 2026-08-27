@@ -15,6 +15,9 @@ msgstr ""
 msgid "Send a test notification when the app starts"
 msgstr "Send a test notification when the app starts"
 
+msgid "Print the version of Actioneer and the GTK stack it runs on"
+msgstr "Print the version of Actioneer and the GTK stack it runs on"
+
 msgid "Preferences"
 msgstr "Preferences"
 
@@ -666,3 +669,4 @@ msgstr "Copy diagnostics"
 
 #~ msgid "Dismiss"
 #~ msgstr "Dismiss"
+

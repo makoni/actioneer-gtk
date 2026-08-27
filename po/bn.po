@@ -921,6 +921,9 @@ msgstr "অ্যাপ্লিকেশনের ভাষা নির্ধ�
 msgid "Start the app with sample demo data"
 msgstr "নমুনা ডেমো ডেটা দিয়ে অ্যাপ চালু করুন"
 
+msgid "Print the version of Actioneer and the GTK stack it runs on"
+msgstr "Actioneer এবং ব্যবহৃত GTK-এর সংস্করণ দেখান"
+
 msgid "No repositories match"
 msgstr "কোনো রিপোজিটরি মেলেনি"
 

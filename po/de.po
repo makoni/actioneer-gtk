@@ -920,6 +920,9 @@ msgstr "Anwendungssprache festlegen (z. B. ru, en, zh_Hans)"
 msgid "Start the app with sample demo data"
 msgstr "App mit Beispieldaten starten"
 
+msgid "Print the version of Actioneer and the GTK stack it runs on"
+msgstr "Die Version von Actioneer und des verwendeten GTK ausgeben"
+
 msgid "No repositories match"
 msgstr "Keine passenden Repositorys"
 

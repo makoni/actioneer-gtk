@@ -917,6 +917,9 @@ msgstr "Taal van de toepassing instellen (bijv. ru, en, zh_Hans)"
 msgid "Start the app with sample demo data"
 msgstr "App starten met voorbeeldgegevens"
 
+msgid "Print the version of Actioneer and the GTK stack it runs on"
+msgstr "De versie van Actioneer en de gebruikte GTK-versie tonen"
+
 msgid "No repositories match"
 msgstr "Geen overeenkomende repository's"
 

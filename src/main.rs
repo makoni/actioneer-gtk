@@ -38,6 +38,23 @@ const TOKIO_WORKER_THREADS_ENV: &str = "ACTIONEER_TOKIO_WORKER_THREADS";
 static RUNTIME_HANDLE: OnceLock<Handle> = OnceLock::new();
 static CURRENT_SESSION_ID: OnceLock<String> = OnceLock::new();
 
+/// One line naming this build and the GTK actually loaded at runtime.
+///
+/// The GTK numbers come from the library that answered the call, not from what
+/// the crate was compiled against, so this is also how a packaged build — the
+/// AppImage bundles its own GTK — reports what it really ships. libadwaita is
+/// left out on purpose: its version functions abort unless GTK has been
+/// initialised, and printing a version must not need a display.
+pub fn version_string() -> String {
+    format!(
+        "actioneer {} (gtk {}.{}.{})",
+        env!("CARGO_PKG_VERSION"),
+        gtk4::major_version(),
+        gtk4::minor_version(),
+        gtk4::micro_version(),
+    )
+}
+
 pub fn runtime_handle() -> &'static Handle {
     RUNTIME_HANDLE.get().expect("Runtime not initialized")
 }
@@ -206,6 +223,19 @@ fn install_unix_signal_handlers(_app: &adw::Application) {
 }
 
 fn main() -> anyhow::Result<()> {
+    // Answered before logging, the runtime, or GTK exist: `--version` is read
+    // by scripts (the AppImage build checks the GTK it bundled this way), and
+    // the log lines this app writes to stdout would otherwise bury the answer.
+    // The option is also registered on the application below, so it shows up in
+    // `--help` and behaves the same when GLib parses the command line.
+    if std::env::args()
+        .skip(1)
+        .any(|arg| arg == "--version" || arg == "-V")
+    {
+        println!("{}", version_string());
+        return Ok(());
+    }
+
     let cli_locale = parse_cli_locale_arg().and_then(|locale| i18n::parse_locale_string(&locale));
     i18n::init(cli_locale.as_deref());
 
@@ -286,6 +316,7 @@ fn main() -> anyhow::Result<()> {
     let test_notification_help = tr("Send a test notification when the app starts");
     let locale_help = tr("Set the application language (e.g., ru, en, zh_Hans)");
     let demo_help = tr("Start the app with sample demo data");
+    let version_help = tr("Print the version of Actioneer and the GTK stack it runs on");
 
     app.add_main_option(
         "test-notification",
@@ -314,7 +345,22 @@ fn main() -> anyhow::Result<()> {
         None,
     );
 
+    app.add_main_option(
+        "version",
+        glib::Char::from(b'V'),
+        glib::OptionFlags::NONE,
+        glib::OptionArg::None,
+        version_help.as_str(),
+        None,
+    );
+
     app.connect_handle_local_options(move |_app, options| {
+        if options.contains("version") {
+            println!("{}", version_string());
+            // A non-negative code is the process's exit status: print and stop,
+            // without opening a window or touching the display.
+            return ControlFlow::Break(glib::ExitCode::SUCCESS);
+        }
         if options.contains("test-notification") {
             option_flag.store(true, Ordering::Relaxed);
         }
@@ -472,6 +518,32 @@ fn register_icon_theme_paths() {
 
 #[cfg(test)]
 mod tests {
+    use super::version_string;
+
+    #[test]
+    fn version_string_is_one_machine_readable_line() {
+        // The AppImage build parses this to check which GTK the bundle ships,
+        // so the shape matters: one line, the crate version, then `gtk X.Y.Z`.
+        let line = version_string();
+        assert!(!line.contains('\n'), "must be a single line: {line:?}");
+        assert!(
+            line.starts_with(concat!("actioneer ", env!("CARGO_PKG_VERSION"), " (gtk ")),
+            "unexpected shape: {line:?}"
+        );
+
+        let gtk = line
+            .split("gtk ")
+            .nth(1)
+            .and_then(|rest| rest.split(')').next())
+            .expect("the line names a GTK version");
+        let parts: Vec<&str> = gtk.split('.').collect();
+        assert_eq!(parts.len(), 3, "expected major.minor.micro, got {gtk:?}");
+        assert!(
+            parts.iter().all(|part| part.parse::<u32>().is_ok()),
+            "non-numeric GTK version: {gtk:?}"
+        );
+    }
+
     #[cfg(unix)]
     use super::ShutdownSignal;
     use super::{

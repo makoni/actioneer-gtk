@@ -916,6 +916,9 @@ msgstr "设置应用语言（例如 ru、en、zh_Hans）"
 msgid "Start the app with sample demo data"
 msgstr "使用示例演示数据启动应用"
 
+msgid "Print the version of Actioneer and the GTK stack it runs on"
+msgstr "显示 Actioneer 及其运行所用 GTK 的版本"
+
 msgid "No repositories match"
 msgstr "没有匹配的仓库"
 
