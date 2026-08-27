@@ -107,7 +107,6 @@ restate it in the file.
   `TODO.md` on every step.
 - Update `TODO.md` when the *backlog* changes: an open item is finished, or a
   new one appears.
-- Keep its "Where to look" pointers accurate when you move or delete modules.
 
 ## Threading and reference cycles
 
