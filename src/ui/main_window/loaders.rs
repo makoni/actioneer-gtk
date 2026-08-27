@@ -165,7 +165,6 @@ impl MainWindow {
 
     pub(super) fn schedule_repo_list_refresh(&self) {
         let repos_snapshot = self.repos.lock().clone();
-        let favorites_snapshot = self.favorites.lock().clone();
         let actions_snapshot = self.actions_states.lock().clone();
         let workflow_snapshot = self.workflow_counts.lock().clone();
         let favorites_arc = self.favorites.clone();
@@ -176,14 +175,13 @@ impl MainWindow {
         glib::idle_add_local_once(move || {
             let context = RepoListRenderContext {
                 repos: repos_snapshot,
-                favorites_snapshot,
                 actions_snapshot,
                 workflow_snapshot,
                 favorites_state: favorites_arc,
                 favorites_manager,
             };
 
-            rebuild_repo_list(store.clone(), context);
+            rebuild_repo_list(store, context);
             window.restore_repo_selection_now();
         });
     }

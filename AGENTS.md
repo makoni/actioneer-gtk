@@ -124,9 +124,9 @@ such a test, prove it can fail by reintroducing the cycle once.
 
 - Rust `stable`; no toolchain file is pinned, and CI installs `stable`. After
   switching toolchains run `cargo clean` before `cargo build`.
-- `gtk4` 0.11 with feature `v4_10`, `libadwaita` 0.9 with `v1_5`. Because CI
+- `gtk4` 0.11 with feature `v4_14`, `libadwaita` 0.9 with `v1_5`. Because CI
   denies warnings, deprecated APIs are effectively banned — e.g. use
-  `adw::AlertDialog`/`adw::Dialog`, not `gtk::MessageDialog`. Under `v4_10`,
+  `adw::AlertDialog`/`adw::Dialog`, not `gtk::MessageDialog`. Under `v4_14`,
   `ListItem` factory closures need an explicit downcast of the list item.
 - When anything edits `Cargo.lock` (including `cargo update`), regenerate the
   Flatpak vendored-sources manifest with `scripts/regenerate-flatpak-sources.sh`

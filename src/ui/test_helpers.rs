@@ -5,7 +5,8 @@ use std::panic::AssertUnwindSafe;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc;
 use std::sync::{Mutex, OnceLock};
-use std::time::Duration;
+use std::thread;
+use std::time::{Duration, Instant};
 
 /// How long a single UI test body may occupy the shared worker. Without a bound,
 /// one hung body wedges every other GTK test and CI burns its whole job budget
@@ -147,6 +148,50 @@ where
         }
         Err(mpsc::RecvTimeoutError::Disconnected) => {
             panic!("{test_name}: GTK test thread died while running the test")
+        }
+    }
+}
+
+/// How long `pump_frames` pumps before giving up, so a wedged main context
+/// cannot hang the worker. A few hundred ms is enough for the frame clock to
+/// tick and a rebuild's layout to settle, and keeps a slow test from eating
+/// the worker's 30s budget.
+const PUMP_FRAMES_DEADLINE: Duration = Duration::from_millis(300);
+
+/// Consecutive empty drains after which `pump_frames` calls the layout settled.
+/// This is a time window, not a frame count: at ~2 ms per drain it must exceed
+/// one display frame period so a *pending* frame (a busy layout keeps ticking
+/// the frame clock) cannot hide inside the quiet stretch.
+const PUMP_FRAMES_IDLE_SETTLE: u32 = 20;
+
+/// Pumps the default main context until the layout settles, letting a rebuild's
+/// layout/adjustment work complete.
+///
+/// The layout a test needs to observe happens on the frame clock, which ticks
+/// over time rather than per context iteration — a headless display (Xvfb)
+/// still advances it, but a single drain (or a handful) is not enough for a
+/// virtual list to finish measuring. So we drain every ready source and yield
+/// briefly, repeating. A *busy* layout keeps scheduling frames, so the context
+/// stays non-empty; once it is settled no frames are pending and the context
+/// goes quiet — we exit after `PUMP_FRAMES_IDLE_SETTLE` consecutive empty
+/// drains, bounded by the deadline so a wedged context still gives up.
+pub fn pump_frames() {
+    let context = gtk::glib::MainContext::default();
+    let deadline = Instant::now() + PUMP_FRAMES_DEADLINE;
+    let mut idle_streak = 0u32;
+    while Instant::now() < deadline {
+        let mut worked = false;
+        while context.iteration(false) {
+            worked = true;
+        }
+        thread::sleep(Duration::from_millis(2));
+        if worked {
+            idle_streak = 0;
+        } else {
+            idle_streak += 1;
+            if idle_streak >= PUMP_FRAMES_IDLE_SETTLE {
+                break;
+            }
         }
     }
 }

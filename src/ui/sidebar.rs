@@ -21,21 +21,108 @@ const SELECTABLE_KEY: &str = "actioneer-sidebar-selectable";
 const ACTIVATABLE_KEY: &str = "actioneer-sidebar-activatable";
 pub(crate) const FAVORITE_ROW_KEY: &str = "actioneer-sidebar-favorite";
 pub(crate) const ACTIVE_RUNS_ROW_KEY: &str = "actioneer-sidebar-active-runs";
+const REPO_FAV_BUTTON_KEY: &str = "actioneer-sidebar-repo-fav-button";
+const REPO_META_BOX_KEY: &str = "actioneer-sidebar-repo-meta-box";
+const REPO_VISIBILITY_LABEL_KEY: &str = "actioneer-sidebar-repo-visibility";
+const REPO_NAME_LABEL_KEY: &str = "actioneer-sidebar-repo-name";
+const REPO_META_ACTIVE_LABEL_KEY: &str = "actioneer-sidebar-repo-meta-active";
+const REPO_META_FAILED_LABEL_KEY: &str = "actioneer-sidebar-repo-meta-failed";
+const REPO_FAV_PENDING_KEY: &str = "actioneer-sidebar-repo-fav-pending";
+// A row's identity payload, read back in `snapshot_rows`. Repo rows carry their
+// id (`REPO_ID_KEY`); a section header carries its section; an owner header
+// carries its section plus the owner login. No `format!` per row per rebuild.
+const ROW_SECTION_KIND_KEY: &str = "actioneer-sidebar-row-section";
+const ROW_OWNER_LOGIN_KEY: &str = "actioneer-sidebar-row-owner";
+
+/// Which section a row belongs to. This is the *stable* identity of a section
+/// header (and, with the owner, of an owner header) — deliberately not the
+/// translated title, so switching languages does not invalidate the rows.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+enum SectionKind {
+    Enabled,
+    Disabled,
+}
+
+impl SectionKind {
+    const ENABLED: i32 = 0;
+    const DISABLED: i32 = 1;
+
+    fn from_kind(kind: i32) -> Option<Self> {
+        match kind {
+            Self::ENABLED => Some(Self::Enabled),
+            Self::DISABLED => Some(Self::Disabled),
+            _ => None,
+        }
+    }
+
+    fn as_kind(self) -> i32 {
+        match self {
+            Self::Enabled => Self::ENABLED,
+            Self::Disabled => Self::DISABLED,
+        }
+    }
+
+    fn title(self) -> String {
+        match self {
+            Self::Enabled => tr("Actions Enabled"),
+            Self::Disabled => tr("Actions Disabled"),
+        }
+    }
+}
+
+/// The stable identity of a sidebar row, used to reuse widgets across rebuilds
+/// (which is what keeps `GtkListBase`'s scroll anchor alive). Each row carries
+/// exactly one: repos by id, sections by kind, owners by (kind, login).
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+enum RowIdentity {
+    Repo(i64),
+    Section(SectionKind),
+    Owner { section: SectionKind, login: String },
+}
+
+/// Reads a row's identity from the values stashed on it when it was built.
+fn read_row_identity(row: &gtk::Widget) -> Option<RowIdentity> {
+    if let Some(id) = get_data_copy::<i64, _>(row, REPO_ID_KEY) {
+        return Some(RowIdentity::Repo(id));
+    }
+    let section =
+        get_data_copy::<i32, _>(row, ROW_SECTION_KIND_KEY).and_then(SectionKind::from_kind)?;
+    match get_data_clone::<String, _>(row, ROW_OWNER_LOGIN_KEY) {
+        Some(login) => Some(RowIdentity::Owner { section, login }),
+        None => Some(RowIdentity::Section(section)),
+    }
+}
 
 #[derive(Clone)]
 pub struct RepoListRenderContext {
     pub repos: Vec<Repo>,
-    pub favorites_snapshot: HashSet<i64>,
     pub actions_snapshot: HashMap<i64, RepoActionsState>,
     pub workflow_snapshot: HashMap<i64, WorkflowStatusCounts>,
     pub favorites_state: Arc<Mutex<HashSet<i64>>>,
     pub favorites_manager: Option<Arc<FavoritesManager>>,
 }
 
-pub fn rebuild_repo_list(store: gio::ListStore, context: RepoListRenderContext) {
+/// Rebuilds the store by diffing it against the current rows instead of
+/// clearing and recreating everything.
+///
+/// Repositories are grouped into the "Actions Enabled" / "Actions Disabled"
+/// sections only — by actions state, never by favorite state. Favoriting a
+/// repository is a pure indicator (the row's star + `FAVORITE_ROW_KEY`); it
+/// must not reorder the list, or the user's scroll position would jump. The
+/// "Favorites" pill above the list filters on `FAVORITE_ROW_KEY`, so "show me
+/// my favourites" is a filter, not a section.
+///
+/// Every row — repository, section header, and owner header — is reused by
+/// widget identity and refreshed in place when its state changed, so a rebuild
+/// that changes nothing leaves the model untouched. This is what keeps the
+/// scroll position: `GtkListBase` tracks the user's place via an anchor bound
+/// to a row's *widget*, and its item manager re-positions that tracker across
+/// model changes as long as the widget survives. Destroying and recreating a
+/// row — even a header the anchor happens to sit on — invalidates the anchor
+/// and snaps the list back to the top.
+pub(crate) fn rebuild_repo_list(store: gio::ListStore, context: RepoListRenderContext) {
     let RepoListRenderContext {
         repos,
-        favorites_snapshot,
         actions_snapshot,
         workflow_snapshot,
         favorites_state,
@@ -44,34 +131,40 @@ pub fn rebuild_repo_list(store: gio::ListStore, context: RepoListRenderContext) 
 
     let render_start = Instant::now();
 
-    store.remove_all();
+    // The rows that survive the rebuild, keyed by identity (repo, section
+    // header, owner header). Holding strong references lets `sync_store` move
+    // them around without destroying them.
+    let existing_rows = snapshot_rows(&store);
+    // Favorited state read from the live favorites at rebuild time, not a
+    // schedule-time snapshot: a favorite toggled between planning and this
+    // idle rebuild must not be reverted. Reading the same set the star handler
+    // guards against is what keeps a programmatic `set_active` from re-firing
+    // that handler and sending a spurious toggle.
+    //
+    // The lock is scoped to this statement on purpose: the guard must NOT live
+    // across the rebuild, because `refresh_repo_row_in_place` calls
+    // `set_active`, which can re-enter the `toggled` handler, and that handler
+    // locks this very Mutex — parking_lot is not reentrant, so holding the
+    // guard here would deadlock the GTK thread.
+    let favorites_now = { favorites_state.lock().clone() };
 
-    let mut favorites_section = Vec::new();
     let mut enabled_section = Vec::new();
     let mut disabled_section = Vec::new();
 
     for repo in repos.iter().cloned() {
-        if favorites_snapshot.contains(&repo.id) {
-            favorites_section.push(repo);
-        } else {
-            let state = actions_snapshot
-                .get(&repo.id)
-                .copied()
-                .unwrap_or(RepoActionsState::Unknown);
-            match state {
-                RepoActionsState::Disabled => disabled_section.push(repo),
-                _ => enabled_section.push(repo),
-            }
+        let state = actions_snapshot
+            .get(&repo.id)
+            .copied()
+            .unwrap_or(RepoActionsState::Unknown);
+        match state {
+            RepoActionsState::Disabled => disabled_section.push(repo),
+            _ => enabled_section.push(repo),
         }
     }
 
-    let favorites_state_for_rows = favorites_state.clone();
-    let favorites_manager_for_rows = favorites_manager.clone();
-    let actions_snapshot_for_rows = actions_snapshot.clone();
-    let workflow_snapshot_for_rows = workflow_snapshot.clone();
-    let store_ref = store.clone();
+    let mut target: Vec<gtk::Widget> = Vec::new();
 
-    let append_section = move |title: &str, repos: Vec<Repo>, favorites_snapshot: &HashSet<i64>| {
+    let append_section = |section: SectionKind, repos: Vec<Repo>, target: &mut Vec<gtk::Widget>| {
         if repos.is_empty() {
             return;
         }
@@ -81,77 +174,91 @@ pub fn rebuild_repo_list(store: gio::ListStore, context: RepoListRenderContext) 
         // instead of leaving a heading with nothing under it.
         let has_active = |repos: &[Repo]| {
             repos.iter().any(|repo| {
-                workflow_snapshot_for_rows
+                workflow_snapshot
                     .get(&repo.id)
                     .is_some_and(|counts| counts.active > 0)
             })
         };
+        let has_favorite =
+            |repos: &[Repo]| repos.iter().any(|repo| favorites_now.contains(&repo.id));
 
-        let header = create_section_header(title);
-        set_data(
-            &header,
-            FAVORITE_ROW_KEY,
-            repos
-                .iter()
-                .any(|repo| favorites_snapshot.contains(&repo.id)),
-        );
-        set_data(&header, ACTIVE_RUNS_ROW_KEY, has_active(&repos));
-        store_ref.append(&header);
+        // Reuse the section header by identity so a no-op rebuild leaves the
+        // model untouched; only its aggregated pill flags are refreshed. The
+        // identity is the section kind, not the translated title, so a
+        // language switch does not recreate the row.
+        let section_header = match existing_rows.get(&RowIdentity::Section(section)) {
+            Some(existing) => {
+                set_data(existing, FAVORITE_ROW_KEY, has_favorite(&repos));
+                set_data(existing, ACTIVE_RUNS_ROW_KEY, has_active(&repos));
+                existing.clone()
+            }
+            None => {
+                let title = section.title();
+                let header = create_section_header(title.as_str(), section);
+                set_data(&header, FAVORITE_ROW_KEY, has_favorite(&repos));
+                set_data(&header, ACTIVE_RUNS_ROW_KEY, has_active(&repos));
+                header.upcast()
+            }
+        };
+        target.push(section_header);
 
         let grouped = group_repos_by_owner(repos);
 
         for (owner, repos) in grouped {
-            let owner_row = create_owner_header(&owner);
-            set_data(
-                &owner_row,
-                FAVORITE_ROW_KEY,
-                repos
-                    .iter()
-                    .any(|repo| favorites_snapshot.contains(&repo.id)),
-            );
-            set_data(&owner_row, ACTIVE_RUNS_ROW_KEY, has_active(&repos));
-            store_ref.append(&owner_row);
+            // Keyed by (section, owner): the same owner can appear in both the
+            // enabled and disabled sections, so the login alone is not unique.
+            let owner_row = match existing_rows.get(&RowIdentity::Owner {
+                section,
+                login: owner.clone(),
+            }) {
+                Some(existing) => {
+                    set_data(existing, FAVORITE_ROW_KEY, has_favorite(&repos));
+                    set_data(existing, ACTIVE_RUNS_ROW_KEY, has_active(&repos));
+                    existing.clone()
+                }
+                None => {
+                    let owner_row = create_owner_header(&owner, section);
+                    set_data(&owner_row, FAVORITE_ROW_KEY, has_favorite(&repos));
+                    set_data(&owner_row, ACTIVE_RUNS_ROW_KEY, has_active(&repos));
+                    owner_row.upcast()
+                }
+            };
+            target.push(owner_row);
 
             for repo in repos {
                 let repo_id = repo.id;
-                let actions_state = actions_snapshot_for_rows
-                    .get(&repo_id)
-                    .copied()
-                    .unwrap_or(RepoActionsState::Unknown);
-                let workflow_counts = workflow_snapshot_for_rows
-                    .get(&repo_id)
-                    .cloned()
-                    .unwrap_or_default();
+                let is_favorite = favorites_now.contains(&repo_id);
+                let workflow_counts = workflow_snapshot.get(&repo_id).cloned().unwrap_or_default();
 
-                let row = build_repo_row(
-                    repo.clone(),
-                    favorites_snapshot.contains(&repo_id),
-                    actions_state,
-                    workflow_counts,
-                    favorites_state_for_rows.clone(),
-                    favorites_manager_for_rows.clone(),
-                );
+                let row = match existing_rows.get(&RowIdentity::Repo(repo_id)) {
+                    Some(existing_row) => {
+                        refresh_repo_row_in_place(
+                            existing_row,
+                            &repo,
+                            is_favorite,
+                            &workflow_counts,
+                        );
+                        existing_row.clone()
+                    }
+                    None => build_repo_row(
+                        repo.clone(),
+                        is_favorite,
+                        workflow_counts,
+                        favorites_state.clone(),
+                        favorites_manager.clone(),
+                    )
+                    .upcast(),
+                };
 
-                store_ref.append(&row);
+                target.push(row);
             }
         }
     };
 
-    append_section(
-        tr("Favorites").as_str(),
-        favorites_section,
-        &favorites_snapshot,
-    );
-    append_section(
-        tr("Actions Enabled").as_str(),
-        enabled_section,
-        &favorites_snapshot,
-    );
-    append_section(
-        tr("Actions Disabled").as_str(),
-        disabled_section,
-        &favorites_snapshot,
-    );
+    append_section(SectionKind::Enabled, enabled_section, &mut target);
+    append_section(SectionKind::Disabled, disabled_section, &mut target);
+
+    sync_store(&store, &target);
 
     let elapsed = render_start.elapsed();
     if repos.len() >= 100 {
@@ -160,6 +267,115 @@ pub fn rebuild_repo_list(store: gio::ListStore, context: RepoListRenderContext) 
             duration_ms = elapsed.as_millis(),
             "Rebuilt repo sidebar list store"
         );
+    }
+}
+
+/// Maps each row's identity to the widget currently in the store, so a rebuild
+/// can reuse the same widgets (and therefore the scroll anchor) instead of
+/// recreating them.
+///
+/// Invariant: the identities are unique within a list, which holds because the
+/// API returns at most one repository per id. If a repository id ever appeared
+/// twice, `target` would hold the same widget twice and `sync_store` would
+/// parent it twice — a GTK-critical with no fallback — so the uniqueness is
+/// load-bearing, not incidental.
+fn snapshot_rows(store: &gio::ListStore) -> HashMap<RowIdentity, gtk::Widget> {
+    let mut existing = HashMap::new();
+    for i in 0..store.n_items() {
+        let Some(item) = store.item(i) else {
+            continue;
+        };
+        let Some(row) = item.downcast_ref::<gtk::Widget>() else {
+            continue;
+        };
+        let Some(identity) = read_row_identity(row) else {
+            continue;
+        };
+        existing.insert(identity, row.clone());
+    }
+    existing
+}
+
+/// Replaces `store`'s contents with `target` with a minimal diff, so rows that
+/// survive keep their widget identity and stay parented.
+///
+/// `GtkListBase`'s scroll anchor is a tracker bound to a row's widget; its
+/// item manager re-positions the tracker across model changes while a widget
+/// survives, so the list holds its place without any restore. Rows absent from
+/// `target` (stale headers, filtered-out repos) are removed and rows absent
+/// from the store are inserted; rows present in both are never touched.
+fn sync_store(store: &gio::ListStore, target: &[gtk::Widget]) {
+    let n = store.n_items() as usize;
+    let m = target.len();
+
+    // Fast path for the common case — a no-op rebuild (nothing changed) leaves
+    // the model identical, so a pointer walk decides it in O(n) with no
+    // allocation. The LCS below is only paid when something actually moved.
+    if n == m
+        && (0..n).all(|i| {
+            let Some(obj) = store.item(i as u32) else {
+                return false;
+            };
+            (obj.as_ptr() as *const ())
+                == (target[i].upcast_ref::<glib::Object>().as_ptr() as *const ())
+        })
+    {
+        return;
+    }
+
+    let current: Vec<*const ()> = (0..n)
+        .filter_map(|i| store.item(i as u32))
+        .map(|item| item.as_ptr() as *const ())
+        .collect();
+    let desired: Vec<*const ()> = target
+        .iter()
+        .map(|row| row.upcast_ref::<glib::Object>().as_ptr() as *const ())
+        .collect();
+
+    // Longest common subsequence by widget identity.
+    let mut dp = vec![vec![0usize; m + 1]; n + 1];
+    for i in (0..n).rev() {
+        for j in (0..m).rev() {
+            dp[i][j] = if current[i] == desired[j] {
+                dp[i + 1][j + 1] + 1
+            } else {
+                dp[i + 1][j].max(dp[i][j + 1])
+            };
+        }
+    }
+
+    let mut matched_store = vec![false; n];
+    let mut matched_target = vec![false; m];
+    let mut i = 0usize;
+    let mut j = 0usize;
+    while i < n && j < m {
+        if current[i] == desired[j] {
+            matched_store[i] = true;
+            matched_target[j] = true;
+            i += 1;
+            j += 1;
+        } else if dp[i + 1][j] >= dp[i][j + 1] {
+            i += 1;
+        } else {
+            j += 1;
+        }
+    }
+
+    // Remove the rows that are not part of the common subsequence, back to
+    // front so the indices stay valid.
+    for i in (0..n).rev() {
+        if !matched_store[i] {
+            store.remove(i as u32);
+        }
+    }
+
+    // Insert the missing rows in order. After the removals the matched rows
+    // already sit at their target indices minus the inserts before them, so
+    // position k of `target` is where `target[k]` belongs.
+    for (k, row) in target.iter().enumerate() {
+        if !matched_target[k] {
+            store.insert(k as u32, row);
+        }
     }
 }
 
@@ -203,7 +419,7 @@ pub fn row_matches_filter(row: &gtk::Widget, query: &str, filter: SidebarFilter)
     row_matches_query(row, query)
 }
 
-pub fn find_label_by_name(widget: &gtk::Widget, name: &str) -> Option<gtk::Label> {
+fn find_label_by_name(widget: &gtk::Widget, name: &str) -> Option<gtk::Label> {
     if widget.widget_name() == name {
         return widget.clone().downcast::<gtk::Label>().ok();
     }
@@ -218,10 +434,44 @@ pub fn find_label_by_name(widget: &gtk::Widget, name: &str) -> Option<gtk::Label
     None
 }
 
+/// Applies a favorite-toggle result to the shared favorite cache and the row's
+/// star.
+///
+/// The cache lock is scoped to the match so the guard is dropped *before*
+/// `button.set_active`: that call re-enters the star's `toggled` handler, which
+/// locks this same non-reentrant `parking_lot::Mutex` to read `previous_state`,
+/// so holding the guard across it wedges the GTK thread.
+fn apply_favorite_result(
+    favorites: &Arc<Mutex<HashSet<i64>>>,
+    repo_id: i64,
+    button: &gtk::ToggleButton,
+    result: Result<bool, (anyhow::Error, bool)>,
+) {
+    let target_state = {
+        let mut favorites = favorites.lock();
+        let state = match result {
+            Ok(is_now_favorite) => is_now_favorite,
+            Err((err, stored_state)) => {
+                warn!("Failed to update favorite {repo_id}: {err}");
+                stored_state
+            }
+        };
+        if state {
+            favorites.insert(repo_id);
+        } else {
+            favorites.remove(&repo_id);
+        }
+        state
+    };
+
+    if button.is_active() != target_state {
+        button.set_active(target_state);
+    }
+}
+
 fn build_repo_row(
     repo: Repo,
     is_favorite: bool,
-    _actions_state: RepoActionsState,
     workflow_counts: WorkflowStatusCounts,
     favorites_arc: Arc<Mutex<HashSet<i64>>>,
     favorites_manager: Option<Arc<FavoritesManager>>,
@@ -253,6 +503,7 @@ fn build_repo_row(
     favorite_button.set_icon_name(crate::ui::utils::favorite_icon_name());
     crate::ui::utils::describe_control(&favorite_button, tr("Toggle favorite").as_str());
     favorite_button.set_active(is_favorite);
+    set_data(&row, REPO_FAV_BUTTON_KEY, favorite_button.clone());
 
     let favorites_arc_for_update = favorites_arc.clone();
     let favorites_manager_for_update = favorites_manager.clone();
@@ -275,40 +526,17 @@ fn build_repo_row(
         if let Some(manager) = favorites_manager {
             let button_clone = button.clone();
             let favorites_arc_clone = favorites_arc.clone();
+            // A genuine user toggle is in flight until the receiver lands the
+            // response; mark it so a concurrent rebuild leaves this star alone
+            // instead of snapping it back to the (still stale) persisted state.
+            set_data(button, REPO_FAV_PENDING_KEY, true);
             let (sender, receiver) =
                 glib::MainContext::default()
                     .channel::<Result<bool, (anyhow::Error, bool)>>(glib::Priority::default());
 
             receiver.attach(None, move |result| {
-                match result {
-                    Ok(is_now_favorite) => {
-                        let mut favorites = favorites_arc_clone.lock();
-                        if is_now_favorite {
-                            favorites.insert(repo_id);
-                        } else {
-                            favorites.remove(&repo_id);
-                        }
-
-                        if button_clone.is_active() != is_now_favorite {
-                            button_clone.set_active(is_now_favorite);
-                        }
-                    }
-                    Err((err, stored_state)) => {
-                        warn!("Failed to update favorite {}: {}", repo_id, err);
-
-                        let mut favorites = favorites_arc_clone.lock();
-                        if stored_state {
-                            favorites.insert(repo_id);
-                        } else {
-                            favorites.remove(&repo_id);
-                        }
-
-                        if button_clone.is_active() != stored_state {
-                            button_clone.set_active(stored_state);
-                        }
-                    }
-                }
-
+                set_data(&button_clone, REPO_FAV_PENDING_KEY, false);
+                apply_favorite_result(&favorites_arc_clone, repo_id, &button_clone, result);
                 glib::ControlFlow::Break
             });
 
@@ -346,36 +574,31 @@ fn build_repo_row(
     name_label.add_css_class("heading");
     name_label.set_widget_name("repo-name-label");
     content_box.append(&name_label);
+    set_data(&row, REPO_NAME_LABEL_KEY, name_label.clone());
 
-    if repo.is_private {
-        let private_label = create_meta_label(tr("Private"));
-        content_box.append(&private_label);
+    let visibility_label = create_meta_label(if repo.is_private {
+        tr("Private")
     } else {
-        let public_label = create_meta_label(tr("Public"));
-        content_box.append(&public_label);
-    }
+        tr("Public")
+    });
+    content_box.append(&visibility_label);
+    set_data(&row, REPO_VISIBILITY_LABEL_KEY, visibility_label.clone());
 
+    // The two meta labels are created once and updated in place thereafter, so
+    // a rebuild never allocates new widgets for a row (each is hidden when its
+    // count is zero).
     let meta_box = gtk::Box::new(gtk::Orientation::Horizontal, 12);
     meta_box.set_halign(gtk::Align::Start);
-
-    if workflow_counts.active > 0 {
-        meta_box.append(&create_meta_label(
-            tr("Active runs: {count}")
-                .replace("{count}", workflow_counts.active.to_string().as_str()),
-        ));
-    }
-
-    if workflow_counts.failed > 0 {
-        let failed_label = create_meta_label(
-            tr("Failures: {count}").replace("{count}", workflow_counts.failed.to_string().as_str()),
-        );
-        failed_label.add_css_class("error");
-        meta_box.append(&failed_label);
-    }
-
-    if meta_box.first_child().is_some() {
-        content_box.append(&meta_box);
-    }
+    let meta_active = create_meta_label(String::new());
+    let meta_failed = create_meta_label(String::new());
+    meta_failed.add_css_class("error");
+    meta_box.append(&meta_active);
+    meta_box.append(&meta_failed);
+    set_data(&meta_box, REPO_META_ACTIVE_LABEL_KEY, meta_active.clone());
+    set_data(&meta_box, REPO_META_FAILED_LABEL_KEY, meta_failed.clone());
+    update_meta_box(&meta_box, &workflow_counts);
+    content_box.append(&meta_box);
+    set_data(&row, REPO_META_BOX_KEY, meta_box.clone());
 
     row.append(&content_box);
     row.append(&favorite_button);
@@ -391,6 +614,50 @@ fn build_repo_row(
     row
 }
 
+/// Updates the mutable parts of an existing repository row in place, keeping
+/// the row widget's identity (which `GtkListBase`'s scroll anchor tracks). The
+/// name label, star, meta box, and visibility label were all stashed on the
+/// row when it was built, so nothing here walks the child tree.
+fn refresh_repo_row_in_place(
+    row: &gtk::Widget,
+    repo: &Repo,
+    is_favorite: bool,
+    workflow_counts: &WorkflowStatusCounts,
+) {
+    if let Some(name_label) = get_data_clone::<gtk::Label, _>(row, REPO_NAME_LABEL_KEY) {
+        name_label.set_text(&repo.full_name);
+    }
+
+    if let Some(visibility) = get_data_clone::<gtk::Label, _>(row, REPO_VISIBILITY_LABEL_KEY) {
+        let text = if repo.is_private {
+            tr("Private")
+        } else {
+            tr("Public")
+        };
+        visibility.set_text(text.as_str());
+    }
+
+    if let Some(button) = get_data_clone::<gtk::ToggleButton, _>(row, REPO_FAV_BUTTON_KEY) {
+        // While a favorite toggle is in flight the star is ahead of the
+        // persisted set (the receiver reconciles it when the response lands);
+        // forcing it back to `is_favorite` here is what blinks it off. So the
+        // star is only synced to the live set when nothing is pending.
+        let pending = get_data_copy(&button, REPO_FAV_PENDING_KEY).unwrap_or(false);
+        if !pending {
+            button.set_active(is_favorite);
+        }
+    }
+
+    if let Some(meta_box) = get_data_clone::<gtk::Box, _>(row, REPO_META_BOX_KEY) {
+        update_meta_box(&meta_box, workflow_counts);
+    }
+
+    set_data(row, REPO_MODEL_KEY, repo.clone());
+    set_data(row, REPO_FULL_NAME_KEY, repo.full_name.clone());
+    set_data(row, FAVORITE_ROW_KEY, is_favorite);
+    set_data(row, ACTIVE_RUNS_ROW_KEY, workflow_counts.active > 0);
+}
+
 fn repo_from_row(row: &gtk::Widget) -> Option<Repo> {
     get_data_clone(row, REPO_MODEL_KEY)
 }
@@ -403,7 +670,7 @@ fn repo_id_from_row(row: &gtk::Widget) -> Option<i64> {
     get_data_copy(row, REPO_ID_KEY)
 }
 
-pub fn repo_id_from_object(obj: &glib::Object) -> Option<i64> {
+pub(crate) fn repo_id_from_object(obj: &glib::Object) -> Option<i64> {
     obj.downcast_ref::<gtk::Widget>().and_then(repo_id_from_row)
 }
 
@@ -442,7 +709,7 @@ pub fn find_first_repo_index(model: &gtk::FilterListModel) -> Option<u32> {
     None
 }
 
-fn create_section_header(title: &str) -> gtk::Box {
+fn create_section_header(title: &str, section: SectionKind) -> gtk::Box {
     let row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     row.set_can_focus(false);
     row.set_can_target(false);
@@ -454,6 +721,7 @@ fn create_section_header(title: &str) -> gtk::Box {
     row.set_margin_end(10);
     set_data(&row, SELECTABLE_KEY, false);
     set_data(&row, ACTIVATABLE_KEY, false);
+    set_data(&row, ROW_SECTION_KIND_KEY, section.as_kind());
 
     let (heading, suppress_tracking) = crate::ui::utils::section_heading(title);
     let label = gtk::Label::new(Some(&heading));
@@ -469,7 +737,7 @@ fn create_section_header(title: &str) -> gtk::Box {
     row
 }
 
-fn create_owner_header(owner: &str) -> gtk::Box {
+fn create_owner_header(owner: &str, section: SectionKind) -> gtk::Box {
     let row = gtk::Box::new(gtk::Orientation::Horizontal, 0);
     row.set_can_focus(false);
     row.set_can_target(false);
@@ -481,6 +749,8 @@ fn create_owner_header(owner: &str) -> gtk::Box {
     row.set_margin_end(10);
     set_data(&row, SELECTABLE_KEY, false);
     set_data(&row, ACTIVATABLE_KEY, false);
+    set_data(&row, ROW_SECTION_KIND_KEY, section.as_kind());
+    set_data(&row, ROW_OWNER_LOGIN_KEY, owner.to_string());
 
     let (heading, suppress_tracking) = crate::ui::utils::section_heading(owner);
     let label = gtk::Label::new(Some(&heading));
@@ -516,6 +786,41 @@ fn create_meta_label(text: String) -> gtk::Label {
     label.add_css_class("dim-label");
     label.add_css_class("caption");
     label
+}
+
+/// Updates a row's meta box in place: the two labels (created once when the
+/// row was built) only change text + visibility, so a rebuild touching a row
+/// never allocates new widgets. A label is hidden when its count is zero, and
+/// GTK collapses a hidden child (and its spacing) out of the layout.
+fn update_meta_box(meta_box: &gtk::Box, workflow_counts: &WorkflowStatusCounts) {
+    let active = get_data_clone::<gtk::Label, _>(meta_box, REPO_META_ACTIVE_LABEL_KEY);
+    let failed = get_data_clone::<gtk::Label, _>(meta_box, REPO_META_FAILED_LABEL_KEY);
+
+    if let Some(active) = active {
+        if workflow_counts.active > 0 {
+            active.set_visible(true);
+            active.set_text(
+                tr("Active runs: {count}")
+                    .replace("{count}", workflow_counts.active.to_string().as_str())
+                    .as_str(),
+            );
+        } else {
+            active.set_visible(false);
+        }
+    }
+
+    if let Some(failed) = failed {
+        if workflow_counts.failed > 0 {
+            failed.set_visible(true);
+            failed.set_text(
+                tr("Failures: {count}")
+                    .replace("{count}", workflow_counts.failed.to_string().as_str())
+                    .as_str(),
+            );
+        } else {
+            failed.set_visible(false);
+        }
+    }
 }
 
 /// Gather workflow status counts for a repository
@@ -717,7 +1022,6 @@ mod tests {
                             default_branch: Some("main".into()),
                         },
                         false,
-                        RepoActionsState::Unknown,
                         WorkflowStatusCounts::default(),
                         Arc::new(Mutex::new(HashSet::new())),
                         None,
@@ -750,8 +1054,10 @@ mod tests {
                             .last_child()
                             .and_then(|child| child.downcast::<gtk::ToggleButton>().ok())
                             .expect("each row ends with its favourite button");
-                        let alloc = button.allocation();
-                        alloc.x() + alloc.width()
+                        let bounds = button
+                            .compute_bounds(row)
+                            .expect("button bounds in row coordinates");
+                        (bounds.x() + bounds.width()).round() as i32
                     })
                     .collect();
 
@@ -786,7 +1092,6 @@ mod tests {
                 store.clone(),
                 RepoListRenderContext {
                     repos: vec![repo.clone()],
-                    favorites_snapshot: HashSet::new(),
                     actions_snapshot: HashMap::new(),
                     workflow_snapshot: HashMap::from([(repo.id, WorkflowStatusCounts::default())]),
                     favorites_state: Arc::new(Mutex::new(HashSet::new())),
@@ -809,5 +1114,59 @@ mod tests {
             );
             assert!(row_selectable_from_object(repo_obj.as_ref()));
         });
+    }
+
+    #[test]
+    // NOTE: on regression this test does NOT fail fast — the wedged worker hits
+    // `GTK_TEST_TIMEOUT` (30 s), is marked wedged, and every GTK test queued after
+    // it fails too, so the whole UI suite looks collapsed. A red `favorite_*` test
+    // here means the favorites path broke; start the hunt here, not in the cascade.
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn favorite_err_result_applied_to_button_does_not_deadlock() {
+        run_gtk_test(
+            "favorite_err_result_applied_to_button_does_not_deadlock",
+            || {
+                let favorites = Arc::new(Mutex::new(HashSet::new()));
+                let row = build_repo_row(
+                    Repo {
+                        id: 42,
+                        name: "repo-42".into(),
+                        full_name: "makoni/repo-42".into(),
+                        owner: User {
+                            login: "makoni".into(),
+                        },
+                        is_private: false,
+                        permissions: None,
+                        default_branch: Some("main".into()),
+                    },
+                    false,
+                    WorkflowStatusCounts::default(),
+                    favorites.clone(),
+                    None,
+                );
+                let button = get_data_clone::<gtk::ToggleButton, _>(&row, REPO_FAV_BUTTON_KEY)
+                    .expect("the favorite button is stashed on the row");
+
+                // A user click flips the star on, so the button is now active.
+                button.set_active(true);
+
+                // The favorite write then failed, so the stored (pre-click) state is
+                // `false` and diverges from the active star. Applying that result must
+                // not wedge the GTK thread: pre-fix the receiver held the favorites
+                // lock across `set_active`, which re-entered `toggled` and locked the
+                // same non-reentrant Mutex.
+                apply_favorite_result(
+                    &favorites,
+                    42,
+                    &button,
+                    Err((anyhow::anyhow!("simulated disk full"), false)),
+                );
+
+                // The star is restored to the stored state and the cache agrees.
+                assert!(!button.is_active());
+                assert!(!favorites.lock().contains(&42));
+            },
+        );
     }
 }

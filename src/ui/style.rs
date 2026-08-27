@@ -429,7 +429,7 @@ pub fn install_app_css() {
     };
 
     let provider = gtk::CssProvider::new();
-    provider.load_from_data(APP_CSS);
+    provider.load_from_bytes(&gtk::glib::Bytes::from(APP_CSS.as_bytes()));
 
     gtk::style_context_add_provider_for_display(
         &display,
