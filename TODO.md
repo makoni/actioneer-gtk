@@ -11,30 +11,6 @@ drifts.
 
 Neither is required work, and neither has been started.
 
-### Sidebar header rows show a hover highlight
-
-The non-interactive section headers ("Actions enabled"/"Actions disabled") and
-the owner-name headers in the repository list pick up the list-row `:hover`
-background on mouse-over even though clicking them does nothing, so they read as
-clickable.
-
-Note that giving the headers a CSS class will not fix it: they already carry
-`section-header` / `owner-header` / `hoverless-row`, and those already paint
-their own background transparent (`style.rs`). The highlight belongs to their
-*parent*, the `ListItemWidget` the factory binds them into, drawn by
-`.sidebar-surface listview row:hover:not(:selected)` (`style.rs:374`). A class
-on the child cannot reach it, and GTK CSS has no `:has()`.
-
-Move the hover off the list row and onto the thing that is actually
-interactive: the repository row's own box, which already has the `activatable`
-class and no hover rule of its own (`build_repo_row` in `src/ui/sidebar.rs`).
-Headers then stop highlighting because nothing highlights them, rather than
-because of an exception.
-
-Check while you are there that the selected repository still gets its accent
-background — that rule (`.sidebar-surface listview row:selected`) is on the
-list row too, and only the hover half should move.
-
 ### AppImage: bundle the newest GTK the way Flatpak does
 
 Question: Flatpak gets "latest GTK" declaratively (`org.gnome.Platform "50"`);

@@ -1083,6 +1083,57 @@ mod tests {
     }
 
     #[test]
+    #[ignore = "requires GTK display"]
+    fn header_rows_are_not_activatable_and_repo_rows_are() {
+        run_gtk_test("header_rows_are_not_activatable_and_repo_rows_are", || {
+            let store = gio::ListStore::new::<gtk::Widget>();
+            let repo = Repo {
+                id: 7,
+                name: "repo-7".into(),
+                full_name: "makoni/repo-7".into(),
+                owner: User {
+                    login: "makoni".into(),
+                },
+                is_private: false,
+                permissions: None,
+                default_branch: Some("main".into()),
+            };
+
+            rebuild_repo_list(
+                store.clone(),
+                RepoListRenderContext {
+                    repos: vec![repo],
+                    actions_snapshot: HashMap::new(),
+                    workflow_snapshot: HashMap::new(),
+                    favorites_state: Arc::new(Mutex::new(HashSet::new())),
+                    favorites_manager: None,
+                },
+            );
+
+            // Load-bearing for the hover: the factory turns this flag into
+            // `set_activatable`, and GTK turns that into the `.activatable`
+            // class on the list row — which is what the hover rule in
+            // `style.rs` selects. Headers must stay out of it, or they light up
+            // under the pointer as if they were clickable.
+            let mut saw_repo = false;
+            let mut saw_header = false;
+            for i in 0..store.n_items() {
+                let row = store.item(i).expect("store item");
+                let is_repo = repo_id_from_object(&row).is_some();
+                assert_eq!(
+                    row_activatable_from_object(&row),
+                    is_repo,
+                    "row {i} (is_repo={is_repo}): only repo rows may be activatable"
+                );
+                saw_repo |= is_repo;
+                saw_header |= !is_repo;
+            }
+            assert!(saw_repo, "expected at least one repo row");
+            assert!(saw_header, "expected at least one section/owner header");
+        });
+    }
+
+    #[test]
     // NOTE: on regression this test does NOT fail fast — the wedged worker hits
     // `GTK_TEST_TIMEOUT` (30 s), is marked wedged, and every GTK test queued after
     // it fails too, so the whole UI suite looks collapsed. A red `favorite_*` test

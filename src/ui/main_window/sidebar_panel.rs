@@ -81,6 +81,11 @@ impl SidebarPanel {
             row.unparent();
             list_item.set_child(Some(&row));
             list_item.set_selectable(row_selectable_from_object(row.as_ref()));
+            // `set_activatable(true)` also puts GTK's `activatable` class on the
+            // `ListItemWidget` wrapping this row. The sidebar's hover rule keys
+            // on `.repo-row` (a class of ours, on the row's own box) precisely so
+            // it cannot latch onto that wrapper — which would repaint the
+            // non-interactive section and owner headers as well.
             list_item.set_activatable(row_activatable_from_object(row.as_ref()));
         });
         factory.connect_unbind(|_, list_item| {

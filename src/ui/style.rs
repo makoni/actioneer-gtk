@@ -371,8 +371,15 @@ const APP_CSS: &str = r#"
     color: @accent_fg_color;
 }
 
-.sidebar-surface listview row:hover:not(:selected) {
-    background-color: alpha(currentColor, 0.06);
+/* Hover paints the whole row, and only rows that do something: `.activatable`
+   is set on the `ListItemWidget` by `set_activatable(true)`, which the factory
+   grants repository rows and withholds from the section and owner headers — so
+   the headers stay flat without needing `:has()`, which GTK CSS lacks. Painting
+   a box *inside* the row instead would show as a second, smaller highlight on
+   top of the theme's own. `:not(:selected)` keeps a selected row's solid accent
+   clean. */
+.sidebar-surface listview row.activatable:hover:not(:selected) {
+    background-color: alpha(currentColor, 0.09);
     border-radius: 9px;
 }
 
@@ -436,4 +443,80 @@ pub fn install_app_css() {
         &provider,
         gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::APP_CSS;
+
+    /// Selectors in `APP_CSS`, one per line, comments and bodies stripped.
+    fn selectors() -> Vec<String> {
+        let mut out = Vec::new();
+        let mut css = APP_CSS;
+        // drop /* … */ comments, which may legitimately mention a selector
+        let mut stripped = String::new();
+        while let Some(start) = css.find("/*") {
+            stripped.push_str(&css[..start]);
+            match css[start..].find("*/") {
+                Some(end) => css = &css[start + end + 2..],
+                None => {
+                    css = "";
+                    break;
+                }
+            }
+        }
+        stripped.push_str(css);
+
+        for block in stripped.split('}') {
+            if let Some((head, _)) = block.split_once('{') {
+                for selector in head.split(',') {
+                    let selector = selector.trim();
+                    if !selector.is_empty() {
+                        out.push(selector.to_string());
+                    }
+                }
+            }
+        }
+        out
+    }
+
+    #[test]
+    fn sidebar_hover_is_limited_to_activatable_rows() {
+        // Regression guard for "headers read as clickable". The list row wraps
+        // every item — repository rows *and* the non-interactive section/owner
+        // headers — so a bare `row:hover` repaints the headers too, and GTK CSS
+        // has no `:has()` to exclude them. `.activatable` is the discriminator:
+        // the factory sets it on repository rows only.
+        //
+        // Note this checks what the rule selects, not what it paints: that the
+        // headers stay flat under the pointer is verified by hovering the real
+        // window, not by this test.
+        let all = selectors();
+        let offenders: Vec<&str> = all
+            .iter()
+            .filter(|selector| selector.contains("listview"))
+            .filter(|selector| {
+                // the `:hover` belongs to the last compound in the selector
+                let Some((_, last)) = selector.rsplit_once(char::is_whitespace) else {
+                    return false;
+                };
+                last.starts_with("row")
+                    && last.contains(":hover")
+                    && !last.contains(":selected")
+                    && !last.contains(".activatable")
+            })
+            .map(String::as_str)
+            .collect();
+        assert!(
+            offenders.is_empty(),
+            "a sidebar hover rule reaches non-activatable rows, i.e. the section \
+             and owner headers: {offenders:?}"
+        );
+
+        assert!(
+            all.iter()
+                .any(|selector| selector.contains("row.activatable:hover")),
+            "the repository row's hover rule is gone"
+        );
+    }
 }
