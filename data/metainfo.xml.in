@@ -86,19 +86,19 @@
     <!-- Referencing screenshots added under data/screenshots/ -->
     <screenshot type="default">
       <caption>Browse Actions workflows</caption>
-      <image type="source" width="2606" height="1872">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-1.png</image>
+      <image type="source" width="2000" height="1400">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-1.png</image>
     </screenshot>
     <screenshot type="detail">
       <caption>Inspect workflow runs and drill into job details quickly</caption>
-      <image type="source" width="2606" height="1872">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-2.png</image>
+      <image type="source" width="2000" height="1400">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-2.png</image>
     </screenshot>
     <screenshot type="detail">
       <caption>Review job logs inline without leaving the app</caption>
-      <image type="source" width="2460" height="1500">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-3.png</image>
+      <image type="source" width="1988" height="1384">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-3.png</image>
     </screenshot>
     <screenshot type="detail">
       <caption>Run a job on any branch</caption>
-      <image type="source" width="2606" height="1872">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-4.png</image>
+      <image type="source" width="2000" height="1400">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-4.png</image>
     </screenshot>
   </screenshots>
 
