@@ -40,10 +40,30 @@ apps:
       - pulseaudio
 
 parts:
+  # snapcraft 9.0.1's rust plugin stopped installing rustup itself
+  # (canonical/snapcraft#6330), and its validator now refuses to build unless
+  # rustup is on PATH or the part depends on one named exactly `rust-deps`.
+  # This provides the toolchain instead of relying on the plugin to do it.
+  rust-deps:
+    plugin: nil
+    build-packages:
+      - curl
+    override-build: |
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+        | sh -s -- -y --no-modify-path --profile minimal --default-toolchain stable
+      craftctl default
+    build-environment:
+      - PATH: "$HOME/.cargo/bin:$PATH"
+
   actioneer:
+    # `rust-channel` must stay unset: the plugin rejects it together with a
+    # `rust-deps` dependency, and the channel is chosen above instead.
+    after:
+      - rust-deps
     plugin: rust
     source: .
-    rust-channel: stable
+    build-environment:
+      - PATH: "$HOME/.cargo/bin:$PATH"
     build-packages:
       - libadwaita-1-dev
       - libgtk-4-dev
