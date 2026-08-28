@@ -56,11 +56,13 @@ parts:
       - PATH: "$HOME/.cargo/bin:$PATH"
 
   actioneer:
-    # `rust-channel` must stay unset: the plugin rejects it together with a
-    # `rust-deps` dependency, and the channel is chosen above instead.
+    # `none` means "the toolchain is already provided" — anything else, including
+    # leaving this out, makes the plugin run `rustup update` during pull, before
+    # `rust-deps` has had a chance to build. The channel is chosen there instead.
     after:
       - rust-deps
     plugin: rust
+    rust-channel: none
     source: .
     build-environment:
       - PATH: "$HOME/.cargo/bin:$PATH"
