@@ -711,17 +711,17 @@ msgstr "Последние данные workflow доступны офлайн."
 msgid "Fast refreshes that keep the interface responsive."
 msgstr "Быстрые обновления сохраняют отзывчивость интерфейса."
 
-msgid "Browse Actions workflows."
-msgstr "Просматривайте workflows в Actions."
+msgid "Browse Actions workflows"
+msgstr "Просматривайте workflows в Actions"
 
-msgid "Inspect workflow runs and drill into job details quickly."
-msgstr "Проверяйте запуски workflow и быстро переходите к деталям заданий."
+msgid "Inspect workflow runs and drill into job details quickly"
+msgstr "Проверяйте запуски workflow и быстро переходите к деталям заданий"
 
-msgid "Review job logs inline without leaving the app."
-msgstr "Просматривайте логи заданий прямо в приложении."
+msgid "Review job logs inline without leaving the app"
+msgstr "Просматривайте логи заданий прямо в приложении"
 
-msgid "Run a job on any branch."
-msgstr "Запускайте задание на любой ветке."
+msgid "Run a job on any branch"
+msgstr "Запускайте задание на любой ветке"
 
 msgid "This release includes an important security update to help keep Actioneer safer to use."
 msgstr "Этот выпуск включает важное обновление безопасности, которое помогает сделать использование Actioneer более безопасным."

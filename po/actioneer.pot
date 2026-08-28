@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-27 18:33+0000\n"
+"POT-Creation-Date: 2026-08-28 07:50+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1090,19 +1090,19 @@ msgid "DevOps"
 msgstr ""
 
 #: data/metainfo.xml.in:83
-msgid "Browse Actions workflows."
+msgid "Browse Actions workflows"
 msgstr ""
 
 #: data/metainfo.xml.in:87
-msgid "Inspect workflow runs and drill into job details quickly."
+msgid "Inspect workflow runs and drill into job details quickly"
 msgstr ""
 
 #: data/metainfo.xml.in:91
-msgid "Review job logs inline without leaving the app."
+msgid "Review job logs inline without leaving the app"
 msgstr ""
 
 #: data/metainfo.xml.in:95
-msgid "Run a job on any branch."
+msgid "Run a job on any branch"
 msgstr ""
 
 #: data/metainfo.xml.in:104

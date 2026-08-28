@@ -1121,20 +1121,20 @@ msgid "DevOps"
 msgstr "DevOps"
 
 #: data/metainfo.xml.in:69
-msgid "Browse Actions workflows."
-msgstr "Sfoglia i workflow di Actions."
+msgid "Browse Actions workflows"
+msgstr "Sfoglia i workflow di Actions"
 
 #: data/metainfo.xml.in:73
-msgid "Inspect workflow runs and drill into job details quickly."
-msgstr "Ispeziona le esecuzioni dei workflow e accedi rapidamente ai dettagli dei job."
+msgid "Inspect workflow runs and drill into job details quickly"
+msgstr "Ispeziona le esecuzioni dei workflow e accedi rapidamente ai dettagli dei job"
 
 #: data/metainfo.xml.in:77
-msgid "Review job logs inline without leaving the app."
-msgstr "Consulta i log dei job in linea senza lasciare l'app."
+msgid "Review job logs inline without leaving the app"
+msgstr "Consulta i log dei job in linea senza lasciare l'app"
 
 #: data/metainfo.xml.in:81
-msgid "Run a job on any branch."
-msgstr "Esegui un job su qualsiasi branch."
+msgid "Run a job on any branch"
+msgstr "Esegui un job su qualsiasi branch"
 
 #: data/metainfo.xml.in:90
 msgid ""

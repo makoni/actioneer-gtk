@@ -707,17 +707,17 @@ msgstr "हाल का वर्कफ़्लो डेटा ऑफ़ल�
 msgid "Fast refreshes that keep the interface responsive."
 msgstr "तेज़ रिफ्रेश इंटरफ़ेस को उत्तरदायी बनाए रखते हैं।"
 
-msgid "Browse Actions workflows."
-msgstr "Actions वर्कफ़्लो ब्राउज़ करें।"
+msgid "Browse Actions workflows"
+msgstr "Actions वर्कफ़्लो ब्राउज़ करें"
 
-msgid "Inspect workflow runs and drill into job details quickly."
-msgstr "वर्कफ़्लो रन जांचें और जल्दी से जॉब विवरण देखें।"
+msgid "Inspect workflow runs and drill into job details quickly"
+msgstr "वर्कफ़्लो रन जांचें और जल्दी से जॉब विवरण देखें"
 
-msgid "Review job logs inline without leaving the app."
-msgstr "ऐप छोड़े बिना जॉब लॉग यहीं देखें।"
+msgid "Review job logs inline without leaving the app"
+msgstr "ऐप छोड़े बिना जॉब लॉग यहीं देखें"
 
-msgid "Run a job on any branch."
-msgstr "किसी भी ब्रांच पर जॉब चलाएँ।"
+msgid "Run a job on any branch"
+msgstr "किसी भी ब्रांच पर जॉब चलाएँ"
 
 msgid "This release includes an important security update to help keep Actioneer safer to use."
 msgstr "इस रिलीज़ में एक महत्वपूर्ण सुरक्षा अपडेट शामिल है, जिससे Actioneer का उपयोग और सुरक्षित रहता है।"

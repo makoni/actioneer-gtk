@@ -1123,20 +1123,20 @@ msgid "DevOps"
 msgstr "DevOps"
 
 #: data/metainfo.xml.in:69
-msgid "Browse Actions workflows."
-msgstr "Actions ワークフローを閲覧します。"
+msgid "Browse Actions workflows"
+msgstr "Actions ワークフローを閲覧します"
 
 #: data/metainfo.xml.in:73
-msgid "Inspect workflow runs and drill into job details quickly."
-msgstr "ワークフロー実行を確認し、すばやくジョブの詳細にアクセスします。"
+msgid "Inspect workflow runs and drill into job details quickly"
+msgstr "ワークフロー実行を確認し、すばやくジョブの詳細にアクセスします"
 
 #: data/metainfo.xml.in:77
-msgid "Review job logs inline without leaving the app."
-msgstr "アプリを離れずにジョブログをインラインで確認します。"
+msgid "Review job logs inline without leaving the app"
+msgstr "アプリを離れずにジョブログをインラインで確認します"
 
 #: data/metainfo.xml.in:81
-msgid "Run a job on any branch."
-msgstr "任意のブランチでジョブを実行します。"
+msgid "Run a job on any branch"
+msgstr "任意のブランチでジョブを実行します"
 
 #: data/metainfo.xml.in:90
 msgid ""

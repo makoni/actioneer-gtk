@@ -702,17 +702,17 @@ msgstr "最近的工作流数据可离线访问。"
 msgid "Fast refreshes that keep the interface responsive."
 msgstr "快速刷新，保持界面响应。"
 
-msgid "Browse Actions workflows."
-msgstr "浏览 Actions 工作流。"
+msgid "Browse Actions workflows"
+msgstr "浏览 Actions 工作流"
 
-msgid "Inspect workflow runs and drill into job details quickly."
-msgstr "检查工作流运行并快速查看作业详情。"
+msgid "Inspect workflow runs and drill into job details quickly"
+msgstr "检查工作流运行并快速查看作业详情"
 
-msgid "Review job logs inline without leaving the app."
-msgstr "在应用内直接查看作业日志，无需离开应用。"
+msgid "Review job logs inline without leaving the app"
+msgstr "在应用内直接查看作业日志，无需离开应用"
 
-msgid "Run a job on any branch."
-msgstr "在任意分支上运行作业。"
+msgid "Run a job on any branch"
+msgstr "在任意分支上运行作业"
 
 msgid "This release includes an important security update to help keep Actioneer safer to use."
 msgstr "此版本包含一项重要的安全更新，帮助让 Actioneer 使用起来更安全。"

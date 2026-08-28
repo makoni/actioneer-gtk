@@ -708,17 +708,17 @@ msgstr "Conservez les données récentes des workflows disponibles hors ligne."
 msgid "Fast refreshes that keep the interface responsive."
 msgstr "Des rafraîchissements rapides gardent l’interface réactive."
 
-msgid "Browse Actions workflows."
-msgstr "Parcourez les workflows Actions."
+msgid "Browse Actions workflows"
+msgstr "Parcourez les workflows Actions"
 
-msgid "Inspect workflow runs and drill into job details quickly."
-msgstr "Inspectez les exécutions de workflows et accédez rapidement aux détails des jobs."
+msgid "Inspect workflow runs and drill into job details quickly"
+msgstr "Inspectez les exécutions de workflows et accédez rapidement aux détails des jobs"
 
-msgid "Review job logs inline without leaving the app."
-msgstr "Consultez les journaux des jobs directement dans l’application."
+msgid "Review job logs inline without leaving the app"
+msgstr "Consultez les journaux des jobs directement dans l’application"
 
-msgid "Run a job on any branch."
-msgstr "Exécutez un job sur n’importe quelle branche."
+msgid "Run a job on any branch"
+msgstr "Exécutez un job sur n’importe quelle branche"
 
 msgid "This release includes an important security update to help keep Actioneer safer to use."
 msgstr "Cette version inclut une importante mise à jour de sécurité afin de rendre Actioneer plus sûr à l’usage."

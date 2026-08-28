@@ -704,17 +704,17 @@ msgstr "إتاحة بيانات سير العمل الحديثة دون اتصا
 msgid "Fast refreshes that keep the interface responsive."
 msgstr "تحديثات سريعة تُبقي الواجهة سريعة الاستجابة."
 
-msgid "Browse Actions workflows."
-msgstr "تصفّح سير عمل Actions."
+msgid "Browse Actions workflows"
+msgstr "تصفّح سير عمل Actions"
 
-msgid "Inspect workflow runs and drill into job details quickly."
-msgstr "افحص عمليات تشغيل سير العمل وتعمّق سريعًا في تفاصيل المهام."
+msgid "Inspect workflow runs and drill into job details quickly"
+msgstr "افحص عمليات تشغيل سير العمل وتعمّق سريعًا في تفاصيل المهام"
 
-msgid "Review job logs inline without leaving the app."
-msgstr "راجع سجلات المهام داخل التطبيق دون مغادرته."
+msgid "Review job logs inline without leaving the app"
+msgstr "راجع سجلات المهام داخل التطبيق دون مغادرته"
 
-msgid "Run a job on any branch."
-msgstr "شغّل مهمة على أي فرع."
+msgid "Run a job on any branch"
+msgstr "شغّل مهمة على أي فرع"
 
 msgid "This release includes an important security update to help keep Actioneer safer to use."
 msgstr "يتضمن هذا الإصدار تحديثًا أمنيًا مهمًا للمساعدة في جعل استخدام Actioneer أكثر أمانًا."

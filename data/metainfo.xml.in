@@ -5,20 +5,25 @@
   <metadata_license>MIT</metadata_license>
   <name>Actioneer</name>
   <summary>Track GitHub Actions runs</summary>
-  <lang>ar</lang>
-  <lang>bn</lang>
-  <lang>de</lang>
-  <lang>en</lang>
-  <lang>es</lang>
-  <lang>fr</lang>
-  <lang>hi</lang>
-  <lang>it</lang>
-  <lang>ja</lang>
-  <lang>nl</lang>
-  <lang>pt</lang>
-  <lang>ru</lang>
-  <lang>ur</lang>
-  <lang>zh</lang>
+  <!-- Declared inside <languages>: AppStream ignores bare <lang> tags in the
+       component root, which is where these sat and why the validator listed
+       them as unknown. -->
+  <languages>
+    <lang>ar</lang>
+    <lang>bn</lang>
+    <lang>de</lang>
+    <lang>en</lang>
+    <lang>es</lang>
+    <lang>fr</lang>
+    <lang>hi</lang>
+    <lang>it</lang>
+    <lang>ja</lang>
+    <lang>nl</lang>
+    <lang>pt</lang>
+    <lang>ru</lang>
+    <lang>ur</lang>
+    <lang>zh</lang>
+  </languages>
   <description>
     <p>Actioneer lets you browse GitHub repositories, inspect workflow runs, check job logs, and refresh status without leaving your desktop.</p>
 
@@ -80,20 +85,20 @@
   <screenshots>
     <!-- Referencing screenshots added under data/screenshots/ -->
     <screenshot type="default">
-      <caption>Browse Actions workflows.</caption>
-      <image type="source" width="2826" height="1886">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-1.png</image>
+      <caption>Browse Actions workflows</caption>
+      <image type="source" width="2606" height="1872">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-1.png</image>
     </screenshot>
     <screenshot type="detail">
-      <caption>Inspect workflow runs and drill into job details quickly.</caption>
-      <image type="source" width="2826" height="1886">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-2.png</image>
+      <caption>Inspect workflow runs and drill into job details quickly</caption>
+      <image type="source" width="2606" height="1872">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-2.png</image>
     </screenshot>
     <screenshot type="detail">
-      <caption>Review job logs inline without leaving the app.</caption>
+      <caption>Review job logs inline without leaving the app</caption>
       <image type="source" width="2460" height="1500">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-3.png</image>
     </screenshot>
     <screenshot type="detail">
-      <caption>Run a job on any branch.</caption>
-      <image type="source" width="2826" height="1886">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-4.png</image>
+      <caption>Run a job on any branch</caption>
+      <image type="source" width="2606" height="1872">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-4.png</image>
     </screenshot>
   </screenshots>
 
