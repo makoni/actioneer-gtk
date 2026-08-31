@@ -10,3 +10,4 @@ Categories=Development;Utility;
 Keywords=GitHub;Actions;CI;Workflow;Automation;
 StartupNotify=true
 X-GNOME-UsesNotifications=true
+X-AppImage-Homepage=https://github.com/makoni/actioneer-gtk

@@ -52,7 +52,7 @@ jobs:
       - name: Install system packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config libglib2.0-dev libgtk-4-dev libadwaita-1-dev desktop-file-utils gettext
+          sudo apt-get install -y pkg-config libglib2.0-dev libgtk-4-dev libadwaita-1-dev desktop-file-utils gettext zsync
 
       - name: Download prebuilt release binary
         uses: actions/download-artifact@v8
@@ -98,6 +98,11 @@ jobs:
       - name: Build AppImage with linuxdeploy
         env:
           ARCH: ${{ matrix.arch }}
+          # Bare filename, no directory: appimagetool takes this as its
+          # destination and hands the same basename to zsyncmake, which writes
+          # the .zsync next to it in the working directory.
+          LDAI_OUTPUT: actioneer-${{ steps.get_version.outputs.version }}-${{ matrix.arch }}.AppImage
+          LDAI_UPDATE_INFORMATION: "gh-releases-zsync|makoni|actioneer-gtk|latest|actioneer-*${{ matrix.arch }}.AppImage.zsync"
         run: |
           set -euo pipefail
           rm -rf "$APPDIR"
@@ -114,9 +119,16 @@ jobs:
             --custom-apprun packaging/AppRun.sh \
             --plugin gtk \
             --output appimage
-          OUTPUT_FILE=$(ls -1 Actioneer-*.AppImage | head -n 1)
-          DEST="dist/actioneer-${{ steps.get_version.outputs.version }}-${{ matrix.arch }}.AppImage"
-          mv "$OUTPUT_FILE" "$DEST"
+          # linuxdeploy already produced the final name via $LDAI_OUTPUT. Do not
+          # rename it: the .zsync carries this exact basename in its URL header,
+          # and a renamed AppImage would leave that header pointing at nothing.
+          test -f "$LDAI_OUTPUT"
+          if [ ! -f "$LDAI_OUTPUT.zsync" ]; then
+            echo "No $LDAI_OUTPUT.zsync: zsyncmake did not run" >&2
+            ls -1 *.zsync 2>/dev/null >&2 || true
+            exit 1
+          fi
+          mv "$LDAI_OUTPUT" "$LDAI_OUTPUT.zsync" dist/
 
       - name: Verify the AppImage runs and carries its own GTK
         env:
@@ -157,11 +169,31 @@ jobs:
           fi
           echo "GTK $gtk_version satisfies the $MIN_BUNDLED_GTK floor"
 
+          # 4. The update information must be embedded, and the .zsync must point
+          #    back at this exact filename — the two halves that let a package
+          #    manager find and fetch the next release.
+          upd_info=$("./$APPIMAGE" --appimage-updateinformation)
+          echo "Update information: $upd_info"
+          expected_upd="gh-releases-zsync|makoni|actioneer-gtk|latest|actioneer-*${{ matrix.arch }}.AppImage.zsync"
+          if [ "$upd_info" != "$expected_upd" ]; then
+            echo "Embedded update information is not '$expected_upd'" >&2
+            exit 1
+          fi
+
+          zsync_header_url=$(head -c 4096 "$APPIMAGE.zsync" | grep -a '^URL:' | head -n 1 | cut -d' ' -f2-)
+          echo "zsync URL header: $zsync_header_url"
+          if [ "$zsync_header_url" != "$(basename "$APPIMAGE")" ]; then
+            echo "zsync URL header does not match the AppImage filename: the AppImage was renamed after zsyncmake ran" >&2
+            exit 1
+          fi
+
       - name: Upload AppImage artifact
         uses: actions/upload-artifact@v7
         with:
           name: actioneer-${{ steps.get_version.outputs.version }}-${{ matrix.arch }}.AppImage
-          path: dist/actioneer-${{ steps.get_version.outputs.version }}-${{ matrix.arch }}.AppImage
+          path: |
+            dist/actioneer-${{ steps.get_version.outputs.version }}-${{ matrix.arch }}.AppImage
+            dist/actioneer-${{ steps.get_version.outputs.version }}-${{ matrix.arch }}.AppImage.zsync
 
       - name: Expose workflow run id
         id: expose-run-id
