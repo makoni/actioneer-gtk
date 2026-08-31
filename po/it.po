@@ -1411,3 +1411,6 @@ msgstr "I componenti integrati aggiornati aiutano a mantenere Actioneer affidabi
 #~ msgstr "Showing {count} jobs"
 
 
+
+msgid "AppImage packages now include zsync update information, so package managers can update the app incrementally."
+msgstr "I pacchetti AppImage ora includono le informazioni di aggiornamento zsync, consentendo ai gestori di pacchetti di aggiornare l'app in modo incrementale."

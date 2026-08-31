@@ -1409,3 +1409,6 @@ msgstr "同梱コンポーネントの更新により、Actioneerの信頼性と
 #~ msgstr "Showing {count} jobs"
 
 
+
+msgid "AppImage packages now include zsync update information, so package managers can update the app incrementally."
+msgstr "AppImage パッケージには zsync の更新情報が含まれるようになり、パッケージマネージャーがアプリを増分更新できるようになりました。"

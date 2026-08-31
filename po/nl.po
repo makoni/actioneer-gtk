@@ -1000,3 +1000,6 @@ msgstr "Packaging- en CI-updates voor Snap, Flatpak en AppImage voor betere comp
 
 msgid "Dependency updates and stability fixes."
 msgstr "Afhankelijkheidsupdates en stabiliteitscorrecties."
+
+msgid "AppImage packages now include zsync update information, so package managers can update the app incrementally."
+msgstr "AppImage-pakketten bevatten nu zsync-updateinformatie, zodat pakketbeheerders de app incrementaal kunnen bijwerken."

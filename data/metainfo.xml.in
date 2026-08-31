@@ -103,6 +103,14 @@
   </screenshots>
 
   <releases>
+    <release version="1.1.1" date="2026-08-31">
+      <description>
+        <ul>
+          <li>Updated bundled components help keep Actioneer reliable and up to date.</li>
+          <li>AppImage packages now include zsync update information, so package managers can update the app incrementally.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.1.0" date="2026-08-25">
       <description>
         <ul>

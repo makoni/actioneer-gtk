@@ -957,3 +957,6 @@ msgid "Updated bundled components help keep Actioneer reliable and up to date."
 msgstr "Los componentes integrados actualizados ayudan a mantener Actioneer fiable y "
 "actualizado."
 
+
+msgid "AppImage packages now include zsync update information, so package managers can update the app incrementally."
+msgstr "Los paquetes AppImage ahora incluyen información de actualización zsync, de modo que los gestores de paquetes puedan actualizar la aplicación de forma incremental."
