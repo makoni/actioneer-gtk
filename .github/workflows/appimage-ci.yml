@@ -122,7 +122,11 @@ jobs:
           # linuxdeploy already produced the final name via $LDAI_OUTPUT. Do not
           # rename it: the .zsync carries this exact basename in its URL header,
           # and a renamed AppImage would leave that header pointing at nothing.
-          test -f "$LDAI_OUTPUT"
+          if [ ! -f "$LDAI_OUTPUT" ]; then
+            echo "linuxdeploy did not produce $LDAI_OUTPUT" >&2
+            ls -1 *.AppImage 2>/dev/null >&2 || true
+            exit 1
+          fi
           if [ ! -f "$LDAI_OUTPUT.zsync" ]; then
             echo "No $LDAI_OUTPUT.zsync: zsyncmake did not run" >&2
             ls -1 *.zsync 2>/dev/null >&2 || true
@@ -180,7 +184,15 @@ jobs:
             exit 1
           fi
 
-          zsync_header_url=$(head -c 4096 "$APPIMAGE.zsync" | grep -a '^URL:' | head -n 1 | cut -d' ' -f2-)
+          # `|| true` is load-bearing: grep -m1 stops reading, which SIGPIPEs
+          # head and would trip `pipefail`. A missing key has to report itself
+          # in the check below rather than killing the step with no message.
+          zsync_header_url=$(head -c 4096 "$APPIMAGE.zsync" | grep -a -m1 '^URL:' | cut -d' ' -f2- || true)
+          if [ -z "$zsync_header_url" ]; then
+            echo "No 'URL:' line in $APPIMAGE.zsync: not a zsync file zsyncmake wrote" >&2
+            head -c 256 "$APPIMAGE.zsync" | tr -d '\0' >&2 || true
+            exit 1
+          fi
           echo "zsync URL header: $zsync_header_url"
           if [ "$zsync_header_url" != "$(basename "$APPIMAGE")" ]; then
             echo "zsync URL header does not match the AppImage filename: the AppImage was renamed after zsyncmake ran" >&2
