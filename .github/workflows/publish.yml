@@ -76,9 +76,11 @@ jobs:
           if [ -z "$NOTES" ]; then
             NOTES="Release drafted automatically. Update notes before publishing."
           fi
-          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
-          echo "name=${NAME}" >> "$GITHUB_OUTPUT"
-          echo "notes=${NOTES}" >> "$GITHUB_OUTPUT"
+          {
+            echo "tag=${TAG}"
+            echo "name=${NAME}"
+            { echo "notes<<ACTIONEER_NOTES_EOF" && printf '%s\n' "$NOTES" && echo "ACTIONEER_NOTES_EOF"; }
+          } >> "$GITHUB_OUTPUT"
 
       - name: Draft GitHub release
         uses: softprops/action-gh-release@v3
