@@ -290,3 +290,24 @@ def select_row_named(root, name):
     raise AssertionError(
         f"{name!r} is not inside a list item; roles present: {visible_roles(root)}"
     )
+
+
+def text_content(node):
+    """Concatenated text of every node exposing the AT-SPI Text interface.
+
+    Log and code views render into a `GtkTextView`, whose content is not an
+    accessible *name* — asserting on `visible_names` would miss it entirely.
+    """
+    chunks = []
+    for candidate in [node] + list(walk(node)):
+        try:
+            text = candidate.queryText()
+        except Exception:
+            continue
+        try:
+            value = text.getText(0, -1)
+        except Exception:
+            continue
+        if value:
+            chunks.append(value)
+    return "\n".join(chunks)

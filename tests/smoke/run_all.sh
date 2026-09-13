@@ -15,6 +15,8 @@ scripts=(
   "welcome_screen.py:"
   "demo_mode.py:--demo"
   "repos_to_workflows.py:--demo"
+  "runs_and_detail.py:--demo"
+  "job_logs.py:--demo"
 )
 
 failed=0

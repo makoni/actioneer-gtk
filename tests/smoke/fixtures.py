@@ -50,3 +50,33 @@ MAIN_FRAME_TITLE = "Actioneer"
 # Window GActions published on the frame node.
 ACTION_ABOUT = "win.about"
 ACTION_SIGN_OUT = "win.sign_out"
+
+# Run numbers of the CI workflow, newest first.
+MAIN_RUN_NUMBERS = ["#134", "#133", "#132", "#131", "#130", "#129", "#128", "#127"]
+
+# Status labels the run list renders.
+RUN_STATUS_IN_PROGRESS = "In Progress"
+RUN_STATUS_SUCCESS = "Success"
+RUN_STATUS_FAILED = "Failed"
+
+# Per-run controls, by run state.
+ACTION_CANCEL_RUN = "Cancel run"
+ACTION_RERUN = "Re-run workflow"
+ACTION_RERUN_FAILED = "Re-run failed jobs"
+ACTION_OPEN_GITHUB = "Open in GitHub"
+
+# Branch labels appearing in the run list.
+RUN_BRANCHES = ["main", "feature/login", "feature/refactor", "release/hotfix"]
+
+# Jobs of the newest CI run, and the job-logs window controls.
+MAIN_RUN_JOBS = ["prepare", "bundle"]
+LOGS_WINDOW_CONTROLS = ["Copy logs to clipboard", "Refresh logs", "Save logs to file"]
+LOGS_WINDOW_TITLE_SUFFIX = "- Logs"
+
+# What the log view renders. The fixtures carry GitHub's `##[group]` markers;
+# `src/ui/ansi.rs` turns them into the disclosure triangle, so asserting on the
+# rendered form also proves the log parser ran.
+LOG_GROUP_MARKER = "\u25be"  # BLACK DOWN-POINTING SMALL TRIANGLE
+LOG_GROUP_TITLE = "Lint"
+LOG_COMMAND_LINE = "cargo clippy --all-targets"
+LOG_TIMESTAMP_PREFIX = "2026-01-24T11:28:01Z"
