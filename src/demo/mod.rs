@@ -1,7 +1,7 @@
 mod data;
 mod state;
 
-pub(crate) use state::{
+pub use state::{
     cancel_run, disable, dispatch_workflow, enable, is_actions_enabled, is_active, job_logs,
     list_branches, list_jobs, list_repos, list_repository_runs, list_runs, list_workflows,
     rate_limit_info, rerun_failed_jobs, rerun_workflow, workflow_dispatch_inputs,
