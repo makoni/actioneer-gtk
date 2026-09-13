@@ -18,6 +18,7 @@ of these needs GTK or a display.
 | `characterization_demo.rs` | everything the demo backend returns, frozen shape by shape |
 | `characterization_api.rs` | the live client against `wiremock`: parsing, error mapping, rate-limit headers |
 | `gateway.rs` | the gateway's dispatch — that live and demo route to different places |
+| `logic_tests.rs` | also covers `domain::filters` and `domain::counts` |
 | `common/mod.rs` | shared frozen fixtures; not a test target itself |
 
 **Characterization tests are not ordinary tests.** Their expected values are
@@ -89,7 +90,7 @@ ACTIONEER_ARGS=--demo dbus-run-session -- \
 ```
 
 Seven journeys today: `welcome_screen`, `demo_mode`, `repos_to_workflows`,
-`runs_and_detail`, `job_logs`, `filters_and_favorites`,
+`runs_and_detail`, `job_logs`, `filters_and_favorites`, `trigger_dialog`,
 `preferences_and_signout`. `lib.py` holds the shared helpers and `fixtures.py`
 the frozen accessibility names; neither is a journey, which is why `run_all.sh`
 lists scripts explicitly instead of globbing.
@@ -159,9 +160,9 @@ When testing UI changes, verify the following:
 
 ## Test metrics
 
-- **Headless:** 226 passing (`cargo test --workspace`)
-- **GTK, `#[ignore]`d:** 73 tests, run under Xvfb
-- **Smoke journeys:** 7
+- **Headless:** 236 passing (`cargo test --workspace`)
+- **GTK, `#[ignore]`d:** 75 tests, run under Xvfb
+- **Smoke journeys:** 8
 - **Manual UI verification:** still required for each release
 
 ## Running Tests

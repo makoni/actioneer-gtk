@@ -39,6 +39,30 @@ Two rules once you have called it:
 The index lives in `.codegraph/` (git-ignored, ~10 MB, local to each machine)
 and trails writes by about a second, so it reflects edits you just made.
 
+## Layout
+
+The crate is `[lib]` + `[[bin]]`: `src/main.rs` is a thin composition root over
+the `actioneer` library, and `tests/` can therefore import real code.
+
+```
+src/kernel/     app identity, i18n, shared value types — depends on nothing
+src/runtime/    Tokio handle + the GLib main-context bridge (`channel`)
+src/domain/     pure rules: models, runs, filters, counts, formatting — no GTK
+src/services/   adapters: api, gateway, tokens, cache, favorites, preferences,
+                notifications, crash_report, auth, app_services, error
+src/demo/       DemoBackend — an alternate backend behind the gateway
+src/ui/         GTK only
+```
+
+Rules that the tree currently satisfies and that CI does not check for you:
+
+- `domain/` names no GTK type, and nothing outside `src/ui/` names `crate::ui`.
+- The data source is chosen once, at `GitHubGateway::{live,demo}`; the HTTP
+  client knows nothing about demo mode.
+- Real services are constructed in exactly one place, `AppServices::build`.
+  Tests use `AppServices::test_fakes(dir)`.
+- Module files are `foo.rs` beside `foo/`, never `foo/mod.rs`.
+
 ## Read next
 
 - `docs/agent-guide.md` — runtime, UI, concurrency and API rules.
@@ -58,8 +82,14 @@ nothing validates a PR unless you do it locally. Run all of these:
 cargo fmt --all
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test --workspace
-xvfb-run -a dbus-run-session -- bash -lc "RUST_TEST_THREADS=1 cargo test --workspace -- --ignored --test-threads=1"
+xvfb-run -a dbus-run-session -- bash -lc "RUST_TEST_THREADS=1 cargo test --workspace -- --ignored --test-threads=1 --skip test_token_storage_lifecycle"
+cargo build --release && dbus-run-session -- bash tests/smoke/run_all.sh
 ```
+
+**`--skip test_token_storage_lifecycle` is not optional.** That test writes the
+developer's real system keyring. It is marked `#[ignore]`, and `--ignored` runs
+precisely the ignored tests — so the mark moves it *into* that batch rather than
+out of the run.
 
 **`-D warnings` is not optional.** CI installs the toolchain with
 `actions-rust-lang/setup-rust-toolchain`, whose `rustflags` input defaults to
@@ -110,7 +140,7 @@ restate it in the file.
 
 ## Threading and reference cycles
 
-- Network calls run on Tokio via `crate::runtime_handle().spawn(...)`.
+- Network calls run on Tokio via `crate::runtime::handle().spawn(...)`.
 - GTK widget updates happen on the GLib main thread — via the project's
   `MainContextChannelExt` channel helper, `glib::MainContext::default()
   .spawn_local(...)`, or `glib::idle_add_local_once(...)`.
@@ -121,11 +151,11 @@ they are attached to.** The widget owns the handler, the handler owns the
 ancestor, and the ancestor owns the widget: the subtree is then never finalized,
 which also defeats weak-ref guards on refresh timers, so they tick forever. This
 repo does not use `glib::clone!`; capture `widget.downgrade()` and `upgrade()`
-inside the closure instead (27 call sites do this today).
+inside the closure instead (30 call sites do this today).
 
 Guard new widget trees with a release test — see
-`run_row_is_released_when_dropped` (`src/ui/detail_view/helpers/runs/row.rs`) and
-`window_is_released_once_closed` (`src/ui/job_logs_window.rs`). Both use
+`run_row_is_released_when_dropped` (`src/ui/detail_view/helpers/runs/row/tests.rs`) and
+`window_is_released_once_closed` (`src/ui/job_logs_window/tests.rs`). Both use
 `test_helpers::collect_widget_weaks` to assert the *whole* subtree died, not just
 its root: a cycle pinning one inner widget passes a root-only check. When you add
 such a test, prove it can fail by reintroducing the cycle once.
@@ -136,8 +166,11 @@ such a test, prove it can fail by reintroducing the cycle once.
   switching toolchains run `cargo clean` before `cargo build`.
 - `gtk4` 0.11 with feature `v4_14`, `libadwaita` 0.9 with `v1_5`. Because CI
   denies warnings, deprecated APIs are effectively banned — e.g. use
-  `adw::AlertDialog`/`adw::Dialog`, not `gtk::MessageDialog`. Under `v4_14`,
-  `ListItem` factory closures need an explicit downcast of the list item.
+  `adw::AlertDialog`/`adw::Dialog`, not `gtk::MessageDialog`. `ListItem` factory
+  closures need an explicit downcast of the list item — that is a gtk4-rs API
+  shape from feature `v4_8` onward (the closure is handed a `&glib::Object`,
+  because a factory may also produce a `ColumnViewCell`), not something specific
+  to `v4_14`.
 - When anything edits `Cargo.lock` (including `cargo update`), regenerate the
   Flatpak vendored-sources manifest with `scripts/regenerate-flatpak-sources.sh`
   and commit `flatpak/me.spaceinbox.actioneer.cargo-sources.json` alongside it;
@@ -148,7 +181,11 @@ such a test, prove it can fail by reintroducing the cycle once.
 ## Internationalization
 
 User-facing strings go through `tr(...)`. There are 14 catalogs in `po/`.
-`scripts/extract-translations.sh` regenerates the `.pot`; when adding a string,
+`scripts/extract-translations.sh` regenerates the `.pot` — it scans **both**
+crate roots, `src/lib.rs` and `src/main.rs`, because `xtr` walks the module tree
+from the root it is given and `main.rs` declares no modules. After running it,
+sanity-check the msgid *set*, not the diff size: a pure file move churns every
+`file:line` comment while leaving the set identical (241 today). when adding a string,
 insert the new `msgid`/`msgstr` pair into each `.po` surgically. Do not run a
 blanket `msgmerge` over the catalogs: it rewrites every file wholesale and buries
 your change in a five-figure diff.
@@ -167,14 +204,14 @@ gh run watch <id> --exit-status
 
 ## Keyring safety
 
-`src/storage/token_storage.rs` contains a live keyring test and operations that
+`src/services/tokens/token_storage.rs` contains a live keyring test and operations that
 may write to or delete entries in the system keyring. Do not run or modify those
 destructive tests on a developer machine unless you accept the side effects.
 Prefer mocks or a dedicated test keyring account.
 
 ## API and caching notes
 
-`src/api/http.rs` implements ETag caching through `ResponseHandler`; reuse it
+`src/services/api/http.rs` implements ETag caching through `ResponseHandler`; reuse it
 when adding endpoints, and keep rate-limit updates intact. For large async fan-
 out, use `for_each_concurrent` with a concurrency cap (see
 `spawn_repo_status_tasks`) rather than spawning per item.
