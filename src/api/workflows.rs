@@ -1,6 +1,6 @@
 /// Workflow operations
 use super::error::GitHubError;
-use super::http::{GITHUB_API_BASE, ResponseHandler, add_auth_header};
+use super::http::{ResponseHandler, add_auth_header};
 use crate::api::models::{
     Workflow, WorkflowDispatchInput, WorkflowDispatchInputType, WorkflowDispatchInputValue,
     WorkflowRun, WorkflowsResponse,
@@ -14,6 +14,7 @@ use tracing::{info, warn};
 /// List workflows for a repository
 pub async fn list_workflows(
     client: &Client,
+    base: &str,
     token: &Option<String>,
     response_handler: &ResponseHandler,
     owner: &str,
@@ -24,7 +25,7 @@ pub async fn list_workflows(
 
     let request = client.get(format!(
         "{}/repos/{}/{}/actions/workflows",
-        GITHUB_API_BASE, owner, repo
+        base, owner, repo
     ));
 
     let request = add_auth_header(request, token);
@@ -49,8 +50,13 @@ struct WorkflowDispatchResponse {
 }
 
 /// Fetch workflow_dispatch inputs from a workflow file
+// Four of the arguments are the transport context (client, base URL, token,
+// response handler) that every endpoint in this module carries. Bundling them
+// into a struct is a separate cleanup; it would touch all 13 endpoints.
+#[allow(clippy::too_many_arguments)]
 pub async fn get_workflow_dispatch_inputs(
     client: &Client,
+    base: &str,
     token: &Option<String>,
     response_handler: &ResponseHandler,
     owner: &str,
@@ -64,7 +70,7 @@ pub async fn get_workflow_dispatch_inputs(
     );
     let mut request = client.get(format!(
         "{}/repos/{}/{}/contents/{}",
-        GITHUB_API_BASE, owner, repo, workflow_path
+        base, owner, repo, workflow_path
     ));
 
     if let Some(reference) = reference {
@@ -137,8 +143,13 @@ fn parse_workflow_contents_response(
 }
 
 /// Dispatch a workflow
+// Four of the arguments are the transport context (client, base URL, token,
+// response handler) that every endpoint in this module carries. Bundling them
+// into a struct is a separate cleanup; it would touch all 13 endpoints.
+#[allow(clippy::too_many_arguments)]
 pub async fn dispatch_workflow(
     client: &Client,
+    base: &str,
     token: &Option<String>,
     owner: &str,
     repo: &str,
@@ -160,7 +171,7 @@ pub async fn dispatch_workflow(
     let request = client
         .post(format!(
             "{}/repos/{}/{}/actions/workflows/{}/dispatches",
-            GITHUB_API_BASE, owner, repo, workflow_id
+            base, owner, repo, workflow_id
         ))
         .json(&body);
 

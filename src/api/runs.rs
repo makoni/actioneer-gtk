@@ -1,6 +1,6 @@
 /// Workflow run operations
 use super::error::GitHubError;
-use super::http::{GITHUB_API_BASE, ResponseHandler, add_auth_header};
+use super::http::{ResponseHandler, add_auth_header};
 use crate::api::models::{WorkflowRun, WorkflowRunsResponse};
 use reqwest::Client;
 use tracing::{debug, info};
@@ -10,6 +10,7 @@ const REPOSITORY_RUNS_PAGE_SIZE: usize = 100;
 /// List workflow runs
 pub async fn list_runs(
     client: &Client,
+    base: &str,
     token: &Option<String>,
     response_handler: &ResponseHandler,
     owner: &str,
@@ -25,7 +26,7 @@ pub async fn list_runs(
     let request = client
         .get(format!(
             "{}/repos/{}/{}/actions/workflows/{}/runs",
-            GITHUB_API_BASE, owner, repo, workflow_id
+            base, owner, repo, workflow_id
         ))
         .query(&[("per_page", "50")]);
 
@@ -42,6 +43,7 @@ pub async fn list_runs(
 /// List recent workflow runs for a repository
 pub async fn list_repository_runs(
     client: &Client,
+    base: &str,
     token: &Option<String>,
     response_handler: &ResponseHandler,
     owner: &str,
@@ -50,10 +52,7 @@ pub async fn list_repository_runs(
     info!("Fetching repository runs for {}/{}", owner, repo);
 
     let request = client
-        .get(format!(
-            "{}/repos/{}/{}/actions/runs",
-            GITHUB_API_BASE, owner, repo
-        ))
+        .get(format!("{}/repos/{}/{}/actions/runs", base, owner, repo))
         .query(&[("per_page", REPOSITORY_RUNS_PAGE_SIZE.to_string())]);
 
     let request = add_auth_header(request, token);
@@ -67,6 +66,7 @@ pub async fn list_repository_runs(
 /// Rerun a workflow
 pub async fn rerun_workflow(
     client: &Client,
+    base: &str,
     token: &Option<String>,
     owner: &str,
     repo: &str,
@@ -76,7 +76,7 @@ pub async fn rerun_workflow(
 
     let request = client.post(format!(
         "{}/repos/{}/{}/actions/runs/{}/rerun",
-        GITHUB_API_BASE, owner, repo, run_id
+        base, owner, repo, run_id
     ));
 
     let request = add_auth_header(request, token);
@@ -95,6 +95,7 @@ pub async fn rerun_workflow(
 /// Rerun failed jobs in a workflow run
 pub async fn rerun_failed_jobs(
     client: &Client,
+    base: &str,
     token: &Option<String>,
     owner: &str,
     repo: &str,
@@ -104,7 +105,7 @@ pub async fn rerun_failed_jobs(
 
     let request = client.post(format!(
         "{}/repos/{}/{}/actions/runs/{}/rerun-failed-jobs",
-        GITHUB_API_BASE, owner, repo, run_id
+        base, owner, repo, run_id
     ));
 
     let request = add_auth_header(request, token);
@@ -123,6 +124,7 @@ pub async fn rerun_failed_jobs(
 /// Cancel a workflow run
 pub async fn cancel_run(
     client: &Client,
+    base: &str,
     token: &Option<String>,
     owner: &str,
     repo: &str,
@@ -134,7 +136,7 @@ pub async fn cancel_run(
 
     let request = client.post(format!(
         "{}/repos/{}/{}/actions/runs/{}/cancel",
-        GITHUB_API_BASE, owner, repo, run_id
+        base, owner, repo, run_id
     ));
 
     let request = add_auth_header(request, token);

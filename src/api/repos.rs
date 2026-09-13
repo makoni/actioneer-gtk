@@ -1,6 +1,6 @@
 /// Repository operations
 use super::error::GitHubError;
-use super::http::{GITHUB_API_BASE, ResponseHandler, add_auth_header};
+use super::http::{ResponseHandler, add_auth_header};
 use crate::api::models::{Branch, Repo};
 use reqwest::Client;
 use tracing::info;
@@ -8,6 +8,7 @@ use tracing::info;
 /// Fetch all repositories for the authenticated user
 pub async fn list_repos(
     client: &Client,
+    base: &str,
     token: &Option<String>,
     response_handler: &ResponseHandler,
 ) -> Result<Vec<Repo>, GitHubError> {
@@ -20,14 +21,12 @@ pub async fn list_repos(
         let cache_key = format!(
             "repos:user:page={page}:affiliation=owner,collaborator,organization_member:sort=updated"
         );
-        let request = client
-            .get(format!("{}/user/repos", GITHUB_API_BASE))
-            .query(&[
-                ("per_page", "100"),
-                ("page", &page.to_string()),
-                ("affiliation", "owner,collaborator,organization_member"),
-                ("sort", "updated"),
-            ]);
+        let request = client.get(format!("{}/user/repos", base)).query(&[
+            ("per_page", "100"),
+            ("page", &page.to_string()),
+            ("affiliation", "owner,collaborator,organization_member"),
+            ("sort", "updated"),
+        ]);
 
         let request = add_auth_header(request, token);
         let request = response_handler.apply_cache_headers(request, Some(cache_key.as_str()));
@@ -51,6 +50,7 @@ pub async fn list_repos(
 /// Check if GitHub Actions is enabled for a repository
 pub async fn is_actions_enabled(
     client: &Client,
+    base: &str,
     token: &Option<String>,
     response_handler: &ResponseHandler,
     owner: &str,
@@ -63,7 +63,7 @@ pub async fn is_actions_enabled(
 
     let request = client.get(format!(
         "{}/repos/{}/{}/actions/permissions",
-        GITHUB_API_BASE, owner, repo
+        base, owner, repo
     ));
 
     let request = add_auth_header(request, token);
@@ -113,6 +113,7 @@ pub async fn is_actions_enabled(
 /// List branches for a repository
 pub async fn list_branches(
     client: &Client,
+    base: &str,
     token: &Option<String>,
     response_handler: &ResponseHandler,
     owner: &str,
@@ -122,10 +123,7 @@ pub async fn list_branches(
     let cache_key = format!("branches:{owner}/{repo}:per_page=100");
 
     let request = client
-        .get(format!(
-            "{}/repos/{}/{}/branches",
-            GITHUB_API_BASE, owner, repo
-        ))
+        .get(format!("{}/repos/{}/{}/branches", base, owner, repo))
         .query(&[("per_page", "100")]);
 
     let request = add_auth_header(request, token);

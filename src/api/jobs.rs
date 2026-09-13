@@ -1,6 +1,6 @@
 /// Job operations
 use super::error::GitHubError;
-use super::http::{GITHUB_API_BASE, ResponseHandler, add_auth_header};
+use super::http::{ResponseHandler, add_auth_header};
 use crate::api::models::{Job, JobsResponse};
 use reqwest::Client;
 use reqwest::StatusCode;
@@ -9,6 +9,7 @@ use tracing::info;
 /// List jobs for a workflow run
 pub async fn list_jobs(
     client: &Client,
+    base: &str,
     token: &Option<String>,
     response_handler: &ResponseHandler,
     owner: &str,
@@ -19,7 +20,7 @@ pub async fn list_jobs(
 
     let request = client.get(format!(
         "{}/repos/{}/{}/actions/runs/{}/jobs",
-        GITHUB_API_BASE, owner, repo, run_id
+        base, owner, repo, run_id
     ));
 
     let request = add_auth_header(request, token);
@@ -31,6 +32,7 @@ pub async fn list_jobs(
 /// Get logs for a job
 pub async fn get_job_logs(
     client: &Client,
+    base: &str,
     token: &Option<String>,
     response_handler: &ResponseHandler,
     owner: &str,
@@ -41,7 +43,7 @@ pub async fn get_job_logs(
 
     let request = client.get(format!(
         "{}/repos/{}/{}/actions/jobs/{}/logs",
-        GITHUB_API_BASE, owner, repo, job_id
+        base, owner, repo, job_id
     ));
 
     let request = add_auth_header(request, token);

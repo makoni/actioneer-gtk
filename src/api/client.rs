@@ -19,12 +19,23 @@ const GITHUB_API_VERSION_ENV: &str = "ACTIONEER_GITHUB_API_VERSION";
 #[derive(Clone)]
 pub struct GitHubClient {
     client: Client,
+    base_url: String,
     token: Option<String>,
     response_handler: Arc<ResponseHandler>,
 }
 
 impl GitHubClient {
     pub fn new(token: Option<String>) -> Result<Self> {
+        Self::with_base_url(super::http::GITHUB_API_BASE, token)
+    }
+
+    /// Builds a client against a different API root.
+    ///
+    /// Exists so integration tests can point the client at a local `wiremock`
+    /// server: every URL is built from this base. Not an environment variable
+    /// on purpose — an env override is process-global and would leak between
+    /// the parallel tests inside one test binary.
+    pub fn with_base_url(base: &str, token: Option<String>) -> Result<Self> {
         let api_version = github_api_version_from_env();
         let client = Client::builder()
             .user_agent("Actioneer-Linux/0.1.0")
@@ -42,6 +53,7 @@ impl GitHubClient {
 
         Ok(Self {
             client,
+            base_url: base.trim_end_matches('/').to_string(),
             token,
             response_handler,
         })
@@ -61,7 +73,13 @@ impl GitHubClient {
             return Ok(repos);
         }
 
-        repos::list_repos(&self.client, &self.token, &self.response_handler).await
+        repos::list_repos(
+            &self.client,
+            &self.base_url,
+            &self.token,
+            &self.response_handler,
+        )
+        .await
     }
 
     pub async fn is_actions_enabled(&self, owner: &str, repo: &str) -> Result<bool, GitHubError> {
@@ -71,6 +89,7 @@ impl GitHubClient {
 
         repos::is_actions_enabled(
             &self.client,
+            &self.base_url,
             &self.token,
             &self.response_handler,
             owner,
@@ -86,6 +105,7 @@ impl GitHubClient {
 
         repos::list_branches(
             &self.client,
+            &self.base_url,
             &self.token,
             &self.response_handler,
             owner,
@@ -106,6 +126,7 @@ impl GitHubClient {
 
         workflows::list_workflows(
             &self.client,
+            &self.base_url,
             &self.token,
             &self.response_handler,
             owner,
@@ -131,6 +152,7 @@ impl GitHubClient {
 
         workflows::dispatch_workflow(
             &self.client,
+            &self.base_url,
             &self.token,
             owner,
             repo,
@@ -154,6 +176,7 @@ impl GitHubClient {
 
         workflows::get_workflow_dispatch_inputs(
             &self.client,
+            &self.base_url,
             &self.token,
             &self.response_handler,
             owner,
@@ -177,6 +200,7 @@ impl GitHubClient {
 
         runs::list_runs(
             &self.client,
+            &self.base_url,
             &self.token,
             &self.response_handler,
             owner,
@@ -197,6 +221,7 @@ impl GitHubClient {
 
         runs::list_repository_runs(
             &self.client,
+            &self.base_url,
             &self.token,
             &self.response_handler,
             owner,
@@ -216,7 +241,15 @@ impl GitHubClient {
             return Ok(());
         }
 
-        runs::rerun_workflow(&self.client, &self.token, owner, repo, run_id).await
+        runs::rerun_workflow(
+            &self.client,
+            &self.base_url,
+            &self.token,
+            owner,
+            repo,
+            run_id,
+        )
+        .await
     }
 
     pub async fn rerun_failed_jobs(
@@ -230,7 +263,15 @@ impl GitHubClient {
             return Ok(());
         }
 
-        runs::rerun_failed_jobs(&self.client, &self.token, owner, repo, run_id).await
+        runs::rerun_failed_jobs(
+            &self.client,
+            &self.base_url,
+            &self.token,
+            owner,
+            repo,
+            run_id,
+        )
+        .await
     }
 
     pub async fn cancel_run(
@@ -244,7 +285,15 @@ impl GitHubClient {
             return Ok(());
         }
 
-        runs::cancel_run(&self.client, &self.token, owner, repo, run_id).await
+        runs::cancel_run(
+            &self.client,
+            &self.base_url,
+            &self.token,
+            owner,
+            repo,
+            run_id,
+        )
+        .await
     }
 
     // Job operations
@@ -260,6 +309,7 @@ impl GitHubClient {
 
         jobs::list_jobs(
             &self.client,
+            &self.base_url,
             &self.token,
             &self.response_handler,
             owner,
@@ -281,6 +331,7 @@ impl GitHubClient {
 
         jobs::get_job_logs(
             &self.client,
+            &self.base_url,
             &self.token,
             &self.response_handler,
             owner,
