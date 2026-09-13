@@ -106,3 +106,12 @@ RUNS_SUMMARY_WITHOUT_FAILED = "Showing 6 of 6 matching filters"
 # The sign-out confirmation is an adw::AlertDialog with Yes/No responses.
 SIGN_OUT_CONFIRM = "Yes"
 SIGN_OUT_CANCEL = "No"
+
+# The "Trigger workflow" dialog, an adw::AlertDialog inside the main frame.
+TRIGGER_DIALOG_TITLE = "Trigger Workflow"
+TRIGGER_DIALOG_BRANCH_LABEL = "Branch or ref:"
+TRIGGER_DIALOG_INPUTS_HEADER = "Inputs"
+TRIGGER_DIALOG_CONFIRM = "Trigger"
+TRIGGER_DIALOG_CANCEL = "Cancel"
+# The two workflow_dispatch inputs the demo backend advertises.
+TRIGGER_DIALOG_INPUTS = ["environment *", "dry_run"]

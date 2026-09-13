@@ -18,6 +18,7 @@ scripts=(
   "runs_and_detail.py:--demo"
   "job_logs.py:--demo"
   "filters_and_favorites.py:--demo"
+  "trigger_dialog.py:--demo"
   "preferences_and_signout.py:--demo"
 )
 
