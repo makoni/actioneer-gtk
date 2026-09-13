@@ -39,7 +39,7 @@ const ROW_OWNER_LOGIN_KEY: &str = "actioneer-sidebar-row-owner";
 /// header (and, with the owner, of an owner header) — deliberately not the
 /// translated title, so switching languages does not invalidate the rows.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-enum SectionKind {
+pub(crate) enum SectionKind {
     Enabled,
     Disabled,
 }
@@ -75,23 +75,10 @@ impl SectionKind {
 /// (which is what keeps `GtkListBase`'s scroll anchor alive). Each row carries
 /// exactly one: repos by id, sections by kind, owners by (kind, login).
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
-enum RowIdentity {
+pub(crate) enum RowIdentity {
     Repo(i64),
     Section(SectionKind),
     Owner { section: SectionKind, login: String },
-}
-
-/// Reads a row's identity from the values stashed on it when it was built.
-fn read_row_identity(row: &gtk::Widget) -> Option<RowIdentity> {
-    if let Some(id) = get_data_copy::<i64, _>(row, REPO_ID_KEY) {
-        return Some(RowIdentity::Repo(id));
-    }
-    let section =
-        get_data_copy::<i32, _>(row, ROW_SECTION_KIND_KEY).and_then(SectionKind::from_kind)?;
-    match get_data_clone::<String, _>(row, ROW_OWNER_LOGIN_KEY) {
-        Some(login) => Some(RowIdentity::Owner { section, login }),
-        None => Some(RowIdentity::Section(section)),
-    }
 }
 
 #[derive(Clone)]
@@ -271,115 +258,6 @@ pub(crate) fn rebuild_repo_list(store: gio::ListStore, context: RepoListRenderCo
     }
 }
 
-/// Maps each row's identity to the widget currently in the store, so a rebuild
-/// can reuse the same widgets (and therefore the scroll anchor) instead of
-/// recreating them.
-///
-/// Invariant: the identities are unique within a list, which holds because the
-/// API returns at most one repository per id. If a repository id ever appeared
-/// twice, `target` would hold the same widget twice and `sync_store` would
-/// parent it twice — a GTK-critical with no fallback — so the uniqueness is
-/// load-bearing, not incidental.
-fn snapshot_rows(store: &gio::ListStore) -> HashMap<RowIdentity, gtk::Widget> {
-    let mut existing = HashMap::new();
-    for i in 0..store.n_items() {
-        let Some(item) = store.item(i) else {
-            continue;
-        };
-        let Some(row) = item.downcast_ref::<gtk::Widget>() else {
-            continue;
-        };
-        let Some(identity) = read_row_identity(row) else {
-            continue;
-        };
-        existing.insert(identity, row.clone());
-    }
-    existing
-}
-
-/// Replaces `store`'s contents with `target` with a minimal diff, so rows that
-/// survive keep their widget identity and stay parented.
-///
-/// `GtkListBase`'s scroll anchor is a tracker bound to a row's widget; its
-/// item manager re-positions the tracker across model changes while a widget
-/// survives, so the list holds its place without any restore. Rows absent from
-/// `target` (stale headers, filtered-out repos) are removed and rows absent
-/// from the store are inserted; rows present in both are never touched.
-fn sync_store(store: &gio::ListStore, target: &[gtk::Widget]) {
-    let n = store.n_items() as usize;
-    let m = target.len();
-
-    // Fast path for the common case — a no-op rebuild (nothing changed) leaves
-    // the model identical, so a pointer walk decides it in O(n) with no
-    // allocation. The LCS below is only paid when something actually moved.
-    if n == m
-        && (0..n).all(|i| {
-            let Some(obj) = store.item(i as u32) else {
-                return false;
-            };
-            (obj.as_ptr() as *const ())
-                == (target[i].upcast_ref::<glib::Object>().as_ptr() as *const ())
-        })
-    {
-        return;
-    }
-
-    let current: Vec<*const ()> = (0..n)
-        .filter_map(|i| store.item(i as u32))
-        .map(|item| item.as_ptr() as *const ())
-        .collect();
-    let desired: Vec<*const ()> = target
-        .iter()
-        .map(|row| row.upcast_ref::<glib::Object>().as_ptr() as *const ())
-        .collect();
-
-    // Longest common subsequence by widget identity.
-    let mut dp = vec![vec![0usize; m + 1]; n + 1];
-    for i in (0..n).rev() {
-        for j in (0..m).rev() {
-            dp[i][j] = if current[i] == desired[j] {
-                dp[i + 1][j + 1] + 1
-            } else {
-                dp[i + 1][j].max(dp[i][j + 1])
-            };
-        }
-    }
-
-    let mut matched_store = vec![false; n];
-    let mut matched_target = vec![false; m];
-    let mut i = 0usize;
-    let mut j = 0usize;
-    while i < n && j < m {
-        if current[i] == desired[j] {
-            matched_store[i] = true;
-            matched_target[j] = true;
-            i += 1;
-            j += 1;
-        } else if dp[i + 1][j] >= dp[i][j + 1] {
-            i += 1;
-        } else {
-            j += 1;
-        }
-    }
-
-    // Remove the rows that are not part of the common subsequence, back to
-    // front so the indices stay valid.
-    for i in (0..n).rev() {
-        if !matched_store[i] {
-            store.remove(i as u32);
-        }
-    }
-
-    // Insert the missing rows in order. After the removals the matched rows
-    // already sit at their target indices minus the inserts before them, so
-    // position k of `target` is where `target[k]` belongs.
-    for (k, row) in target.iter().enumerate() {
-        if !matched_target[k] {
-            store.insert(k as u32, row);
-        }
-    }
-}
-
 pub fn row_matches_query(row: &gtk::Widget, query: &str) -> bool {
     let query = query.trim();
 
@@ -419,262 +297,6 @@ pub fn row_matches_filter(row: &gtk::Widget, query: &str, filter: SidebarFilter)
 
     row_matches_query(row, query)
 }
-
-fn find_label_by_name(widget: &gtk::Widget, name: &str) -> Option<gtk::Label> {
-    if widget.widget_name() == name {
-        return widget.clone().downcast::<gtk::Label>().ok();
-    }
-
-    let mut child = widget.first_child();
-    while let Some(current) = child {
-        if let Some(label) = find_label_by_name(&current, name) {
-            return Some(label);
-        }
-        child = current.next_sibling();
-    }
-    None
-}
-
-fn build_repo_row(
-    repo: Repo,
-    is_favorite: bool,
-    workflow_counts: WorkflowStatusCounts,
-    favorites_arc: Arc<Mutex<HashSet<i64>>>,
-    favorites_manager: Option<Arc<FavoritesManager>>,
-) -> gtk::Box {
-    let row = gtk::Box::new(gtk::Orientation::Horizontal, 10);
-    let repo_id = repo.id;
-    row.set_margin_top(8);
-    row.set_margin_bottom(8);
-    row.set_margin_start(10);
-    row.set_margin_end(8);
-    row.set_hexpand(true);
-    row.set_can_focus(false);
-    row.add_css_class("activatable");
-
-    let icon = gtk::Image::from_icon_name("folder-symbolic");
-    icon.set_pixel_size(16);
-    icon.set_valign(gtk::Align::Center);
-    icon.set_halign(gtk::Align::Center);
-    icon.add_css_class("dim-label");
-    row.append(&icon);
-
-    let favorite_button = gtk::ToggleButton::new();
-    favorite_button.add_css_class("flat");
-    favorite_button.add_css_class("sidebar-fav");
-    favorite_button.set_valign(gtk::Align::Center);
-    // Pinned to the trailing edge: packed loosely it trails the name label, so
-    // the column of stars zig-zags with the length of each repository's name.
-    favorite_button.set_halign(gtk::Align::End);
-    favorite_button.set_icon_name(crate::ui::utils::favorite_icon_name());
-    crate::ui::utils::describe_control(&favorite_button, tr("Toggle favorite").as_str());
-    favorite_button.set_active(is_favorite);
-    set_data(&row, REPO_FAV_BUTTON_KEY, favorite_button.clone());
-
-    let favorites_arc_for_update = favorites_arc.clone();
-    let favorites_manager_for_update = favorites_manager.clone();
-
-    favorite_button.connect_toggled(move |button| {
-        let desired_state = button.is_active();
-
-        let favorites_arc = favorites_arc_for_update.clone();
-        let favorites_manager = favorites_manager_for_update.clone();
-
-        let previous_state = {
-            let favorites = favorites_arc.lock();
-            favorites.contains(&repo_id)
-        };
-
-        if previous_state == desired_state {
-            return;
-        }
-
-        if let Some(manager) = favorites_manager {
-            let button_clone = button.clone();
-            let favorites_arc_clone = favorites_arc.clone();
-            // A genuine user toggle is in flight until the receiver lands the
-            // response; mark it so a concurrent rebuild leaves this star alone
-            // instead of snapping it back to the (still stale) persisted state.
-            set_data(button, REPO_FAV_PENDING_KEY, true);
-            let (sender, receiver) =
-                glib::MainContext::default()
-                    .channel::<Result<bool, (anyhow::Error, bool)>>(glib::Priority::default());
-
-            receiver.attach(None, move |result| {
-                set_data(&button_clone, REPO_FAV_PENDING_KEY, false);
-                apply_favorite_result(&favorites_arc_clone, repo_id, &button_clone, result);
-                glib::ControlFlow::Break
-            });
-
-            let manager_for_task = manager.clone();
-            crate::runtime::handle().spawn(async move {
-                let outcome = match manager_for_task.toggle_favorite(repo_id).await {
-                    Ok(next_state) => Ok(next_state),
-                    Err(err) => {
-                        let current_state = manager_for_task.is_favorite(repo_id).await;
-                        Err((err, current_state))
-                    }
-                };
-
-                let _ = sender.send(outcome);
-            });
-        } else {
-            let mut favorites = favorites_arc.lock();
-            if desired_state {
-                favorites.insert(repo_id);
-            } else {
-                favorites.remove(&repo_id);
-            }
-        }
-    });
-
-    let content_box = gtk::Box::new(gtk::Orientation::Vertical, 2);
-    content_box.set_valign(gtk::Align::Center);
-    // Takes the whole gap between the folder icon and the star, which is what
-    // both keeps the star at the edge and lets the name label ellipsize.
-    content_box.set_hexpand(true);
-
-    let name_label = gtk::Label::new(Some(&repo.full_name));
-    name_label.set_halign(gtk::Align::Start);
-    name_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
-    name_label.add_css_class("heading");
-    name_label.set_widget_name("repo-name-label");
-    content_box.append(&name_label);
-    set_data(&row, REPO_NAME_LABEL_KEY, name_label.clone());
-
-    let visibility_label = create_meta_label(if repo.is_private {
-        tr("Private")
-    } else {
-        tr("Public")
-    });
-    content_box.append(&visibility_label);
-    set_data(&row, REPO_VISIBILITY_LABEL_KEY, visibility_label.clone());
-
-    // The two meta labels are created once and updated in place thereafter, so
-    // a rebuild never allocates new widgets for a row (each is hidden when its
-    // count is zero).
-    let meta_box = gtk::Box::new(gtk::Orientation::Horizontal, 12);
-    meta_box.set_halign(gtk::Align::Start);
-    let meta_active = create_meta_label(String::new());
-    let meta_failed = create_meta_label(String::new());
-    meta_failed.add_css_class("error");
-    meta_box.append(&meta_active);
-    meta_box.append(&meta_failed);
-    set_data(&meta_box, REPO_META_ACTIVE_LABEL_KEY, meta_active.clone());
-    set_data(&meta_box, REPO_META_FAILED_LABEL_KEY, meta_failed.clone());
-    update_meta_box(&meta_box, &workflow_counts);
-    content_box.append(&meta_box);
-    set_data(&row, REPO_META_BOX_KEY, meta_box.clone());
-
-    row.append(&content_box);
-    row.append(&favorite_button);
-
-    set_data(&row, REPO_ID_KEY, repo_id);
-    set_data(&row, REPO_FULL_NAME_KEY, repo.full_name.clone());
-    set_data(&row, REPO_MODEL_KEY, repo);
-    set_data(&row, SELECTABLE_KEY, true);
-    set_data(&row, ACTIVATABLE_KEY, true);
-    set_data(&row, FAVORITE_ROW_KEY, is_favorite);
-    set_data(&row, ACTIVE_RUNS_ROW_KEY, workflow_counts.active > 0);
-
-    row
-}
-
-/// Updates the mutable parts of an existing repository row in place, keeping
-/// the row widget's identity (which `GtkListBase`'s scroll anchor tracks). The
-/// name label, star, meta box, and visibility label were all stashed on the
-/// row when it was built, so nothing here walks the child tree.
-fn refresh_repo_row_in_place(
-    row: &gtk::Widget,
-    repo: &Repo,
-    is_favorite: bool,
-    workflow_counts: &WorkflowStatusCounts,
-) {
-    if let Some(name_label) = get_data_clone::<gtk::Label, _>(row, REPO_NAME_LABEL_KEY) {
-        name_label.set_text(&repo.full_name);
-    }
-
-    if let Some(visibility) = get_data_clone::<gtk::Label, _>(row, REPO_VISIBILITY_LABEL_KEY) {
-        let text = if repo.is_private {
-            tr("Private")
-        } else {
-            tr("Public")
-        };
-        visibility.set_text(text.as_str());
-    }
-
-    if let Some(button) = get_data_clone::<gtk::ToggleButton, _>(row, REPO_FAV_BUTTON_KEY) {
-        // While a favorite toggle is in flight the star is ahead of the
-        // persisted set (the receiver reconciles it when the response lands);
-        // forcing it back to `is_favorite` here is what blinks it off. So the
-        // star is only synced to the live set when nothing is pending.
-        let pending = get_data_copy(&button, REPO_FAV_PENDING_KEY).unwrap_or(false);
-        if !pending {
-            button.set_active(is_favorite);
-        }
-    }
-
-    if let Some(meta_box) = get_data_clone::<gtk::Box, _>(row, REPO_META_BOX_KEY) {
-        update_meta_box(&meta_box, workflow_counts);
-    }
-
-    set_data(row, REPO_MODEL_KEY, repo.clone());
-    set_data(row, REPO_FULL_NAME_KEY, repo.full_name.clone());
-    set_data(row, FAVORITE_ROW_KEY, is_favorite);
-    set_data(row, ACTIVE_RUNS_ROW_KEY, workflow_counts.active > 0);
-}
-
-fn repo_from_row(row: &gtk::Widget) -> Option<Repo> {
-    get_data_clone(row, REPO_MODEL_KEY)
-}
-
-pub fn repo_from_object(obj: &glib::Object) -> Option<Repo> {
-    obj.downcast_ref::<gtk::Widget>().and_then(repo_from_row)
-}
-
-fn repo_id_from_row(row: &gtk::Widget) -> Option<i64> {
-    get_data_copy(row, REPO_ID_KEY)
-}
-
-pub(crate) fn repo_id_from_object(obj: &glib::Object) -> Option<i64> {
-    obj.downcast_ref::<gtk::Widget>().and_then(repo_id_from_row)
-}
-
-pub fn row_selectable_from_object(obj: &glib::Object) -> bool {
-    obj.downcast_ref::<gtk::Widget>()
-        .and_then(|row| get_data_copy(row, SELECTABLE_KEY))
-        .unwrap_or(false)
-}
-
-pub fn row_activatable_from_object(obj: &glib::Object) -> bool {
-    obj.downcast_ref::<gtk::Widget>()
-        .and_then(|row| get_data_copy(row, ACTIVATABLE_KEY))
-        .unwrap_or(false)
-}
-
-pub fn find_repo_index(model: &gtk::FilterListModel, repo_id: i64) -> Option<u32> {
-    for idx in 0..model.n_items() {
-        if let Some(obj) = model.item(idx)
-            && let Some(id) = repo_id_from_object(&obj)
-            && id == repo_id
-        {
-            return Some(idx);
-        }
-    }
-    None
-}
-
-pub fn find_first_repo_index(model: &gtk::FilterListModel) -> Option<u32> {
-    for idx in 0..model.n_items() {
-        if let Some(obj) = model.item(idx)
-            && repo_id_from_object(&obj).is_some()
-        {
-            return Some(idx);
-        }
-    }
-    None
-}
-
 fn create_section_header(title: &str, section: SectionKind) -> gtk::Box {
     let row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
     row.set_can_focus(false);
@@ -864,6 +486,11 @@ pub async fn gather_workflow_status_counts(
         failed: failed_count,
     })
 }
+
+mod rows;
+mod store;
+pub(crate) use rows::*;
+pub(crate) use store::*;
 
 #[cfg(test)]
 mod tests;
