@@ -80,3 +80,16 @@ LOG_GROUP_MARKER = "\u25be"  # BLACK DOWN-POINTING SMALL TRIANGLE
 LOG_GROUP_TITLE = "Lint"
 LOG_COMMAND_LINE = "cargo clippy --all-targets"
 LOG_TIMESTAMP_PREFIX = "2026-01-24T11:28:01Z"
+
+# Sidebar and detail-pane filter controls (all `toggle button`).
+CONTROL_TOGGLE_FAVORITE = "Toggle favorite"
+FILTER_FAILED = "Show failed runs \u00b7 1 workflows in this state"
+FILTER_SUCCESS = "Show successful runs \u00b7 4 workflows in this state"
+SIDEBAR_TAB_FAVORITES = "Favorites"
+SIDEBAR_TAB_ALL = "All"
+
+# The status chips are inclusive and start pressed (everything shown). Clicking
+# one un-presses it and drops those runs from the run list, which the summary
+# line reports. Filtering acts on runs, not on the workflow list.
+RUNS_SUMMARY_UNFILTERED = "Showing 8 of 8"
+RUNS_SUMMARY_WITHOUT_FAILED = "Showing 6 of 6 matching filters"

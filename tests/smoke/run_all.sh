@@ -17,6 +17,7 @@ scripts=(
   "repos_to_workflows.py:--demo"
   "runs_and_detail.py:--demo"
   "job_logs.py:--demo"
+  "filters_and_favorites.py:--demo"
 )
 
 failed=0
