@@ -791,7 +791,7 @@ fn update_meta_box(meta_box: &gtk::Box, workflow_counts: &WorkflowStatusCounts) 
 
 /// Gather workflow status counts for a repository
 pub async fn gather_workflow_status_counts(
-    client: &crate::api::GitHubClient,
+    client: &crate::gateway::GitHubGateway,
     owner: &str,
     repo: &str,
 ) -> Result<WorkflowStatusCounts, crate::api::GitHubError> {

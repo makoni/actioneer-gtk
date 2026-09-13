@@ -1,8 +1,7 @@
 use super::MainWindow;
-use crate::api::GitHubClient;
-use crate::demo;
+use crate::gateway::GitHubGateway;
 use gtk4::glib;
-use tracing::{error, info};
+use tracing::info;
 
 impl MainWindow {
     pub(super) fn is_demo_mode(&self) -> bool {
@@ -18,19 +17,12 @@ impl MainWindow {
         info!("Entering demo mode with mock data");
         self.stop_background_refresh();
 
-        let repos = demo::enable();
-        let rate_info = demo::rate_limit_info();
-
-        match GitHubClient::new(None) {
-            Ok(client) => {
-                let mut client_guard = self.client.lock();
-                *client_guard = Some(client);
-            }
-            Err(err) => {
-                error!("Failed to initialize demo client: {}", err);
-                return;
-            }
-        }
+        // Demo mode is now "a demo gateway is installed in the slot", not "a
+        // global flag is set". The seed is the one synchronous read the backend
+        // offers: this runs on the GTK main thread and has nothing to await on.
+        let gateway = GitHubGateway::demo();
+        let (repos, rate_info) = gateway.demo_seed().expect("a demo gateway always seeds");
+        *self.client.lock() = Some(gateway);
 
         {
             let mut flag = self.demo_mode.lock();

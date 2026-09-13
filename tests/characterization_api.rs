@@ -29,16 +29,10 @@ fn repo_json(id: i64, owner: &str, name: &str) -> serde_json::Value {
     })
 }
 
-#[tokio::test]
-async fn demo_mode_is_inactive_in_integration_tests() {
-    // The premise this whole file rests on: nothing here enables demo mode, so
-    // the client really does go over HTTP. If this ever fails, every assertion
-    // below is testing the demo fixtures instead of the client.
-    assert!(
-        !actioneer::demo::is_active(),
-        "integration tests must not run with demo mode active"
-    );
-}
+// The premise test that used to live here — asserting demo mode was inactive so
+// the client really took the HTTP path — is gone with step 2.3. The client has
+// no demo branches left to take: the choice is made once, at the gateway. There
+// is nothing left to assert that the type system does not already guarantee.
 
 #[tokio::test]
 async fn list_repos_parses_the_repository_page() {

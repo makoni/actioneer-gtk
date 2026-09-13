@@ -9,11 +9,11 @@ use super::runs::{
 };
 use super::status_dot::{WORKFLOW_DOT_SIZE, build_status_dot, set_status_dot_state};
 use super::workflow_follow_up::{FollowUpRefreshParams, schedule_follow_up_refresh};
-use crate::api::GitHubClient;
 use crate::api::models::{
     JobSummary, Repo, Workflow, WorkflowDispatchInput, WorkflowDispatchInputType,
     WorkflowDispatchInputValue, WorkflowRun, build_dispatch_inputs_payload,
 };
+use crate::gateway::GitHubGateway;
 use crate::i18n::tr;
 use crate::notifications::NotificationManager;
 use crate::preferences::PreferencesManager;
@@ -36,7 +36,7 @@ use tracing::{error, info};
 
 #[derive(Clone)]
 pub(crate) struct WorkflowRowContext {
-    pub client: Arc<Mutex<GitHubClient>>,
+    pub client: Arc<Mutex<GitHubGateway>>,
     pub owner: String,
     pub repo: String,
     pub repo_model: Repo,
@@ -1384,9 +1384,7 @@ mod tests {
         let controls = FilterControls::new();
 
         WorkflowRowContext {
-            client: Arc::new(Mutex::new(
-                crate::api::GitHubClient::new(None).expect("client stub should build"),
-            )),
+            client: Arc::new(Mutex::new(crate::gateway::GitHubGateway::demo())),
             owner: "mak".into(),
             repo: "actioneer".into(),
             repo_model: Repo {

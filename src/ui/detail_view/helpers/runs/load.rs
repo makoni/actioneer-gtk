@@ -3,8 +3,9 @@ use super::super::workflows::update_workflow_row_header;
 use super::digest::{RunDigestMap, RunDigestStore, update_digest_and_collect_notifications};
 use super::filters::summarize_visible_runs;
 use super::list::WorkflowRunListModel;
+use crate::api::GitHubError;
 use crate::api::models::{Repo, WorkflowRun};
-use crate::api::{GitHubClient, GitHubError};
+use crate::gateway::GitHubGateway;
 use crate::notifications::NotificationManager;
 use crate::preferences::PreferencesManager;
 use crate::runtime::channel::MainContextChannelExt;
@@ -23,7 +24,7 @@ use tracing::{debug, error, info, warn};
 #[derive(Clone)]
 struct RunErrorContext {
     run_list: WorkflowRunListModel,
-    client: Arc<Mutex<GitHubClient>>,
+    client: Arc<Mutex<GitHubGateway>>,
     owner: String,
     repo: String,
     parent_window: adw::ApplicationWindow,
@@ -42,7 +43,7 @@ struct RunErrorContext {
 }
 
 pub(crate) struct LoadRunsParams {
-    pub client: Arc<Mutex<GitHubClient>>,
+    pub client: Arc<Mutex<GitHubGateway>>,
     pub owner: String,
     pub repo: String,
     pub repo_model: Repo,

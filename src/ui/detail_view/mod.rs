@@ -1,6 +1,6 @@
-use crate::api::GitHubClient;
 use crate::api::models::{Repo, Workflow};
 use crate::favorites::FavoritesManager;
+use crate::gateway::GitHubGateway;
 use crate::i18n::tr;
 use crate::notifications::NotificationManager;
 use crate::preferences::{PreferencesManager, RunFilterPreferences};
@@ -36,7 +36,7 @@ use helpers::{JobContextMap, RunBadgeSummaryMap, RunDigestStore, RunLoadService}
 pub struct RepoDetailPane {
     parent: adw::ApplicationWindow,
     repo: Repo,
-    client: Arc<Mutex<GitHubClient>>,
+    client: Arc<Mutex<GitHubGateway>>,
     workflows: Arc<Mutex<Arc<Vec<Workflow>>>>,
     favorites_manager: Option<Arc<FavoritesManager>>,
     preferences_manager: Option<Arc<PreferencesManager>>,
@@ -89,7 +89,7 @@ pub struct RepoDetailDeps {
 #[derive(Clone)]
 struct WorkflowListContext {
     store: gio::ListStore,
-    client: Arc<Mutex<GitHubClient>>,
+    client: Arc<Mutex<GitHubGateway>>,
     owner: String,
     repo: String,
     repo_model: Repo,
@@ -163,7 +163,7 @@ impl RepoDetailPane {
     pub fn new(
         parent: adw::ApplicationWindow,
         repo: Repo,
-        client: Arc<Mutex<GitHubClient>>,
+        client: Arc<Mutex<GitHubGateway>>,
         deps: RepoDetailDeps,
         expand_first_workflow_on_load: bool,
     ) -> Self {
@@ -479,14 +479,6 @@ mod tests {
 
     /// Demo data is global: switch it off however the test ends, or an
     /// unrelated test that builds a client picks up the demo repositories.
-    struct DemoData;
-
-    impl Drop for DemoData {
-        fn drop(&mut self) {
-            crate::demo::disable();
-        }
-    }
-
     /// Runs the main loop until it goes quiet, so in-flight channels that pin a
     /// pane clone until their reply arrives are not mistaken for a leak.
     fn settle() {
@@ -506,8 +498,8 @@ mod tests {
     fn detail_pane_is_released_when_dropped() {
         run_gtk_test("detail_pane_is_released_when_dropped", || {
             crate::runtime::init_test_runtime();
-            let _demo = DemoData;
-            let repos = crate::demo::enable();
+            // Own backend per test; no global switch to enable or tear down.
+            let repos = crate::demo::DemoBackend::new().seed().0;
             let repo = repos.first().cloned().expect("demo data has repositories");
 
             let app = adw::Application::builder()
@@ -515,7 +507,7 @@ mod tests {
                 .build();
             let window = adw::ApplicationWindow::new(&app);
             let client = Arc::new(parking_lot::Mutex::new(
-                crate::api::GitHubClient::new(None).expect("client stub should build"),
+                crate::gateway::GitHubGateway::demo(),
             ));
 
             let mut weaks: Vec<(String, glib::WeakRef<gtk::Widget>)> = Vec::new();

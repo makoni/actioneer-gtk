@@ -1,5 +1,5 @@
-use crate::api::GitHubClient;
 use crate::api::models::{Job, JobSummary, Repo};
+use crate::gateway::GitHubGateway;
 use gtk4::prelude::*;
 use gtk4::{self as gtk};
 use parking_lot::Mutex;
@@ -11,7 +11,7 @@ use std::sync::Arc;
 /// Shared state for refreshing job lists when background tasks update.
 #[derive(Clone)]
 pub(crate) struct JobRefreshContext {
-    client: Arc<Mutex<GitHubClient>>,
+    client: Arc<Mutex<GitHubGateway>>,
     owner: String,
     repo: String,
     workflow_id: i64,
@@ -27,7 +27,7 @@ pub(crate) struct JobRefreshContext {
 }
 
 pub(crate) struct JobRefreshContextParams {
-    pub client: Arc<Mutex<GitHubClient>>,
+    pub client: Arc<Mutex<GitHubGateway>>,
     pub owner: String,
     pub repo: String,
     pub workflow_id: i64,
@@ -83,7 +83,7 @@ impl JobRefreshContext {
             && self.expander.root().is_some()
     }
 
-    pub(crate) fn client(&self) -> Arc<Mutex<GitHubClient>> {
+    pub(crate) fn client(&self) -> Arc<Mutex<GitHubGateway>> {
         self.client.clone()
     }
 
@@ -147,8 +147,8 @@ pub(crate) fn current_job_context_run_ids(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::GitHubClient;
     use crate::api::models::{Repo, User};
+    use crate::gateway::GitHubGateway;
     use crate::ui::test_helpers::run_gtk_test;
     use parking_lot::Mutex;
     use std::cell::RefCell;
@@ -170,10 +170,8 @@ mod tests {
         }
     }
 
-    fn client_stub() -> Arc<Mutex<GitHubClient>> {
-        Arc::new(Mutex::new(
-            GitHubClient::new(None).expect("client stub should build"),
-        ))
+    fn client_stub() -> Arc<Mutex<GitHubGateway>> {
+        Arc::new(Mutex::new(GitHubGateway::demo()))
     }
 
     fn context_for(expander: &gtk::Expander, run_id: i64, workflow_id: i64) -> JobRefreshContext {

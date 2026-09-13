@@ -14,6 +14,7 @@ pub mod config;
 pub mod crash_report;
 pub mod demo;
 pub mod favorites;
+pub mod gateway;
 pub mod i18n;
 pub mod notifications;
 pub mod preferences;

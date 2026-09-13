@@ -1,6 +1,6 @@
 use super::super::formatting::format_run_title;
-use crate::api::GitHubClient;
 use crate::api::models::{Repo, WorkflowRun};
+use crate::gateway::GitHubGateway;
 use crate::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
 use gtk4::prelude::*;
@@ -13,7 +13,7 @@ use tracing::error;
 
 #[derive(Clone)]
 pub(crate) struct RunActionContext {
-    pub(crate) client: Arc<Mutex<GitHubClient>>,
+    pub(crate) client: Arc<Mutex<GitHubGateway>>,
     pub(crate) owner: String,
     pub(crate) repo: String,
     pub(crate) repo_model: Repo,
@@ -448,7 +448,7 @@ mod tests {
     fn open_button_added_when_url_present() {
         run_gtk_test("open_button_added_when_url_present", || {
             let run = run_stub();
-            let client = Arc::new(Mutex::new(GitHubClient::new(None).unwrap()));
+            let client = Arc::new(Mutex::new(GitHubGateway::demo()));
             let parent = adw::ApplicationWindow::builder().build();
             let overlay = adw::ToastOverlay::new();
 

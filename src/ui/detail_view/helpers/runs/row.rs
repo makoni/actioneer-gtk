@@ -8,8 +8,8 @@ use super::super::formatting::{
 use super::super::jobs::{LoadJobsParams, load_run_jobs};
 use super::super::status_dot::{RUN_DOT_SIZE, build_status_dot};
 use super::actions::{RunActionContext, create_actions_box};
-use crate::api::GitHubClient;
 use crate::api::models::{Repo, WorkflowRun};
+use crate::gateway::GitHubGateway;
 use crate::i18n::tr;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib, pango};
@@ -19,7 +19,7 @@ use std::sync::Arc;
 
 #[derive(Clone)]
 pub(crate) struct RunRowContext {
-    pub(super) client: Arc<Mutex<GitHubClient>>,
+    pub(super) client: Arc<Mutex<GitHubGateway>>,
     pub(super) owner: String,
     pub(super) repo: String,
     pub(super) repo_model: Repo,
@@ -33,7 +33,7 @@ pub(crate) struct RunRowContext {
 impl RunRowContext {
     #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
-        client: Arc<Mutex<GitHubClient>>,
+        client: Arc<Mutex<GitHubGateway>>,
         owner: String,
         repo: String,
         repo_model: Repo,
@@ -391,8 +391,8 @@ fn remove_job_context_if_current(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::client::GitHubClient;
     use crate::api::models::{Job, Repo, User};
+    use crate::gateway::GitHubGateway;
     use crate::ui::test_helpers::run_gtk_test;
     use parking_lot::Mutex;
     use std::cell::RefCell;
@@ -414,10 +414,8 @@ mod tests {
         }
     }
 
-    fn client_stub() -> Arc<Mutex<GitHubClient>> {
-        Arc::new(Mutex::new(
-            GitHubClient::new(None).expect("client stub should build"),
-        ))
+    fn client_stub() -> Arc<Mutex<GitHubGateway>> {
+        Arc::new(Mutex::new(GitHubGateway::demo()))
     }
 
     fn run_stub() -> WorkflowRun {

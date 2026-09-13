@@ -1,7 +1,8 @@
 use super::helpers::{LoadRunsParams, current_job_context_run_ids, refresh_jobs_for_workflows};
 use super::{RepoDetailPane, WorkflowListContext};
+use crate::api::GitHubError;
 use crate::api::models::Workflow;
-use crate::api::{GitHubClient, GitHubError};
+use crate::gateway::GitHubGateway;
 use crate::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
 use crate::runtime::channel::Sender as UiChannelSender;
@@ -945,7 +946,7 @@ impl CallbackRefs {
 }
 
 async fn fetch_workflows(
-    client: &GitHubClient,
+    client: &GitHubGateway,
     owner: &str,
     repo: &str,
 ) -> Result<Vec<Workflow>, GitHubError> {

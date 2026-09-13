@@ -4,8 +4,9 @@ use super::context::{
 use super::formatting::{get_job_status_class, get_job_status_icon};
 use super::runs::WorkflowRunListModel;
 use super::status_dot::{JOB_DOT_SIZE, STEP_DOT_SIZE, build_status_dot};
+use crate::api::GitHubError;
 use crate::api::models::{Job, JobStep, JobSummary, Repo};
-use crate::api::{GitHubClient, GitHubError};
+use crate::gateway::GitHubGateway;
 use crate::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
 use crate::ui::job_logs_window::JobLogsWindow;
@@ -21,7 +22,7 @@ use tracing::error;
 const JOB_LOAD_IN_FLIGHT_KEY: &str = "actioneer-job-load-in-flight";
 
 pub(super) struct LoadJobsParams {
-    pub(super) client: Arc<Mutex<GitHubClient>>,
+    pub(super) client: Arc<Mutex<GitHubGateway>>,
     pub(super) owner: String,
     pub(super) repo: String,
     pub(super) run_id: i64,
@@ -39,7 +40,7 @@ pub(super) struct LoadJobsParams {
 
 #[derive(Clone)]
 pub(super) struct JobRowContext {
-    pub(super) client: Arc<Mutex<GitHubClient>>,
+    pub(super) client: Arc<Mutex<GitHubGateway>>,
     pub(super) parent_window: gtk::Window,
     pub(super) repo: Repo,
     pub(super) run_title: String,
@@ -288,7 +289,7 @@ fn update_workflow_progress(
 #[allow(clippy::too_many_arguments)]
 fn store_job_refresh_context(
     job_contexts: &JobContextMap,
-    client: Arc<Mutex<GitHubClient>>,
+    client: Arc<Mutex<GitHubGateway>>,
     owner: String,
     repo: String,
     workflow_id: i64,
@@ -691,9 +692,7 @@ mod tests {
     #[ignore = "requires GTK display"]
     fn provisional_context_preserves_cached_jobs() {
         run_gtk_test("provisional_context_preserves_cached_jobs", || {
-            let client = Arc::new(Mutex::new(
-                GitHubClient::new(None).expect("client should build"),
-            ));
+            let client = Arc::new(Mutex::new(GitHubGateway::demo()));
             let repo = Repo {
                 id: 1,
                 name: "actioneer".into(),
@@ -756,9 +755,7 @@ mod tests {
             job_contexts.borrow_mut().insert(
                 42,
                 JobRefreshContext::from_params(JobRefreshContextParams {
-                    client: Arc::new(Mutex::new(
-                        GitHubClient::new(None).expect("client should build"),
-                    )),
+                    client: Arc::new(Mutex::new(GitHubGateway::demo())),
                     owner: "mak".into(),
                     repo: "actioneer".into(),
                     workflow_id: 7,

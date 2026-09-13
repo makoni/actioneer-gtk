@@ -1,8 +1,8 @@
 use super::context::JobContextMap;
 use super::run_loader::RunLoadService;
 use super::runs::{LoadRunsParams, RunDigestStore, WorkflowRunListModel};
-use crate::api::GitHubClient;
 use crate::api::models::Repo;
+use crate::gateway::GitHubGateway;
 use crate::notifications::NotificationManager;
 use crate::preferences::PreferencesManager;
 use crate::ui::detail_view::RunFilters;
@@ -25,7 +25,7 @@ const MAX_FOLLOW_UP_TICKS: u32 = 12;
 
 #[derive(Clone)]
 pub(super) struct FollowUpRefreshParams {
-    pub(super) client: Arc<Mutex<GitHubClient>>,
+    pub(super) client: Arc<Mutex<GitHubGateway>>,
     pub(super) owner: String,
     pub(super) repo: String,
     pub(super) repo_model: Repo,

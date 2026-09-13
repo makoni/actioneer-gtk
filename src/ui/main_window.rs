@@ -1,9 +1,8 @@
 use super::WelcomeScreen;
-use crate::api::GitHubClient;
 use crate::api::models::{RateLimitInfo, Repo};
 use crate::cache::{CachePersistenceConfig, DataCache};
-use crate::demo;
 use crate::favorites::FavoritesManager;
+use crate::gateway::GitHubGateway;
 use crate::i18n::tr;
 use crate::notifications::NotificationManager;
 use crate::preferences::{Preferences, PreferencesManager, ThemePreference};
@@ -49,7 +48,7 @@ const DONATION_URL: &str = "https://nowpayments.io/donation/makoni";
 #[derive(Clone)]
 pub struct MainWindow {
     window: adw::ApplicationWindow,
-    client: Arc<Mutex<Option<GitHubClient>>>,
+    client: Arc<Mutex<Option<GitHubGateway>>>,
     repos: Arc<Mutex<Vec<Repo>>>,
     sidebar_panel: SidebarPanel,
     repo_store: gio::ListStore,
@@ -575,11 +574,12 @@ impl MainWindow {
 
     fn initialize_client(&self, token: String) -> bool {
         if self.is_demo_mode() {
-            demo::disable();
+            // Leaving demo mode is just dropping the demo gateway; the slot is
+            // replaced (or cleared) by the caller right below.
             *self.demo_mode.lock() = false;
         }
 
-        match GitHubClient::new(Some(token)) {
+        match GitHubGateway::live(Some(token)) {
             Ok(client) => {
                 {
                     let mut client_guard = self.client.lock();
@@ -615,7 +615,8 @@ impl MainWindow {
         self.stop_background_refresh();
 
         if self.is_demo_mode() {
-            demo::disable();
+            // Leaving demo mode is just dropping the demo gateway; the slot is
+            // replaced (or cleared) by the caller right below.
             *self.demo_mode.lock() = false;
         }
 

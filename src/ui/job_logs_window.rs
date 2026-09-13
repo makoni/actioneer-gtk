@@ -1,5 +1,6 @@
+use crate::api::GitHubError;
 use crate::api::models::{Job, Repo};
-use crate::api::{GitHubClient, GitHubError};
+use crate::gateway::GitHubGateway;
 use crate::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
 use gtk4::gdk;
@@ -37,7 +38,7 @@ struct Ctx {
     /// with fresh data; `selected` tracks the reader's place by job id.
     jobs: Rc<RefCell<Vec<Job>>>,
     selected: Cell<usize>,
-    client: Arc<Mutex<GitHubClient>>,
+    client: Arc<Mutex<GitHubGateway>>,
     window: glib::WeakRef<adw::Window>,
     text_view: gtk::TextView,
     /// Weak like the window: the overlay is the root of the content, so every
@@ -116,7 +117,7 @@ impl JobLogsWindow {
         run_title: String,
         jobs: Vec<Job>,
         selected: usize,
-        client: Arc<Mutex<GitHubClient>>,
+        client: Arc<Mutex<GitHubGateway>>,
     ) -> Self {
         let logs_window = Self::build(parent, repo, run_title, jobs, selected, client);
         logs_window.ctx.load_logs(false);
@@ -131,7 +132,7 @@ impl JobLogsWindow {
         run_title: String,
         jobs: Vec<Job>,
         selected: usize,
-        client: Arc<Mutex<GitHubClient>>,
+        client: Arc<Mutex<GitHubGateway>>,
     ) -> Self {
         assert!(!jobs.is_empty(), "JobLogsWindow requires at least one job");
         let selected = selected.min(jobs.len() - 1);
@@ -934,9 +935,7 @@ mod tests {
                     "CI • main #1".to_string(),
                     vec![running, queued],
                     0,
-                    Arc::new(Mutex::new(
-                        GitHubClient::new(None).expect("client stub should build"),
-                    )),
+                    Arc::new(Mutex::new(GitHubGateway::demo())),
                 );
                 logs.present();
 
@@ -1011,9 +1010,7 @@ mod tests {
                 "CI • main #1".to_string(),
                 vec![job_stub("build", Some("success")), job_stub("test", None)],
                 1,
-                Arc::new(Mutex::new(
-                    GitHubClient::new(None).expect("client stub should build"),
-                )),
+                Arc::new(Mutex::new(GitHubGateway::demo())),
             );
             logs.present();
 
@@ -1051,26 +1048,24 @@ mod tests {
 
     /// Demo data is global: switch it off however the test ends, or an
     /// unrelated test that builds a client picks up the demo data.
-    struct DemoData;
-
-    impl Drop for DemoData {
-        fn drop(&mut self) {
-            crate::demo::disable();
-        }
-    }
-
     #[test]
     #[ignore = "requires GTK display"]
     fn apply_jobs_resyncs_when_the_readers_job_leaves_the_run() {
         run_gtk_test(
             "apply_jobs_resyncs_when_the_readers_job_leaves_the_run",
             || {
-                let _demo = DemoData;
-                crate::demo::enable();
+                // Each test owns its own backend now — there is no global to
+                // enable or tear down. The demo methods do no I/O, so a trivial
+                // executor resolves them without a Tokio runtime.
+                let backend = crate::demo::DemoBackend::new();
                 // The reader is watching the in-progress job of the demo's
                 // running CI run.
-                let jobs = crate::demo::list_jobs("demo-org", "actioneer-demo-app", 30_108)
-                    .expect("demo data has the running CI run's jobs");
+                let jobs = futures::executor::block_on(backend.list_jobs(
+                    "demo-org",
+                    "actioneer-demo-app",
+                    30_108,
+                ))
+                .expect("demo data has the running CI run's jobs");
                 let reader_job = jobs
                     .iter()
                     .find(|job| job.status.as_deref() == Some("in_progress"))
@@ -1092,9 +1087,7 @@ mod tests {
                     "CI • main #134".to_string(),
                     jobs.clone(),
                     selected,
-                    Arc::new(Mutex::new(
-                        GitHubClient::new(None).expect("client stub should build"),
-                    )),
+                    Arc::new(Mutex::new(GitHubGateway::demo())),
                 );
                 logs.present();
                 logs.ctx.text_view.buffer().set_text("the old job's log");
@@ -1165,9 +1158,7 @@ mod tests {
                 "CI • main #1".to_string(),
                 vec![job_stub("build", Some("success"))],
                 0,
-                Arc::new(Mutex::new(
-                    GitHubClient::new(None).expect("client stub should build"),
-                )),
+                Arc::new(Mutex::new(GitHubGateway::demo())),
             );
 
             logs.present();
@@ -1207,9 +1198,7 @@ mod tests {
                         job_stub("test", Some("failure")),
                     ],
                     1,
-                    Arc::new(Mutex::new(
-                        GitHubClient::new(None).expect("client stub should build"),
-                    )),
+                    Arc::new(Mutex::new(GitHubGateway::demo())),
                 );
                 let window = logs.window.clone();
                 crate::ui::test_helpers::collect_widget_weaks(
@@ -1269,9 +1258,7 @@ mod tests {
                 "CI • main #1".to_string(),
                 vec![job_stub("build", Some("success"))],
                 0,
-                Arc::new(Mutex::new(
-                    GitHubClient::new(None).expect("client stub should build"),
-                )),
+                Arc::new(Mutex::new(GitHubGateway::demo())),
             );
             assert_eq!(
                 logs.ctx.text_view.direction(),
