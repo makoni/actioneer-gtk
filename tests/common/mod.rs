@@ -69,3 +69,18 @@ pub const DEMO_DISPATCH_INPUT_COUNT: usize = 2;
 /// A fixed instant for time-dependent assertions, so tests never call
 /// `Utc::now()` inside an assertion.
 pub const FIXED_INSTANT: &str = "2026-01-24T12:00:00Z";
+
+/// A gateway serving the demo fixtures, for tests that need a working data
+/// source without a network.
+pub fn demo_gateway() -> actioneer::gateway::GitHubGateway {
+    actioneer::gateway::GitHubGateway::demo()
+}
+
+/// A gateway pointed at a local fake API server.
+pub fn live_gateway_at(base_url: &str) -> actioneer::gateway::GitHubGateway {
+    // `GitHubGateway::live` always builds the real client, so tests that need a
+    // controllable server go through the client's base-URL override and wrap it
+    // the same way the gateway would.
+    actioneer::gateway::GitHubGateway::live_with_base_url(base_url, Some("test-token".into()))
+        .expect("a live gateway against a local server builds")
+}

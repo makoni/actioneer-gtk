@@ -45,6 +45,18 @@ impl GitHubGateway {
         })
     }
 
+    /// A live gateway against a different API root.
+    ///
+    /// Exists for integration tests, which need a controllable server: the
+    /// alternative would be an environment variable, and that is process-global
+    /// and would leak between the parallel tests inside one binary.
+    #[doc(hidden)]
+    pub fn live_with_base_url(base: &str, token: Option<String>) -> Result<Self> {
+        Ok(Self {
+            inner: Inner::Live(GitHubClient::with_base_url(base, token)?),
+        })
+    }
+
     /// The demo fixtures. Infallible — there is nothing to configure.
     pub fn demo() -> Self {
         Self {
