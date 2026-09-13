@@ -15,9 +15,16 @@
 
 mod common;
 
+use actioneer::domain::counts::{
+    RepoActionsState, determine_actions_state, select_latest_runs_for_workflows,
+};
+use actioneer::domain::filters::{
+    RunFilters, RunStatusFilterKind, classify_run_status, run_matches_filters,
+};
 use actioneer::domain::formatting::{
     format_elapsed, is_in_progress, job_duration_text, running_duration_string, step_duration_text,
 };
+use actioneer::domain::models::RepoPermissions;
 use actioneer::domain::models::{Job, JobStep, WorkflowRun};
 use actioneer::domain::runs::{is_run_active, is_run_failure};
 use common::FIXED_INSTANT;
@@ -172,4 +179,116 @@ fn a_step_follows_the_same_duration_rule_as_a_job() {
         completed_at: Some("2026-01-24T11:00:09Z".into()),
     };
     assert_eq!(step_duration_text(&step).as_deref(), Some("00:09"));
+}
+
+// ---------------------------------------------------------------------------
+// domain::filters
+// ---------------------------------------------------------------------------
+
+#[test]
+fn the_default_filter_admits_every_run() {
+    let filters = RunFilters::default();
+    for (status, conclusion) in [
+        (Some("completed"), Some("success")),
+        (Some("completed"), Some("failure")),
+        (Some("in_progress"), None),
+        (Some("queued"), None),
+    ] {
+        assert!(
+            run_matches_filters(&run(status, conclusion), &filters),
+            "{status:?}/{conclusion:?} should pass the default filter"
+        );
+    }
+}
+
+#[test]
+fn clearing_a_filter_drops_exactly_that_state() {
+    let filters = RunFilters {
+        include_failed: false,
+        ..RunFilters::default()
+    };
+
+    assert!(run_matches_filters(
+        &run(Some("completed"), Some("success")),
+        &filters
+    ));
+    assert!(!run_matches_filters(
+        &run(Some("completed"), Some("failure")),
+        &filters
+    ));
+    assert!(
+        run_matches_filters(&run(Some("in_progress"), None), &filters),
+        "hiding failures must not hide running work"
+    );
+}
+
+#[test]
+fn a_run_is_classified_by_state_not_by_conclusion_alone() {
+    assert_eq!(
+        classify_run_status(&run(Some("in_progress"), None)),
+        RunStatusFilterKind::Running
+    );
+    assert_eq!(
+        classify_run_status(&run(Some("completed"), Some("success"))),
+        RunStatusFilterKind::Success
+    );
+    assert_eq!(
+        classify_run_status(&run(Some("completed"), Some("failure"))),
+        RunStatusFilterKind::Failed
+    );
+}
+
+// ---------------------------------------------------------------------------
+// domain::counts
+// ---------------------------------------------------------------------------
+
+#[test]
+fn write_access_decides_whether_actions_are_available() {
+    let perms = |admin: bool, push: bool, pull: bool| RepoPermissions { admin, push, pull };
+
+    assert_eq!(
+        determine_actions_state(Some(&perms(false, true, true))),
+        RepoActionsState::Enabled
+    );
+    assert_eq!(
+        determine_actions_state(Some(&perms(true, false, true))),
+        RepoActionsState::Enabled
+    );
+    assert_eq!(
+        determine_actions_state(Some(&perms(false, false, true))),
+        RepoActionsState::Disabled
+    );
+    assert_eq!(determine_actions_state(None), RepoActionsState::Unknown);
+}
+
+#[test]
+fn the_latest_run_per_workflow_is_the_first_one_seen() {
+    // The API returns runs newest first, so the first match wins and later ones
+    // for the same workflow are ignored.
+    let mut newest = run(Some("completed"), Some("success"));
+    newest.id = 200;
+    newest.workflow_id = Some(11);
+    let mut older = run(Some("completed"), Some("failure"));
+    older.id = 100;
+    older.workflow_id = Some(11);
+
+    let (latest, missing) = select_latest_runs_for_workflows(&[11], &[newest, older], false);
+    assert_eq!(latest.get(&11).map(|r| r.id), Some(200));
+    assert!(missing.is_empty());
+}
+
+#[test]
+fn only_a_truncated_page_reports_workflows_as_missing() {
+    let (_, missing) = select_latest_runs_for_workflows(&[11, 22], &[], false);
+    assert!(
+        missing.is_empty(),
+        "a complete page means the workflows simply have no runs"
+    );
+
+    let (_, missing) = select_latest_runs_for_workflows(&[11, 22], &[], true);
+    assert_eq!(
+        missing.len(),
+        2,
+        "a truncated page means they may have runs we did not see"
+    );
 }

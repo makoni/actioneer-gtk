@@ -87,3 +87,17 @@ pub fn live_gateway_at(base_url: &str) -> actioneer::services::gateway::GitHubGa
     )
     .expect("a live gateway against a local server builds")
 }
+
+/// Services backed by temporary files and demo data.
+///
+/// Returns the `TempDir` alongside them: dropping it deletes the directory the
+/// managers write to, so the caller has to keep it alive for the test's
+/// duration.
+pub fn test_services() -> (
+    tempfile::TempDir,
+    actioneer::services::app_services::AppServices,
+) {
+    let dir = tempfile::tempdir().expect("temp dir");
+    let services = actioneer::services::app_services::AppServices::test_fakes(dir.path());
+    (dir, services)
+}
