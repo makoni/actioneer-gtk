@@ -795,7 +795,7 @@ pub async fn gather_workflow_status_counts(
     owner: &str,
     repo: &str,
 ) -> Result<WorkflowStatusCounts, crate::api::GitHubError> {
-    use crate::ui::utils::{is_run_active, is_run_failure};
+    use crate::domain::runs::{is_run_active, is_run_failure};
 
     let workflows: Vec<_> = client
         .list_workflows(owner, repo)

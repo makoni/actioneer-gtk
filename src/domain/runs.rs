@@ -1,5 +1,9 @@
-/// Utility functions for workflow runs
-use crate::api::models::WorkflowRun;
+//! Rules over workflow runs.
+//!
+//! Pure: no GTK, no I/O, no localization. The UI asks these questions to decide
+//! what to render; the answers do not depend on anything but the run itself.
+
+use super::models::WorkflowRun;
 
 /// Check if a workflow run is currently active
 pub fn is_run_active(run: &WorkflowRun) -> bool {

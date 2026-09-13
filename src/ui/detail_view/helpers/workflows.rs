@@ -13,6 +13,7 @@ use crate::api::models::{
     JobSummary, Repo, Workflow, WorkflowDispatchInput, WorkflowDispatchInputType,
     WorkflowDispatchInputValue, WorkflowRun, build_dispatch_inputs_payload,
 };
+use crate::domain::formatting::running_duration_string;
 use crate::gateway::GitHubGateway;
 use crate::i18n::tr;
 use crate::notifications::NotificationManager;
@@ -21,7 +22,6 @@ use crate::runtime::channel::MainContextChannelExt;
 use crate::ui::detail_view::RunFilters;
 use crate::ui::detail_view::header_state::DetailHeaderState;
 use crate::ui::job_logs_window::JobLogsWindow;
-use crate::ui::utils::duration::running_duration_string;
 use crate::ui::utils::widget_data::{set_data, steal_data};
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib, pango};

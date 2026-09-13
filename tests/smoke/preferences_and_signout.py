@@ -88,9 +88,22 @@ def main():
     # Confirming dismisses it too. In demo mode the repository list stays —
     # see the module docstring; this pins current behaviour.
     do_window_action(frame, fixtures.ACTION_SIGN_OUT)
+
+    # Wait for a dialog that actually carries its buttons, not merely for an
+    # `alert` node: right after the cancel above, the dismissed dialog lingers
+    # in the tree for a moment with its children already gone, and grabbing it
+    # makes this journey flake.
     dialog = wait_until(
-        lambda: find_role(frame, "alert"),
-        "the sign-out confirmation did not reopen",
+        lambda: next(
+            (
+                node
+                for node in [find_role(frame, "alert")]
+                if node is not None
+                and find_named(node, fixtures.SIGN_OUT_CONFIRM) is not None
+            ),
+            None,
+        ),
+        "the sign-out confirmation did not reopen with its responses",
     )
     click(require_named(dialog, fixtures.SIGN_OUT_CONFIRM))
     wait_until(

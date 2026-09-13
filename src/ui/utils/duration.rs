@@ -1,20 +1,10 @@
 //! Wall-clock durations for items that are still running, shared by the job,
 //! step and run rows so every view counts up the same way.
 
-use crate::api::models::{Job, JobStep, format_elapsed};
+use crate::api::models::{Job, JobStep};
+use crate::domain::formatting::{is_in_progress, running_duration_string};
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
-
-/// Elapsed `mm:ss` (or `h:mm:ss`) for a job, step or run that is still running.
-pub(crate) fn running_duration_string(started_at: Option<&String>) -> Option<String> {
-    let started = chrono::DateTime::parse_from_rfc3339(started_at?).ok()?;
-    let seconds = chrono::Utc::now()
-        .signed_duration_since(started.with_timezone(&chrono::Utc))
-        .num_seconds()
-        .max(0);
-
-    Some(format_elapsed(seconds))
-}
 
 /// One tick of a label whose text is recomputed from the wall clock. Split out
 /// from the timer so it can be tested without waiting on the clock.
@@ -70,20 +60,12 @@ fn live_start(
 /// fallback is only correct once it is actually executing — otherwise a queued
 /// item would show a ticking timer, and one that never completed would show a
 /// value that keeps growing on every refresh.
-fn is_in_progress(status: Option<&str>) -> bool {
-    matches!(status, Some("in_progress"))
-}
-
 /// Text for a job row's duration label, plus `started_at` when the label should
 /// keep counting: the job is executing and GitHub has not yet reported a final
 /// duration for it.
 pub(crate) fn job_duration_label(job: &Job) -> (Option<String>, Option<String>) {
     let final_duration = job.duration_string();
-    let text = final_duration.clone().or_else(|| {
-        is_in_progress(job.status.as_deref())
-            .then(|| running_duration_string(job.started_at.as_ref()))
-            .flatten()
-    });
+    let text = crate::domain::formatting::job_duration_text(job);
     let live = live_start(
         final_duration,
         job.status.as_deref(),
@@ -95,11 +77,7 @@ pub(crate) fn job_duration_label(job: &Job) -> (Option<String>, Option<String>) 
 /// Same as `job_duration_label` for a job step.
 pub(crate) fn step_duration_label(step: &JobStep) -> (Option<String>, Option<String>) {
     let final_duration = step.duration_string();
-    let text = final_duration.clone().or_else(|| {
-        is_in_progress(step.status.as_deref())
-            .then(|| running_duration_string(step.started_at.as_ref()))
-            .flatten()
-    });
+    let text = crate::domain::formatting::step_duration_text(step);
     let live = live_start(
         final_duration,
         step.status.as_deref(),

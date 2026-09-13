@@ -1,6 +1,7 @@
 use crate::api::models::{Job, WorkflowRun};
+use crate::domain::formatting::running_duration_string;
 use crate::i18n::tr;
-use crate::ui::utils::duration::{running_duration_string, start_live_text};
+use crate::ui::utils::duration::start_live_text;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, pango};
 

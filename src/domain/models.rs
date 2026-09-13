@@ -285,23 +285,6 @@ impl WorkflowRun {
 }
 
 /// Parse ISO 8601 timestamp and return relative time string
-/// Elapsed seconds as `mm:ss`, or `h:mm:ss` past the hour.
-///
-/// No language-specific units: a run shows the same shape while it is live
-/// (counting from the start) and after it finishes (from the final duration).
-pub fn format_elapsed(seconds: i64) -> String {
-    if seconds < 3600 {
-        format!("{:02}:{:02}", seconds / 60, seconds % 60)
-    } else {
-        format!(
-            "{}:{:02}:{:02}",
-            seconds / 3600,
-            (seconds % 3600) / 60,
-            seconds % 60
-        )
-    }
-}
-
 fn duration_string_from_bounds(
     started: Option<&String>,
     completed: Option<&String>,
@@ -315,7 +298,7 @@ fn duration_string_from_bounds(
     let duration = end_time.signed_duration_since(start_time);
     let seconds = duration.num_seconds().max(0);
 
-    Some(format_elapsed(seconds))
+    Some(super::formatting::format_elapsed(seconds))
 }
 
 impl Job {
@@ -570,14 +553,6 @@ mod tests {
 
         let result = build_dispatch_inputs_payload(&inputs, &values);
         assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_format_elapsed_minutes_then_hours() {
-        assert_eq!(format_elapsed(0), "00:00");
-        assert_eq!(format_elapsed(65), "01:05");
-        assert_eq!(format_elapsed(3599), "59:59");
-        assert_eq!(format_elapsed(3661), "1:01:01");
     }
 
     #[test]
