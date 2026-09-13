@@ -23,13 +23,13 @@ pub(crate) fn format_run_title(run: &WorkflowRun) -> String {
 pub(crate) fn format_run_tooltip(run: &WorkflowRun) -> String {
     let mut lines = Vec::new();
 
-    let status_text = run.friendly_status();
+    let status_text = friendly_status(run.status.as_deref(), run.conclusion.as_deref());
     if !status_text.is_empty() {
         lines.push(format!("{}: {}", tr("Status"), status_text));
     }
 
     if run.conclusion.is_some() {
-        let conclusion_text = run.friendly_conclusion();
+        let conclusion_text = friendly_conclusion(run.conclusion.as_deref());
         if !conclusion_text.is_empty() {
             lines.push(format!("{}: {}", tr("Conclusion"), conclusion_text));
         }
@@ -72,7 +72,7 @@ pub(crate) fn format_run_tooltip(run: &WorkflowRun) -> String {
 pub(crate) fn format_workflow_meta(run: &WorkflowRun) -> String {
     let mut parts = Vec::new();
 
-    let when = run.relative_time_string();
+    let when = relative_time(run);
     if !when.is_empty() {
         parts.push(when);
     }
@@ -103,7 +103,7 @@ fn run_meta_rest_text(run: &WorkflowRun, live_elapsed: Option<&str>) -> String {
     {
         rest.push(duration);
     }
-    let when = run.relative_time_string();
+    let when = relative_time(run);
     if !when.is_empty() {
         rest.push(when);
     }
@@ -243,12 +243,15 @@ pub(crate) fn workflow_status_text(latest_run: &WorkflowRun) -> (String, &'stati
     let class = get_run_status_class(latest_run);
 
     let text = if latest_run.conclusion.is_some() {
-        latest_run.friendly_conclusion()
+        friendly_conclusion(latest_run.conclusion.as_deref())
     } else {
         match latest_run.status.as_deref() {
             Some("in_progress") => tr("In Progress"),
             Some("queued" | "waiting" | "pending" | "requested") => tr("Queued"),
-            _ => latest_run.friendly_status(),
+            _ => friendly_status(
+                latest_run.status.as_deref(),
+                latest_run.conclusion.as_deref(),
+            ),
         }
     };
 
@@ -257,8 +260,173 @@ pub(crate) fn workflow_status_text(latest_run: &WorkflowRun) -> (String, &'stati
     (text, class)
 }
 
+// ---------------------------------------------------------------------------
+// Display strings for run, job and step state.
+//
+// These used to be six near-identical `friendly_status`/`friendly_conclusion`
+// methods on `WorkflowRun`, `Job` and `JobStep`, which put `tr` — and therefore
+// the UI's language — inside the data models. The models now carry raw data
+// only; this is the display-formatting home, where `tr` belongs.
+//
+// Unified into two functions because all three impls matched on the same
+// strings. One cosmetic difference is folded in deliberately: `Job` and
+// `JobStep` previously fell through on `"stale"` and rendered it verbatim,
+// where `WorkflowRun` translated it. GitHub only ever reports `stale` on a run,
+// so the case is unreachable for the other two.
+// ---------------------------------------------------------------------------
+
+/// A human-readable status, falling through to the conclusion once complete.
+pub fn friendly_status(status: Option<&str>, conclusion: Option<&str>) -> String {
+    let Some(status) = status else {
+        return tr("Unknown");
+    };
+    match status.to_lowercase().as_str() {
+        "queued" => tr("Queued"),
+        "in_progress" => tr("In Progress"),
+        "completed" => {
+            if conclusion.is_some() {
+                friendly_conclusion(conclusion)
+            } else {
+                tr("Completed")
+            }
+        }
+        "waiting" => tr("Waiting"),
+        "requested" => tr("Requested"),
+        "pending" => tr("Pending"),
+        _ => status.replace('_', " "),
+    }
+}
+
+/// A human-readable conclusion, or empty when there is none yet.
+pub fn friendly_conclusion(conclusion: Option<&str>) -> String {
+    let Some(conclusion) = conclusion else {
+        return String::new();
+    };
+    match conclusion.to_lowercase().as_str() {
+        "success" => tr("Success"),
+        "failure" => tr("Failed"),
+        "cancelled" => tr("Cancelled"),
+        "skipped" => tr("Skipped"),
+        "timed_out" => tr("Timed Out"),
+        "action_required" => tr("Action Required"),
+        "neutral" => tr("Neutral"),
+        "stale" => tr("Stale"),
+        _ => conclusion.replace('_', " "),
+    }
+}
+
+/// The run's age, as "Just now", "5m ago", "Yesterday", or a localized date.
+pub fn relative_time(run: &WorkflowRun) -> String {
+    run.run_started_at
+        .as_ref()
+        .or(run.created_at.as_ref())
+        .or(run.updated_at.as_ref())
+        .map(|ts| relative_time_from_iso(ts))
+        .unwrap_or_default()
+}
+
+fn relative_time_from_iso(iso_string: &str) -> String {
+    use chrono::{DateTime, Local, Utc};
+
+    // Try parsing the ISO string
+    if let Ok(dt) = DateTime::parse_from_rfc3339(iso_string) {
+        let now = Utc::now();
+        let duration = now.signed_duration_since(dt.with_timezone(&Utc));
+
+        let seconds = duration.num_seconds();
+
+        if seconds < 60 {
+            tr("Just now")
+        } else if seconds < 3600 {
+            let minutes = seconds / 60;
+            tr("{count}m ago").replace("{count}", minutes.to_string().as_str())
+        } else if seconds < 86400 {
+            let hours = seconds / 3600;
+            tr("{count}h ago").replace("{count}", hours.to_string().as_str())
+        } else if seconds < 604800 {
+            let days = seconds / 86400;
+            if days == 1 {
+                tr("Yesterday")
+            } else {
+                tr("{count}d ago").replace("{count}", days.to_string().as_str())
+            }
+        } else {
+            localized_absolute_date_from_iso(iso_string)
+                .unwrap_or_else(|| fallback_localized_numeric_date(dt.with_timezone(&Local)))
+        }
+    } else {
+        String::new()
+    }
+}
+
+fn localized_absolute_date_from_iso(iso_string: &str) -> Option<String> {
+    let date_time = gtk4::glib::DateTime::from_iso8601(iso_string, None).ok()?;
+    let local_date_time = date_time.to_local().ok()?;
+    let formatted = local_date_time.format("%x").ok()?;
+    let formatted = formatted.trim();
+
+    if formatted.is_empty() {
+        None
+    } else {
+        Some(formatted.to_string())
+    }
+}
+
+fn fallback_localized_numeric_date(date_time: chrono::DateTime<chrono::Local>) -> String {
+    match crate::i18n::current_effective_language().as_str() {
+        "en" => date_time.format("%m/%d/%Y").to_string(),
+        "zh_Hans" => date_time.format("%Y/%m/%d").to_string(),
+        "pt_BR" | "fr" | "es" | "hi" | "ar" | "bn" | "ur" => {
+            date_time.format("%d/%m/%Y").to_string()
+        }
+        "de" | "nl" | "ru" => date_time.format("%d.%m.%Y").to_string(),
+        _ => date_time.format("%Y-%m-%d").to_string(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    // Moved here with the functions they cover: these assert on localized
+    // output, so they live where `tr` lives. They stay in-crate because
+    // `i18n_test_guard` is `#[cfg(test)] pub(crate)` and is what serialises the
+    // global locale across parallel tests.
+    #[test]
+    fn test_relative_time_from_iso_localizes_old_dates() {
+        let _guard = i18n_test_guard();
+        init(None);
+        let _ = apply_language_preference(LanguagePreference::En);
+
+        let formatted = relative_time_from_iso("2024-01-08T13:45:00Z");
+
+        assert!(!formatted.is_empty());
+        assert_ne!(formatted, "2024-01-08");
+    }
+
+    #[test]
+    fn test_fallback_localized_numeric_date_uses_english_order() {
+        let _guard = i18n_test_guard();
+        init(None);
+        let _ = apply_language_preference(LanguagePreference::En);
+        let date_time = chrono::DateTime::parse_from_rfc3339("2024-01-08T13:45:00Z")
+            .unwrap()
+            .with_timezone(&chrono::Local);
+
+        assert_eq!(fallback_localized_numeric_date(date_time), "01/08/2024");
+    }
+
+    #[test]
+    fn test_fallback_localized_numeric_date_uses_russian_order() {
+        let _guard = i18n_test_guard();
+        init(None);
+        let _ = apply_language_preference(LanguagePreference::Ru);
+        let date_time = chrono::DateTime::parse_from_rfc3339("2024-01-08T13:45:00Z")
+            .unwrap()
+            .with_timezone(&chrono::Local);
+
+        assert_eq!(fallback_localized_numeric_date(date_time), "08.01.2024");
+        let _ = apply_language_preference(LanguagePreference::En);
+    }
+
     use super::*;
     use crate::api::models::{Job, WorkflowRun};
     use crate::i18n::{apply_language_preference, i18n_test_guard, init};

@@ -1,6 +1,7 @@
 use super::context::{
     JobContextMap, JobRefreshContext, JobRefreshContextParams, RunBadgeSummaryMap,
 };
+use super::formatting::friendly_status;
 use super::formatting::{get_job_status_class, get_job_status_icon};
 use super::runs::WorkflowRunListModel;
 use super::status_dot::{JOB_DOT_SIZE, STEP_DOT_SIZE, build_status_dot};
@@ -73,7 +74,7 @@ pub(super) fn create_job_row_simple(job: &Job, context: Option<JobRowContext>) -
         get_job_status_class(job),
         JOB_DOT_SIZE,
     );
-    let job_status_text = job.friendly_status();
+    let job_status_text = friendly_status(job.status.as_deref(), job.conclusion.as_deref());
     if !job_status_text.is_empty() {
         crate::ui::utils::describe_control(&dot, &job_status_text);
     }
@@ -185,7 +186,7 @@ fn create_job_step_row(step: &JobStep, display_number: usize) -> gtk::Box {
         step_status_class(step),
         STEP_DOT_SIZE,
     );
-    let step_status_text = step.friendly_status();
+    let step_status_text = friendly_status(step.status.as_deref(), step.conclusion.as_deref());
     if !step_status_text.is_empty() {
         crate::ui::utils::describe_control(&dot, &step_status_text);
     }

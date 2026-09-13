@@ -13,6 +13,7 @@ pub mod cache;
 pub mod config;
 pub mod crash_report;
 pub mod demo;
+pub mod domain;
 pub mod favorites;
 pub mod gateway;
 pub mod i18n;
