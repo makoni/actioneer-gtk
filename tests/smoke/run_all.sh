@@ -14,6 +14,7 @@ runner="$repo_root/tests/smoke/run_smoke.sh"
 scripts=(
   "welcome_screen.py:"
   "demo_mode.py:--demo"
+  "repos_to_workflows.py:--demo"
 )
 
 failed=0
