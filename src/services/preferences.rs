@@ -86,7 +86,14 @@ impl PreferencesManager {
             .join("actioneer");
 
         fs::create_dir_all(&config_dir)?;
+        Self::with_dir(&config_dir)
+    }
 
+    /// Reads and writes preferences inside an explicit directory.
+    ///
+    /// Tests point this at a `tempfile` directory; `new()` is the production
+    /// entry point and picks the XDG config location.
+    pub fn with_dir(config_dir: &std::path::Path) -> anyhow::Result<Self> {
         let config_path = config_dir.join("preferences.json");
         let prefs = if config_path.exists() {
             let data = fs::read_to_string(&config_path)?;

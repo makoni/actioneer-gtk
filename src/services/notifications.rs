@@ -523,7 +523,7 @@ struct NotificationCommand {
 mod tests {
     use super::*;
     use crate::kernel::i18n::{apply_language_preference, i18n_test_guard, init};
-    use crate::preferences::LanguagePreference;
+    use crate::services::preferences::LanguagePreference;
 
     #[test]
     fn test_conclusion_text() {

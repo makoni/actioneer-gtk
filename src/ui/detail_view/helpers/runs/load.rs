@@ -2,13 +2,13 @@ use super::super::context::{JobContextMap, current_job_context_run_ids};
 use super::super::workflows::update_workflow_row_header;
 use super::digest::{RunDigestMap, RunDigestStore, update_digest_and_collect_notifications};
 use super::list::WorkflowRunListModel;
-use crate::api::GitHubError;
-use crate::api::models::{Repo, WorkflowRun};
 use crate::domain::filters::summarize_visible_runs;
-use crate::gateway::GitHubGateway;
-use crate::notifications::NotificationManager;
-use crate::preferences::PreferencesManager;
 use crate::runtime::channel::MainContextChannelExt;
+use crate::services::api::GitHubError;
+use crate::services::api::models::{Repo, WorkflowRun};
+use crate::services::gateway::GitHubGateway;
+use crate::services::notifications::NotificationManager;
+use crate::services::preferences::PreferencesManager;
 use crate::ui::detail_view::RunFilters;
 use crate::ui::detail_view::helpers::jobs::refresh_jobs_for_workflows;
 use gtk4::prelude::*;
@@ -476,7 +476,7 @@ fn show_error_state(error: GitHubError, workflow_id: i64, context: RunErrorConte
 #[cfg(test)]
 mod tests {
     use super::{resolve_preserved_expanded_run_ids, should_render_run_list};
-    use crate::api::models::WorkflowRun;
+    use crate::services::api::models::WorkflowRun;
     use std::collections::HashSet;
 
     fn run_stub(id: i64) -> WorkflowRun {

@@ -1,7 +1,7 @@
 /// Workflow run operations
 use super::error::GitHubError;
 use super::http::{ResponseHandler, add_auth_header};
-use crate::api::models::{WorkflowRun, WorkflowRunsResponse};
+use crate::services::api::models::{WorkflowRun, WorkflowRunsResponse};
 use reqwest::Client;
 use tracing::{debug, info};
 

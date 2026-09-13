@@ -1,5 +1,5 @@
-use crate::api::models::{Job, JobSummary, Repo};
-use crate::gateway::GitHubGateway;
+use crate::services::api::models::{Job, JobSummary, Repo};
+use crate::services::gateway::GitHubGateway;
 use gtk4::prelude::*;
 use gtk4::{self as gtk};
 use parking_lot::Mutex;
@@ -147,8 +147,8 @@ pub(crate) fn current_job_context_run_ids(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::models::{Repo, User};
-    use crate::gateway::GitHubGateway;
+    use crate::services::api::models::{Repo, User};
+    use crate::services::gateway::GitHubGateway;
     use crate::ui::test_helpers::run_gtk_test;
     use parking_lot::Mutex;
     use std::cell::RefCell;

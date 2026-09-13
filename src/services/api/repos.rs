@@ -1,7 +1,7 @@
 /// Repository operations
 use super::error::GitHubError;
 use super::http::{ResponseHandler, add_auth_header};
-use crate::api::models::{Branch, Repo};
+use crate::services::api::models::{Branch, Repo};
 use reqwest::Client;
 use tracing::info;
 

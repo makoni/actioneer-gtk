@@ -1,7 +1,7 @@
 use super::MainWindow;
 use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
-use crate::storage::TokenStorage;
+use crate::services::tokens::TokenStorage;
 use crate::ui::auth_window::AuthWindow;
 use gtk4::glib;
 use gtk4::prelude::*;

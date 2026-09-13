@@ -1,6 +1,6 @@
-use crate::api::models::{Job, WorkflowRun};
 use crate::domain::formatting::running_duration_string;
 use crate::kernel::i18n::tr;
+use crate::services::api::models::{Job, WorkflowRun};
 use crate::ui::utils::duration::start_live_text;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, pango};
@@ -429,9 +429,9 @@ mod tests {
     }
 
     use super::*;
-    use crate::api::models::{Job, WorkflowRun};
     use crate::kernel::i18n::{apply_language_preference, i18n_test_guard, init};
-    use crate::preferences::LanguagePreference;
+    use crate::services::api::models::{Job, WorkflowRun};
+    use crate::services::preferences::LanguagePreference;
     use crate::ui::test_helpers::run_gtk_test;
 
     #[test]
@@ -556,7 +556,7 @@ mod tests {
         run_gtk_test("populate_run_meta_renders_branch_in_mono", || {
             let mut run = run_stub();
             run.head_branch = Some("main".into());
-            run.actor = Some(crate::api::models::User {
+            run.actor = Some(crate::services::api::models::User {
                 login: "makoni".into(),
             });
 

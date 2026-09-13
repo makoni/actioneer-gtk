@@ -1,10 +1,10 @@
-use crate::api::models::{Repo, Workflow};
 use crate::domain::filters::RunFilters;
-use crate::favorites::FavoritesManager;
-use crate::gateway::GitHubGateway;
 use crate::kernel::i18n::tr;
-use crate::notifications::NotificationManager;
-use crate::preferences::{PreferencesManager, RunFilterPreferences};
+use crate::services::api::models::{Repo, Workflow};
+use crate::services::favorites::FavoritesManager;
+use crate::services::gateway::GitHubGateway;
+use crate::services::notifications::NotificationManager;
+use crate::services::preferences::{PreferencesManager, RunFilterPreferences};
 use gtk4::prelude::*;
 use gtk4::{self as gtk, gio, glib};
 use libadwaita as adw;
@@ -493,7 +493,7 @@ mod tests {
                 .build();
             let window = adw::ApplicationWindow::new(&app);
             let client = Arc::new(parking_lot::Mutex::new(
-                crate::gateway::GitHubGateway::demo(),
+                crate::services::gateway::GitHubGateway::demo(),
             ));
 
             let mut weaks: Vec<(String, glib::WeakRef<gtk::Widget>)> = Vec::new();

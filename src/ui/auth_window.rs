@@ -1,11 +1,11 @@
-use crate::auth::device::{
-    AccessToken, AuthError, DeviceFlowInfo, poll_device_token, start_device_flow,
-};
-use crate::config::Config;
 use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
 use crate::runtime::handle;
-use crate::storage::TokenStorage;
+use crate::services::auth::device::{
+    AccessToken, AuthError, DeviceFlowInfo, poll_device_token, start_device_flow,
+};
+use crate::services::config::Config;
+use crate::services::tokens::TokenStorage;
 use glib::ControlFlow;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};

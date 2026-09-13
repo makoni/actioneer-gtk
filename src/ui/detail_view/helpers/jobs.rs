@@ -5,11 +5,11 @@ use super::formatting::friendly_status;
 use super::formatting::{get_job_status_class, get_job_status_icon};
 use super::runs::WorkflowRunListModel;
 use super::status_dot::{JOB_DOT_SIZE, STEP_DOT_SIZE, build_status_dot};
-use crate::api::GitHubError;
-use crate::api::models::{Job, JobStep, JobSummary, Repo};
-use crate::gateway::GitHubGateway;
 use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
+use crate::services::api::GitHubError;
+use crate::services::api::models::{Job, JobStep, JobSummary, Repo};
+use crate::services::gateway::GitHubGateway;
 use crate::ui::job_logs_window::JobLogsWindow;
 use crate::ui::utils::duration::{job_duration_label, start_live_duration, step_duration_label};
 use crate::ui::utils::widget_data::{get_data_clone, get_data_copy, set_data};
@@ -590,7 +590,7 @@ pub(crate) fn refresh_jobs_for_workflows(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::models::{JobStep, User};
+    use crate::services::api::models::{JobStep, User};
     use crate::ui::test_helpers::run_gtk_test;
     use std::cell::RefCell;
     use std::collections::HashMap;

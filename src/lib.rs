@@ -6,19 +6,10 @@
 // Kernel and runtime first: nothing below them may depend on the layers above.
 pub mod kernel;
 pub mod runtime;
+pub mod services;
 
-pub mod api;
-pub mod auth;
-pub mod cache;
-pub mod config;
-pub mod crash_report;
 pub mod demo;
 pub mod domain;
-pub mod favorites;
-pub mod gateway;
-pub mod notifications;
-pub mod preferences;
-pub mod storage;
 pub mod ui;
 
 // Convenience re-exports for the binary and for `tests/`. In-crate code uses

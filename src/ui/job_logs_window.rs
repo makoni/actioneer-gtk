@@ -1,8 +1,8 @@
-use crate::api::GitHubError;
-use crate::api::models::{Job, Repo};
-use crate::gateway::GitHubGateway;
 use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
+use crate::services::api::GitHubError;
+use crate::services::api::models::{Job, Repo};
+use crate::services::gateway::GitHubGateway;
 use gtk4::gdk;
 use gtk4::gio;
 use gtk4::prelude::*;
@@ -723,7 +723,7 @@ fn append_job_row(list: &gtk::ListBox, job: &Job) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::models::Job;
+    use crate::services::api::models::Job;
     use crate::ui::test_helpers::run_gtk_test;
 
     fn repo_stub() -> Repo {
@@ -731,7 +731,7 @@ mod tests {
             id: 1,
             name: "repo".into(),
             full_name: "owner/repo".into(),
-            owner: crate::api::models::User {
+            owner: crate::services::api::models::User {
                 login: "owner".into(),
             },
             is_private: false,

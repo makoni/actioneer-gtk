@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-13 13:15+0000\n"
+"POT-Creation-Date: 2026-09-13 13:27+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,44 +23,49 @@ msgstr ""
 msgid "Welcome to Actioneer"
 msgstr ""
 
-#: src/notifications.rs:127
+#: src/services/notifications.rs:127
 msgid "Workflow Completed: {workflow}"
 msgstr ""
 
-#: src/notifications.rs:128
+#: src/services/notifications.rs:128
 msgid "{run} - {status}"
 msgstr ""
 
-#: src/notifications.rs:206
+#: src/services/notifications.rs:206
 msgid "Success ✓"
 msgstr ""
 
-#: src/notifications.rs:207
+#: src/services/notifications.rs:207
 msgid "Failed ✗"
 msgstr ""
 
-#: src/notifications.rs:208 src/ui/detail_view/helpers/formatting.rs:309
+#: src/services/notifications.rs:208
+#: src/ui/detail_view/helpers/formatting.rs:309
 msgid "Cancelled"
 msgstr ""
 
-#: src/notifications.rs:209 src/ui/detail_view/helpers/formatting.rs:310
+#: src/services/notifications.rs:209
+#: src/ui/detail_view/helpers/formatting.rs:310
 msgid "Skipped"
 msgstr ""
 
-#: src/notifications.rs:210 src/ui/detail_view/helpers/formatting.rs:311
+#: src/services/notifications.rs:210
+#: src/ui/detail_view/helpers/formatting.rs:311
 msgid "Timed Out"
 msgstr ""
 
-#: src/notifications.rs:211 src/notifications.rs:542
+#: src/services/notifications.rs:211 src/services/notifications.rs:542
 #: src/ui/detail_view/helpers/formatting.rs:312
 msgid "Action Required"
 msgstr ""
 
-#: src/notifications.rs:212 src/ui/detail_view/helpers/formatting.rs:313
+#: src/services/notifications.rs:212
+#: src/ui/detail_view/helpers/formatting.rs:313
 msgid "Neutral"
 msgstr ""
 
-#: src/notifications.rs:225 src/ui/detail_view/helpers/formatting.rs:291
+#: src/services/notifications.rs:225
+#: src/ui/detail_view/helpers/formatting.rs:291
 msgid "Completed"
 msgstr ""
 
@@ -68,11 +73,11 @@ msgstr ""
 msgid "Workflows and runs will load in the detail pane."
 msgstr ""
 
-#: src/ui/detail_placeholder.rs:25 src/ui/main_window.rs:122
+#: src/ui/detail_placeholder.rs:25 src/ui/main_window.rs:117
 msgid "Select a repository"
 msgstr ""
 
-#: src/ui/detail_placeholder.rs:27 src/ui/main_window.rs:124
+#: src/ui/detail_placeholder.rs:27 src/ui/main_window.rs:119
 msgid ""
 "Choose a repository from the sidebar to browse its workflows and runs here."
 msgstr ""
@@ -87,7 +92,7 @@ msgstr ""
 msgid "Workflows"
 msgstr ""
 
-#: src/ui/detail_view/favorite_controls.rs:19 src/ui/detail_view/mod.rs:178
+#: src/ui/detail_view/favorite_controls.rs:19 src/ui/detail_view/mod.rs:164
 #: src/ui/sidebar.rs:470
 msgid "Toggle favorite"
 msgstr ""
@@ -256,13 +261,13 @@ msgid "View logs"
 msgstr ""
 
 #: src/ui/detail_view/helpers/jobs.rs:412
-#: src/ui/detail_view/helpers/runs/actions.rs:116
+#: src/ui/detail_view/helpers/runs/actions.rs:118
 #: src/ui/detail_view/helpers/workflows.rs:633
 msgid "No jobs found"
 msgstr ""
 
 #: src/ui/detail_view/helpers/jobs.rs:466
-#: src/ui/detail_view/helpers/runs/actions.rs:121
+#: src/ui/detail_view/helpers/runs/actions.rs:123
 #: src/ui/detail_view/helpers/workflows.rs:640
 msgid "Unable to load jobs"
 msgstr ""
@@ -286,71 +291,71 @@ msgstr ""
 msgid "Yes"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:145
+#: src/ui/detail_view/helpers/runs/actions.rs:147
 msgid "Open in GitHub"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:161
+#: src/ui/detail_view/helpers/runs/actions.rs:163
 msgid "Re-run workflow"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:175
+#: src/ui/detail_view/helpers/runs/actions.rs:177
 msgid "Re-run Workflow"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:176
+#: src/ui/detail_view/helpers/runs/actions.rs:178
 msgid "Do you want to re-run \"{run}\"?"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:208
+#: src/ui/detail_view/helpers/runs/actions.rs:210
 msgid "✓ Re-running '{run}'"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:213
+#: src/ui/detail_view/helpers/runs/actions.rs:215
 msgid "✗ Failed to re-run workflow"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:240
+#: src/ui/detail_view/helpers/runs/actions.rs:242
 msgid "Re-run failed jobs"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:254
+#: src/ui/detail_view/helpers/runs/actions.rs:256
 msgid "Re-run Failed Jobs"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:255
+#: src/ui/detail_view/helpers/runs/actions.rs:257
 msgid "Do you want to re-run all failed jobs in \"{run}\"?"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:286
+#: src/ui/detail_view/helpers/runs/actions.rs:288
 msgid "✓ Re-running failed jobs for '{run}'"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:288
+#: src/ui/detail_view/helpers/runs/actions.rs:290
 msgid "✗ Failed to re-run failed jobs"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:316
+#: src/ui/detail_view/helpers/runs/actions.rs:318
 #: src/ui/detail_view/helpers/workflows.rs:406
 msgid "Cancel run"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:338
+#: src/ui/detail_view/helpers/runs/actions.rs:340
 msgid "Cancel Workflow Run"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:339
+#: src/ui/detail_view/helpers/runs/actions.rs:341
 msgid ""
 "Do you want to cancel the in-progress run \"{run}\"?\n"
 "\n"
 "This action cannot be undone."
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:372
+#: src/ui/detail_view/helpers/runs/actions.rs:374
 msgid "✓ Cancelled run '{run}'"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:374
+#: src/ui/detail_view/helpers/runs/actions.rs:376
 msgid "✗ Failed to cancel run"
 msgstr ""
 
@@ -504,15 +509,15 @@ msgstr ""
 msgid "Loading workflows..."
 msgstr ""
 
-#: src/ui/detail_view/mod.rs:181
+#: src/ui/detail_view/mod.rs:167
 msgid "Refresh workflows"
 msgstr ""
 
-#: src/ui/detail_view/mod.rs:422 src/ui/sidebar.rs:546 src/ui/sidebar.rs:599
+#: src/ui/detail_view/mod.rs:408 src/ui/sidebar.rs:546 src/ui/sidebar.rs:599
 msgid "Private"
 msgstr ""
 
-#: src/ui/detail_view/mod.rs:424 src/ui/sidebar.rs:548 src/ui/sidebar.rs:601
+#: src/ui/detail_view/mod.rs:410 src/ui/sidebar.rs:548 src/ui/sidebar.rs:601
 msgid "Public"
 msgstr ""
 
@@ -560,7 +565,7 @@ msgstr ""
 msgid "Explore Actioneer with sample data"
 msgstr ""
 
-#: src/ui/welcome_screen.rs:125 src/ui/main_window.rs:391
+#: src/ui/welcome_screen.rs:125 src/ui/main_window.rs:375
 msgid "Quit"
 msgstr ""
 
@@ -744,7 +749,7 @@ msgstr ""
 msgid "Preferences are currently unavailable."
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:55 src/ui/main_window.rs:384
+#: src/ui/main_window/window_actions.rs:55 src/ui/main_window.rs:368
 msgid "Keyboard Shortcuts"
 msgstr ""
 
@@ -817,7 +822,7 @@ msgstr ""
 msgid "Copy diagnostics"
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:279 src/ui/main_window.rs:387
+#: src/ui/main_window/window_actions.rs:279 src/ui/main_window.rs:371
 msgid "Report Issue"
 msgstr ""
 
@@ -825,7 +830,7 @@ msgstr ""
 msgid "Failed to open donation page in the browser."
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:331 src/ui/main_window.rs:738
+#: src/ui/main_window/window_actions.rs:331 src/ui/main_window.rs:712
 msgid "Actioneer notification test"
 msgstr ""
 
@@ -837,123 +842,123 @@ msgstr ""
 msgid "Notifications are currently unavailable."
 msgstr ""
 
-#: src/ui/main_window.rs:378
+#: src/ui/main_window.rs:362
 msgid "Application menu"
 msgstr ""
 
-#: src/ui/main_window.rs:383 src/ui/preferences_window.rs:21
+#: src/ui/main_window.rs:367 src/ui/preferences_window.rs:23
 msgid "Preferences"
 msgstr ""
 
-#: src/ui/main_window.rs:385
+#: src/ui/main_window.rs:369
 msgid "Help"
 msgstr ""
 
-#: src/ui/main_window.rs:386
+#: src/ui/main_window.rs:370
 msgid "Sign out"
 msgstr ""
 
-#: src/ui/main_window.rs:388
+#: src/ui/main_window.rs:372
 msgid "About Actioneer"
 msgstr ""
 
-#: src/ui/main_window.rs:389
+#: src/ui/main_window.rs:373
 msgid "Donate"
 msgstr ""
 
-#: src/ui/main_window.rs:390
+#: src/ui/main_window.rs:374
 msgid "Debug"
 msgstr ""
 
-#: src/ui/main_window.rs:397
+#: src/ui/main_window.rs:381
 msgid "Send test notification"
 msgstr ""
 
-#: src/ui/main_window.rs:398
+#: src/ui/main_window.rs:382
 msgid "Trigger test crash"
 msgstr ""
 
-#: src/ui/main_window.rs:739
+#: src/ui/main_window.rs:713
 msgid "If you see this, notifications are working."
 msgstr ""
 
-#: src/ui/preferences_window.rs:31
+#: src/ui/preferences_window.rs:33
 msgid "Refresh"
 msgstr ""
 
-#: src/ui/preferences_window.rs:34
+#: src/ui/preferences_window.rs:36
 msgid "2 seconds"
 msgstr ""
 
-#: src/ui/preferences_window.rs:35
+#: src/ui/preferences_window.rs:37
 msgid "5 seconds"
 msgstr ""
 
-#: src/ui/preferences_window.rs:36
+#: src/ui/preferences_window.rs:38
 msgid "10 seconds"
 msgstr ""
 
-#: src/ui/preferences_window.rs:37
+#: src/ui/preferences_window.rs:39
 msgid "30 seconds"
 msgstr ""
 
-#: src/ui/preferences_window.rs:46
+#: src/ui/preferences_window.rs:48
 msgid "Auto-refresh interval"
 msgstr ""
 
-#: src/ui/preferences_window.rs:47
+#: src/ui/preferences_window.rs:49
 msgid "How often to check for workflow run updates"
 msgstr ""
 
-#: src/ui/preferences_window.rs:53
+#: src/ui/preferences_window.rs:55
 msgid "Notifications"
 msgstr ""
 
-#: src/ui/preferences_window.rs:57
+#: src/ui/preferences_window.rs:59
 msgid "Desktop Notifications"
 msgstr ""
 
-#: src/ui/preferences_window.rs:58
+#: src/ui/preferences_window.rs:60
 msgid "Show a notification when a workflow run finishes"
 msgstr ""
 
-#: src/ui/preferences_window.rs:70
+#: src/ui/preferences_window.rs:72
 msgid "Appearance"
 msgstr ""
 
-#: src/ui/preferences_window.rs:72
+#: src/ui/preferences_window.rs:74
 msgid "System"
 msgstr ""
 
-#: src/ui/preferences_window.rs:73
+#: src/ui/preferences_window.rs:75
 msgid "Light"
 msgstr ""
 
-#: src/ui/preferences_window.rs:74
+#: src/ui/preferences_window.rs:76
 msgid "Dark"
 msgstr ""
 
-#: src/ui/preferences_window.rs:81
+#: src/ui/preferences_window.rs:83
 msgid "Theme"
 msgstr ""
 
-#: src/ui/preferences_window.rs:82
+#: src/ui/preferences_window.rs:84
 msgid "Select application theme"
 msgstr ""
 
-#: src/ui/preferences_window.rs:88
+#: src/ui/preferences_window.rs:90
 msgid "Language"
 msgstr ""
 
-#: src/ui/preferences_window.rs:90
+#: src/ui/preferences_window.rs:92
 msgid "System language (fallback: English)"
 msgstr ""
 
-#: src/ui/preferences_window.rs:109
+#: src/ui/preferences_window.rs:111
 msgid "Application language"
 msgstr ""
 
-#: src/ui/preferences_window.rs:110
+#: src/ui/preferences_window.rs:112
 msgid "Switch language instantly"
 msgstr ""
 
@@ -973,19 +978,19 @@ msgstr ""
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr ""
 
-#: src/main.rs:172
+#: src/main.rs:173
 msgid "Send a test notification when the app starts"
 msgstr ""
 
-#: src/main.rs:173
+#: src/main.rs:174
 msgid "Set the application language (e.g., ru, en, zh_Hans)"
 msgstr ""
 
-#: src/main.rs:174
+#: src/main.rs:175
 msgid "Start the app with sample demo data"
 msgstr ""
 
-#: src/main.rs:175
+#: src/main.rs:176
 msgid "Print the version of Actioneer and the GTK stack it runs on"
 msgstr ""
 

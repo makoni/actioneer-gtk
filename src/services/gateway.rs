@@ -19,11 +19,11 @@
 //! held across an `.await` in a `Send` future. Both variants share their state
 //! through `Arc`, so a clone is a handle, not a copy.
 
-use crate::api::models::{
+use crate::demo::DemoBackend;
+use crate::services::api::models::{
     Branch, Job, RateLimitInfo, Repo, Workflow, WorkflowDispatchInput, WorkflowRun,
 };
-use crate::api::{GitHubClient, GitHubError};
-use crate::demo::DemoBackend;
+use crate::services::api::{GitHubClient, GitHubError};
 use anyhow::Result;
 
 #[derive(Clone)]

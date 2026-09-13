@@ -1,5 +1,4 @@
 use super::MainWindow;
-use crate::gateway::GitHubGateway;
 use gtk4::glib;
 use tracing::info;
 
@@ -17,12 +16,9 @@ impl MainWindow {
         info!("Entering demo mode with mock data");
         self.stop_background_refresh();
 
-        // Demo mode is now "a demo gateway is installed in the slot", not "a
-        // global flag is set". The seed is the one synchronous read the backend
-        // offers: this runs on the GTK main thread and has nothing to await on.
-        let gateway = GitHubGateway::demo();
-        let (repos, rate_info) = gateway.demo_seed().expect("a demo gateway always seeds");
-        *self.client.lock() = Some(gateway);
+        // The slot transition belongs to the services; everything below it in
+        // this function is the UI reacting, which is why it stays here.
+        let (repos, rate_info) = self.services.enter_demo();
 
         {
             let mut flag = self.demo_mode.lock();

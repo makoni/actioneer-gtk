@@ -3,9 +3,9 @@ use super::helpers::{
     current_job_context_run_ids, set_expander_active, update_workflow_row_header,
 };
 use super::{RepoDetailPane, WorkflowListContext};
-use crate::api::models::{Workflow, WorkflowRun};
 use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
+use crate::services::api::models::{Workflow, WorkflowRun};
 use gtk4::prelude::*;
 use gtk4::{self as gtk, gio, glib};
 use std::collections::{HashMap, HashSet};
@@ -330,7 +330,7 @@ fn collect_expanded_runs(widget: &gtk::Widget, expanded_runs: &mut HashMap<i64, 
 #[cfg(test)]
 mod tests {
     use super::workflows_differ;
-    use crate::api::models::Workflow;
+    use crate::services::api::models::Workflow;
 
     fn workflow(id: i64) -> Workflow {
         Workflow {

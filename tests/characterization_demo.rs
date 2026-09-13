@@ -17,7 +17,7 @@ use common::*;
 #[tokio::test]
 async fn demo_surface_is_stable() {
     // ---- a demo gateway seeds itself --------------------------------------
-    let gateway = actioneer::gateway::GitHubGateway::demo();
+    let gateway = actioneer::services::gateway::GitHubGateway::demo();
     assert!(gateway.is_demo(), "a demo gateway reports itself as demo");
     let (repos, seeded_rate) = gateway.demo_seed().expect("a demo gateway always seeds");
     assert!(seeded_rate.is_some(), "the seed carries the rate limit");
@@ -262,7 +262,8 @@ async fn demo_surface_is_stable() {
     // The one assertion this phase *did* change, because the mechanism it named
     // is gone: there is no global to switch off. Demo mode now ends by dropping
     // the demo gateway, and a live gateway is simply not a demo one.
-    let live = actioneer::gateway::GitHubGateway::live(None).expect("a live gateway builds");
+    let live =
+        actioneer::services::gateway::GitHubGateway::live(None).expect("a live gateway builds");
     assert!(!live.is_demo(), "a live gateway is not demo");
     assert!(
         live.demo_seed().is_none(),
@@ -271,7 +272,7 @@ async fn demo_surface_is_stable() {
 
     // Each demo gateway owns its own fixtures: a fresh one is unaffected by the
     // mutations above. That is the property the Arc-shared backend must keep.
-    let fresh = actioneer::gateway::GitHubGateway::demo();
+    let fresh = actioneer::services::gateway::GitHubGateway::demo();
     let fresh_runs = fresh
         .list_repository_runs(owner, name)
         .await

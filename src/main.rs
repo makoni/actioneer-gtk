@@ -3,7 +3,8 @@
 //! application. Everything else lives in the `actioneer` library.
 
 use actioneer::kernel::i18n::tr;
-use actioneer::preferences::{PreferencesManager, ThemePreference};
+use actioneer::services::app_services::AppServices;
+use actioneer::services::preferences::ThemePreference;
 use actioneer::ui::{MainWindow, style};
 use gio::ApplicationFlags;
 use gtk4::prelude::*;
@@ -22,7 +23,7 @@ static CURRENT_SESSION_ID: OnceLock<String> = OnceLock::new();
 
 fn mark_current_session_clean(reason: &str) {
     if let Some(session_id) = CURRENT_SESSION_ID.get()
-        && let Err(err) = actioneer::crash_report::mark_session_clean(session_id)
+        && let Err(err) = actioneer::services::crash_report::mark_session_clean(session_id)
     {
         warn!(
             reason,
@@ -139,7 +140,7 @@ fn main() -> anyhow::Result<()> {
                 .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
         )
         .init();
-    match actioneer::crash_report::initialize_session_lifecycle() {
+    match actioneer::services::crash_report::initialize_session_lifecycle() {
         Ok(marker) => {
             let _ = CURRENT_SESSION_ID.set(marker.session_id);
         }
@@ -151,7 +152,7 @@ fn main() -> anyhow::Result<()> {
 
     info!("Starting Actioneer for Linux");
     let runtime_app_id = actioneer::resolved_app_id();
-    actioneer::notifications::initialize_portal_env(runtime_app_id.as_ref());
+    actioneer::services::notifications::initialize_portal_env(runtime_app_id.as_ref());
     actioneer::runtime::install_runtime(actioneer::runtime::tokio_worker_threads());
 
     let app = adw::Application::builder()
@@ -226,7 +227,13 @@ fn main() -> anyhow::Result<()> {
         ControlFlow::Continue(())
     });
 
-    let startup_preferences = PreferencesManager::new()
+    // The composition root: the one place that builds the real services. Built
+    // here, before the startup preferences are read, so nothing else has to
+    // construct a `PreferencesManager` of its own.
+    let services = AppServices::build(&app);
+    let startup_preferences = services
+        .preferences
+        .as_ref()
         .map(|manager| manager.get_blocking())
         .unwrap_or_default();
     if cli_locale.is_none() {
@@ -257,9 +264,12 @@ fn main() -> anyhow::Result<()> {
 
     let activate_flag = send_test_notification.clone();
     let activate_demo = start_demo_mode.clone();
+    // `connect_activate` takes an `Fn`, so the services are cloned per
+    // activation rather than moved.
     app.connect_activate(move |app| {
         build_ui(
             app,
+            services.clone(),
             activate_flag.load(Ordering::Relaxed),
             activate_demo.load(Ordering::Relaxed),
         )
@@ -292,7 +302,7 @@ fn install_panic_hook() {
             "Unhandled panic"
         );
         let session_id = CURRENT_SESSION_ID.get().map(String::as_str);
-        if let Err(err) = actioneer::crash_report::persist_panic_report(
+        if let Err(err) = actioneer::services::crash_report::persist_panic_report(
             &location,
             &payload,
             &backtrace.to_string(),
@@ -330,8 +340,13 @@ where
     None
 }
 
-fn build_ui(app: &adw::Application, send_test_notification: bool, start_demo_mode: bool) {
-    let main_window = MainWindow::new(app, start_demo_mode);
+fn build_ui(
+    app: &adw::Application,
+    services: AppServices,
+    send_test_notification: bool,
+    start_demo_mode: bool,
+) {
+    let main_window = MainWindow::new(app, services, start_demo_mode);
     if send_test_notification {
         main_window.trigger_test_notification();
     }

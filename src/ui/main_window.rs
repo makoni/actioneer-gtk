@@ -1,12 +1,13 @@
 use super::WelcomeScreen;
-use crate::api::models::{RateLimitInfo, Repo};
-use crate::cache::{CachePersistenceConfig, DataCache};
-use crate::favorites::FavoritesManager;
-use crate::gateway::GitHubGateway;
 use crate::kernel::i18n::tr;
-use crate::notifications::NotificationManager;
-use crate::preferences::{Preferences, PreferencesManager, ThemePreference};
 use crate::runtime::channel::MainContextChannelExt;
+use crate::services::api::models::{RateLimitInfo, Repo};
+use crate::services::app_services::AppServices;
+use crate::services::cache::DataCache;
+use crate::services::favorites::FavoritesManager;
+use crate::services::gateway::GitHubGateway;
+use crate::services::notifications::NotificationManager;
+use crate::services::preferences::{Preferences, PreferencesManager, ThemePreference};
 use crate::ui::detail_view::RepoDetailPane;
 use crate::ui::utils::create_detail_clamp;
 use gio::Menu;
@@ -76,10 +77,13 @@ pub struct MainWindow {
     handling_selection: Arc<Mutex<bool>>,
     notification_manager: Option<NotificationManager>,
     demo_mode: Arc<Mutex<bool>>,
+    /// Kept so the window can rebuild itself on a language change without
+    /// constructing a second set of real services.
+    services: AppServices,
 }
 
 impl MainWindow {
-    pub fn new(app: &adw::Application, start_demo_mode: bool) -> Self {
+    pub fn new(app: &adw::Application, services: AppServices, start_demo_mode: bool) -> Self {
         crate::ui::style::apply_text_direction_for_language();
         let window = adw::ApplicationWindow::builder()
             .application(app)
@@ -92,20 +96,11 @@ impl MainWindow {
 
         Self::ensure_app_focus_action(app, &window);
 
-        let client = Arc::new(Mutex::new(None));
+        // Everything below comes from the composition root now; the window
+        // constructs no service of its own.
+        let client = services.gateway.clone();
+        let cache = services.cache.clone();
         let repos = Arc::new(Mutex::new(Vec::new()));
-        let cache = Arc::new(
-            CachePersistenceConfig::for_app(crate::kernel::app::APP_ID)
-                .map_or_else(DataCache::new, DataCache::with_persistence),
-        );
-        if cache.has_persistence() {
-            let cache_clone = cache.clone();
-            crate::runtime::handle().spawn(async move {
-                if cache_clone.hydrate_from_disk().await {
-                    info!("Loaded cache snapshot from disk");
-                }
-            });
-        }
 
         let sidebar_panel = SidebarPanel::new();
         let repo_store = sidebar_panel.repo_store();
@@ -137,20 +132,8 @@ impl MainWindow {
         root_stack.set_hexpand(true);
         root_stack.set_vexpand(true);
         let active_detail: Rc<RefCell<Option<RepoDetailPane>>> = Rc::new(RefCell::new(None));
-        let favorites_manager = match FavoritesManager::new() {
-            Ok(manager) => Some(Arc::new(manager)),
-            Err(err) => {
-                warn!("Failed to initialize FavoritesManager: {}", err);
-                None
-            }
-        };
-        let preferences_manager = match PreferencesManager::new() {
-            Ok(manager) => Some(Arc::new(manager)),
-            Err(err) => {
-                warn!("Failed to initialize PreferencesManager: {}", err);
-                None
-            }
-        };
+        let favorites_manager = services.favorites.clone();
+        let preferences_manager = services.preferences.clone();
 
         let favorites = Arc::new(Mutex::new(HashSet::new()));
         let actions_states = Arc::new(Mutex::new(HashMap::new()));
@@ -161,7 +144,7 @@ impl MainWindow {
         let background_refresh_task = Arc::new(Mutex::new(None));
         let handling_selection = Arc::new(Mutex::new(false));
         let header_spinner = Rc::new(RefCell::new(None));
-        let notification_manager = Some(NotificationManager::for_application(app));
+        let notification_manager = services.notifications.clone();
         let demo_mode = Arc::new(Mutex::new(false));
 
         let main_window = Self {
@@ -194,6 +177,7 @@ impl MainWindow {
             handling_selection: handling_selection.clone(),
             notification_manager: notification_manager.clone(),
             demo_mode: demo_mode.clone(),
+            services: services.clone(),
         };
 
         main_window.ensure_app_actions(app);
@@ -579,27 +563,20 @@ impl MainWindow {
             *self.demo_mode.lock() = false;
         }
 
-        match GitHubGateway::live(Some(token)) {
-            Ok(client) => {
-                {
-                    let mut client_guard = self.client.lock();
-                    *client_guard = Some(client);
-                }
-
-                {
-                    let mut info_guard = self.rate_limit_info.lock();
-                    *info_guard = None;
-                }
-
-                self.update_rate_limit_display(None);
-                self.show_authenticated_ui();
-                self.load_repositories();
-                true
+        // The slot transition belongs to the services; the UI reaction below
+        // belongs here.
+        if self.services.authenticate(token) {
+            {
+                let mut info_guard = self.rate_limit_info.lock();
+                *info_guard = None;
             }
-            Err(e) => {
-                error!("Failed to create GitHub client: {}", e);
-                false
-            }
+
+            self.update_rate_limit_display(None);
+            self.show_authenticated_ui();
+            self.load_repositories();
+            true
+        } else {
+            false
         }
     }
 
@@ -630,10 +607,7 @@ impl MainWindow {
             *selected = None;
         }
 
-        {
-            let mut client_guard = self.client.lock();
-            *client_guard = None;
-        }
+        self.services.sign_out();
 
         {
             let cache = self.cache.clone();
@@ -772,7 +746,7 @@ impl MainWindow {
 
         self.stop_background_refresh();
 
-        let replacement = MainWindow::new(&app, was_demo_mode);
+        let replacement = MainWindow::new(&app, self.services.clone(), was_demo_mode);
         {
             let mut replacement_selected = replacement.selected_repo_id.lock();
             *replacement_selected = selected_repo;

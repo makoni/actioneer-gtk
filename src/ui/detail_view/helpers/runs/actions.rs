@@ -1,8 +1,8 @@
 use super::super::formatting::format_run_title;
-use crate::api::models::{Repo, WorkflowRun};
-use crate::gateway::GitHubGateway;
 use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
+use crate::services::api::models::{Repo, WorkflowRun};
+use crate::services::gateway::GitHubGateway;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
@@ -90,7 +90,9 @@ fn create_logs_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::But
         let btn_for_result = btn.clone();
 
         let (sender, receiver) = glib::MainContext::default()
-            .channel::<Result<Vec<crate::api::models::Job>, String>>(glib::Priority::default());
+            .channel::<Result<Vec<crate::services::api::models::Job>, String>>(
+                glib::Priority::default(),
+            );
 
         let parent_window = parent_window.clone();
         let repo_model = repo_model.clone();
@@ -397,7 +399,7 @@ pub(crate) fn confirm_and_cancel_run(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::models::{Repo, WorkflowRun};
+    use crate::services::api::models::{Repo, WorkflowRun};
     use crate::ui::test_helpers::run_gtk_test;
 
     fn run_stub() -> WorkflowRun {
@@ -460,7 +462,7 @@ mod tests {
                     id: 1,
                     name: "repo".into(),
                     full_name: "owner/repo".into(),
-                    owner: crate::api::models::User {
+                    owner: crate::services::api::models::User {
                         login: "owner".into(),
                     },
                     is_private: false,

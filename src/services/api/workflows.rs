@@ -1,7 +1,7 @@
 /// Workflow operations
 use super::error::GitHubError;
 use super::http::{ResponseHandler, add_auth_header};
-use crate::api::models::{
+use crate::services::api::models::{
     Workflow, WorkflowDispatchInput, WorkflowDispatchInputType, WorkflowDispatchInputValue,
     WorkflowRun, WorkflowsResponse,
 };
@@ -386,11 +386,11 @@ fn yaml_value_as_string(value: &YamlValue) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::models::WorkflowRunsResponse;
+    use crate::services::api::models::WorkflowRunsResponse;
 
     #[test]
     fn parse_publish_workflow_inputs() {
-        let yaml = include_str!("../../.github/workflows/publish.yml");
+        let yaml = include_str!("../../../.github/workflows/publish.yml");
         let inputs = parse_workflow_dispatch_inputs(yaml).expect("parse workflow inputs");
 
         assert_eq!(inputs.len(), 3);

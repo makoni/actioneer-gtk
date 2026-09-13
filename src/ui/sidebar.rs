@@ -1,7 +1,7 @@
-use crate::api::models::Repo;
-use crate::favorites::FavoritesManager;
 use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
+use crate::services::api::models::Repo;
+use crate::services::favorites::FavoritesManager;
 use crate::ui::state::{RepoActionsState, WorkflowStatusCounts};
 use crate::ui::utils::apply_favorite_result;
 use crate::ui::utils::widget_data::{get_data_clone, get_data_copy, set_data};
@@ -791,10 +791,10 @@ fn update_meta_box(meta_box: &gtk::Box, workflow_counts: &WorkflowStatusCounts) 
 
 /// Gather workflow status counts for a repository
 pub async fn gather_workflow_status_counts(
-    client: &crate::gateway::GitHubGateway,
+    client: &crate::services::gateway::GitHubGateway,
     owner: &str,
     repo: &str,
-) -> Result<WorkflowStatusCounts, crate::api::GitHubError> {
+) -> Result<WorkflowStatusCounts, crate::services::api::GitHubError> {
     use crate::domain::counts::select_latest_runs_for_workflows;
     use crate::domain::runs::{is_run_active, is_run_failure};
 
@@ -868,7 +868,7 @@ pub async fn gather_workflow_status_counts(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::models::{Repo, User};
+    use crate::services::api::models::{Repo, User};
     use crate::ui::state::WorkflowStatusCounts;
     use crate::ui::test_helpers::run_gtk_test;
     use gtk4::{self as gtk, gio};

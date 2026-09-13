@@ -1,6 +1,6 @@
-/// Background task: Observe favorites changes
-use crate::favorites::FavoritesManager;
 use crate::runtime::channel::MainContextChannelExt;
+/// Background task: Observe favorites changes
+use crate::services::favorites::FavoritesManager;
 use gtk4::glib;
 use parking_lot::Mutex;
 use std::collections::HashSet;

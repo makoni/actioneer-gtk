@@ -24,8 +24,14 @@ impl FavoritesManager {
             .join("actioneer");
 
         fs::create_dir_all(&config_dir)?;
+        Self::with_path(config_dir.join("favorites.json"))
+    }
 
-        let config_path = config_dir.join("favorites.json");
+    /// Reads and writes favorites at an explicit path.
+    ///
+    /// Tests point this at a `tempfile` directory; `new()` is the production
+    /// entry point and picks the XDG config location.
+    pub fn with_path(config_path: std::path::PathBuf) -> anyhow::Result<Self> {
         let data = if config_path.exists() {
             let json = fs::read_to_string(&config_path)?;
             serde_json::from_str(&json).unwrap_or_default()

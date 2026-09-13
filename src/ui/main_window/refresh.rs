@@ -1,6 +1,6 @@
 use super::MainWindow;
-use crate::api::models::Repo;
 use crate::runtime::channel::MainContextChannelExt;
+use crate::services::api::models::Repo;
 use crate::ui::utils::update_rate_limit_label;
 use gtk4::glib;
 use tokio::time::{Duration, sleep};

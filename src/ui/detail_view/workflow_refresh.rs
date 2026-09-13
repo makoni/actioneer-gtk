@@ -1,11 +1,11 @@
 use super::helpers::{LoadRunsParams, current_job_context_run_ids, refresh_jobs_for_workflows};
 use super::{RepoDetailPane, WorkflowListContext};
-use crate::api::GitHubError;
-use crate::api::models::Workflow;
-use crate::gateway::GitHubGateway;
 use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
 use crate::runtime::channel::Sender as UiChannelSender;
+use crate::services::api::GitHubError;
+use crate::services::api::models::Workflow;
+use crate::services::gateway::GitHubGateway;
 use crate::ui::utils::try_remove_source;
 use crate::ui::utils::widget_data::get_data_clone;
 use gtk4::prelude::*;
@@ -822,7 +822,7 @@ mod tests {
         should_refresh_workflow_runs_in_background, should_skip_silent_workflow_refresh,
         workflow_load_result, workflow_load_task_dropped_error,
     };
-    use crate::api::models::Workflow;
+    use crate::services::api::models::Workflow;
     use std::sync::Arc;
     use std::time::Instant;
 

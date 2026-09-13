@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::services::config::Config;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;

@@ -1,4 +1,4 @@
-use crate::api::models::{Job, Workflow, WorkflowRun};
+use crate::services::api::models::{Job, Workflow, WorkflowRun};
 use dirs::cache_dir;
 use std::path::PathBuf;
 use std::sync::Arc;

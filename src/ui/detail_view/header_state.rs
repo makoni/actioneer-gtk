@@ -1,7 +1,7 @@
 use super::filter_controls::FilterChips;
-use crate::api::models::WorkflowRun;
 use crate::domain::filters::{RunStatusFilterKind, classify_run_status};
 use crate::kernel::i18n::tr;
+use crate::services::api::models::WorkflowRun;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use std::cell::{Cell, RefCell};

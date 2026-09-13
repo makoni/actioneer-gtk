@@ -9,16 +9,16 @@ use super::runs::{
 };
 use super::status_dot::{WORKFLOW_DOT_SIZE, build_status_dot, set_status_dot_state};
 use super::workflow_follow_up::{FollowUpRefreshParams, schedule_follow_up_refresh};
-use crate::api::models::{
+use crate::domain::formatting::running_duration_string;
+use crate::kernel::i18n::tr;
+use crate::runtime::channel::MainContextChannelExt;
+use crate::services::api::models::{
     JobSummary, Repo, Workflow, WorkflowDispatchInput, WorkflowDispatchInputType,
     WorkflowDispatchInputValue, WorkflowRun, build_dispatch_inputs_payload,
 };
-use crate::domain::formatting::running_duration_string;
-use crate::gateway::GitHubGateway;
-use crate::kernel::i18n::tr;
-use crate::notifications::NotificationManager;
-use crate::preferences::PreferencesManager;
-use crate::runtime::channel::MainContextChannelExt;
+use crate::services::gateway::GitHubGateway;
+use crate::services::notifications::NotificationManager;
+use crate::services::preferences::PreferencesManager;
 use crate::ui::detail_view::RunFilters;
 use crate::ui::detail_view::header_state::DetailHeaderState;
 use crate::ui::job_logs_window::JobLogsWindow;
@@ -600,7 +600,7 @@ pub(crate) fn create_workflow_expander_row(
 
             let (sender, receiver) =
                 glib::MainContext::default()
-                    .channel::<Result<Vec<crate::api::models::Job>, String>>(
+                    .channel::<Result<Vec<crate::services::api::models::Job>, String>>(
                         glib::Priority::default(),
                     );
 
@@ -1360,7 +1360,7 @@ pub(crate) fn create_workflow_expander_row(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::models::User;
+    use crate::services::api::models::User;
     use crate::ui::detail_view::filter_controls::FilterControls;
     use crate::ui::test_helpers::run_gtk_test;
 
@@ -1384,7 +1384,7 @@ mod tests {
         let controls = FilterControls::new();
 
         WorkflowRowContext {
-            client: Arc::new(Mutex::new(crate::gateway::GitHubGateway::demo())),
+            client: Arc::new(Mutex::new(crate::services::gateway::GitHubGateway::demo())),
             owner: "mak".into(),
             repo: "actioneer".into(),
             repo_model: Repo {

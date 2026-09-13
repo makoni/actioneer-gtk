@@ -1,8 +1,8 @@
 use super::helpers::{LoadRunsParams, current_job_context_run_ids};
 use super::workflow_refresh::run_list_for_expander;
 use super::{RepoDetailPane, RunFilters};
-use crate::preferences::RunFilterPreferences;
 use crate::runtime::channel::MainContextChannelExt;
+use crate::services::preferences::RunFilterPreferences;
 use crate::ui::utils::widget_data::{get_data_clone, get_data_copy};
 use gtk4::prelude::{Cast, ToggleButtonExt, WidgetExt};
 use gtk4::{self as gtk, glib};

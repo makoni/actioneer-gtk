@@ -1,4 +1,4 @@
-use crate::api::models::WorkflowRun;
+use crate::services::api::models::WorkflowRun;
 use std::collections::HashMap;
 
 #[derive(Clone, PartialEq, Eq, Debug)]

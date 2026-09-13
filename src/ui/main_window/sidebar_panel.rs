@@ -322,7 +322,7 @@ fn create_pill(label: &str) -> gtk::ToggleButton {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::models::{Repo, User};
+    use crate::services::api::models::{Repo, User};
     use crate::ui::sidebar::{RepoListRenderContext, rebuild_repo_list};
     use crate::ui::test_helpers::{pump_frames, run_gtk_test};
     use parking_lot::Mutex;

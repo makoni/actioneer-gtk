@@ -1,5 +1,5 @@
-use crate::api::GitHubError;
-use crate::api::models::{
+use crate::services::api::GitHubError;
+use crate::services::api::models::{
     Branch, BranchCommit, Job, JobStep, RateLimitInfo, Repo, RepoPermissions, RunHeadCommit, User,
     Workflow, WorkflowRun,
 };

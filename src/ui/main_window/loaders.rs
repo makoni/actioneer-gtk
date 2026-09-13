@@ -1,8 +1,8 @@
 use super::MainWindow;
-use crate::api::GitHubError;
-use crate::api::models::{RateLimitInfo, Repo};
 use crate::domain::counts::{determine_actions_state, selected_repo_for_status_refresh};
 use crate::runtime::channel::MainContextChannelExt;
+use crate::services::api::GitHubError;
+use crate::services::api::models::{RateLimitInfo, Repo};
 use crate::ui::sidebar::{RepoListRenderContext, rebuild_repo_list};
 use crate::ui::tasks::repo_status;
 use crate::ui::utils::update_rate_limit_label;
@@ -191,7 +191,7 @@ impl MainWindow {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::models::User;
+    use crate::services::api::models::User;
 
     fn repo(id: i64, name: &str) -> Repo {
         Repo {

@@ -1,6 +1,6 @@
-/// Utility functions for rate limit display
-use crate::api::models::RateLimitInfo;
 use crate::kernel::i18n::tr;
+/// Utility functions for rate limit display
+use crate::services::api::models::RateLimitInfo;
 use chrono::{DateTime, Utc};
 use gtk4::{self as gtk};
 

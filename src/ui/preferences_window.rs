@@ -1,7 +1,9 @@
 use crate::kernel::i18n::{apply_language_preference, tr};
-use crate::preferences::{LanguagePreference, Preferences, PreferencesManager, ThemePreference};
 use crate::runtime::channel::MainContextChannelExt;
 use crate::runtime::handle;
+use crate::services::preferences::{
+    LanguagePreference, Preferences, PreferencesManager, ThemePreference,
+};
 use gtk4::glib::Propagation;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
@@ -297,7 +299,7 @@ fn index_to_language(index: u32) -> LanguagePreference {
 #[cfg(test)]
 mod tests {
     use super::{index_to_language, language_to_index};
-    use crate::preferences::LanguagePreference;
+    use crate::services::preferences::LanguagePreference;
 
     #[test]
     fn language_index_mapping_handles_de_and_nl() {

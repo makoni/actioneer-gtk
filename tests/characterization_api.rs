@@ -13,7 +13,7 @@
 //! already covered by the in-crate tests in `src/api/http.rs`; this file covers
 //! the public client surface those unit tests do not reach.
 
-use actioneer::api::{GitHubClient, GitHubError};
+use actioneer::services::api::{GitHubClient, GitHubError};
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 

@@ -1,7 +1,7 @@
 use super::error::GitHubError;
 use super::http::ResponseHandler;
 use super::{jobs, repos, runs, workflows};
-use crate::api::models::*;
+use crate::services::api::models::*;
 use anyhow::Result;
 use reqwest::Client;
 use reqwest::header::{ACCEPT, HeaderMap, HeaderName, HeaderValue};

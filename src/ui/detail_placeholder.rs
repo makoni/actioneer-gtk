@@ -1,5 +1,5 @@
-use crate::api::models::Repo;
 use crate::kernel::i18n::tr;
+use crate::services::api::models::Repo;
 use gtk4::glib::idle_add_local_once;
 use libadwaita as adw;
 
@@ -45,7 +45,7 @@ pub fn schedule_actions_disabled_page(status_page: adw::StatusPage, repo: Repo) 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::models::User;
+    use crate::services::api::models::User;
     use crate::ui::test_helpers::run_gtk_test;
     use gtk4::glib;
 

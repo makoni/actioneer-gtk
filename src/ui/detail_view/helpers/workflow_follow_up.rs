@@ -1,10 +1,10 @@
 use super::context::JobContextMap;
 use super::run_loader::RunLoadService;
 use super::runs::{LoadRunsParams, RunDigestStore, WorkflowRunListModel};
-use crate::api::models::Repo;
-use crate::gateway::GitHubGateway;
-use crate::notifications::NotificationManager;
-use crate::preferences::PreferencesManager;
+use crate::services::api::models::Repo;
+use crate::services::gateway::GitHubGateway;
+use crate::services::notifications::NotificationManager;
+use crate::services::preferences::PreferencesManager;
 use crate::ui::detail_view::RunFilters;
 use crate::ui::utils::try_remove_source;
 use crate::ui::utils::widget_data::{get_data_copy, set_data, steal_data};
@@ -68,7 +68,7 @@ pub(super) fn schedule_follow_up_refresh(params: FollowUpRefreshParams) {
     glib::MainContext::default().spawn_local(async move {
         let interval_secs = match prefs_mgr {
             Some(manager) => manager.get().await.refresh_interval,
-            None => crate::preferences::Preferences::default().refresh_interval,
+            None => crate::services::preferences::Preferences::default().refresh_interval,
         };
 
         if interval_secs == 0 {

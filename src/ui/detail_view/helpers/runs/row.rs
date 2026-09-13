@@ -8,9 +8,9 @@ use super::super::formatting::{
 use super::super::jobs::{LoadJobsParams, load_run_jobs};
 use super::super::status_dot::{RUN_DOT_SIZE, build_status_dot};
 use super::actions::{RunActionContext, create_actions_box};
-use crate::api::models::{Repo, WorkflowRun};
-use crate::gateway::GitHubGateway;
 use crate::kernel::i18n::tr;
+use crate::services::api::models::{Repo, WorkflowRun};
+use crate::services::gateway::GitHubGateway;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib, pango};
 use libadwaita as adw;
@@ -391,8 +391,8 @@ fn remove_job_context_if_current(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::models::{Job, Repo, User};
-    use crate::gateway::GitHubGateway;
+    use crate::services::api::models::{Job, Repo, User};
+    use crate::services::gateway::GitHubGateway;
     use crate::ui::test_helpers::run_gtk_test;
     use parking_lot::Mutex;
     use std::cell::RefCell;

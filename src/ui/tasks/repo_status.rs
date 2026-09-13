@@ -1,8 +1,8 @@
 /// Background task: Check repository status (Actions enabled, workflow counts)
 use super::super::state::{RepoActionsState, WorkflowStatusCounts};
-use crate::api::models::Repo;
-use crate::gateway::GitHubGateway;
 use crate::runtime::channel::MainContextChannelExt;
+use crate::services::api::models::Repo;
+use crate::services::gateway::GitHubGateway;
 use crate::ui::sidebar::gather_workflow_status_counts;
 use gtk4::glib;
 use parking_lot::Mutex;

@@ -1,8 +1,8 @@
 //! Wall-clock durations for items that are still running, shared by the job,
 //! step and run rows so every view counts up the same way.
 
-use crate::api::models::{Job, JobStep};
 use crate::domain::formatting::{is_in_progress, running_duration_string};
+use crate::services::api::models::{Job, JobStep};
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 

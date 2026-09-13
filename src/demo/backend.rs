@@ -13,8 +13,8 @@
 //! working. `tests/characterization_demo.rs` covers exactly that.
 
 use super::data::DemoData;
-use crate::api::GitHubError;
-use crate::api::models::{
+use crate::services::api::GitHubError;
+use crate::services::api::models::{
     Branch, Job, RateLimitInfo, Repo, Workflow, WorkflowDispatchInput, WorkflowDispatchInputType,
     WorkflowDispatchInputValue, WorkflowRun,
 };

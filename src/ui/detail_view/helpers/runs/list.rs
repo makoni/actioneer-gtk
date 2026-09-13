@@ -1,8 +1,8 @@
 use super::super::workflows::{WorkflowRowHeader, update_workflow_row_header};
 use super::row::{RunRowContext, create_run_expander_row};
-use crate::api::models::{JobSummary, WorkflowRun};
 use crate::domain::filters::summarize_visible_runs;
 use crate::kernel::i18n::tr;
+use crate::services::api::models::{JobSummary, WorkflowRun};
 use crate::ui::detail_view::RunFilters;
 use crate::ui::detail_view::header_state::DetailHeaderState;
 use glib::subclass::types::ObjectSubclassIsExt;
@@ -626,8 +626,8 @@ mod imp {
 mod tests {
     use super::test_run_list_model;
     use super::{STATE_CONTENT, STATE_ERROR, STATE_IDLE, format_runs_counts, state_requires_load};
-    use crate::api::models::WorkflowRun;
     use crate::kernel::i18n::{i18n_test_guard, tr};
+    use crate::services::api::models::WorkflowRun;
     use crate::ui::detail_view::RunFilters;
     use crate::ui::test_helpers::run_gtk_test;
     use gtk4::prelude::ListModelExt;

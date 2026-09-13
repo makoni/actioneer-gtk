@@ -1,6 +1,6 @@
-use crate::favorites::FavoritesManager;
 use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
+use crate::services::favorites::FavoritesManager;
 use crate::ui::utils::apply_favorite_result;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
@@ -151,7 +151,10 @@ mod tests {
     fn observing_favorites_keeps_the_button_sensitive() {
         run_gtk_test("observing_favorites_keeps_the_button_sensitive", || {
             crate::runtime::init_test_runtime();
-            let manager = FavoritesManager::new().expect("favorites manager builds");
+            // A temp file, not the developer's real favorites.json.
+            let dir = tempfile::tempdir().expect("temp dir");
+            let manager = FavoritesManager::with_path(dir.path().join("favorites.json"))
+                .expect("favorites manager builds");
             let button = gtk::ToggleButton::new();
             button.set_sensitive(true);
 
@@ -191,7 +194,10 @@ mod tests {
     fn revert_set_active_does_not_spawn_a_favorite_write() {
         run_gtk_test("revert_set_active_does_not_spawn_a_favorite_write", || {
             crate::runtime::init_test_runtime();
-            let manager = FavoritesManager::new().expect("favorites manager builds");
+            // A temp file, not the developer's real favorites.json.
+            let dir = tempfile::tempdir().expect("temp dir");
+            let manager = FavoritesManager::with_path(dir.path().join("favorites.json"))
+                .expect("favorites manager builds");
             let updates = manager.subscribe();
             let repo_id = i64::MAX;
             let favorites = Arc::new(Mutex::new(HashSet::new()));

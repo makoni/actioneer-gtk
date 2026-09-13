@@ -1,6 +1,6 @@
 /// HTTP client utilities and helpers
 use super::error::GitHubError;
-use crate::api::models::RateLimitInfo;
+use crate::services::api::models::RateLimitInfo;
 use reqwest::{Response, StatusCode, header};
 use serde::de::DeserializeOwned;
 use std::collections::HashMap;

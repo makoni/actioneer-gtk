@@ -1,7 +1,7 @@
 /// Job operations
 use super::error::GitHubError;
 use super::http::{ResponseHandler, add_auth_header};
-use crate::api::models::{Job, JobsResponse};
+use crate::services::api::models::{Job, JobsResponse};
 use reqwest::Client;
 use reqwest::StatusCode;
 use tracing::info;
