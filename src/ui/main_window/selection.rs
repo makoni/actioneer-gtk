@@ -1,6 +1,6 @@
 use super::MainWindow;
 use crate::api::models::Repo;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use crate::ui::detail_placeholder::{schedule_actions_disabled_page, schedule_status_page_update};
 use crate::ui::detail_view::{RepoDetailDeps, RepoDetailPane};
 use gtk4::prelude::WidgetExt;

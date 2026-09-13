@@ -2,7 +2,7 @@ use crate::auth::device::{
     AccessToken, AuthError, DeviceFlowInfo, poll_device_token, start_device_flow,
 };
 use crate::config::Config;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
 use crate::runtime::handle;
 use crate::storage::TokenStorage;

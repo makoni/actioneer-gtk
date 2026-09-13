@@ -1,6 +1,6 @@
 use crate::api::models::{Job, WorkflowRun};
 use crate::domain::formatting::running_duration_string;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use crate::ui::utils::duration::start_live_text;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, pango};
@@ -374,7 +374,7 @@ fn localized_absolute_date_from_iso(iso_string: &str) -> Option<String> {
 }
 
 fn fallback_localized_numeric_date(date_time: chrono::DateTime<chrono::Local>) -> String {
-    match crate::i18n::current_effective_language().as_str() {
+    match crate::kernel::i18n::current_effective_language().as_str() {
         "en" => date_time.format("%m/%d/%Y").to_string(),
         "zh_Hans" => date_time.format("%Y/%m/%d").to_string(),
         "pt_BR" | "fr" | "es" | "hi" | "ar" | "bn" | "ur" => {
@@ -430,7 +430,7 @@ mod tests {
 
     use super::*;
     use crate::api::models::{Job, WorkflowRun};
-    use crate::i18n::{apply_language_preference, i18n_test_guard, init};
+    use crate::kernel::i18n::{apply_language_preference, i18n_test_guard, init};
     use crate::preferences::LanguagePreference;
     use crate::ui::test_helpers::run_gtk_test;
 

@@ -1,7 +1,7 @@
 use crate::api::models::{Repo, Workflow};
 use crate::favorites::FavoritesManager;
 use crate::gateway::GitHubGateway;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use crate::notifications::NotificationManager;
 use crate::preferences::{PreferencesManager, RunFilterPreferences};
 use gtk4::prelude::*;

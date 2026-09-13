@@ -16,7 +16,6 @@ pub mod demo;
 pub mod domain;
 pub mod favorites;
 pub mod gateway;
-pub mod i18n;
 pub mod notifications;
 pub mod preferences;
 pub mod storage;

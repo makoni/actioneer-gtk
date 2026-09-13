@@ -3,7 +3,7 @@ use super::{RepoDetailPane, WorkflowListContext};
 use crate::api::GitHubError;
 use crate::api::models::Workflow;
 use crate::gateway::GitHubGateway;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
 use crate::runtime::channel::Sender as UiChannelSender;
 use crate::ui::utils::try_remove_source;

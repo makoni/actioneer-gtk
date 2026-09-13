@@ -1,4 +1,4 @@
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use crate::ui::sidebar::{
     SidebarFilter, row_activatable_from_object, row_matches_filter, row_selectable_from_object,
 };

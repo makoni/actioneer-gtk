@@ -2,3 +2,4 @@
 //! nothing else in this crate.
 
 pub mod app;
+pub mod i18n;

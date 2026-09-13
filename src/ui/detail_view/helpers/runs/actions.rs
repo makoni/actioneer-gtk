@@ -1,7 +1,7 @@
 use super::super::formatting::format_run_title;
 use crate::api::models::{Repo, WorkflowRun};
 use crate::gateway::GitHubGateway;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};

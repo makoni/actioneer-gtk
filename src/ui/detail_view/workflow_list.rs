@@ -4,7 +4,7 @@ use super::helpers::{
 };
 use super::{RepoDetailPane, WorkflowListContext};
 use crate::api::models::{Workflow, WorkflowRun};
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, gio, glib};

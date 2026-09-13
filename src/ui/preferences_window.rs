@@ -1,4 +1,4 @@
-use crate::i18n::{apply_language_preference, tr};
+use crate::kernel::i18n::{apply_language_preference, tr};
 use crate::preferences::{LanguagePreference, Preferences, PreferencesManager, ThemePreference};
 use crate::runtime::channel::MainContextChannelExt;
 use crate::runtime::handle;

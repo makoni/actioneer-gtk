@@ -1,6 +1,6 @@
 use crate::api::models::Repo;
 use crate::favorites::FavoritesManager;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
 use crate::ui::state::{RepoActionsState, WorkflowStatusCounts};
 use crate::ui::utils::apply_favorite_result;

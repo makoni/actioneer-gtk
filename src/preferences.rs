@@ -1,38 +1,12 @@
+// The two value enums live in the kernel: `i18n` needs `LanguagePreference`,
+// and the kernel is the layer that may not depend on a service. Re-exported so
+// every existing `preferences::LanguagePreference` path still resolves.
+pub use crate::kernel::i18n::{LanguagePreference, ThemePreference};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::{RwLock, watch};
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
-#[serde(rename_all = "snake_case")]
-pub enum ThemePreference {
-    #[default]
-    System,
-    Light,
-    Dark,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
-#[serde(rename_all = "snake_case")]
-pub enum LanguagePreference {
-    #[default]
-    System,
-    En,
-    De,
-    Nl,
-    ZhHans,
-    Hi,
-    Es,
-    Fr,
-    Ar,
-    Bn,
-    PtBr,
-    Ru,
-    Ur,
-    It,
-    Ja,
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Preferences {

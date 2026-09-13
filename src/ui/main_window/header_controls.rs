@@ -1,4 +1,4 @@
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use gtk4::prelude::*;
 use gtk4::{self as gtk};
 use libadwaita as adw;

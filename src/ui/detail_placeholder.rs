@@ -1,5 +1,5 @@
 use crate::api::models::Repo;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use gtk4::glib::idle_add_local_once;
 use libadwaita as adw;
 

@@ -1,6 +1,6 @@
 use super::{DONATION_URL, HOMEPAGE_URL, ISSUE_URL, MainWindow};
 use crate::crash_report;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use crate::ui::preferences_window::PreferencesWindow;
 use gtk4::prelude::*;
 use gtk4::{self as gtk};

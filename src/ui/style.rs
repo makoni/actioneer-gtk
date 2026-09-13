@@ -450,7 +450,7 @@ pub fn install_app_css() {
 /// Lives here rather than in `kernel/` because it drives a GTK widget default;
 /// the kernel must not name the toolkit.
 pub fn apply_text_direction_for_language() {
-    let direction = if crate::i18n::current_language_is_rtl() {
+    let direction = if crate::kernel::i18n::current_language_is_rtl() {
         gtk::TextDirection::Rtl
     } else {
         gtk::TextDirection::Ltr

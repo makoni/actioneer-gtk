@@ -1,11 +1,41 @@
-use crate::preferences::LanguagePreference;
 use gettextrs::{
     LocaleCategory, bind_textdomain_codeset, bindtextdomain, gettext, setlocale, textdomain,
 };
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::{OnceLock, RwLock};
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum ThemePreference {
+    #[default]
+    System,
+    Light,
+    Dark,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum LanguagePreference {
+    #[default]
+    System,
+    En,
+    De,
+    Nl,
+    ZhHans,
+    Hi,
+    Es,
+    Fr,
+    Ar,
+    Bn,
+    PtBr,
+    Ru,
+    Ur,
+    It,
+    Ja,
+}
 
 pub const GETTEXT_PACKAGE: &str = "actioneer";
 
@@ -429,12 +459,12 @@ fn resolve_locale_dir(
 #[cfg(test)]
 mod tests {
     use super::{
-        apply_language_preference, current_effective_language, current_language_is_rtl, init,
-        is_rtl_language, normalize_system_locale, parse_locale_string, parse_po_catalog,
-        resolve_initial_language, resolve_language_preference, resolve_locale_dir, resolve_po_dir,
-        set_effective_language, tr,
+        LanguagePreference, apply_language_preference, current_effective_language,
+        current_language_is_rtl, init, is_rtl_language, normalize_system_locale,
+        parse_locale_string, parse_po_catalog, resolve_initial_language,
+        resolve_language_preference, resolve_locale_dir, resolve_po_dir, set_effective_language,
+        tr,
     };
-    use crate::preferences::LanguagePreference;
     use std::path::PathBuf;
 
     #[test]

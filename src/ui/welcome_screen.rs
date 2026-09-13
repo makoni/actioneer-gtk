@@ -1,5 +1,5 @@
-use crate::i18n::tr;
 use crate::kernel::app::APP_ICON_NAME;
+use crate::kernel::i18n::tr;
 use gtk4 as gtk;
 use gtk4::prelude::*;
 

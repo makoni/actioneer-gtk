@@ -15,7 +15,7 @@ use crate::api::models::{
 };
 use crate::domain::formatting::running_duration_string;
 use crate::gateway::GitHubGateway;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use crate::notifications::NotificationManager;
 use crate::preferences::PreferencesManager;
 use crate::runtime::channel::MainContextChannelExt;

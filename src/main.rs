@@ -2,7 +2,7 @@
 //! crash-report session and the Tokio runtime, then builds and runs the
 //! application. Everything else lives in the `actioneer` library.
 
-use actioneer::i18n::tr;
+use actioneer::kernel::i18n::tr;
 use actioneer::preferences::{PreferencesManager, ThemePreference};
 use actioneer::ui::{MainWindow, style};
 use gio::ApplicationFlags;
@@ -128,9 +128,9 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
 
-    let cli_locale =
-        parse_cli_locale_arg().and_then(|locale| actioneer::i18n::parse_locale_string(&locale));
-    actioneer::i18n::init(cli_locale.as_deref());
+    let cli_locale = parse_cli_locale_arg()
+        .and_then(|locale| actioneer::kernel::i18n::parse_locale_string(&locale));
+    actioneer::kernel::i18n::init(cli_locale.as_deref());
 
     // Initialize logging
     tracing_subscriber::fmt()
@@ -230,7 +230,7 @@ fn main() -> anyhow::Result<()> {
         .map(|manager| manager.get_blocking())
         .unwrap_or_default();
     if cli_locale.is_none() {
-        actioneer::i18n::apply_language_preference(startup_preferences.language_preference);
+        actioneer::kernel::i18n::apply_language_preference(startup_preferences.language_preference);
     }
 
     app.connect_startup(|_| {

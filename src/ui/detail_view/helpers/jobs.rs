@@ -8,7 +8,7 @@ use super::status_dot::{JOB_DOT_SIZE, STEP_DOT_SIZE, build_status_dot};
 use crate::api::GitHubError;
 use crate::api::models::{Job, JobStep, JobSummary, Repo};
 use crate::gateway::GitHubGateway;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
 use crate::ui::job_logs_window::JobLogsWindow;
 use crate::ui::utils::duration::{job_duration_label, start_live_duration, step_duration_label};

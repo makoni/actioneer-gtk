@@ -1,5 +1,5 @@
-use crate::i18n::tr;
 use crate::kernel::app::APP_ICON_NAME;
+use crate::kernel::i18n::tr;
 use crate::runtime::channel::{MainContextChannelExt, Sender as UiChannelSender};
 use crate::runtime::handle;
 use anyhow::anyhow;
@@ -522,7 +522,7 @@ struct NotificationCommand {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::i18n::{apply_language_preference, i18n_test_guard, init};
+    use crate::kernel::i18n::{apply_language_preference, i18n_test_guard, init};
     use crate::preferences::LanguagePreference;
 
     #[test]

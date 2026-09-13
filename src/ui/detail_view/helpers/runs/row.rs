@@ -10,7 +10,7 @@ use super::super::status_dot::{RUN_DOT_SIZE, build_status_dot};
 use super::actions::{RunActionContext, create_actions_box};
 use crate::api::models::{Repo, WorkflowRun};
 use crate::gateway::GitHubGateway;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib, pango};
 use libadwaita as adw;

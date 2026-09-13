@@ -1,5 +1,5 @@
 use super::MainWindow;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
 use crate::storage::TokenStorage;
 use crate::ui::auth_window::AuthWindow;

@@ -1,7 +1,7 @@
 use crate::api::GitHubError;
 use crate::api::models::{Job, Repo};
 use crate::gateway::GitHubGateway;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
 use gtk4::gdk;
 use gtk4::gio;

@@ -1,5 +1,5 @@
 use crate::favorites::FavoritesManager;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use crate::runtime::channel::MainContextChannelExt;
 use crate::ui::utils::apply_favorite_result;
 use gtk4::prelude::*;

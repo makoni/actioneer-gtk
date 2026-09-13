@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-13 12:57+0000\n"
+"POT-Creation-Date: 2026-09-13 13:15+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. Welcome title
-#: src/i18n.rs:550 src/i18n.rs:567 src/i18n.rs:584 src/ui/welcome_screen.rs:38
+#: src/kernel/i18n.rs:580 src/kernel/i18n.rs:597 src/kernel/i18n.rs:614
+#: src/ui/welcome_screen.rs:38
 msgid "Welcome to Actioneer"
 msgstr ""
 
@@ -38,28 +39,28 @@ msgstr ""
 msgid "Failed ✗"
 msgstr ""
 
-#: src/notifications.rs:208 src/ui/detail_view/helpers/formatting.rs:620
+#: src/notifications.rs:208 src/ui/detail_view/helpers/formatting.rs:309
 msgid "Cancelled"
 msgstr ""
 
-#: src/notifications.rs:209 src/ui/detail_view/helpers/formatting.rs:621
+#: src/notifications.rs:209 src/ui/detail_view/helpers/formatting.rs:310
 msgid "Skipped"
 msgstr ""
 
-#: src/notifications.rs:210 src/ui/detail_view/helpers/formatting.rs:622
+#: src/notifications.rs:210 src/ui/detail_view/helpers/formatting.rs:311
 msgid "Timed Out"
 msgstr ""
 
 #: src/notifications.rs:211 src/notifications.rs:542
-#: src/ui/detail_view/helpers/formatting.rs:623
+#: src/ui/detail_view/helpers/formatting.rs:312
 msgid "Action Required"
 msgstr ""
 
-#: src/notifications.rs:212 src/ui/detail_view/helpers/formatting.rs:624
+#: src/notifications.rs:212 src/ui/detail_view/helpers/formatting.rs:313
 msgid "Neutral"
 msgstr ""
 
-#: src/notifications.rs:225 src/ui/detail_view/helpers/formatting.rs:602
+#: src/notifications.rs:225 src/ui/detail_view/helpers/formatting.rs:291
 msgid "Completed"
 msgstr ""
 
@@ -133,17 +134,17 @@ msgid "{count} workflows"
 msgstr ""
 
 #: src/ui/detail_view/header_state.rs:169
-#: src/ui/detail_view/helpers/formatting.rs:651
+#: src/ui/detail_view/helpers/formatting.rs:340
 msgid "Just now"
 msgstr ""
 
 #: src/ui/detail_view/header_state.rs:171
-#: src/ui/detail_view/helpers/formatting.rs:654
+#: src/ui/detail_view/helpers/formatting.rs:343
 msgid "{count}m ago"
 msgstr ""
 
 #: src/ui/detail_view/header_state.rs:173
-#: src/ui/detail_view/helpers/formatting.rs:657
+#: src/ui/detail_view/helpers/formatting.rs:346
 msgid "{count}h ago"
 msgstr ""
 
@@ -155,92 +156,92 @@ msgstr ""
 msgid "Not updated yet"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:8
+#: src/ui/detail_view/helpers/formatting.rs:9
 #: src/ui/detail_view/helpers/runs/row.rs:185
 msgid "Workflow Run"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:28
+#: src/ui/detail_view/helpers/formatting.rs:29
 msgid "Status"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:34
+#: src/ui/detail_view/helpers/formatting.rs:35
 msgid "Conclusion"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:39
+#: src/ui/detail_view/helpers/formatting.rs:40
 msgid "Branch"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:43
+#: src/ui/detail_view/helpers/formatting.rs:44
 msgid "Commit"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:47
+#: src/ui/detail_view/helpers/formatting.rs:48
 msgid "Triggered by"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:51
+#: src/ui/detail_view/helpers/formatting.rs:52
 msgid "Event"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:55
+#: src/ui/detail_view/helpers/formatting.rs:56
 msgid "Duration"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:59
-#: src/ui/detail_view/helpers/formatting.rs:61
+#: src/ui/detail_view/helpers/formatting.rs:60
+#: src/ui/detail_view/helpers/formatting.rs:62
 msgid "Started"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:65
+#: src/ui/detail_view/helpers/formatting.rs:66
 msgid "Updated"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:249
-#: src/ui/detail_view/helpers/formatting.rs:597
+#: src/ui/detail_view/helpers/formatting.rs:250
+#: src/ui/detail_view/helpers/formatting.rs:286
 msgid "In Progress"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:250
-#: src/ui/detail_view/helpers/formatting.rs:596
+#: src/ui/detail_view/helpers/formatting.rs:251
+#: src/ui/detail_view/helpers/formatting.rs:285
 msgid "Queued"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:258
-#: src/ui/detail_view/helpers/formatting.rs:593
+#: src/ui/detail_view/helpers/formatting.rs:259
+#: src/ui/detail_view/helpers/formatting.rs:282
 msgid "Unknown"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:605
+#: src/ui/detail_view/helpers/formatting.rs:294
 msgid "Waiting"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:606
+#: src/ui/detail_view/helpers/formatting.rs:295
 msgid "Requested"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:607
+#: src/ui/detail_view/helpers/formatting.rs:296
 msgid "Pending"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:618
+#: src/ui/detail_view/helpers/formatting.rs:307
 msgid "Success"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:619
+#: src/ui/detail_view/helpers/formatting.rs:308
 msgid "Failed"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:625
+#: src/ui/detail_view/helpers/formatting.rs:314
 msgid "Stale"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:661
+#: src/ui/detail_view/helpers/formatting.rs:350
 msgid "Yesterday"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:663
+#: src/ui/detail_view/helpers/formatting.rs:352
 msgid "{count}d ago"
 msgstr ""
 
@@ -267,7 +268,7 @@ msgid "Unable to load jobs"
 msgstr ""
 
 #: src/ui/detail_view/helpers/jobs.rs:472
-#: src/ui/detail_view/helpers/runs/load.rs:448 src/ui/auth_window.rs:401
+#: src/ui/detail_view/helpers/runs/load.rs:447 src/ui/auth_window.rs:401
 #: src/ui/auth_window.rs:443
 msgid "Error: {message}"
 msgstr ""

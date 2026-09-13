@@ -444,8 +444,8 @@ fn show_error_state(error: GitHubError, workflow_id: i64, context: RunErrorConte
         run_filters,
     } = context;
 
-    let detail =
-        crate::i18n::tr("Error: {message}").replace("{message}", error.to_string().as_str());
+    let detail = crate::kernel::i18n::tr("Error: {message}")
+        .replace("{message}", error.to_string().as_str());
     let retry_run_list = run_list.clone();
     run_list.show_error(detail, move || {
         load_workflow_runs(LoadRunsParams {

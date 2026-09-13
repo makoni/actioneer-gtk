@@ -3,7 +3,7 @@ use crate::api::models::{RateLimitInfo, Repo};
 use crate::cache::{CachePersistenceConfig, DataCache};
 use crate::favorites::FavoritesManager;
 use crate::gateway::GitHubGateway;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 use crate::notifications::NotificationManager;
 use crate::preferences::{Preferences, PreferencesManager, ThemePreference};
 use crate::runtime::channel::MainContextChannelExt;
