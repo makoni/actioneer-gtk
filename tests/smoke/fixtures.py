@@ -47,9 +47,19 @@ ACTION_TRIGGER = "Trigger workflow"
 # The main window's title.
 MAIN_FRAME_TITLE = "Actioneer"
 
-# Window GActions published on the frame node.
-ACTION_ABOUT = "win.about"
+# Window GActions published on the frame node. Items inside the primary
+# `GtkMenuButton` popover never reach the accessibility tree; these do.
+ACTION_PREFERENCES = "win.open_preferences"
 ACTION_SIGN_OUT = "win.sign_out"
+
+# The preferences window is a separate toplevel.
+PREFS_FRAME_TITLE = "Preferences"
+PREFS_SECTIONS = ["Appearance", "Theme", "Language", "Notifications"]
+PREFS_ROWS = ["Application language", "Auto-refresh interval", "Desktop Notifications"]
+
+# The welcome screen, shown again after signing out.
+WELCOME_HEADING = "Welcome to Actioneer"
+WELCOME_SIGN_IN = "Sign in with GitHub"
 
 # Run numbers of the CI workflow, newest first.
 MAIN_RUN_NUMBERS = ["#134", "#133", "#132", "#131", "#130", "#129", "#128", "#127"]
@@ -93,3 +103,6 @@ SIDEBAR_TAB_ALL = "All"
 # line reports. Filtering acts on runs, not on the workflow list.
 RUNS_SUMMARY_UNFILTERED = "Showing 8 of 8"
 RUNS_SUMMARY_WITHOUT_FAILED = "Showing 6 of 6 matching filters"
+# The sign-out confirmation is an adw::AlertDialog with Yes/No responses.
+SIGN_OUT_CONFIRM = "Yes"
+SIGN_OUT_CANCEL = "No"
