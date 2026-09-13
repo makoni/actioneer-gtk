@@ -34,3 +34,53 @@ pub fn create_detail_clamp<W: IsA<gtk::Widget>>(child: &W) -> adw::Clamp {
     clamp.set_child(Some(child));
     clamp
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ui::test_helpers::run_gtk_test;
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn the_sidebar_clamp_is_narrow_and_holds_its_child() {
+        run_gtk_test("sidebar_clamp", || {
+            let child = gtk::Label::new(Some("child"));
+            let clamp = create_sidebar_clamp(&child);
+
+            assert_eq!(clamp.maximum_size(), 420);
+            assert!(!clamp.hexpands(), "the sidebar must not take slack width");
+            assert!(clamp.vexpands());
+            assert!(clamp.has_css_class("sidebar-surface"));
+            assert_eq!(
+                clamp.child().map(|c| c.type_()),
+                Some(child.type_()),
+                "the child is installed"
+            );
+        });
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn the_detail_clamp_is_wide_and_takes_the_slack() {
+        run_gtk_test("detail_clamp", || {
+            let child = gtk::Label::new(Some("child"));
+            let clamp = create_detail_clamp(&child);
+
+            assert_eq!(clamp.maximum_size(), 800);
+            assert!(clamp.hexpands(), "the detail pane absorbs the extra width");
+            assert!(clamp.child().is_some());
+        });
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn the_two_clamps_differ_in_width_budget() {
+        run_gtk_test("clamps_differ", || {
+            let a = gtk::Label::new(None);
+            let b = gtk::Label::new(None);
+            assert!(
+                create_detail_clamp(&a).maximum_size() > create_sidebar_clamp(&b).maximum_size()
+            );
+        });
+    }
+}

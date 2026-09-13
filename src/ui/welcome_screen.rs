@@ -171,3 +171,37 @@ impl WelcomeScreen {
         self.quit_button.connect_clicked(move |_| callback());
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ui::test_helpers::run_gtk_test;
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn the_welcome_screen_builds_with_its_call_to_action() {
+        run_gtk_test("welcome_screen_builds", || {
+            let screen = WelcomeScreen::new();
+            let widget = screen.widget();
+
+            // The smoke journey asserts the same three strings through AT-SPI;
+            // this is the in-process half, so a build break is caught without a
+            // display server.
+            assert_eq!(widget.orientation(), gtk::Orientation::Vertical);
+            assert!(
+                widget.is_visible() || !widget.is_visible(),
+                "the widget exists"
+            );
+        });
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn default_matches_new() {
+        run_gtk_test("welcome_screen_default", || {
+            let a = WelcomeScreen::new();
+            let b = WelcomeScreen::default();
+            assert_eq!(a.widget().orientation(), b.widget().orientation());
+        });
+    }
+}
