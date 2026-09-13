@@ -1,10 +1,10 @@
 use super::super::context::{JobContextMap, current_job_context_run_ids};
 use super::super::workflows::update_workflow_row_header;
 use super::digest::{RunDigestMap, RunDigestStore, update_digest_and_collect_notifications};
-use super::filters::summarize_visible_runs;
 use super::list::WorkflowRunListModel;
 use crate::api::GitHubError;
 use crate::api::models::{Repo, WorkflowRun};
+use crate::domain::filters::summarize_visible_runs;
 use crate::gateway::GitHubGateway;
 use crate::notifications::NotificationManager;
 use crate::preferences::PreferencesManager;

@@ -1,21 +1,42 @@
-use crate::api::models::WorkflowRun;
-use crate::ui::detail_view::RunFilters;
+//! Run filtering and the visible-run summary.
+//!
+//! Pure: which runs a filter admits depends only on the run and the filter, not
+//! on any widget. The UI owns the chips; this owns the rule.
+
+use super::models::WorkflowRun;
+
+#[derive(Debug, Clone)]
+pub struct RunFilters {
+    pub include_success: bool,
+    pub include_failed: bool,
+    pub include_running: bool,
+}
+
+impl Default for RunFilters {
+    fn default() -> Self {
+        Self {
+            include_success: true,
+            include_failed: true,
+            include_running: true,
+        }
+    }
+}
 
 const MAX_VISIBLE_RUNS: usize = 10;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
-pub(in crate::ui::detail_view) enum RunStatusFilterKind {
+pub enum RunStatusFilterKind {
     Success,
     Failed,
     Running,
 }
 
-pub(super) struct RunDisplaySummary {
+pub struct RunDisplaySummary {
     pub filtered_total: usize,
     pub visible_runs: Vec<WorkflowRun>,
 }
 
-pub(super) fn run_matches_filters(run: &WorkflowRun, filters: &RunFilters) -> bool {
+pub fn run_matches_filters(run: &WorkflowRun, filters: &RunFilters) -> bool {
     match classify_run_status(run) {
         RunStatusFilterKind::Success => filters.include_success,
         RunStatusFilterKind::Failed => filters.include_failed,
@@ -23,10 +44,7 @@ pub(super) fn run_matches_filters(run: &WorkflowRun, filters: &RunFilters) -> bo
     }
 }
 
-pub(super) fn summarize_visible_runs(
-    runs: &[WorkflowRun],
-    filters: &RunFilters,
-) -> RunDisplaySummary {
+pub fn summarize_visible_runs(runs: &[WorkflowRun], filters: &RunFilters) -> RunDisplaySummary {
     let mut filtered_total = 0;
     let mut visible_runs = Vec::new();
 
@@ -45,7 +63,7 @@ pub(super) fn summarize_visible_runs(
     }
 }
 
-pub(in crate::ui::detail_view) fn classify_run_status(run: &WorkflowRun) -> RunStatusFilterKind {
+pub fn classify_run_status(run: &WorkflowRun) -> RunStatusFilterKind {
     if run.is_active() {
         return RunStatusFilterKind::Running;
     }

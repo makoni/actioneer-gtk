@@ -795,6 +795,7 @@ pub async fn gather_workflow_status_counts(
     owner: &str,
     repo: &str,
 ) -> Result<WorkflowStatusCounts, crate::api::GitHubError> {
+    use crate::domain::counts::select_latest_runs_for_workflows;
     use crate::domain::runs::{is_run_active, is_run_failure};
 
     let workflows: Vec<_> = client
@@ -864,109 +865,16 @@ pub async fn gather_workflow_status_counts(
     })
 }
 
-fn select_latest_runs_for_workflows(
-    workflow_ids: &[i64],
-    repo_runs: &[crate::api::models::WorkflowRun],
-    repo_runs_truncated: bool,
-) -> (HashMap<i64, crate::api::models::WorkflowRun>, Vec<i64>) {
-    let selected_ids: HashSet<i64> = workflow_ids.iter().copied().collect();
-    let mut latest_runs = HashMap::new();
-
-    for run in repo_runs {
-        let Some(workflow_id) = run.workflow_id else {
-            continue;
-        };
-
-        if !selected_ids.contains(&workflow_id) || latest_runs.contains_key(&workflow_id) {
-            continue;
-        }
-
-        latest_runs.insert(workflow_id, run.clone());
-
-        if latest_runs.len() == selected_ids.len() {
-            break;
-        }
-    }
-
-    let missing = if repo_runs_truncated {
-        workflow_ids
-            .iter()
-            .copied()
-            .filter(|workflow_id| !latest_runs.contains_key(workflow_id))
-            .collect()
-    } else {
-        Vec::new()
-    };
-
-    (latest_runs, missing)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::models::{Repo, User, WorkflowRun};
+    use crate::api::models::{Repo, User};
     use crate::ui::state::WorkflowStatusCounts;
     use crate::ui::test_helpers::run_gtk_test;
     use gtk4::{self as gtk, gio};
     use parking_lot::Mutex;
     use std::collections::{HashMap, HashSet};
     use std::sync::Arc;
-
-    fn run(id: i64, workflow_id: Option<i64>) -> WorkflowRun {
-        WorkflowRun {
-            id,
-            run_number: Some(id),
-            workflow_id,
-            name: Some(format!("Run {id}")),
-            display_title: Some(format!("Run {id}")),
-            head_branch: Some("main".to_string()),
-            status: Some("completed".to_string()),
-            conclusion: Some("success".to_string()),
-            run_started_at: None,
-            event: None,
-            created_at: None,
-            updated_at: None,
-            actor: None,
-            head_commit: None,
-            triggering_actor: None,
-            html_url: None,
-        }
-    }
-
-    #[test]
-    fn select_latest_runs_keeps_first_repo_run_per_workflow() {
-        let (latest, missing) = select_latest_runs_for_workflows(
-            &[11, 22],
-            &[
-                run(200, Some(22)),
-                run(199, Some(22)),
-                run(150, None),
-                run(100, Some(11)),
-            ],
-            false,
-        );
-
-        assert_eq!(latest.get(&22).map(|run| run.id), Some(200));
-        assert_eq!(latest.get(&11).map(|run| run.id), Some(100));
-        assert!(
-            missing.is_empty(),
-            "non-truncated responses should not trigger fallback"
-        );
-    }
-
-    #[test]
-    fn select_latest_runs_requests_fallback_only_for_truncated_missing_workflows() {
-        let (_, missing_without_truncation) =
-            select_latest_runs_for_workflows(&[11, 22, 33], &[run(300, Some(11))], false);
-        assert!(
-            missing_without_truncation.is_empty(),
-            "missing workflows should be treated as having no runs when the repo-wide page is complete"
-        );
-
-        let (_, missing_with_truncation) =
-            select_latest_runs_for_workflows(&[11, 22, 33], &[run(300, Some(11))], true);
-        assert_eq!(missing_with_truncation, vec![22, 33]);
-    }
 
     #[test]
     #[ignore = "requires GTK display"]

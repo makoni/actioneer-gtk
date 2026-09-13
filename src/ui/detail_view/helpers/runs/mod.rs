@@ -1,7 +1,6 @@
 mod actions;
 mod digest;
-pub(in crate::ui::detail_view) mod filters;
-mod list;
+pub(in crate::ui::detail_view) mod list;
 mod load;
 mod row;
 

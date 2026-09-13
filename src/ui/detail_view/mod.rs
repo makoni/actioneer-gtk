@@ -1,4 +1,5 @@
 use crate::api::models::{Repo, Workflow};
+use crate::domain::filters::RunFilters;
 use crate::favorites::FavoritesManager;
 use crate::gateway::GitHubGateway;
 use crate::kernel::i18n::tr;
@@ -109,23 +110,8 @@ struct WorkflowListContext {
     header: DetailHeaderState,
 }
 
-#[derive(Debug, Clone)]
-pub(crate) struct RunFilters {
-    pub include_success: bool,
-    pub include_failed: bool,
-    pub include_running: bool,
-}
-
-impl Default for RunFilters {
-    fn default() -> Self {
-        Self {
-            include_success: true,
-            include_failed: true,
-            include_running: true,
-        }
-    }
-}
-
+// `RunFilters` itself lives in `domain::filters`; these conversions stay in
+// the UI, which is the only layer allowed to name both it and `preferences`.
 impl From<RunFilterPreferences> for RunFilters {
     fn from(prefs: RunFilterPreferences) -> Self {
         Self {

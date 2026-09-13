@@ -1,6 +1,6 @@
 use super::filter_controls::FilterChips;
-use super::helpers::runs::filters::{RunStatusFilterKind, classify_run_status};
 use crate::api::models::WorkflowRun;
+use crate::domain::filters::{RunStatusFilterKind, classify_run_status};
 use crate::kernel::i18n::tr;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};

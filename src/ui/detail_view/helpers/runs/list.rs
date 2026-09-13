@@ -1,7 +1,7 @@
 use super::super::workflows::{WorkflowRowHeader, update_workflow_row_header};
-use super::filters::summarize_visible_runs;
 use super::row::{RunRowContext, create_run_expander_row};
 use crate::api::models::{JobSummary, WorkflowRun};
+use crate::domain::filters::summarize_visible_runs;
 use crate::kernel::i18n::tr;
 use crate::ui::detail_view::RunFilters;
 use crate::ui::detail_view::header_state::DetailHeaderState;
