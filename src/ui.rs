@@ -11,6 +11,7 @@ pub mod preferences_window;
 pub mod style;
 
 // New modules for better organization
+pub mod error_text;
 pub mod state;
 pub mod tasks;
 pub mod utils;

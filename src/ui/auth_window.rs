@@ -397,11 +397,7 @@ impl AuthWindow {
                 }
                 AuthMessage::FlowError(_, err) => {
                     error!("Failed to start device flow: {}", err);
-                    status_clone.set_text(
-                        tr("Error: {message}")
-                            .replace("{message}", err.as_str())
-                            .as_str(),
-                    );
+                    status_clone.set_text(crate::ui::error_text::user_message_from(&err).as_str());
                     if let Some(existing) = poll_task.lock().take() {
                         existing.abort();
                     }
@@ -439,11 +435,7 @@ impl AuthWindow {
                     }
                     spinner_clone.stop();
                     spinner_clone.set_visible(false);
-                    status_clone.set_text(
-                        tr("Error: {message}")
-                            .replace("{message}", err.as_str())
-                            .as_str(),
-                    );
+                    status_clone.set_text(crate::ui::error_text::user_message_from(&err).as_str());
                     ControlFlow::Break
                 }
                 AuthMessage::SaveCompleted(_, save_result) => {

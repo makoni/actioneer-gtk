@@ -469,9 +469,7 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
                     error_box.append(&error_label);
 
                     let detail_label = gtk::Label::new(Some(
-                        tr("Error: {message}")
-                            .replace("{message}", e.to_string().as_str())
-                            .as_str(),
+                        crate::ui::error_text::user_message_from(&e).as_str(),
                     ));
                     detail_label.add_css_class("caption");
                     detail_label.add_css_class("dim-label");
