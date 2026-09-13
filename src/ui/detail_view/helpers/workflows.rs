@@ -17,10 +17,10 @@ use crate::api::models::{
 use crate::i18n::tr;
 use crate::notifications::NotificationManager;
 use crate::preferences::PreferencesManager;
+use crate::runtime::channel::MainContextChannelExt;
 use crate::ui::detail_view::RunFilters;
 use crate::ui::detail_view::header_state::DetailHeaderState;
 use crate::ui::job_logs_window::JobLogsWindow;
-use crate::ui::utils::MainContextChannelExt;
 use crate::ui::utils::duration::running_duration_string;
 use crate::ui::utils::widget_data::{set_data, steal_data};
 use gtk4::prelude::*;
@@ -646,7 +646,7 @@ pub(crate) fn create_workflow_expander_row(
             let client = client_for_logs.clone();
             let owner = owner_for_logs.clone();
             let repo = repo_for_logs.clone();
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let client_guard = client.lock().clone();
                 let result = client_guard
                     .list_jobs(&owner, &repo, run.id)
@@ -906,7 +906,7 @@ pub(crate) fn create_workflow_expander_row(
             glib::ControlFlow::Break
         });
 
-        crate::runtime_handle().spawn(async move {
+        crate::runtime::handle().spawn(async move {
             let client_guard = client_for_branches.lock().clone();
             let branch_result = client_guard
                 .list_branches(&owner_for_branches, &repo_for_branches)
@@ -1057,7 +1057,7 @@ pub(crate) fn create_workflow_expander_row(
             glib::ControlFlow::Break
         });
 
-        crate::runtime_handle().spawn(async move {
+        crate::runtime::handle().spawn(async move {
             let client_guard = client_for_inputs.lock().clone();
             let inputs_result = client_guard
                 .get_workflow_dispatch_inputs(
@@ -1146,7 +1146,7 @@ pub(crate) fn create_workflow_expander_row(
                 let (sender, receiver) = glib::MainContext::default()
                     .channel::<Result<(String, Option<WorkflowRun>), String>>(glib::Priority::default());
 
-                crate::runtime_handle().spawn(async move {
+                crate::runtime::handle().spawn(async move {
                     let client_guard = client.lock().clone();
                     let dispatch_result = client_guard
                         .dispatch_workflow(

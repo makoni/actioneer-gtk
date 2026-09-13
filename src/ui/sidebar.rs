@@ -1,8 +1,8 @@
 use crate::api::models::Repo;
 use crate::favorites::FavoritesManager;
 use crate::i18n::tr;
+use crate::runtime::channel::MainContextChannelExt;
 use crate::ui::state::{RepoActionsState, WorkflowStatusCounts};
-use crate::ui::utils::MainContextChannelExt;
 use crate::ui::utils::apply_favorite_result;
 use crate::ui::utils::widget_data::{get_data_clone, get_data_copy, set_data};
 use gtk::prelude::*;
@@ -507,7 +507,7 @@ fn build_repo_row(
             });
 
             let manager_for_task = manager.clone();
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let outcome = match manager_for_task.toggle_favorite(repo_id).await {
                     Ok(next_state) => Ok(next_state),
                     Err(err) => {

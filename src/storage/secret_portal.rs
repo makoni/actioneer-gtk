@@ -7,7 +7,7 @@ use gio::{self, DBusCallFlags, DBusProxyFlags};
 use thiserror::Error;
 use tracing::debug;
 
-use crate::runtime_handle;
+use crate::runtime::handle;
 
 const PORTAL_BUS_NAME: &str = "org.freedesktop.portal.Desktop";
 const PORTAL_OBJECT_PATH: &str = "/org/freedesktop/portal/desktop";
@@ -135,7 +135,7 @@ pub fn secret_portal_available() -> Result<bool, PortalDetectionError> {
 /// Retrieve the per-application secret via the portal and return it alongside any session token.
 pub fn retrieve_secret(_previous_token: Option<&str>) -> Result<PortalSecret, PortalSecretError> {
     let (reader, writer) = UnixStream::pair()?;
-    runtime_handle().block_on(run_portal_request_with_timeout(
+    handle().block_on(run_portal_request_with_timeout(
         || async {
             let portal = PortalClient::new()
                 .await

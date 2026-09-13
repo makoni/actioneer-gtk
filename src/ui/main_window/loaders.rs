@@ -1,10 +1,11 @@
 use super::MainWindow;
 use crate::api::GitHubError;
 use crate::api::models::{RateLimitInfo, Repo, RepoPermissions};
+use crate::runtime::channel::MainContextChannelExt;
 use crate::ui::sidebar::{RepoListRenderContext, rebuild_repo_list};
 use crate::ui::state::RepoActionsState;
 use crate::ui::tasks::repo_status;
-use crate::ui::utils::{MainContextChannelExt, update_rate_limit_label};
+use crate::ui::utils::update_rate_limit_label;
 use gtk4::glib;
 use std::time::Instant;
 use tracing::{error, info};
@@ -50,7 +51,7 @@ impl MainWindow {
                 glib::ControlFlow::Break
             });
 
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let repos_result = client.list_repos().await;
                 let rate_info = client.rate_limit_info();
 

@@ -6,6 +6,14 @@ authors = ["Sergey Armodin"]
 description = "GitHub Actions client for Linux (GNOME)"
 license = "MIT"
 
+[lib]
+name = "actioneer"
+path = "src/lib.rs"
+
+[[bin]]
+name = "actioneer"
+path = "src/main.rs"
+
 [dependencies]
 # GTK4 and libadwaita
 

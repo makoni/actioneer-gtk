@@ -3,9 +3,9 @@ use crate::auth::device::{
 };
 use crate::config::Config;
 use crate::i18n::tr;
-use crate::runtime_handle;
+use crate::runtime::channel::MainContextChannelExt;
+use crate::runtime::handle;
 use crate::storage::TokenStorage;
-use crate::ui::utils::MainContextChannelExt;
 use glib::ControlFlow;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
@@ -68,6 +68,12 @@ pub struct AuthWindow {
     spinner: gtk::Spinner,
     attempt_tracker: Arc<AuthAttemptTracker>,
     poll_task: Arc<Mutex<Option<tokio::task::JoinHandle<()>>>>,
+}
+
+impl Default for AuthWindow {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl AuthWindow {
@@ -270,7 +276,7 @@ impl AuthWindow {
             glib::MainContext::default().channel::<AuthMessage>(glib::Priority::default());
 
         let start_sender = sender.clone();
-        runtime_handle().spawn(async move {
+        handle().spawn(async move {
             info!("Starting device flow authentication");
             let scopes = ["repo", "workflow"];
             let message = match start_device_flow(Config::github_client_id(), &scopes).await {
@@ -315,7 +321,7 @@ impl AuthWindow {
 
                     let poll_info = info.clone();
                     let sender_for_polling = poll_sender.clone();
-                    let poll_handle = runtime_handle().spawn(async move {
+                    let poll_handle = handle().spawn(async move {
                         let interval_secs = poll_info.interval.max(1) as u64;
                         let interval = Duration::from_secs(interval_secs);
                         let max_attempts =
@@ -410,7 +416,7 @@ impl AuthWindow {
                     poll_task.lock().take();
 
                     let save_sender = poll_sender.clone();
-                    runtime_handle().spawn(async move {
+                    handle().spawn(async move {
                         let save_result = tokio::task::spawn_blocking(move || save_token(token))
                             .await
                             .map_err(|err| format!("Failed to join token save task: {err}"))

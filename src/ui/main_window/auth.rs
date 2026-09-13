@@ -1,8 +1,8 @@
 use super::MainWindow;
 use crate::i18n::tr;
+use crate::runtime::channel::MainContextChannelExt;
 use crate::storage::TokenStorage;
 use crate::ui::auth_window::AuthWindow;
-use crate::ui::utils::MainContextChannelExt;
 use gtk4::glib;
 use gtk4::prelude::*;
 use libadwaita as adw;
@@ -69,7 +69,7 @@ impl MainWindow {
                     glib::ControlFlow::Break
                 });
 
-                crate::runtime_handle().spawn(async move {
+                crate::runtime::handle().spawn(async move {
                     let result = tokio::task::spawn_blocking(delete_token_blocking)
                         .await
                         .map_err(|err| format!("Failed to join sign-out task: {err}"))
@@ -107,7 +107,7 @@ impl MainWindow {
             glib::ControlFlow::Break
         });
 
-        crate::runtime_handle().spawn(async move {
+        crate::runtime::handle().spawn(async move {
             let result = tokio::task::spawn_blocking(load_token_if_present_blocking)
                 .await
                 .map_err(|err| format!("Failed to join auth check task: {err}"))
@@ -129,7 +129,7 @@ impl MainWindow {
 
         self.enter_signed_out_state();
 
-        crate::runtime_handle().spawn(async move {
+        crate::runtime::handle().spawn(async move {
             let result = tokio::task::spawn_blocking(delete_token_blocking)
                 .await
                 .map_err(|err| format!("Failed to join auth-failure token cleanup task: {err}"))
@@ -160,7 +160,7 @@ impl MainWindow {
             glib::ControlFlow::Break
         });
 
-        crate::runtime_handle().spawn(async move {
+        crate::runtime::handle().spawn(async move {
             let result = tokio::task::spawn_blocking(load_token_blocking)
                 .await
                 .map_err(|err| format!("Failed to join sign-in token load task: {err}"))
@@ -213,7 +213,7 @@ impl MainWindow {
                 glib::ControlFlow::Break
             });
 
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let result = tokio::task::spawn_blocking(load_token_blocking)
                     .await
                     .map_err(|err| format!("Failed to join focus token check task: {err}"))

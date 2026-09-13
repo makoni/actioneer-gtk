@@ -7,8 +7,8 @@ use super::status_dot::{JOB_DOT_SIZE, STEP_DOT_SIZE, build_status_dot};
 use crate::api::models::{Job, JobStep, JobSummary, Repo};
 use crate::api::{GitHubClient, GitHubError};
 use crate::i18n::tr;
+use crate::runtime::channel::MainContextChannelExt;
 use crate::ui::job_logs_window::JobLogsWindow;
-use crate::ui::utils::MainContextChannelExt;
 use crate::ui::utils::duration::{job_duration_label, start_live_duration, step_duration_label};
 use crate::ui::utils::widget_data::{get_data_clone, get_data_copy, set_data};
 use gtk4::prelude::*;
@@ -542,7 +542,7 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
         glib::ControlFlow::Break
     });
 
-    crate::runtime_handle().spawn(async move {
+    crate::runtime::handle().spawn(async move {
         let client_guard = client_for_api.lock().clone();
         let result = client_guard
             .list_jobs(&owner_for_api, &repo_for_api, run_id)

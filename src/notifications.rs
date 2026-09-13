@@ -1,7 +1,7 @@
-use crate::APP_ICON_NAME;
 use crate::i18n::tr;
-use crate::runtime_handle;
-use crate::ui::utils::channel::{MainContextChannelExt, Sender as UiChannelSender};
+use crate::kernel::app::APP_ICON_NAME;
+use crate::runtime::channel::{MainContextChannelExt, Sender as UiChannelSender};
+use crate::runtime::handle;
 use anyhow::anyhow;
 use ashpd::desktop::Icon as PortalIcon;
 use ashpd::desktop::notification::{
@@ -380,7 +380,7 @@ impl NotificationManager {
             ..payload
         };
 
-        runtime_handle()
+        handle()
             .spawn(async move { Self::send_portal_notification(resolved_app_id, payload).await })
             .await
             .map_err(|err| anyhow!("Portal dispatch task failed: {err}"))?

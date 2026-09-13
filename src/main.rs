@@ -1,136 +1,28 @@
-mod api;
-mod auth;
-mod cache;
-mod config;
-mod crash_report;
-mod demo;
-mod favorites;
-mod i18n;
-mod notifications;
-mod preferences;
-mod storage;
-mod ui;
+//! Composition root. Parses the few pre-GTK arguments, installs logging, the
+//! crash-report session and the Tokio runtime, then builds and runs the
+//! application. Everything else lives in the `actioneer` library.
 
+use actioneer::i18n::tr;
+use actioneer::preferences::{PreferencesManager, ThemePreference};
+use actioneer::ui::{MainWindow, style};
 use gio::ApplicationFlags;
 use gtk4::prelude::*;
 use gtk4::{IconTheme, gdk, glib};
-use i18n::tr;
 use libadwaita as adw;
-use preferences::{PreferencesManager, ThemePreference};
 use std::backtrace::Backtrace;
-use std::borrow::Cow;
 use std::ops::ControlFlow;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, OnceLock};
-use tokio::runtime::{Builder, Handle};
 use tracing::{info, warn};
-use ui::{MainWindow, style};
-
-pub const APP_ID: &str = "me.spaceinbox.actioneer";
-pub const APP_ICON_NAME: &str = APP_ID;
 
 const DEV_ICON_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/icons/icons");
-const DEFAULT_TOKIO_WORKER_THREADS: usize = 4;
-const TOKIO_WORKER_THREADS_ENV: &str = "ACTIONEER_TOKIO_WORKER_THREADS";
 
-// Global runtime handle
-static RUNTIME_HANDLE: OnceLock<Handle> = OnceLock::new();
 static CURRENT_SESSION_ID: OnceLock<String> = OnceLock::new();
-
-/// One line naming this build and the GTK actually loaded at runtime.
-///
-/// The GTK numbers come from the library that answered the call, not from what
-/// the crate was compiled against, so this is also how a packaged build — the
-/// AppImage bundles its own GTK — reports what it really ships. libadwaita is
-/// left out on purpose: its version functions abort unless GTK has been
-/// initialised, and printing a version must not need a display.
-pub fn version_string() -> String {
-    format!(
-        "actioneer {} (gtk {}.{}.{})",
-        env!("CARGO_PKG_VERSION"),
-        gtk4::major_version(),
-        gtk4::minor_version(),
-        gtk4::micro_version(),
-    )
-}
-
-pub fn runtime_handle() -> &'static Handle {
-    RUNTIME_HANDLE.get().expect("Runtime not initialized")
-}
-
-/// Gives tests the global runtime the app sets up in `main`, so code paths that
-/// spawn (loading workflows, persisting preferences) can run under `cargo test`.
-#[cfg(test)]
-pub(crate) fn init_test_runtime() {
-    static TEST_RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
-
-    let runtime = TEST_RUNTIME.get_or_init(|| {
-        Builder::new_multi_thread()
-            .worker_threads(1)
-            .enable_all()
-            .build()
-            .expect("test runtime should build")
-    });
-    let _ = RUNTIME_HANDLE.set(runtime.handle().clone());
-}
-
-pub fn apply_text_direction_for_language() {
-    let direction = if i18n::current_language_is_rtl() {
-        gtk4::TextDirection::Rtl
-    } else {
-        gtk4::TextDirection::Ltr
-    };
-    gtk4::Widget::set_default_direction(direction);
-}
-
-pub fn resolved_app_id() -> Cow<'static, str> {
-    if let Ok(snap_name) =
-        std::env::var("SNAP_INSTANCE_NAME").or_else(|_| std::env::var("SNAP_NAME"))
-    {
-        Cow::Owned(format!("{}_{}", snap_name, APP_ID))
-    } else {
-        Cow::Borrowed(APP_ID)
-    }
-}
-
-fn available_parallelism_count() -> usize {
-    std::thread::available_parallelism()
-        .map(usize::from)
-        .unwrap_or(DEFAULT_TOKIO_WORKER_THREADS)
-}
-
-fn default_tokio_worker_threads_for(available_parallelism: usize) -> usize {
-    available_parallelism.clamp(1, DEFAULT_TOKIO_WORKER_THREADS)
-}
-
-fn parse_tokio_worker_threads_override(value: &str) -> Option<usize> {
-    value
-        .trim()
-        .parse::<usize>()
-        .ok()
-        .filter(|threads| *threads > 0)
-}
-
-fn tokio_worker_threads() -> usize {
-    let default_workers = default_tokio_worker_threads_for(available_parallelism_count());
-    match std::env::var(TOKIO_WORKER_THREADS_ENV) {
-        Ok(value) => parse_tokio_worker_threads_override(&value).unwrap_or_else(|| {
-            warn!(
-                env_var = TOKIO_WORKER_THREADS_ENV,
-                value = %value,
-                default_workers,
-                "Ignoring invalid Tokio worker thread override"
-            );
-            default_workers
-        }),
-        Err(_) => default_workers,
-    }
-}
 
 fn mark_current_session_clean(reason: &str) {
     if let Some(session_id) = CURRENT_SESSION_ID.get()
-        && let Err(err) = crash_report::mark_session_clean(session_id)
+        && let Err(err) = actioneer::crash_report::mark_session_clean(session_id)
     {
         warn!(
             reason,
@@ -179,7 +71,7 @@ impl ShutdownSignal {
 fn install_unix_signal_handlers(_app: &adw::Application) {
     use tokio::signal::unix::signal;
 
-    let _runtime_guard = runtime_handle().enter();
+    let _runtime_guard = actioneer::runtime::handle().enter();
     let mut handles = Vec::with_capacity(ShutdownSignal::all().len());
     for shutdown_signal in ShutdownSignal::all() {
         let handle = match signal(shutdown_signal.kind()) {
@@ -201,7 +93,7 @@ fn install_unix_signal_handlers(_app: &adw::Application) {
         .try_into()
         .expect("shutdown signal registration count should match enum");
 
-    runtime_handle().spawn(async move {
+    actioneer::runtime::handle().spawn(async move {
         let signal_name = tokio::select! {
             _ = sig_hangup.recv() => signal_hangup.name(),
             _ = sig_interrupt.recv() => signal_interrupt.name(),
@@ -232,12 +124,13 @@ fn main() -> anyhow::Result<()> {
         .skip(1)
         .any(|arg| arg == "--version" || arg == "-V")
     {
-        println!("{}", version_string());
+        println!("{}", actioneer::version_string());
         return Ok(());
     }
 
-    let cli_locale = parse_cli_locale_arg().and_then(|locale| i18n::parse_locale_string(&locale));
-    i18n::init(cli_locale.as_deref());
+    let cli_locale =
+        parse_cli_locale_arg().and_then(|locale| actioneer::i18n::parse_locale_string(&locale));
+    actioneer::i18n::init(cli_locale.as_deref());
 
     // Initialize logging
     tracing_subscriber::fmt()
@@ -246,7 +139,7 @@ fn main() -> anyhow::Result<()> {
                 .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
         )
         .init();
-    match crash_report::initialize_session_lifecycle() {
+    match actioneer::crash_report::initialize_session_lifecycle() {
         Ok(marker) => {
             let _ = CURRENT_SESSION_ID.set(marker.session_id);
         }
@@ -257,45 +150,9 @@ fn main() -> anyhow::Result<()> {
     install_panic_hook();
 
     info!("Starting Actioneer for Linux");
-    let runtime_app_id = resolved_app_id();
-    notifications::initialize_portal_env(runtime_app_id.as_ref());
-    let available_parallelism = available_parallelism_count();
-    let default_runtime_workers = default_tokio_worker_threads_for(available_parallelism);
-    let runtime_worker_threads = tokio_worker_threads();
-    info!(
-        available_parallelism,
-        default_runtime_workers,
-        runtime_worker_threads,
-        env_var = TOKIO_WORKER_THREADS_ENV,
-        "Configuring Tokio runtime"
-    );
-
-    // Start tokio runtime in background thread and keep it alive
-    std::thread::spawn(move || {
-        let rt = Builder::new_multi_thread()
-            .worker_threads(runtime_worker_threads)
-            .enable_all()
-            .build()
-            .expect("Failed to create Tokio runtime");
-        let handle = rt.handle().clone();
-
-        // Store the handle globally
-        RUNTIME_HANDLE
-            .set(handle)
-            .expect("Failed to set runtime handle");
-
-        // Keep the runtime alive
-        rt.block_on(async {
-            futures::future::pending::<()>().await;
-        })
-    });
-
-    // Wait for runtime to be ready
-    while RUNTIME_HANDLE.get().is_none() {
-        std::thread::sleep(std::time::Duration::from_millis(10));
-    }
-
-    info!("Tokio runtime initialized");
+    let runtime_app_id = actioneer::resolved_app_id();
+    actioneer::notifications::initialize_portal_env(runtime_app_id.as_ref());
+    actioneer::runtime::install_runtime(actioneer::runtime::tokio_worker_threads());
 
     let app = adw::Application::builder()
         .application_id(runtime_app_id.as_ref())
@@ -309,7 +166,6 @@ fn main() -> anyhow::Result<()> {
 
     let send_test_notification = Arc::new(AtomicBool::new(false));
     let option_flag = send_test_notification.clone();
-
     let start_demo_mode = Arc::new(AtomicBool::new(false));
     let demo_option_flag = start_demo_mode.clone();
 
@@ -356,7 +212,7 @@ fn main() -> anyhow::Result<()> {
 
     app.connect_handle_local_options(move |_app, options| {
         if options.contains("version") {
-            println!("{}", version_string());
+            println!("{}", actioneer::version_string());
             // A non-negative code is the process's exit status: print and stop,
             // without opening a window or touching the display.
             return ControlFlow::Break(glib::ExitCode::SUCCESS);
@@ -374,13 +230,13 @@ fn main() -> anyhow::Result<()> {
         .map(|manager| manager.get_blocking())
         .unwrap_or_default();
     if cli_locale.is_none() {
-        i18n::apply_language_preference(startup_preferences.language_preference);
+        actioneer::i18n::apply_language_preference(startup_preferences.language_preference);
     }
 
     app.connect_startup(|_| {
-        apply_text_direction_for_language();
+        style::apply_text_direction_for_language();
         register_icon_theme_paths();
-        gtk4::Window::set_default_icon_name(APP_ICON_NAME);
+        gtk4::Window::set_default_icon_name(actioneer::APP_ICON_NAME);
         style::install_app_css();
     });
     let startup_theme_preference = startup_preferences.theme_preference;
@@ -436,7 +292,7 @@ fn install_panic_hook() {
             "Unhandled panic"
         );
         let session_id = CURRENT_SESSION_ID.get().map(String::as_str);
-        if let Err(err) = crate::crash_report::persist_panic_report(
+        if let Err(err) = actioneer::crash_report::persist_panic_report(
             &location,
             &payload,
             &backtrace.to_string(),
@@ -518,7 +374,10 @@ fn register_icon_theme_paths() {
 
 #[cfg(test)]
 mod tests {
-    use super::version_string;
+    use actioneer::runtime::{
+        default_tokio_worker_threads_for, parse_tokio_worker_threads_override,
+    };
+    use actioneer::version_string;
 
     #[test]
     fn version_string_is_one_machine_readable_line() {
@@ -546,10 +405,7 @@ mod tests {
 
     #[cfg(unix)]
     use super::ShutdownSignal;
-    use super::{
-        default_tokio_worker_threads_for, extract_cli_locale_arg,
-        parse_tokio_worker_threads_override,
-    };
+    use super::extract_cli_locale_arg;
 
     #[test]
     fn extracts_locale_from_long_option_with_value() {

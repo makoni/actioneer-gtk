@@ -2,8 +2,8 @@
 use super::super::state::{RepoActionsState, WorkflowStatusCounts};
 use crate::api::GitHubClient;
 use crate::api::models::Repo;
+use crate::runtime::channel::MainContextChannelExt;
 use crate::ui::sidebar::gather_workflow_status_counts;
-use crate::ui::utils::MainContextChannelExt;
 use gtk4::glib;
 use parking_lot::Mutex;
 use std::collections::HashMap;
@@ -42,7 +42,7 @@ pub fn spawn_repo_status_tasks<F>(
 
     let repos: Vec<Repo> = repos.into_iter().take(MAX_REPOS_FOR_STATUS).collect();
 
-    crate::runtime_handle().spawn(async move {
+    crate::runtime::handle().spawn(async move {
         use futures::stream::{self, StreamExt};
 
         stream::iter(repos)

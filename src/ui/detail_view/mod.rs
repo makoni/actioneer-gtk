@@ -261,7 +261,7 @@ impl RepoDetailPane {
             })
             .or_else(|| {
                 Some(NotificationManager::new(
-                    crate::resolved_app_id().into_owned(),
+                    crate::kernel::app::resolved_app_id().into_owned(),
                 ))
             });
         let run_load_service = RunLoadService::new(
@@ -505,7 +505,7 @@ mod tests {
     #[ignore = "requires GTK display"]
     fn detail_pane_is_released_when_dropped() {
         run_gtk_test("detail_pane_is_released_when_dropped", || {
-            crate::init_test_runtime();
+            crate::runtime::init_test_runtime();
             let _demo = DemoData;
             let repos = crate::demo::enable();
             let repo = repos.first().cloned().expect("demo data has repositories");

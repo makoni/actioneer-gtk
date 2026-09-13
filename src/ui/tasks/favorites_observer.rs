@@ -1,6 +1,6 @@
 /// Background task: Observe favorites changes
 use crate::favorites::FavoritesManager;
-use crate::ui::utils::MainContextChannelExt;
+use crate::runtime::channel::MainContextChannelExt;
 use gtk4::glib;
 use parking_lot::Mutex;
 use std::collections::HashSet;
@@ -36,7 +36,7 @@ pub fn observe_favorites<F>(
         glib::ControlFlow::Continue
     });
 
-    crate::runtime_handle().spawn(async move {
+    crate::runtime::handle().spawn(async move {
         loop {
             if receiver.changed().await.is_err() {
                 break;

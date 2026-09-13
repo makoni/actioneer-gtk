@@ -1,5 +1,5 @@
-use crate::APP_ICON_NAME;
 use crate::i18n::tr;
+use crate::kernel::app::APP_ICON_NAME;
 use gtk4 as gtk;
 use gtk4::prelude::*;
 
@@ -8,6 +8,12 @@ pub struct WelcomeScreen {
     signin_button: gtk::Button,
     demo_button: gtk::Button,
     quit_button: gtk::Button,
+}
+
+impl Default for WelcomeScreen {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl WelcomeScreen {

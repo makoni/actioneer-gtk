@@ -5,7 +5,7 @@ use super::helpers::{
 use super::{RepoDetailPane, WorkflowListContext};
 use crate::api::models::{Workflow, WorkflowRun};
 use crate::i18n::tr;
-use crate::ui::utils::MainContextChannelExt;
+use crate::runtime::channel::MainContextChannelExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, gio, glib};
 use std::collections::{HashMap, HashSet};
@@ -271,7 +271,7 @@ pub(super) fn fetch_latest_runs_summary(context: &WorkflowListContext) {
         glib::ControlFlow::Break
     });
 
-    crate::runtime_handle().spawn(async move {
+    crate::runtime::handle().spawn(async move {
         let client_guard = client.lock().clone();
         let runs = client_guard
             .list_repository_runs(&owner, &repo)

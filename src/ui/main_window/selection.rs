@@ -75,7 +75,7 @@ impl MainWindow {
                 *self.selected_repo_id.lock() = Some(repo_id);
                 if let Some(manager) = &self.preferences_manager {
                     let manager = manager.clone();
-                    crate::runtime_handle().spawn(async move {
+                    crate::runtime::handle().spawn(async move {
                         if let Err(err) = manager.set_last_selected_repo(Some(repo_id)).await {
                             warn!("Failed to persist selected repo: {}", err);
                         }
@@ -106,7 +106,7 @@ impl MainWindow {
                 *self.selected_repo_id.lock() = None;
                 if let Some(manager) = &self.preferences_manager {
                     let manager = manager.clone();
-                    crate::runtime_handle().spawn(async move {
+                    crate::runtime::handle().spawn(async move {
                         if let Err(err) = manager.set_last_selected_repo(None).await {
                             warn!("Failed to clear selected repo preference: {}", err);
                         }

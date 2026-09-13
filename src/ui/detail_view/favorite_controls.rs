@@ -1,6 +1,6 @@
 use crate::favorites::FavoritesManager;
 use crate::i18n::tr;
-use crate::ui::utils::MainContextChannelExt;
+use crate::runtime::channel::MainContextChannelExt;
 use crate::ui::utils::apply_favorite_result;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
@@ -51,7 +51,7 @@ pub(super) fn setup_favorite_button(
             });
 
             let manager_for_task = manager_for_toggle.clone();
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let outcome = match if is_active {
                     manager_for_task.add_favorite(repo_id).await
                 } else {
@@ -106,7 +106,7 @@ pub(super) fn observe_favorites(
         glib::ControlFlow::Continue
     });
 
-    Some(crate::runtime_handle().spawn(async move {
+    Some(crate::runtime::handle().spawn(async move {
         let mut receiver_local = receiver;
 
         if sender
@@ -150,7 +150,7 @@ mod tests {
     #[ignore = "requires GTK display"]
     fn observing_favorites_keeps_the_button_sensitive() {
         run_gtk_test("observing_favorites_keeps_the_button_sensitive", || {
-            crate::init_test_runtime();
+            crate::runtime::init_test_runtime();
             let manager = FavoritesManager::new().expect("favorites manager builds");
             let button = gtk::ToggleButton::new();
             button.set_sensitive(true);
@@ -190,7 +190,7 @@ mod tests {
     #[ignore = "requires GTK display"]
     fn revert_set_active_does_not_spawn_a_favorite_write() {
         run_gtk_test("revert_set_active_does_not_spawn_a_favorite_write", || {
-            crate::init_test_runtime();
+            crate::runtime::init_test_runtime();
             let manager = FavoritesManager::new().expect("favorites manager builds");
             let updates = manager.subscribe();
             let repo_id = i64::MAX;

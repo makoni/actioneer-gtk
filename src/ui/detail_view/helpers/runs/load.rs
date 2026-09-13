@@ -7,9 +7,9 @@ use crate::api::models::{Repo, WorkflowRun};
 use crate::api::{GitHubClient, GitHubError};
 use crate::notifications::NotificationManager;
 use crate::preferences::PreferencesManager;
+use crate::runtime::channel::MainContextChannelExt;
 use crate::ui::detail_view::RunFilters;
 use crate::ui::detail_view::helpers::jobs::refresh_jobs_for_workflows;
-use crate::ui::utils::MainContextChannelExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
@@ -184,7 +184,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                         let workflow_label = workflow_name.clone();
                         let preferences_manager = preferences_manager.clone();
 
-                        crate::runtime_handle().spawn(async move {
+                        crate::runtime::handle().spawn(async move {
                             let notifications_enabled = match preferences_manager {
                                 Some(manager) => manager.get().await.enable_notifications,
                                 None => true,
@@ -332,7 +332,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
         glib::ControlFlow::Break
     });
 
-    crate::runtime_handle().spawn(async move {
+    crate::runtime::handle().spawn(async move {
         let client_guard = client_for_spawn.lock().clone();
         let result = client_guard
             .list_runs(&owner_for_spawn, &repo_for_spawn, workflow_id)

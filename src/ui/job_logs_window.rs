@@ -1,7 +1,7 @@
 use crate::api::models::{Job, Repo};
 use crate::api::{GitHubClient, GitHubError};
 use crate::i18n::tr;
-use crate::ui::utils::channel::MainContextChannelExt;
+use crate::runtime::channel::MainContextChannelExt;
 use gtk4::gdk;
 use gtk4::gio;
 use gtk4::prelude::*;
@@ -400,7 +400,7 @@ impl Ctx {
         let client = self.client.clone();
         let owner = self.repo.owner.login.clone();
         let repo_name = self.repo.name.clone();
-        crate::runtime_handle().spawn(async move {
+        crate::runtime::handle().spawn(async move {
             let client = client.lock().clone();
             let result = client.get_job_logs(&owner, &repo_name, job_id).await;
             let _ = sender.send(result);
@@ -435,7 +435,7 @@ impl Ctx {
         let owner = self.repo.owner.login.clone();
         let repo_name = self.repo.name.clone();
         let run_id = self.run_id;
-        crate::runtime_handle().spawn(async move {
+        crate::runtime::handle().spawn(async move {
             let client = client.lock().clone();
             let result = client.list_jobs(&owner, &repo_name, run_id).await;
             let _ = sender.send(result);
@@ -630,7 +630,7 @@ impl Ctx {
             });
 
             let text_to_write = text.clone();
-            crate::runtime_handle().spawn_blocking(move || {
+            crate::runtime::handle().spawn_blocking(move || {
                 let result = std::fs::write(&path, text_to_write);
                 let _ = sender.send(result.map_err(|e| e.to_string()));
             });

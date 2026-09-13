@@ -7,8 +7,9 @@ use crate::favorites::FavoritesManager;
 use crate::i18n::tr;
 use crate::notifications::NotificationManager;
 use crate::preferences::{Preferences, PreferencesManager, ThemePreference};
+use crate::runtime::channel::MainContextChannelExt;
 use crate::ui::detail_view::RepoDetailPane;
-use crate::ui::utils::{MainContextChannelExt, create_detail_clamp};
+use crate::ui::utils::create_detail_clamp;
 use gio::Menu;
 use gio::prelude::*;
 use gtk4::prelude::*;
@@ -80,7 +81,7 @@ pub struct MainWindow {
 
 impl MainWindow {
     pub fn new(app: &adw::Application, start_demo_mode: bool) -> Self {
-        crate::apply_text_direction_for_language();
+        crate::ui::style::apply_text_direction_for_language();
         let window = adw::ApplicationWindow::builder()
             .application(app)
             .title("Actioneer")
@@ -95,12 +96,12 @@ impl MainWindow {
         let client = Arc::new(Mutex::new(None));
         let repos = Arc::new(Mutex::new(Vec::new()));
         let cache = Arc::new(
-            CachePersistenceConfig::for_app(crate::APP_ID)
+            CachePersistenceConfig::for_app(crate::kernel::app::APP_ID)
                 .map_or_else(DataCache::new, DataCache::with_persistence),
         );
         if cache.has_persistence() {
             let cache_clone = cache.clone();
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 if cache_clone.hydrate_from_disk().await {
                     info!("Loaded cache snapshot from disk");
                 }
@@ -226,7 +227,7 @@ impl MainWindow {
                 glib::ControlFlow::Break
             });
 
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let favorite_ids = manager.get_all().await;
                 let _ = sender.send(favorite_ids);
             });
@@ -298,7 +299,7 @@ impl MainWindow {
                 let width = win.width();
                 let height = win.height();
                 let manager = manager.clone();
-                crate::runtime_handle().spawn(async move {
+                crate::runtime::handle().spawn(async move {
                     if let Err(err) = manager.set_window_size(width, height).await {
                         warn!("Failed to persist window size: {}", err);
                     }
@@ -363,7 +364,7 @@ impl MainWindow {
             });
 
             let manager = manager.clone();
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let prefs = manager.get().await;
                 let _ = sender.send(prefs);
             });
@@ -635,7 +636,7 @@ impl MainWindow {
 
         {
             let cache = self.cache.clone();
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 cache.clear_all().await;
             });
         }
@@ -652,7 +653,7 @@ impl MainWindow {
 
         if let Some(manager) = &self.favorites_manager {
             let manager = manager.clone();
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 if let Err(err) = manager.clear_all().await {
                     warn!("Failed to clear favorites during sign-out: {}", err);
                 }
@@ -675,7 +676,7 @@ impl MainWindow {
 
         if let Some(manager) = &self.preferences_manager {
             let manager = manager.clone();
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 if let Err(err) = manager.set_last_selected_repo(None).await {
                     warn!(
                         "Failed to reset stored repo selection during sign-out: {}",

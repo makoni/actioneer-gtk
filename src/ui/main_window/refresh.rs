@@ -1,6 +1,7 @@
 use super::MainWindow;
 use crate::api::models::Repo;
-use crate::ui::utils::{MainContextChannelExt, update_rate_limit_label};
+use crate::runtime::channel::MainContextChannelExt;
+use crate::ui::utils::update_rate_limit_label;
 use gtk4::glib;
 use tokio::time::{Duration, sleep};
 
@@ -26,7 +27,7 @@ impl MainWindow {
             glib::ControlFlow::Continue
         });
 
-        let handle = crate::runtime_handle().spawn(async move {
+        let handle = crate::runtime::handle().spawn(async move {
             let mut updates = preferences_manager.subscribe();
             loop {
                 let interval = preferences_manager.get().await.refresh_interval;

@@ -2,7 +2,7 @@ use super::helpers::{LoadRunsParams, current_job_context_run_ids};
 use super::workflow_refresh::run_list_for_expander;
 use super::{RepoDetailPane, RunFilters};
 use crate::preferences::RunFilterPreferences;
-use crate::ui::utils::MainContextChannelExt;
+use crate::runtime::channel::MainContextChannelExt;
 use crate::ui::utils::widget_data::{get_data_clone, get_data_copy};
 use gtk4::prelude::{Cast, ToggleButtonExt, WidgetExt};
 use gtk4::{self as gtk, glib};
@@ -29,7 +29,7 @@ impl RepoDetailPane {
             let (sender, receiver) =
                 glib::MainContext::default().channel::<RunFilters>(glib::Priority::default());
             let manager = manager.clone();
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let prefs = manager.get().await;
                 let _ = sender.send(RunFilters::from(prefs.run_filters));
             });
@@ -78,7 +78,7 @@ impl RepoDetailPane {
         if let Some(manager) = &self.preferences_manager {
             let manager = manager.clone();
             let filters: RunFilterPreferences = self.run_filters.lock().clone().into();
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 if let Err(err) = manager.set_run_filters(filters).await {
                     warn!("Failed to persist run filters: {}", err);
                 }

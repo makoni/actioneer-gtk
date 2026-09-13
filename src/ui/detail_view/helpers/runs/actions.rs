@@ -2,7 +2,7 @@ use super::super::formatting::format_run_title;
 use crate::api::GitHubClient;
 use crate::api::models::{Repo, WorkflowRun};
 use crate::i18n::tr;
-use crate::ui::utils::MainContextChannelExt;
+use crate::runtime::channel::MainContextChannelExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
@@ -127,7 +127,7 @@ fn create_logs_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::But
         let client = client.clone();
         let owner = owner.clone();
         let repo = repo.clone();
-        crate::runtime_handle().spawn(async move {
+        crate::runtime::handle().spawn(async move {
             let client_guard = client.lock().clone();
             let jobs = client_guard
                 .list_jobs(&owner, &repo, run_id)
@@ -217,7 +217,7 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
                 glib::ControlFlow::Break
             });
 
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let client_guard = client.lock().clone();
                 let rerun_result = client_guard.rerun_workflow(&owner, &repo, run_id).await;
                 if let Err(err) = rerun_result {
@@ -293,7 +293,7 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
                 glib::ControlFlow::Break
             });
 
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let client_guard = client.lock().clone();
                 let rerun_result = client_guard.rerun_failed_jobs(&owner, &repo, run_id).await;
                 if let Err(err) = rerun_result {
@@ -379,7 +379,7 @@ pub(crate) fn confirm_and_cancel_run(
             glib::ControlFlow::Break
         });
 
-        crate::runtime_handle().spawn(async move {
+        crate::runtime::handle().spawn(async move {
             let client_guard = client.lock().clone();
             let cancel_result = client_guard.cancel_run(&owner, &repo, run_id).await;
             if let Err(err) = cancel_result {

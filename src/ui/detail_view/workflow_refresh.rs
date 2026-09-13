@@ -3,9 +3,10 @@ use super::{RepoDetailPane, WorkflowListContext};
 use crate::api::models::Workflow;
 use crate::api::{GitHubClient, GitHubError};
 use crate::i18n::tr;
-use crate::ui::utils::channel::Sender as UiChannelSender;
+use crate::runtime::channel::MainContextChannelExt;
+use crate::runtime::channel::Sender as UiChannelSender;
+use crate::ui::utils::try_remove_source;
 use crate::ui::utils::widget_data::get_data_clone;
-use crate::ui::utils::{MainContextChannelExt, try_remove_source};
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
@@ -362,7 +363,7 @@ fn refresh_workflows_silent_with_state(
         glib::ControlFlow::Break
     });
 
-    crate::runtime_handle().spawn(async move {
+    crate::runtime::handle().spawn(async move {
         let notifier = WorkflowLoadNotifier::new(sender);
         let client_clone = client_for_spawn.lock().clone();
         let result = fetch_workflows(&client_clone, &owner_for_spawn, &repo_name_for_spawn)
@@ -467,7 +468,7 @@ impl RepoDetailPane {
             glib::ControlFlow::Break
         });
 
-        crate::runtime_handle().spawn(async move {
+        crate::runtime::handle().spawn(async move {
             let notifier = WorkflowLoadNotifier::new(sender);
             let client_clone = client_for_spawn.lock().clone();
             let result = fetch_workflows(&client_clone, &owner_for_spawn, &repo_name_for_spawn)
@@ -598,7 +599,7 @@ impl RepoDetailPane {
             let client_for_spawn = client.clone();
             let owner_for_spawn = owner.clone();
             let repo_name_for_spawn = repo_name.clone();
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let notifier = WorkflowLoadNotifier::new(sender);
                 let client_clone = client_for_spawn.lock().clone();
                 let result = fetch_workflows(&client_clone, &owner_for_spawn, &repo_name_for_spawn)
@@ -652,7 +653,7 @@ impl RepoDetailPane {
             });
 
             let prefs_mgr = prefs_mgr.clone();
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let mut updates = prefs_mgr.subscribe();
                 if sender.send(updates.borrow().refresh_interval).is_err() {
                     return;
