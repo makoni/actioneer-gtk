@@ -356,6 +356,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore = "live keyring; destructive"]
     fn test_token_storage_lifecycle() {
         let storage = match TokenStorage::new() {
             Ok(storage) => storage,
