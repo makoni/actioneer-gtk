@@ -178,7 +178,7 @@ fn render_progress_label(
 fn stop_elapsed_ticker(header: &WorkflowRowHeader) {
     let source = header.elapsed.borrow_mut().source.take();
     if let Some(source) = source {
-        let _ = crate::ui::utils::try_remove_source(source);
+        let _ = crate::ui::detail_view::source::try_remove_source(source);
     }
 }
 

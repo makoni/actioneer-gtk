@@ -1,12 +1,9 @@
-pub mod duration;
-pub mod layout;
-pub mod rate_limit;
-pub mod source;
-pub mod widget_data;
+//! Genuinely cross-cutting GTK helpers: each of these is used by two or more
+//! features, which is what keeps them here rather than beside one owner.
+//! Helpers with a single owning feature moved next to it in Phase 7.
 
-pub use layout::{create_detail_clamp, create_sidebar_clamp};
-pub use rate_limit::update_rate_limit_label;
-pub use source::try_remove_source;
+pub mod duration;
+pub mod widget_data;
 
 mod icons;
 pub use icons::favorite_icon_name;

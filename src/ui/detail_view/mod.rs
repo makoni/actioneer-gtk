@@ -24,6 +24,7 @@ mod filter_controls;
 pub(crate) mod header_state;
 mod helpers;
 mod run_filters;
+mod source;
 mod workflow_list;
 mod workflow_refresh;
 use favorite_controls::observe_favorites;

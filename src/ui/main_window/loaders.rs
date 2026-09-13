@@ -3,9 +3,9 @@ use crate::domain::counts::{determine_actions_state, selected_repo_for_status_re
 use crate::runtime::channel::MainContextChannelExt;
 use crate::services::api::GitHubError;
 use crate::services::api::models::{RateLimitInfo, Repo};
+use crate::ui::main_window::rate_limit::update_rate_limit_label;
 use crate::ui::sidebar::{RepoListRenderContext, rebuild_repo_list};
 use crate::ui::tasks::repo_status;
-use crate::ui::utils::update_rate_limit_label;
 use gtk4::glib;
 use std::time::Instant;
 use tracing::{error, info};

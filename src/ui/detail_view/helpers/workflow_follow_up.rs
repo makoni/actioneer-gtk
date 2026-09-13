@@ -6,7 +6,7 @@ use crate::services::gateway::GitHubGateway;
 use crate::services::notifications::NotificationManager;
 use crate::services::preferences::PreferencesManager;
 use crate::ui::detail_view::RunFilters;
-use crate::ui::utils::try_remove_source;
+use crate::ui::detail_view::source::try_remove_source;
 use crate::ui::utils::widget_data::{get_data_copy, set_data, steal_data};
 use gtk4::prelude::*;
 use gtk4::{self as gtk, gio, glib};

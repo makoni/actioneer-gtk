@@ -1,8 +1,8 @@
 use crate::kernel::i18n::tr;
+use crate::ui::main_window::layout::create_sidebar_clamp;
 use crate::ui::sidebar::{
     SidebarFilter, row_activatable_from_object, row_matches_filter, row_selectable_from_object,
 };
-use crate::ui::utils::create_sidebar_clamp;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, gio};
 use libadwaita as adw;

@@ -9,7 +9,7 @@ use crate::services::gateway::GitHubGateway;
 use crate::services::notifications::NotificationManager;
 use crate::services::preferences::{Preferences, PreferencesManager, ThemePreference};
 use crate::ui::detail_view::RepoDetailPane;
-use crate::ui::utils::create_detail_clamp;
+use crate::ui::main_window::layout::create_detail_clamp;
 use gio::Menu;
 use gio::prelude::*;
 use gtk4::prelude::*;
@@ -572,6 +572,8 @@ impl MainWindow {
 }
 
 mod app_actions;
+mod layout;
+mod rate_limit;
 
 #[cfg(test)]
 mod tests;
