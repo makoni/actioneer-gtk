@@ -345,7 +345,7 @@ pub(crate) fn create_workflow_expander_row(
         cancel_btn,
         expander,
         run_list,
-    } = build_row_widgets(&main_box, context, workflow, &settings);
+    } = build_row_widgets(&main_box, context, workflow);
 
     // Highlight the row while the workflow is expanded. The reference must be
     // weak: `main_box` owns the expander, so a strong clone here would form a

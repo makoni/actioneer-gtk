@@ -31,8 +31,8 @@ fn the_window_builds_from_fake_services() {
         // The three regions the app is made of.
         assert!(window.window.content().is_some(), "the window has content");
         assert!(
-            window.header_bar.is_visible() || !window.header_bar.is_visible(),
-            "the header bar exists"
+            window.header_bar.parent().is_some(),
+            "the header bar is packed into the window, not left dangling"
         );
         assert!(
             window.root_stack.pages().n_items() > 0,

@@ -56,16 +56,16 @@ fn live_start(
     started_at.cloned()
 }
 
-/// `started_at` is also set while a job/step is still queued, so the wall-clock
-/// fallback is only correct once it is actually executing — otherwise a queued
-/// item would show a ticking timer, and one that never completed would show a
-/// value that keeps growing on every refresh.
 /// Text for a job row's duration label, plus `started_at` when the label should
 /// keep counting: the job is executing and GitHub has not yet reported a final
 /// duration for it.
 pub(crate) fn job_duration_label(job: &Job) -> (Option<String>, Option<String>) {
     let final_duration = job.duration_string();
-    let text = crate::domain::formatting::job_duration_text(job);
+    let text = crate::domain::formatting::duration_text(
+        final_duration.clone(),
+        job.status.as_deref(),
+        job.started_at.as_ref(),
+    );
     let live = live_start(
         final_duration,
         job.status.as_deref(),
@@ -77,7 +77,11 @@ pub(crate) fn job_duration_label(job: &Job) -> (Option<String>, Option<String>) 
 /// Same as `job_duration_label` for a job step.
 pub(crate) fn step_duration_label(step: &JobStep) -> (Option<String>, Option<String>) {
     let final_duration = step.duration_string();
-    let text = crate::domain::formatting::step_duration_text(step);
+    let text = crate::domain::formatting::duration_text(
+        final_duration.clone(),
+        step.status.as_deref(),
+        step.started_at.as_ref(),
+    );
     let live = live_start(
         final_duration,
         step.status.as_deref(),

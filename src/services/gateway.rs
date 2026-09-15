@@ -119,7 +119,6 @@ impl GitHubGateway {
         }
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub async fn dispatch_workflow(
         &self,
         owner: &str,

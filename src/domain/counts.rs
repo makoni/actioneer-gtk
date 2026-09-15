@@ -78,6 +78,7 @@ pub fn select_latest_runs_for_workflows(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     #[test]
     fn determine_actions_state_prefers_push_or_admin() {
         let perms = RepoPermissions {
@@ -174,8 +175,6 @@ mod tests {
             select_latest_runs_for_workflows(&[11, 22, 33], &[run(300, Some(11))], true);
         assert_eq!(missing_with_truncation, vec![22, 33]);
     }
-
-    use super::*;
 
     #[test]
     fn status_counts_start_at_zero() {

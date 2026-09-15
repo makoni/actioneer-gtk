@@ -5,6 +5,8 @@
 
 use super::*;
 
+// The arguments are the row's shared context, passed individually rather than
+// as a struct because the caller already holds them as separate locals.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn connect_logs_button(
     logs_btn: &gtk::Button,

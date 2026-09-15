@@ -7,7 +7,7 @@
 use super::*;
 
 impl RepoDetailPane {
-    pub(crate) fn load_workflows(&self) {
+    pub(in crate::ui::detail_view) fn load_workflows(&self) {
         {
             let mut loading_guard = self.loading.lock();
             if *loading_guard {
@@ -114,7 +114,7 @@ impl RepoDetailPane {
         });
     }
 
-    pub(crate) fn connect_refresh_button(&self, button: &gtk::Button) {
+    pub(in crate::ui::detail_view) fn connect_refresh_button(&self, button: &gtk::Button) {
         let client = self.client.clone();
         let workflows = self.workflows.clone();
         let context = self.workflow_list_context();
@@ -250,7 +250,7 @@ impl RepoDetailPane {
         self.register_pane_handler(button, handler);
     }
 
-    pub(crate) fn start_auto_refresh(&self) {
+    pub(in crate::ui::detail_view) fn start_auto_refresh(&self) {
         let auto_refresh_source = self.auto_refresh_source.clone();
         let auto_refresh_interval = self.auto_refresh_interval.clone();
         let refresh_active = self.refresh_active.clone();
@@ -317,11 +317,11 @@ impl RepoDetailPane {
         }
     }
 
-    pub(crate) fn cancel_auto_refresh_timer(&self) {
+    pub(in crate::ui::detail_view) fn cancel_auto_refresh_timer(&self) {
         cancel_auto_refresh_timer_slot(&self.auto_refresh_source);
     }
 
-    pub(crate) fn teardown_refresh_timers(&self) {
+    pub(in crate::ui::detail_view) fn teardown_refresh_timers(&self) {
         self.cancel_auto_refresh_timer();
         *self.auto_refresh_interval.lock() = None;
         crate::ui::detail_view::helpers::clear_follow_up_refresh_timers(&self.workflow_store);
@@ -412,7 +412,7 @@ impl RepoDetailPane {
         }
     }
 
-    pub(crate) fn show_loading(&self, loading: bool) {
+    pub(in crate::ui::detail_view) fn show_loading(&self, loading: bool) {
         let refresh_button = self.refresh_button.clone();
         let buttons_box = self.buttons_box.clone();
 

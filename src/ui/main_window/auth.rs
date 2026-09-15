@@ -54,44 +54,28 @@ impl MainWindow {
 
         dialog.connect_response(None, move |_dialog, response| {
             if response == "signout" {
-                // Demo mode has no stored token, so there is nothing to delete
-                // and no reason to depend on the keyring being available. Before
-                // this, signing out of demo mode went through `TokenStorage`,
-                // and on a machine where that fails to open — no session
-                // keyring, a locked one, a sandboxed test environment — the
-                // error branch below logged and returned, leaving the user on a
-                // screen that still showed demo data.
-                if this.is_demo_mode() {
-                    info!("Leaving demo mode");
-                    this.enter_signed_out_state();
-                    return;
-                }
+                // Leave the signed-in UI immediately rather than waiting on the
+                // keyring. Deleting the token can *block indefinitely* when the
+                // secret service cannot be reached — no session keyring, a
+                // locked one, a sandboxed environment — and the previous code
+                // did the transition inside the reply handler, so the user
+                // clicked "Yes", the dialog closed, and nothing else ever
+                // happened. That was the demo-mode sign-out bug: demo has no
+                // token to delete, yet its sign-out still hung on the keyring.
+                info!("Signing out");
+                this.enter_signed_out_state();
 
-                let this_for_ui = this.clone();
-                let (sender, receiver) = glib::MainContext::default()
-                    .channel::<Result<(), String>>(glib::Priority::default());
-
-                receiver.attach(None, move |result| {
-                    match result {
-                        Ok(()) => {
-                            info!("Signed out successfully");
-                        }
-                        // Still sign out. The user asked to; refusing silently
-                        // is the one outcome that helps nobody, and the stored
-                        // token — if there even is one — is reported rather
-                        // than swallowed.
-                        Err(err) => error!("Failed to delete token: {}", err),
-                    }
-                    this_for_ui.enter_signed_out_state();
-                    glib::ControlFlow::Break
-                });
-
+                // The deletion still runs, in the background, because a demo
+                // session started while a token is stored must not leave that
+                // token behind — the focus handler would sign the user straight
+                // back in. Its outcome only gets logged: the session is already
+                // over from the user's point of view.
                 crate::runtime::handle().spawn(async move {
-                    let result = tokio::task::spawn_blocking(delete_token_blocking)
-                        .await
-                        .map_err(|err| format!("Failed to join sign-out task: {err}"))
-                        .and_then(|result| result);
-                    let _ = sender.send(result);
+                    match tokio::task::spawn_blocking(delete_token_blocking).await {
+                        Ok(Ok(())) => info!("Stored token deleted"),
+                        Ok(Err(err)) => error!("Failed to delete token: {}", err),
+                        Err(err) => error!("Sign-out task failed to join: {}", err),
+                    }
                 });
             }
         });

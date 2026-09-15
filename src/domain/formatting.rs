@@ -34,27 +34,53 @@ pub fn running_duration_string(started_at: Option<&String>) -> Option<String> {
     Some(format_elapsed(seconds))
 }
 
+/// `started_at` is also set while a job or step is still queued, so the
+/// wall-clock fallback is only correct once it is actually executing —
+/// otherwise a queued item would show a ticking timer, and one that never
+/// completed would show a value that keeps growing on every refresh.
 pub fn is_in_progress(status: Option<&str>) -> bool {
     matches!(status, Some("in_progress"))
 }
 
-/// The duration text for a job row: the final duration once GitHub reports one,
-/// otherwise a wall-clock count while the job is executing.
-pub fn job_duration_text(job: &Job) -> Option<String> {
-    job.duration_string().or_else(|| {
-        is_in_progress(job.status.as_deref())
-            .then(|| running_duration_string(job.started_at.as_ref()))
+/// `started_at` is also set while a job or step is still queued, so the
+/// wall-clock fallback is only correct once it is actually executing —
+/// otherwise a queued item would show a ticking timer, and one that never
+/// completed would show a value that keeps growing on every refresh.
+/// The duration text: the final duration once GitHub reports one, otherwise a
+/// wall-clock count while the item is executing.
+///
+/// Takes `final_duration` rather than recomputing it. Callers already need it
+/// to decide whether the label should keep ticking, and computing it parses two
+/// RFC-3339 timestamps — which would otherwise happen twice per row on every
+/// rebuild and again on every one-second tick.
+pub fn duration_text(
+    final_duration: Option<String>,
+    status: Option<&str>,
+    started_at: Option<&String>,
+) -> Option<String> {
+    final_duration.or_else(|| {
+        is_in_progress(status)
+            .then(|| running_duration_string(started_at))
             .flatten()
     })
 }
 
+/// The duration text for a job row.
+pub fn job_duration_text(job: &Job) -> Option<String> {
+    duration_text(
+        job.duration_string(),
+        job.status.as_deref(),
+        job.started_at.as_ref(),
+    )
+}
+
 /// Same as [`job_duration_text`] for a job step.
 pub fn step_duration_text(step: &JobStep) -> Option<String> {
-    step.duration_string().or_else(|| {
-        is_in_progress(step.status.as_deref())
-            .then(|| running_duration_string(step.started_at.as_ref()))
-            .flatten()
-    })
+    duration_text(
+        step.duration_string(),
+        step.status.as_deref(),
+        step.started_at.as_ref(),
+    )
 }
 
 #[cfg(test)]

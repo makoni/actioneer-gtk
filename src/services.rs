@@ -10,7 +10,6 @@ pub mod auth;
 pub mod cache;
 pub mod config;
 pub mod crash_report;
-pub mod error;
 pub mod favorites;
 pub mod gateway;
 pub mod notifications;

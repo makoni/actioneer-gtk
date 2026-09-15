@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-13 13:54+0000\n"
+"POT-Creation-Date: 2026-09-15 14:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -250,29 +250,29 @@ msgstr ""
 msgid "{count}d ago"
 msgstr ""
 
-#: src/ui/detail_view/helpers/jobs.rs:83
+#: src/ui/detail_view/helpers/jobs.rs:82
 msgid "Unnamed job"
 msgstr ""
 
-#: src/ui/detail_view/helpers/jobs.rs:114
+#: src/ui/detail_view/helpers/jobs.rs:113
 #: src/ui/detail_view/helpers/runs/actions.rs:75
-#: src/ui/detail_view/helpers/workflows/row_widgets.rs:89
+#: src/ui/detail_view/helpers/workflows/row_widgets.rs:88
 msgid "View logs"
 msgstr ""
 
-#: src/ui/detail_view/helpers/jobs.rs:412
+#: src/ui/detail_view/helpers/jobs.rs:411
 #: src/ui/detail_view/helpers/runs/actions.rs:118
-#: src/ui/detail_view/helpers/workflows/logs_button.rs:78
+#: src/ui/detail_view/helpers/workflows/logs_button.rs:80
 msgid "No jobs found"
 msgstr ""
 
-#: src/ui/detail_view/helpers/jobs.rs:466
+#: src/ui/detail_view/helpers/jobs.rs:465
 #: src/ui/detail_view/helpers/runs/actions.rs:123
-#: src/ui/detail_view/helpers/workflows/logs_button.rs:85
+#: src/ui/detail_view/helpers/workflows/logs_button.rs:87
 msgid "Unable to load jobs"
 msgstr ""
 
-#: src/ui/detail_view/helpers/jobs.rs:479
+#: src/ui/detail_view/helpers/jobs.rs:478
 #: src/ui/detail_view/helpers/runs/list/placeholders.rs:87
 msgid "Retry"
 msgstr ""
@@ -330,7 +330,7 @@ msgid "✗ Failed to re-run failed jobs"
 msgstr ""
 
 #: src/ui/detail_view/helpers/runs/actions.rs:318
-#: src/ui/detail_view/helpers/workflows/row_widgets.rs:104
+#: src/ui/detail_view/helpers/workflows/row_widgets.rs:103
 msgid "Cancel run"
 msgstr ""
 
@@ -392,23 +392,23 @@ msgstr ""
 msgid "Click to load jobs..."
 msgstr ""
 
-#: src/ui/detail_view/helpers/workflows/logs_button.rs:38
-#: src/ui/detail_view/helpers/workflows/row_widgets.rs:73
+#: src/ui/detail_view/helpers/workflows/logs_button.rs:40
+#: src/ui/detail_view/helpers/workflows/row_widgets.rs:72
 #: src/ui/detail_view/helpers/workflows.rs:254
 #: src/ui/detail_view/helpers/workflows.rs:286
 #: src/ui/detail_view/helpers/workflows.rs:287
 msgid "No runs yet"
 msgstr ""
 
-#: src/ui/detail_view/helpers/workflows/row_widgets.rs:96
+#: src/ui/detail_view/helpers/workflows/row_widgets.rs:95
 msgid "Trigger workflow"
 msgstr ""
 
-#: src/ui/detail_view/helpers/workflows/row_widgets.rs:153
+#: src/ui/detail_view/helpers/workflows/row_widgets.rs:152
 msgid "Recent runs"
 msgstr ""
 
-#: src/ui/detail_view/helpers/workflows/row_widgets.rs:182
+#: src/ui/detail_view/helpers/workflows/row_widgets.rs:181
 msgid "All on GitHub"
 msgstr ""
 
@@ -826,7 +826,7 @@ msgstr ""
 msgid "Failed to open donation page in the browser."
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:331 src/ui/main_window.rs:509
+#: src/ui/main_window/window_actions.rs:331 src/ui/main_window.rs:510
 msgid "Actioneer notification test"
 msgstr ""
 
@@ -890,7 +890,7 @@ msgstr ""
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr ""
 
-#: src/ui/main_window.rs:510
+#: src/ui/main_window.rs:511
 msgid "If you see this, notifications are working."
 msgstr ""
 
@@ -974,7 +974,7 @@ msgstr ""
 msgid "Switch language instantly"
 msgstr ""
 
-#: src/ui/error_text.rs:31 src/ui/error_text.rs:37
+#: src/ui/error_text.rs:26
 msgid "Error: {message}"
 msgstr ""
 

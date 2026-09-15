@@ -1,8 +1,7 @@
 use super::context::{
     JobContextMap, JobRefreshContext, JobRefreshContextParams, RunBadgeSummaryMap,
 };
-use super::formatting::friendly_status;
-use super::formatting::{get_job_status_class, get_job_status_icon};
+use super::formatting::{friendly_status, get_job_status_class, get_job_status_icon};
 use super::runs::WorkflowRunListModel;
 use super::status_dot::{JOB_DOT_SIZE, STEP_DOT_SIZE, build_status_dot};
 use crate::kernel::i18n::tr;

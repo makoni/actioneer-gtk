@@ -23,7 +23,6 @@ pub(super) fn build_row_widgets(
     main_box: &gtk::Box,
     context: &WorkflowRowContext,
     workflow: &Workflow,
-    _settings: &WorkflowRowSettings,
 ) -> RowWidgets {
     let client = context.client.clone();
     let owner = context.owner.clone();

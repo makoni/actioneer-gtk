@@ -189,8 +189,8 @@ mod tests {
             // display server.
             assert_eq!(widget.orientation(), gtk::Orientation::Vertical);
             assert!(
-                widget.is_visible() || !widget.is_visible(),
-                "the widget exists"
+                widget.first_child().is_some(),
+                "the welcome screen packs its content, not an empty box"
             );
         });
     }

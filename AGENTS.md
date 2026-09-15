@@ -57,6 +57,11 @@ src/ui/         GTK only
 Rules that the tree currently satisfies and that CI does not check for you:
 
 - `domain/` names no GTK type, and nothing outside `src/ui/` names `crate::ui`.
+  One deliberate exception: `kernel::app::version_string` calls
+  `gtk4::major_version()` and friends, because the whole point of that line is
+  to report the GTK that answered at runtime — an AppImage bundles its own — and
+  it must work with no display. That is the only `gtk4` reference outside
+  `src/ui/`.
 - The data source is chosen once, at `GitHubGateway::{live,demo}`; the HTTP
   client knows nothing about demo mode.
 - Real services are constructed in exactly one place, `AppServices::build`.
@@ -185,8 +190,10 @@ User-facing strings go through `tr(...)`. There are 14 catalogs in `po/`.
 crate roots, `src/lib.rs` and `src/main.rs`, because `xtr` walks the module tree
 from the root it is given and `main.rs` declares no modules. After running it,
 sanity-check the msgid *set*, not the diff size: a pure file move churns every
-`file:line` comment while leaving the set identical (241 today). when adding a string,
-insert the new `msgid`/`msgstr` pair into each `.po` surgically. Do not run a
+`file:line` comment while leaving the set identical (241 today).
+
+When adding a string, insert the new `msgid`/`msgstr` pair into each `.po`
+surgically. Do not run a
 blanket `msgmerge` over the catalogs: it rewrites every file wholesale and buries
 your change in a five-figure diff.
 

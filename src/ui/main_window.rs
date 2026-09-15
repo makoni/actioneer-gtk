@@ -354,15 +354,16 @@ impl MainWindow {
         }
     }
     fn initialize_client(&self, token: String) -> bool {
-        if self.is_demo_mode() {
-            // Leaving demo mode is just dropping the demo gateway; the slot is
-            // replaced (or cleared) by the caller right below.
-            *self.demo_mode.lock() = false;
-        }
-
         // The slot transition belongs to the services; the UI reaction below
         // belongs here.
+        //
+        // The demo flag is cleared *after* the swap succeeds, not before:
+        // `authenticate` leaves the slot untouched when it fails, so clearing
+        // first would leave `is_demo_mode()` answering false while a
+        // `DemoBackend` was still installed — and the focus handler and the
+        // refresh paths both branch on that flag.
         if self.services.authenticate(token) {
+            *self.demo_mode.lock() = false;
             {
                 let mut info_guard = self.rate_limit_info.lock();
                 *info_guard = None;
