@@ -6,22 +6,29 @@ This document describes the testing approach for the Actioneer GTK application.
 
 ## Test Structure
 
-### 1. Logic Tests (`tests/logic_tests.rs`)
+### 1. Integration tests (`tests/`)
 
-These tests verify business logic, helper functions, and state management without requiring GTK or a display server. They can run in CI/CD environments and on headless systems.
+Each file in `tests/` is its own test binary and can only reach the crate's
+**public** API — which is why the crate is split into `[lib]` + `[[bin]]`. None
+of these needs GTK or a display.
 
-**Test Coverage:**
-- ✅ Relative time formatting logic
-- ✅ Status to icon name mapping (success, failure, cancelled, in_progress, queued)
-- ✅ Status to CSS class mapping (success, error, warning, accent)
-- ✅ Button visibility logic based on workflow run state
-- ✅ Expansion state tracking with HashSet
-- ✅ Auto-refresh interval parsing and conversion
-- ✅ Run state checks (is_active, is_cancellable, is_rerunnable)
+| File | What it covers |
+|---|---|
+| `logic_tests.rs` | `domain::runs` predicates and `domain::formatting` durations |
+| `characterization_demo.rs` | everything the demo backend returns, frozen shape by shape |
+| `characterization_api.rs` | the live client against `wiremock`: parsing, error mapping, rate-limit headers |
+| `gateway.rs` | the gateway's dispatch — that live and demo route to different places |
+| `logic_tests.rs` | also covers `domain::filters` and `domain::counts` |
+| `common/mod.rs` | shared frozen fixtures; not a test target itself |
 
-**Running logic tests:**
+**Characterization tests are not ordinary tests.** Their expected values are
+frozen: a refactor may change *how* a test reaches a value, never *what* it
+asserts. If one starts failing, the refactor changed behaviour — fix the code,
+not the constant.
+
 ```bash
 cargo test --test logic_tests
+cargo test --workspace          # everything headless
 ```
 
 ### 2. Unit Tests (in source files)
@@ -71,10 +78,38 @@ Run locally:
 
 ```bash
 cargo build --release
-dbus-run-session -- bash tests/smoke/run_smoke.sh
+dbus-run-session -- bash tests/smoke/run_all.sh
 ```
 
-The default scenario (`tests/smoke/welcome_screen.py`) verifies that the welcome screen renders with its signed-out CTAs. Additional scripts can be passed as `bash tests/smoke/run_smoke.sh path/to/script.py`.
+`run_all.sh` runs every journey with the launch arguments it needs and stops at
+the first failure. To run one on its own:
+
+```bash
+ACTIONEER_ARGS=--demo dbus-run-session -- \
+  bash tests/smoke/run_smoke.sh tests/smoke/job_logs.py
+```
+
+Seven journeys today: `welcome_screen`, `demo_mode`, `repos_to_workflows`,
+`runs_and_detail`, `job_logs`, `filters_and_favorites`, `trigger_dialog`,
+`preferences_and_signout`. `lib.py` holds the shared helpers and `fixtures.py`
+the frozen accessibility names; neither is a journey, which is why `run_all.sh`
+lists scripts explicitly instead of globbing.
+
+**A release build is required** — `run_smoke.sh` defaults `ACTIONEER_BIN` to
+`target/release/actioneer`. On a Wayland desktop the harness pins
+`GDK_BACKEND=x11` itself; without that GTK prefers the inherited Wayland
+session and reports "Failed to open display" even though Xvfb is up.
+
+Three helpers exist because the obvious AT-SPI approaches silently do nothing on
+GTK4, which makes a test pass while checking nothing:
+
+- `click()` looks an action up **by name**. `doAction(0)` on a label is
+  `clipboard.copy` — it succeeds and changes nothing.
+- `select_row_named()` selects through the enclosing list's `Selection`
+  interface. `ListView` rows expose no select action and have an empty
+  accessible name.
+- `do_window_action()` invokes a window GAction on the frame. Items inside a
+  `GtkMenuButton` popover never reach the accessibility tree at all.
 
 ## Manual UI Test Checklist
 
@@ -123,39 +158,47 @@ When testing UI changes, verify the following:
 - [ ] Rate limit display updates after each API call
 - [ ] App remains responsive during data loading
 
-## Test Metrics
+## Test metrics
 
-Current test coverage:
-- **Logic tests:** 7 tests, 100% passing
-- **Unit tests:** 15 tests total in source files
-- **Manual UI verification:** Required for each release
+- **Headless:** 236 passing (`cargo test --workspace`)
+- **GTK, `#[ignore]`d:** 75 tests, run under Xvfb
+- **Smoke journeys:** 8
+- **Manual UI verification:** still required for each release
 
 ## Running Tests
 
+The full gate, in the order CI runs it:
+
 ```bash
-# Run all tests (unit + logic)
-cargo test
-
-# Run only logic tests
-cargo test --test logic_tests
-
-# Run with output
-cargo test -- --nocapture
-
-# Run specific test
-cargo test test_status_icon_mapping
-
-# Build and run the application for manual testing
-cargo run
+cargo fmt --all
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace
+xvfb-run -a dbus-run-session -- bash -lc \
+  "RUST_TEST_THREADS=1 cargo test --workspace -- --ignored --test-threads=1 \
+   --skip test_token_storage_lifecycle"
+cargo build --release && dbus-run-session -- bash tests/smoke/run_all.sh
 ```
 
-## Future Improvements
+**`--skip test_token_storage_lifecycle` is not optional.** That test writes the
+developer's real system keyring, and `--ignored` runs precisely the tests marked
+`#[ignore]` — so marking it ignored moves it *into* that batch rather than out
+of the run.
 
-1. **Add integration tests** for API client with mocked responses (using `wiremock`)
-2. **Add E2E tests** using dogtail or similar for automated UI testing
-3. **Add property-based tests** for state management using `proptest`
-4. **Add benchmarks** for performance-critical operations
-5. **Add visual regression tests** for UI consistency
+Everyday commands:
+
+```bash
+cargo test --workspace          # headless only
+cargo test --test logic_tests   # one integration binary
+cargo test -- --nocapture       # with output
+cargo run                       # the app, for manual testing
+cargo run -- --demo             # the app with sample data
+```
+
+## Future improvements
+
+1. **Property-based tests** for the domain predicates using `proptest`
+2. **Benchmarks** for the run-list rendering path
+3. **Visual regression tests** for UI consistency
 
 ## Debugging Tests
 

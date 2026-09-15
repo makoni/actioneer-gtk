@@ -1,14 +1,4 @@
-/// Repository actions state
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum RepoActionsState {
-    Enabled,
-    Disabled,
-    Unknown,
-}
+//! The repository-status value types now live in `domain::counts`; this
+//! re-export keeps the `ui::state::…` paths their consumers use resolving.
 
-/// Workflow status counts for a repository
-#[derive(Clone, Debug, Default)]
-pub struct WorkflowStatusCounts {
-    pub active: usize,
-    pub failed: usize,
-}
+pub use crate::domain::counts::{RepoActionsState, WorkflowStatusCounts};

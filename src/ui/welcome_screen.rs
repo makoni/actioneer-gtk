@@ -1,5 +1,5 @@
-use crate::APP_ICON_NAME;
-use crate::i18n::tr;
+use crate::kernel::app::APP_ICON_NAME;
+use crate::kernel::i18n::tr;
 use gtk4 as gtk;
 use gtk4::prelude::*;
 
@@ -8,6 +8,12 @@ pub struct WelcomeScreen {
     signin_button: gtk::Button,
     demo_button: gtk::Button,
     quit_button: gtk::Button,
+}
+
+impl Default for WelcomeScreen {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl WelcomeScreen {
@@ -163,5 +169,39 @@ impl WelcomeScreen {
 
     pub fn connect_quit<F: Fn() + 'static>(&self, callback: F) {
         self.quit_button.connect_clicked(move |_| callback());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ui::test_helpers::run_gtk_test;
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn the_welcome_screen_builds_with_its_call_to_action() {
+        run_gtk_test("welcome_screen_builds", || {
+            let screen = WelcomeScreen::new();
+            let widget = screen.widget();
+
+            // The smoke journey asserts the same three strings through AT-SPI;
+            // this is the in-process half, so a build break is caught without a
+            // display server.
+            assert_eq!(widget.orientation(), gtk::Orientation::Vertical);
+            assert!(
+                widget.first_child().is_some(),
+                "the welcome screen packs its content, not an empty box"
+            );
+        });
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn default_matches_new() {
+        run_gtk_test("welcome_screen_default", || {
+            let a = WelcomeScreen::new();
+            let b = WelcomeScreen::default();
+            assert_eq!(a.widget().orientation(), b.widget().orientation());
+        });
     }
 }

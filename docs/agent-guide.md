@@ -339,3 +339,34 @@ glib::spawn_future_local(clone!(@weak self as widget => async move {
 - Prefer small files/modules over large ones to enhance code organization. Files should ideally be under 500 lines when possible.
 
 By following these best practices, an AI agent can create a robust, modern, and well-integrated GNOME application that provides an excellent user experience on the Linux desktop.
+
+## Decisions that are settled (do not re-litigate)
+
+**Demo mode stays in the crate, with no Cargo feature.** It looks like the kind
+of thing that belongs behind `[features]` or in `examples/`, and it is not: demo
+mode is a shipped, user-visible mode reachable from the welcome screen and via
+`--demo`. `examples/` would delete a product feature, and a `demo` feature would
+have to be default-on anyway because `AppServices::test_fakes()` is an
+unconditionally-`pub` item that builds a demo gateway — buying nothing but
+`#[cfg]` cascades through every match arm of the gateway. The architectural half
+of the concern is already handled: the live HTTP client does not name `demo`,
+and the data source is chosen once, at `GitHubGateway::{live,demo}`.
+
+**Services keep their own error types; `AppError` is not a universal return
+type.** The UI matches `GitHubError` variants for *behaviour* —
+`AuthenticationFailed` drives a sign-out, `NotFound` and `Gone` pick different
+log-window messages, an `ApiError` containing "Not modified" is suppressed.
+Flattening those into `AppError::Api(GitHubError::…)` adds nesting to every one
+of those decisions, and a `?` at a service boundary erases the distinction
+outright. What is centralised is the *text*: `ui::error_text::user_message`
+is the one place an error becomes something a person reads.
+
+**`MainWindow` has no release test, and that is not an omission.** It wraps an
+`adw::ApplicationWindow`, which registers itself with its application and is
+released only once the application processes that removal — which needs a
+running main loop that a `run_gtk_test` body does not have. Measured: after a
+destroy-and-rebuild the toplevel survives and so does every widget beneath it,
+uniformly, which is the signature of the toplevel being held rather than of a
+handler cycle. The per-row release tests and the `--demo` smoke journeys cover
+the cycle risk instead. `JobLogsWindow` *is* testable this way because it is a
+plain `adw::Window`.

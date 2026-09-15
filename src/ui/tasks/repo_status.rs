@@ -1,9 +1,9 @@
 /// Background task: Check repository status (Actions enabled, workflow counts)
 use super::super::state::{RepoActionsState, WorkflowStatusCounts};
-use crate::api::GitHubClient;
-use crate::api::models::Repo;
+use crate::runtime::channel::MainContextChannelExt;
+use crate::services::api::models::Repo;
+use crate::services::gateway::GitHubGateway;
 use crate::ui::sidebar::gather_workflow_status_counts;
-use crate::ui::utils::MainContextChannelExt;
 use gtk4::glib;
 use parking_lot::Mutex;
 use std::collections::HashMap;
@@ -17,7 +17,7 @@ const MAX_REPOS_FOR_STATUS: usize = 20;
 /// Runs checks in parallel (5 concurrent) on tokio runtime
 pub fn spawn_repo_status_tasks<F>(
     repos: Vec<Repo>,
-    client: GitHubClient,
+    client: GitHubGateway,
     actions_state: Arc<Mutex<HashMap<i64, RepoActionsState>>>,
     workflow_state: Arc<Mutex<HashMap<i64, WorkflowStatusCounts>>>,
     checked_state: Arc<Mutex<HashMap<i64, Instant>>>,
@@ -42,7 +42,7 @@ pub fn spawn_repo_status_tasks<F>(
 
     let repos: Vec<Repo> = repos.into_iter().take(MAX_REPOS_FOR_STATUS).collect();
 
-    crate::runtime_handle().spawn(async move {
+    crate::runtime::handle().spawn(async move {
         use futures::stream::{self, StreamExt};
 
         stream::iter(repos)

@@ -1,8 +1,8 @@
 use super::super::formatting::format_run_title;
-use crate::api::GitHubClient;
-use crate::api::models::{Repo, WorkflowRun};
-use crate::i18n::tr;
-use crate::ui::utils::MainContextChannelExt;
+use crate::kernel::i18n::tr;
+use crate::runtime::channel::MainContextChannelExt;
+use crate::services::api::models::{Repo, WorkflowRun};
+use crate::services::gateway::GitHubGateway;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
@@ -13,7 +13,7 @@ use tracing::error;
 
 #[derive(Clone)]
 pub(crate) struct RunActionContext {
-    pub(crate) client: Arc<Mutex<GitHubClient>>,
+    pub(crate) client: Arc<Mutex<GitHubGateway>>,
     pub(crate) owner: String,
     pub(crate) repo: String,
     pub(crate) repo_model: Repo,
@@ -90,7 +90,9 @@ fn create_logs_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::But
         let btn_for_result = btn.clone();
 
         let (sender, receiver) = glib::MainContext::default()
-            .channel::<Result<Vec<crate::api::models::Job>, String>>(glib::Priority::default());
+            .channel::<Result<Vec<crate::services::api::models::Job>, String>>(
+                glib::Priority::default(),
+            );
 
         let parent_window = parent_window.clone();
         let repo_model = repo_model.clone();
@@ -127,7 +129,7 @@ fn create_logs_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::But
         let client = client.clone();
         let owner = owner.clone();
         let repo = repo.clone();
-        crate::runtime_handle().spawn(async move {
+        crate::runtime::handle().spawn(async move {
             let client_guard = client.lock().clone();
             let jobs = client_guard
                 .list_jobs(&owner, &repo, run_id)
@@ -217,7 +219,7 @@ fn create_rerun_button(run: &WorkflowRun, context: &RunActionContext) -> gtk::Bu
                 glib::ControlFlow::Break
             });
 
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let client_guard = client.lock().clone();
                 let rerun_result = client_guard.rerun_workflow(&owner, &repo, run_id).await;
                 if let Err(err) = rerun_result {
@@ -293,7 +295,7 @@ fn create_rerun_failed_button(run: &WorkflowRun, context: &RunActionContext) -> 
                 glib::ControlFlow::Break
             });
 
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let client_guard = client.lock().clone();
                 let rerun_result = client_guard.rerun_failed_jobs(&owner, &repo, run_id).await;
                 if let Err(err) = rerun_result {
@@ -379,7 +381,7 @@ pub(crate) fn confirm_and_cancel_run(
             glib::ControlFlow::Break
         });
 
-        crate::runtime_handle().spawn(async move {
+        crate::runtime::handle().spawn(async move {
             let client_guard = client.lock().clone();
             let cancel_result = client_guard.cancel_run(&owner, &repo, run_id).await;
             if let Err(err) = cancel_result {
@@ -397,7 +399,7 @@ pub(crate) fn confirm_and_cancel_run(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::models::{Repo, WorkflowRun};
+    use crate::services::api::models::{Repo, WorkflowRun};
     use crate::ui::test_helpers::run_gtk_test;
 
     fn run_stub() -> WorkflowRun {
@@ -448,7 +450,7 @@ mod tests {
     fn open_button_added_when_url_present() {
         run_gtk_test("open_button_added_when_url_present", || {
             let run = run_stub();
-            let client = Arc::new(Mutex::new(GitHubClient::new(None).unwrap()));
+            let client = Arc::new(Mutex::new(GitHubGateway::demo()));
             let parent = adw::ApplicationWindow::builder().build();
             let overlay = adw::ToastOverlay::new();
 
@@ -460,7 +462,7 @@ mod tests {
                     id: 1,
                     name: "repo".into(),
                     full_name: "owner/repo".into(),
-                    owner: crate::api::models::User {
+                    owner: crate::services::api::models::User {
                         login: "owner".into(),
                     },
                     is_private: false,

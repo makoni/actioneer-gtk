@@ -1,10 +1,11 @@
 use super::MainWindow;
-use crate::api::GitHubError;
-use crate::api::models::{RateLimitInfo, Repo, RepoPermissions};
+use crate::domain::counts::{determine_actions_state, selected_repo_for_status_refresh};
+use crate::runtime::channel::MainContextChannelExt;
+use crate::services::api::GitHubError;
+use crate::services::api::models::{RateLimitInfo, Repo};
+use crate::ui::main_window::rate_limit::update_rate_limit_label;
 use crate::ui::sidebar::{RepoListRenderContext, rebuild_repo_list};
-use crate::ui::state::RepoActionsState;
 use crate::ui::tasks::repo_status;
-use crate::ui::utils::{MainContextChannelExt, update_rate_limit_label};
 use gtk4::glib;
 use std::time::Instant;
 use tracing::{error, info};
@@ -50,7 +51,7 @@ impl MainWindow {
                 glib::ControlFlow::Break
             });
 
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let repos_result = client.list_repos().await;
                 let rate_info = client.rate_limit_info();
 
@@ -187,26 +188,10 @@ impl MainWindow {
     }
 }
 
-fn determine_actions_state(permissions: Option<&RepoPermissions>) -> RepoActionsState {
-    match permissions {
-        Some(perms) if perms.push || perms.admin => RepoActionsState::Enabled,
-        Some(_) => RepoActionsState::Disabled,
-        None => RepoActionsState::Unknown,
-    }
-}
-
-fn selected_repo_for_status_refresh(repos: &[Repo], selected_repo_id: Option<i64>) -> Option<Repo> {
-    let selected_repo_id = selected_repo_id?;
-    repos
-        .iter()
-        .find(|repo| repo.id == selected_repo_id)
-        .cloned()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::models::User;
+    use crate::services::api::models::User;
 
     fn repo(id: i64, name: &str) -> Repo {
         Repo {
@@ -220,47 +205,6 @@ mod tests {
             permissions: None,
             default_branch: Some("main".into()),
         }
-    }
-
-    #[test]
-    fn determine_actions_state_prefers_push_or_admin() {
-        let perms = RepoPermissions {
-            admin: false,
-            push: true,
-            pull: true,
-        };
-        assert_eq!(
-            determine_actions_state(Some(&perms)),
-            RepoActionsState::Enabled
-        );
-
-        let admin_perms = RepoPermissions {
-            admin: true,
-            push: false,
-            pull: true,
-        };
-        assert_eq!(
-            determine_actions_state(Some(&admin_perms)),
-            RepoActionsState::Enabled
-        );
-    }
-
-    #[test]
-    fn determine_actions_state_disables_pull_only() {
-        let perms = RepoPermissions {
-            admin: false,
-            push: false,
-            pull: true,
-        };
-        assert_eq!(
-            determine_actions_state(Some(&perms)),
-            RepoActionsState::Disabled
-        );
-    }
-
-    #[test]
-    fn determine_actions_state_unknown_without_permissions() {
-        assert_eq!(determine_actions_state(None), RepoActionsState::Unknown);
     }
 
     #[test]

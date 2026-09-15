@@ -1,6 +1,6 @@
 use super::{DONATION_URL, HOMEPAGE_URL, ISSUE_URL, MainWindow};
-use crate::crash_report;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
+use crate::services::crash_report;
 use crate::ui::preferences_window::PreferencesWindow;
 use gtk4::prelude::*;
 use gtk4::{self as gtk};
@@ -35,7 +35,7 @@ impl MainWindow {
         let about = adw::AboutWindow::builder()
             .transient_for(&self.window)
             .application_name("Actioneer")
-            .application_icon(crate::APP_ICON_NAME)
+            .application_icon(crate::kernel::app::APP_ICON_NAME)
             .developer_name("Sergey Armodin")
             .version(env!("CARGO_PKG_VERSION"))
             .website(HOMEPAGE_URL)
@@ -325,7 +325,7 @@ Troubleshooting\n\
         info!("Debug: dispatching test notification action");
         match self.notification_manager.clone() {
             Some(manager) => {
-                crate::runtime_handle().spawn(async move {
+                crate::runtime::handle().spawn(async move {
                     match manager
                         .notify_message(
                             tr("Actioneer notification test").as_str(),

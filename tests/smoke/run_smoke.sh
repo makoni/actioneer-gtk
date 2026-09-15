@@ -50,6 +50,13 @@ chmod 700 "$XDG_RUNTIME_DIR"
 export NO_AT_BRIDGE=0
 export GTK_A11Y=atspi
 
+# Pin GTK to the X11 backend for the Xvfb display below. On a Wayland desktop
+# GDK_BACKEND/WAYLAND_DISPLAY are inherited from the developer's session, GTK
+# then prefers Wayland and reports "Failed to open display" even though Xvfb is
+# up and reachable. CI never hits this because it has no Wayland session.
+export GDK_BACKEND=x11
+unset WAYLAND_DISPLAY
+
 app_log="$workdir/app.log"
 
 xvfb_display=":${XVFB_DISPLAY_NUM:-98}"
@@ -70,7 +77,10 @@ cleanup() {
 trap 'cleanup; rm -rf "$workdir"' EXIT
 
 # Launch the app; pyatspi will poll the accessibility tree.
-"$bin_path" >"$app_log" 2>&1 &
+# ACTIONEER_ARGS lets a smoke script pick the launch mode it needs (e.g.
+# `--demo`). Unquoted on purpose so multiple flags word-split; `:-` is required
+# because this script runs under `set -u`.
+"$bin_path" ${ACTIONEER_ARGS:-} >"$app_log" 2>&1 &
 app_pid=$!
 export APP_PID="$app_pid"
 

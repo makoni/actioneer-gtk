@@ -1,7 +1,9 @@
-use crate::i18n::{apply_language_preference, tr};
-use crate::preferences::{LanguagePreference, Preferences, PreferencesManager, ThemePreference};
-use crate::runtime_handle;
-use crate::ui::utils::MainContextChannelExt;
+use crate::kernel::i18n::{apply_language_preference, tr};
+use crate::runtime::channel::MainContextChannelExt;
+use crate::runtime::handle;
+use crate::services::preferences::{
+    LanguagePreference, Preferences, PreferencesManager, ThemePreference,
+};
 use gtk4::glib::Propagation;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
@@ -125,7 +127,7 @@ impl PreferencesWindow {
         let (sender, receiver) =
             glib::MainContext::default().channel::<Preferences>(glib::Priority::default());
 
-        runtime_handle().spawn({
+        handle().spawn({
             let manager = manager.clone();
             async move {
                 let mut updates = manager.subscribe();
@@ -166,7 +168,7 @@ impl PreferencesWindow {
                 _ => 10,
             };
             let manager = manager_for_combo.clone();
-            runtime_handle().spawn(async move {
+            handle().spawn(async move {
                 if let Err(err) = manager.set_refresh_interval(interval).await {
                     warn!("Failed to save refresh interval: {}", err);
                 }
@@ -176,7 +178,7 @@ impl PreferencesWindow {
         let manager_for_notify = manager.clone();
         notify_switch.connect_state_set(move |_, state| {
             let manager = manager_for_notify.clone();
-            runtime_handle().spawn(async move {
+            handle().spawn(async move {
                 if let Err(err) = manager.set_notifications_enabled(state).await {
                     warn!("Failed to update notifications preference: {}", err);
                 }
@@ -190,7 +192,7 @@ impl PreferencesWindow {
             apply_theme(theme_preference);
 
             let manager = manager_for_theme.clone();
-            runtime_handle().spawn(async move {
+            handle().spawn(async move {
                 if let Err(err) = manager.set_theme_preference(theme_preference).await {
                     warn!("Failed to update theme preference: {}", err);
                 }
@@ -205,7 +207,7 @@ impl PreferencesWindow {
             let changed = apply_language_preference(language_preference);
 
             let manager = manager_for_language.clone();
-            runtime_handle().spawn(async move {
+            handle().spawn(async move {
                 if let Err(err) = manager.set_language_preference(language_preference).await {
                     warn!("Failed to update language preference: {}", err);
                 }
@@ -297,7 +299,7 @@ fn index_to_language(index: u32) -> LanguagePreference {
 #[cfg(test)]
 mod tests {
     use super::{index_to_language, language_to_index};
-    use crate::preferences::LanguagePreference;
+    use crate::services::preferences::LanguagePreference;
 
     #[test]
     fn language_index_mapping_handles_de_and_nl() {

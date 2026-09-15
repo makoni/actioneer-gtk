@@ -1,15 +1,16 @@
 use super::super::context::{JobContextMap, current_job_context_run_ids};
 use super::super::workflows::update_workflow_row_header;
 use super::digest::{RunDigestMap, RunDigestStore, update_digest_and_collect_notifications};
-use super::filters::summarize_visible_runs;
 use super::list::WorkflowRunListModel;
-use crate::api::models::{Repo, WorkflowRun};
-use crate::api::{GitHubClient, GitHubError};
-use crate::notifications::NotificationManager;
-use crate::preferences::PreferencesManager;
+use crate::domain::filters::summarize_visible_runs;
+use crate::runtime::channel::MainContextChannelExt;
+use crate::services::api::GitHubError;
+use crate::services::api::models::{Repo, WorkflowRun};
+use crate::services::gateway::GitHubGateway;
+use crate::services::notifications::NotificationManager;
+use crate::services::preferences::PreferencesManager;
 use crate::ui::detail_view::RunFilters;
 use crate::ui::detail_view::helpers::jobs::refresh_jobs_for_workflows;
-use crate::ui::utils::MainContextChannelExt;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use libadwaita as adw;
@@ -23,7 +24,7 @@ use tracing::{debug, error, info, warn};
 #[derive(Clone)]
 struct RunErrorContext {
     run_list: WorkflowRunListModel,
-    client: Arc<Mutex<GitHubClient>>,
+    client: Arc<Mutex<GitHubGateway>>,
     owner: String,
     repo: String,
     parent_window: adw::ApplicationWindow,
@@ -42,7 +43,7 @@ struct RunErrorContext {
 }
 
 pub(crate) struct LoadRunsParams {
-    pub client: Arc<Mutex<GitHubClient>>,
+    pub client: Arc<Mutex<GitHubGateway>>,
     pub owner: String,
     pub repo: String,
     pub repo_model: Repo,
@@ -184,7 +185,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
                         let workflow_label = workflow_name.clone();
                         let preferences_manager = preferences_manager.clone();
 
-                        crate::runtime_handle().spawn(async move {
+                        crate::runtime::handle().spawn(async move {
                             let notifications_enabled = match preferences_manager {
                                 Some(manager) => manager.get().await.enable_notifications,
                                 None => true,
@@ -332,7 +333,7 @@ pub(crate) fn load_workflow_runs(params: LoadRunsParams) {
         glib::ControlFlow::Break
     });
 
-    crate::runtime_handle().spawn(async move {
+    crate::runtime::handle().spawn(async move {
         let client_guard = client_for_spawn.lock().clone();
         let result = client_guard
             .list_runs(&owner_for_spawn, &repo_for_spawn, workflow_id)
@@ -443,8 +444,7 @@ fn show_error_state(error: GitHubError, workflow_id: i64, context: RunErrorConte
         run_filters,
     } = context;
 
-    let detail =
-        crate::i18n::tr("Error: {message}").replace("{message}", error.to_string().as_str());
+    let detail = crate::ui::error_text::user_message_from(&error);
     let retry_run_list = run_list.clone();
     run_list.show_error(detail, move || {
         load_workflow_runs(LoadRunsParams {
@@ -475,7 +475,7 @@ fn show_error_state(error: GitHubError, workflow_id: i64, context: RunErrorConte
 #[cfg(test)]
 mod tests {
     use super::{resolve_preserved_expanded_run_ids, should_render_run_list};
-    use crate::api::models::WorkflowRun;
+    use crate::services::api::models::WorkflowRun;
     use std::collections::HashSet;
 
     fn run_stub(id: i64) -> WorkflowRun {

@@ -54,3 +54,7 @@ flatpak/me.spaceinbox.actioneer.yaml
 
 # AppStream metainfo is generated from metainfo.xml.in + po/*.po by msgfmt --xml
 data/metainfo.xml
+
+# Python bytecode from the smoke scripts
+__pycache__/
+*.pyc

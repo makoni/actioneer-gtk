@@ -1,8 +1,8 @@
 use super::MainWindow;
-use crate::i18n::tr;
-use crate::storage::TokenStorage;
+use crate::kernel::i18n::tr;
+use crate::runtime::channel::MainContextChannelExt;
+use crate::services::tokens::TokenStorage;
 use crate::ui::auth_window::AuthWindow;
-use crate::ui::utils::MainContextChannelExt;
 use gtk4::glib;
 use gtk4::prelude::*;
 use libadwaita as adw;
@@ -54,27 +54,28 @@ impl MainWindow {
 
         dialog.connect_response(None, move |_dialog, response| {
             if response == "signout" {
-                let this_for_ui = this.clone();
-                let (sender, receiver) = glib::MainContext::default()
-                    .channel::<Result<(), String>>(glib::Priority::default());
+                // Leave the signed-in UI immediately rather than waiting on the
+                // keyring. Deleting the token can *block indefinitely* when the
+                // secret service cannot be reached — no session keyring, a
+                // locked one, a sandboxed environment — and the previous code
+                // did the transition inside the reply handler, so the user
+                // clicked "Yes", the dialog closed, and nothing else ever
+                // happened. That was the demo-mode sign-out bug: demo has no
+                // token to delete, yet its sign-out still hung on the keyring.
+                info!("Signing out");
+                this.enter_signed_out_state();
 
-                receiver.attach(None, move |result| {
-                    match result {
-                        Ok(()) => {
-                            info!("Signed out successfully");
-                            this_for_ui.enter_signed_out_state();
-                        }
-                        Err(err) => error!("Failed to delete token: {}", err),
+                // The deletion still runs, in the background, because a demo
+                // session started while a token is stored must not leave that
+                // token behind — the focus handler would sign the user straight
+                // back in. Its outcome only gets logged: the session is already
+                // over from the user's point of view.
+                crate::runtime::handle().spawn(async move {
+                    match tokio::task::spawn_blocking(delete_token_blocking).await {
+                        Ok(Ok(())) => info!("Stored token deleted"),
+                        Ok(Err(err)) => error!("Failed to delete token: {}", err),
+                        Err(err) => error!("Sign-out task failed to join: {}", err),
                     }
-                    glib::ControlFlow::Break
-                });
-
-                crate::runtime_handle().spawn(async move {
-                    let result = tokio::task::spawn_blocking(delete_token_blocking)
-                        .await
-                        .map_err(|err| format!("Failed to join sign-out task: {err}"))
-                        .and_then(|result| result);
-                    let _ = sender.send(result);
                 });
             }
         });
@@ -107,7 +108,7 @@ impl MainWindow {
             glib::ControlFlow::Break
         });
 
-        crate::runtime_handle().spawn(async move {
+        crate::runtime::handle().spawn(async move {
             let result = tokio::task::spawn_blocking(load_token_if_present_blocking)
                 .await
                 .map_err(|err| format!("Failed to join auth check task: {err}"))
@@ -129,7 +130,7 @@ impl MainWindow {
 
         self.enter_signed_out_state();
 
-        crate::runtime_handle().spawn(async move {
+        crate::runtime::handle().spawn(async move {
             let result = tokio::task::spawn_blocking(delete_token_blocking)
                 .await
                 .map_err(|err| format!("Failed to join auth-failure token cleanup task: {err}"))
@@ -160,7 +161,7 @@ impl MainWindow {
             glib::ControlFlow::Break
         });
 
-        crate::runtime_handle().spawn(async move {
+        crate::runtime::handle().spawn(async move {
             let result = tokio::task::spawn_blocking(load_token_blocking)
                 .await
                 .map_err(|err| format!("Failed to join sign-in token load task: {err}"))
@@ -213,7 +214,7 @@ impl MainWindow {
                 glib::ControlFlow::Break
             });
 
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let result = tokio::task::spawn_blocking(load_token_blocking)
                     .await
                     .map_err(|err| format!("Failed to join focus token check task: {err}"))

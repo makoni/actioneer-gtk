@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-31 12:07+0000\n"
+"POT-Creation-Date: 2026-09-15 14:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,125 +17,67 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/api/models.rs:230 src/api/models.rs:443 src/api/models.rs:513
-#: src/ui/detail_view/helpers/formatting.rs:250
-msgid "Queued"
-msgstr ""
-
-#: src/api/models.rs:231 src/api/models.rs:444 src/api/models.rs:514
-#: src/ui/detail_view/helpers/formatting.rs:249
-msgid "In Progress"
-msgstr ""
-
-#: src/api/models.rs:236 src/api/models.rs:449 src/api/models.rs:519
-#: src/notifications.rs:225
-msgid "Completed"
-msgstr ""
-
-#: src/api/models.rs:239 src/api/models.rs:452 src/api/models.rs:522
-msgid "Waiting"
-msgstr ""
-
-#: src/api/models.rs:240 src/api/models.rs:453 src/api/models.rs:523
-msgid "Requested"
-msgstr ""
-
-#: src/api/models.rs:241 src/api/models.rs:454 src/api/models.rs:524
-msgid "Pending"
-msgstr ""
-
-#: src/api/models.rs:245 src/api/models.rs:458 src/api/models.rs:528
-#: src/ui/detail_view/helpers/formatting.rs:255
-msgid "Unknown"
-msgstr ""
-
-#: src/api/models.rs:253 src/api/models.rs:466 src/api/models.rs:535
-msgid "Success"
-msgstr ""
-
-#: src/api/models.rs:254 src/api/models.rs:467 src/api/models.rs:536
-msgid "Failed"
-msgstr ""
-
-#: src/api/models.rs:255 src/api/models.rs:468 src/api/models.rs:537
-#: src/notifications.rs:208
-msgid "Cancelled"
-msgstr ""
-
-#: src/api/models.rs:256 src/api/models.rs:469 src/api/models.rs:538
-#: src/notifications.rs:209
-msgid "Skipped"
-msgstr ""
-
-#: src/api/models.rs:257 src/api/models.rs:470 src/api/models.rs:539
-#: src/notifications.rs:210
-msgid "Timed Out"
-msgstr ""
-
-#: src/api/models.rs:258 src/api/models.rs:471 src/api/models.rs:540
-#: src/notifications.rs:211 src/notifications.rs:542
-msgid "Action Required"
-msgstr ""
-
-#: src/api/models.rs:259 src/api/models.rs:472 src/api/models.rs:541
-#: src/notifications.rs:212
-msgid "Neutral"
-msgstr ""
-
-#: src/api/models.rs:260
-msgid "Stale"
-msgstr ""
-
-#: src/api/models.rs:357 src/ui/detail_view/header_state.rs:169
-msgid "Just now"
-msgstr ""
-
-#: src/api/models.rs:360 src/ui/detail_view/header_state.rs:171
-msgid "{count}m ago"
-msgstr ""
-
-#: src/api/models.rs:363 src/ui/detail_view/header_state.rs:173
-msgid "{count}h ago"
-msgstr ""
-
-#: src/api/models.rs:367
-msgid "Yesterday"
-msgstr ""
-
-#: src/api/models.rs:369
-msgid "{count}d ago"
-msgstr ""
-
 #. Welcome title
-#: src/i18n.rs:550 src/i18n.rs:567 src/i18n.rs:584 src/ui/welcome_screen.rs:32
+#: src/kernel/i18n/tests.rs:124 src/kernel/i18n/tests.rs:141
+#: src/kernel/i18n/tests.rs:158 src/ui/welcome_screen.rs:38
 msgid "Welcome to Actioneer"
 msgstr ""
 
-#: src/notifications.rs:127
+#: src/services/notifications.rs:127
 msgid "Workflow Completed: {workflow}"
 msgstr ""
 
-#: src/notifications.rs:128
+#: src/services/notifications.rs:128
 msgid "{run} - {status}"
 msgstr ""
 
-#: src/notifications.rs:206
+#: src/services/notifications.rs:206
 msgid "Success ✓"
 msgstr ""
 
-#: src/notifications.rs:207
+#: src/services/notifications.rs:207
 msgid "Failed ✗"
+msgstr ""
+
+#: src/services/notifications.rs:208
+#: src/ui/detail_view/helpers/formatting.rs:309
+msgid "Cancelled"
+msgstr ""
+
+#: src/services/notifications.rs:209
+#: src/ui/detail_view/helpers/formatting.rs:310
+msgid "Skipped"
+msgstr ""
+
+#: src/services/notifications.rs:210
+#: src/ui/detail_view/helpers/formatting.rs:311
+msgid "Timed Out"
+msgstr ""
+
+#: src/services/notifications.rs:211 src/services/notifications.rs:542
+#: src/ui/detail_view/helpers/formatting.rs:312
+msgid "Action Required"
+msgstr ""
+
+#: src/services/notifications.rs:212
+#: src/ui/detail_view/helpers/formatting.rs:313
+msgid "Neutral"
+msgstr ""
+
+#: src/services/notifications.rs:225
+#: src/ui/detail_view/helpers/formatting.rs:291
+msgid "Completed"
 msgstr ""
 
 #: src/ui/detail_placeholder.rs:17
 msgid "Workflows and runs will load in the detail pane."
 msgstr ""
 
-#: src/ui/detail_placeholder.rs:25 src/ui/main_window.rs:122
+#: src/ui/detail_placeholder.rs:25 src/ui/main_window.rs:117
 msgid "Select a repository"
 msgstr ""
 
-#: src/ui/detail_placeholder.rs:27 src/ui/main_window.rs:124
+#: src/ui/detail_placeholder.rs:27 src/ui/main_window.rs:119
 msgid ""
 "Choose a repository from the sidebar to browse its workflows and runs here."
 msgstr ""
@@ -150,8 +92,8 @@ msgstr ""
 msgid "Workflows"
 msgstr ""
 
-#: src/ui/detail_view/favorite_controls.rs:19 src/ui/detail_view/mod.rs:178
-#: src/ui/sidebar.rs:470
+#: src/ui/detail_view/favorite_controls.rs:19 src/ui/detail_view.rs:165
+#: src/ui/sidebar/rows.rs:69
 msgid "Toggle favorite"
 msgstr ""
 
@@ -196,6 +138,21 @@ msgstr ""
 msgid "{count} workflows"
 msgstr ""
 
+#: src/ui/detail_view/header_state.rs:169
+#: src/ui/detail_view/helpers/formatting.rs:340
+msgid "Just now"
+msgstr ""
+
+#: src/ui/detail_view/header_state.rs:171
+#: src/ui/detail_view/helpers/formatting.rs:343
+msgid "{count}m ago"
+msgstr ""
+
+#: src/ui/detail_view/header_state.rs:173
+#: src/ui/detail_view/helpers/formatting.rs:346
+msgid "{count}h ago"
+msgstr ""
+
 #: src/ui/detail_view/header_state.rs:175
 msgid "Updated {when}"
 msgstr ""
@@ -204,78 +161,119 @@ msgstr ""
 msgid "Not updated yet"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:8
+#: src/ui/detail_view/helpers/formatting.rs:9
 #: src/ui/detail_view/helpers/runs/row.rs:185
 msgid "Workflow Run"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:28
+#: src/ui/detail_view/helpers/formatting.rs:29
 msgid "Status"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:34
+#: src/ui/detail_view/helpers/formatting.rs:35
 msgid "Conclusion"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:39
+#: src/ui/detail_view/helpers/formatting.rs:40
 msgid "Branch"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:43
+#: src/ui/detail_view/helpers/formatting.rs:44
 msgid "Commit"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:47
+#: src/ui/detail_view/helpers/formatting.rs:48
 msgid "Triggered by"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:51
+#: src/ui/detail_view/helpers/formatting.rs:52
 msgid "Event"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:55
+#: src/ui/detail_view/helpers/formatting.rs:56
 msgid "Duration"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:59
-#: src/ui/detail_view/helpers/formatting.rs:61
+#: src/ui/detail_view/helpers/formatting.rs:60
+#: src/ui/detail_view/helpers/formatting.rs:62
 msgid "Started"
 msgstr ""
 
-#: src/ui/detail_view/helpers/formatting.rs:65
+#: src/ui/detail_view/helpers/formatting.rs:66
 msgid "Updated"
 msgstr ""
 
-#: src/ui/detail_view/helpers/jobs.rs:81
+#: src/ui/detail_view/helpers/formatting.rs:250
+#: src/ui/detail_view/helpers/formatting.rs:286
+msgid "In Progress"
+msgstr ""
+
+#: src/ui/detail_view/helpers/formatting.rs:251
+#: src/ui/detail_view/helpers/formatting.rs:285
+msgid "Queued"
+msgstr ""
+
+#: src/ui/detail_view/helpers/formatting.rs:259
+#: src/ui/detail_view/helpers/formatting.rs:282
+msgid "Unknown"
+msgstr ""
+
+#: src/ui/detail_view/helpers/formatting.rs:294
+msgid "Waiting"
+msgstr ""
+
+#: src/ui/detail_view/helpers/formatting.rs:295
+msgid "Requested"
+msgstr ""
+
+#: src/ui/detail_view/helpers/formatting.rs:296
+msgid "Pending"
+msgstr ""
+
+#: src/ui/detail_view/helpers/formatting.rs:307
+msgid "Success"
+msgstr ""
+
+#: src/ui/detail_view/helpers/formatting.rs:308
+msgid "Failed"
+msgstr ""
+
+#: src/ui/detail_view/helpers/formatting.rs:314
+msgid "Stale"
+msgstr ""
+
+#: src/ui/detail_view/helpers/formatting.rs:350
+msgid "Yesterday"
+msgstr ""
+
+#: src/ui/detail_view/helpers/formatting.rs:352
+msgid "{count}d ago"
+msgstr ""
+
+#: src/ui/detail_view/helpers/jobs.rs:82
 msgid "Unnamed job"
 msgstr ""
 
-#: src/ui/detail_view/helpers/jobs.rs:112
+#: src/ui/detail_view/helpers/jobs.rs:113
 #: src/ui/detail_view/helpers/runs/actions.rs:75
-#: src/ui/detail_view/helpers/workflows.rs:391
+#: src/ui/detail_view/helpers/workflows/row_widgets.rs:88
 msgid "View logs"
 msgstr ""
 
-#: src/ui/detail_view/helpers/jobs.rs:410
-#: src/ui/detail_view/helpers/runs/actions.rs:116
-#: src/ui/detail_view/helpers/workflows.rs:633
+#: src/ui/detail_view/helpers/jobs.rs:411
+#: src/ui/detail_view/helpers/runs/actions.rs:118
+#: src/ui/detail_view/helpers/workflows/logs_button.rs:80
 msgid "No jobs found"
 msgstr ""
 
-#: src/ui/detail_view/helpers/jobs.rs:464
-#: src/ui/detail_view/helpers/runs/actions.rs:121
-#: src/ui/detail_view/helpers/workflows.rs:640
+#: src/ui/detail_view/helpers/jobs.rs:465
+#: src/ui/detail_view/helpers/runs/actions.rs:123
+#: src/ui/detail_view/helpers/workflows/logs_button.rs:87
 msgid "Unable to load jobs"
 msgstr ""
 
-#: src/ui/detail_view/helpers/jobs.rs:470
-#: src/ui/detail_view/helpers/runs/load.rs:447 src/ui/auth_window.rs:395
-#: src/ui/auth_window.rs:437
-msgid "Error: {message}"
-msgstr ""
-
-#: src/ui/detail_view/helpers/jobs.rs:479
-#: src/ui/detail_view/helpers/runs/list.rs:513
+#: src/ui/detail_view/helpers/jobs.rs:478
+#: src/ui/detail_view/helpers/runs/list/placeholders.rs:87
 msgid "Retry"
 msgstr ""
 
@@ -287,106 +285,106 @@ msgstr ""
 msgid "Yes"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:145
+#: src/ui/detail_view/helpers/runs/actions.rs:147
 msgid "Open in GitHub"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:161
+#: src/ui/detail_view/helpers/runs/actions.rs:163
 msgid "Re-run workflow"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:175
+#: src/ui/detail_view/helpers/runs/actions.rs:177
 msgid "Re-run Workflow"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:176
+#: src/ui/detail_view/helpers/runs/actions.rs:178
 msgid "Do you want to re-run \"{run}\"?"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:208
+#: src/ui/detail_view/helpers/runs/actions.rs:210
 msgid "✓ Re-running '{run}'"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:213
+#: src/ui/detail_view/helpers/runs/actions.rs:215
 msgid "✗ Failed to re-run workflow"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:240
+#: src/ui/detail_view/helpers/runs/actions.rs:242
 msgid "Re-run failed jobs"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:254
+#: src/ui/detail_view/helpers/runs/actions.rs:256
 msgid "Re-run Failed Jobs"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:255
+#: src/ui/detail_view/helpers/runs/actions.rs:257
 msgid "Do you want to re-run all failed jobs in \"{run}\"?"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:286
+#: src/ui/detail_view/helpers/runs/actions.rs:288
 msgid "✓ Re-running failed jobs for '{run}'"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:288
+#: src/ui/detail_view/helpers/runs/actions.rs:290
 msgid "✗ Failed to re-run failed jobs"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:316
-#: src/ui/detail_view/helpers/workflows.rs:406
+#: src/ui/detail_view/helpers/runs/actions.rs:318
+#: src/ui/detail_view/helpers/workflows/row_widgets.rs:103
 msgid "Cancel run"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:338
+#: src/ui/detail_view/helpers/runs/actions.rs:340
 msgid "Cancel Workflow Run"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:339
+#: src/ui/detail_view/helpers/runs/actions.rs:341
 msgid ""
 "Do you want to cancel the in-progress run \"{run}\"?\n"
 "\n"
 "This action cannot be undone."
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:372
+#: src/ui/detail_view/helpers/runs/actions.rs:374
 msgid "✓ Cancelled run '{run}'"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/actions.rs:374
+#: src/ui/detail_view/helpers/runs/actions.rs:376
 msgid "✗ Failed to cancel run"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/list.rs:452
+#: src/ui/detail_view/helpers/runs/list/placeholders.rs:26
 msgid "Click to load runs..."
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/list.rs:464
+#: src/ui/detail_view/helpers/runs/list/placeholders.rs:38
 msgid "No recent runs"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/list.rs:470
+#: src/ui/detail_view/helpers/runs/list/placeholders.rs:44
 msgid "Triggered runs may take 10-30 seconds to appear"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/list.rs:483
+#: src/ui/detail_view/helpers/runs/list/placeholders.rs:57
 msgid "No runs match the current filters"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/list.rs:489
+#: src/ui/detail_view/helpers/runs/list/placeholders.rs:63
 msgid "Adjust the status chips above to see more runs."
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/list.rs:502
+#: src/ui/detail_view/helpers/runs/list/placeholders.rs:76
 msgid "Unable to load workflow runs"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/list.rs:534
-#: src/ui/detail_view/helpers/runs/list.rs:642
+#: src/ui/detail_view/helpers/runs/list/tests.rs:21
+#: src/ui/detail_view/helpers/runs/list.rs:443
 msgid "Showing {visible} of {overall}"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/list.rs:538
-#: src/ui/detail_view/helpers/runs/list.rs:656
-#: src/ui/detail_view/helpers/runs/list.rs:668
+#: src/ui/detail_view/helpers/runs/list/tests.rs:35
+#: src/ui/detail_view/helpers/runs/list/tests.rs:47
+#: src/ui/detail_view/helpers/runs/list.rs:447
 msgid "Showing {visible} of {filtered} matching filters"
 msgstr ""
 
@@ -394,7 +392,89 @@ msgstr ""
 msgid "Click to load jobs..."
 msgstr ""
 
-#: src/ui/detail_view/helpers/workflows.rs:63 src/ui/auth_window.rs:226
+#: src/ui/detail_view/helpers/workflows/logs_button.rs:40
+#: src/ui/detail_view/helpers/workflows/row_widgets.rs:72
+#: src/ui/detail_view/helpers/workflows.rs:254
+#: src/ui/detail_view/helpers/workflows.rs:286
+#: src/ui/detail_view/helpers/workflows.rs:287
+msgid "No runs yet"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/row_widgets.rs:95
+msgid "Trigger workflow"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/row_widgets.rs:152
+msgid "Recent runs"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/row_widgets.rs:181
+msgid "All on GitHub"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/trigger.rs:81
+msgid "Trigger Workflow"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/trigger.rs:87
+msgid "This will trigger the \"{workflow}\" workflow."
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/trigger.rs:89
+msgid "Triggered runs typically appear within 10-30 seconds."
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/trigger.rs:96
+msgid "Branch or ref:"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/trigger.rs:100
+msgid "Loading branches..."
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/trigger.rs:107
+msgid "Loading workflow inputs..."
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/trigger.rs:112
+msgid "Inputs"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/trigger.rs:210
+msgid "No inputs defined for this workflow."
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/trigger.rs:281
+msgid "Workflow inputs could not be loaded."
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/trigger.rs:288
+msgid "✗ Failed to load workflow inputs: {error}"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/trigger.rs:320
+msgid "Failed to load workflow inputs: {error}"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/trigger.rs:385
+msgid "✗ {error}"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/trigger.rs:415
+msgid "Failed to trigger workflow: {error}"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/trigger.rs:571
+msgid ""
+"✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear "
+"once GitHub reports it."
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows/trigger.rs:587
+msgid "✗ Failed to trigger workflow: {error}"
+msgstr ""
+
+#: src/ui/detail_view/helpers/workflows.rs:63 src/ui/auth_window.rs:232
 msgid "Cancel"
 msgstr ""
 
@@ -410,110 +490,30 @@ msgstr ""
 msgid "Required"
 msgstr ""
 
-#: src/ui/detail_view/helpers/workflows.rs:254
-#: src/ui/detail_view/helpers/workflows.rs:286
-#: src/ui/detail_view/helpers/workflows.rs:287
-#: src/ui/detail_view/helpers/workflows.rs:375
-#: src/ui/detail_view/helpers/workflows.rs:593
-msgid "No runs yet"
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:398
-msgid "Trigger workflow"
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:455
-msgid "Recent runs"
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:484
-msgid "All on GitHub"
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:834
-msgid "Trigger Workflow"
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:840
-msgid "This will trigger the \"{workflow}\" workflow."
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:842
-msgid "Triggered runs typically appear within 10-30 seconds."
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:849
-msgid "Branch or ref:"
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:853
-msgid "Loading branches..."
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:860
-msgid "Loading workflow inputs..."
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:865
-msgid "Inputs"
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:963
-msgid "No inputs defined for this workflow."
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:1034
-msgid "Workflow inputs could not be loaded."
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:1041
-msgid "✗ Failed to load workflow inputs: {error}"
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:1073
-msgid "Failed to load workflow inputs: {error}"
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:1138
-msgid "✗ {error}"
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:1168
-msgid "Failed to trigger workflow: {error}"
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:1324
-msgid ""
-"✓ Workflow '{workflow}' triggered on branch '{branch}'. The run will appear "
-"once GitHub reports it."
-msgstr ""
-
-#: src/ui/detail_view/helpers/workflows.rs:1340
-msgid "✗ Failed to trigger workflow: {error}"
-msgstr ""
-
 #: src/ui/detail_view/workflow_list.rs:92
 msgid "No workflows found."
 msgstr ""
 
-#: src/ui/detail_view/workflow_refresh.rs:456
+#: src/ui/detail_view/workflow_refresh/pane.rs:93
 msgid "Failed to load workflows: {error}"
 msgstr ""
 
-#: src/ui/detail_view/workflow_refresh.rs:794
-#: src/ui/detail_view/workflow_refresh.rs:925
+#: src/ui/detail_view/workflow_refresh/pane.rs:434
+#: src/ui/detail_view/workflow_refresh.rs:488
 msgid "Loading workflows..."
 msgstr ""
 
-#: src/ui/detail_view/mod.rs:181
+#: src/ui/detail_view.rs:168
 msgid "Refresh workflows"
 msgstr ""
 
-#: src/ui/detail_view/mod.rs:422 src/ui/sidebar.rs:546 src/ui/sidebar.rs:599
+#: src/ui/detail_view.rs:409 src/ui/sidebar/rows.rs:145
+#: src/ui/sidebar/rows.rs:198
 msgid "Private"
 msgstr ""
 
-#: src/ui/detail_view/mod.rs:424 src/ui/sidebar.rs:548 src/ui/sidebar.rs:601
+#: src/ui/detail_view.rs:411 src/ui/sidebar/rows.rs:147
+#: src/ui/sidebar/rows.rs:200
 msgid "Public"
 msgstr ""
 
@@ -525,168 +525,168 @@ msgstr ""
 msgid "Actions Disabled"
 msgstr ""
 
-#: src/ui/sidebar.rs:769
+#: src/ui/sidebar.rs:391
 msgid "Active runs: {count}"
 msgstr ""
 
-#: src/ui/sidebar.rs:782
+#: src/ui/sidebar.rs:404
 msgid "Failures: {count}"
 msgstr ""
 
-#: src/ui/welcome_screen.rs:39
+#: src/ui/welcome_screen.rs:45
 msgid "Manage your GitHub Actions workflows with ease"
 msgstr ""
 
-#: src/ui/welcome_screen.rs:53
+#: src/ui/welcome_screen.rs:59
 msgid "Trigger workflows instantly"
 msgstr ""
 
-#: src/ui/welcome_screen.rs:59
+#: src/ui/welcome_screen.rs:65
 msgid "Monitor runs in real-time"
 msgstr ""
 
-#: src/ui/welcome_screen.rs:65
+#: src/ui/welcome_screen.rs:71
 msgid "View detailed logs"
 msgstr ""
 
-#: src/ui/welcome_screen.rs:89
+#: src/ui/welcome_screen.rs:95
 msgid "Sign in with GitHub"
 msgstr ""
 
-#: src/ui/welcome_screen.rs:97
+#: src/ui/welcome_screen.rs:103
 msgid "Try Demo Mode"
 msgstr ""
 
-#: src/ui/welcome_screen.rs:100
+#: src/ui/welcome_screen.rs:106
 msgid "Explore Actioneer with sample data"
 msgstr ""
 
-#: src/ui/welcome_screen.rs:119 src/ui/main_window.rs:391
+#: src/ui/welcome_screen.rs:125 src/ui/main_window/app_actions.rs:28
 msgid "Quit"
 msgstr ""
 
-#: src/ui/auth_window.rs:76 src/ui/auth_window.rs:157
+#: src/ui/auth_window.rs:82 src/ui/auth_window.rs:163
 msgid "Sign in to GitHub"
 msgstr ""
 
-#: src/ui/auth_window.rs:165 src/ui/auth_window.rs:255
+#: src/ui/auth_window.rs:171 src/ui/auth_window.rs:261
 msgid "Initializing authentication..."
 msgstr ""
 
-#: src/ui/auth_window.rs:179
+#: src/ui/auth_window.rs:185
 msgid "Enter this code on GitHub:"
 msgstr ""
 
-#: src/ui/auth_window.rs:192
+#: src/ui/auth_window.rs:198
 msgid "Copy code to clipboard"
 msgstr ""
 
-#: src/ui/auth_window.rs:220
+#: src/ui/auth_window.rs:226
 msgid "Open GitHub in Browser"
 msgstr ""
 
-#: src/ui/auth_window.rs:314
+#: src/ui/auth_window.rs:320
 msgid "Open GitHub in your browser and enter the code."
 msgstr ""
 
-#: src/ui/auth_window.rs:329 src/ui/auth_window.rs:361
+#: src/ui/auth_window.rs:335 src/ui/auth_window.rs:367
 msgid "Authentication timeout"
 msgstr ""
 
-#: src/ui/auth_window.rs:368
+#: src/ui/auth_window.rs:374
 msgid "Access denied"
 msgstr ""
 
-#: src/ui/auth_window.rs:389
+#: src/ui/auth_window.rs:395
 msgid "Waiting for authorization..."
 msgstr ""
 
-#: src/ui/auth_window.rs:407
+#: src/ui/auth_window.rs:409
 msgid "Saving token..."
 msgstr ""
 
-#: src/ui/auth_window.rs:448
+#: src/ui/auth_window.rs:446
 msgid "Signed in successfully"
 msgstr ""
 
-#: src/ui/auth_window.rs:455
+#: src/ui/auth_window.rs:453
 msgid "Error saving token: {message}"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:141
-msgid "{title} - Logs"
-msgstr ""
-
-#: src/ui/job_logs_window.rs:160 src/ui/job_logs_window.rs:369
+#: src/ui/job_logs_window/ctx.rs:46 src/ui/job_logs_window.rs:161
 msgid "Fetching logs..."
 msgstr ""
 
-#: src/ui/job_logs_window.rs:213
-msgid "Refresh logs"
-msgstr ""
-
-#: src/ui/job_logs_window.rs:217
-msgid "Copy logs to clipboard"
-msgstr ""
-
-#: src/ui/job_logs_window.rs:221
-msgid "Save logs to file"
-msgstr ""
-
-#: src/ui/job_logs_window.rs:302 src/ui/job_logs_window.rs:1296
-msgid "Save Logs"
-msgstr ""
-
-#: src/ui/job_logs_window.rs:303 src/ui/job_logs_window.rs:1297
-msgid "Save"
-msgstr ""
-
-#: src/ui/job_logs_window.rs:512
+#: src/ui/job_logs_window/ctx.rs:189
 msgid ""
 "Logs are not yet available for this job. GitHub only provides logs once the "
 "job starts streaming output or completes. Try refreshing in a few moments."
 msgstr ""
 
-#: src/ui/job_logs_window.rs:517
+#: src/ui/job_logs_window/ctx.rs:194
 msgid "The logs for this run have expired and are no longer available."
 msgstr ""
 
-#: src/ui/job_logs_window.rs:521
+#: src/ui/job_logs_window/ctx.rs:198
 msgid ""
 "Unable to load logs right now. Please try again later.\n"
 "\n"
 "Details: {error}"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:563
+#: src/ui/job_logs_window/ctx.rs:240
 msgid "Logs are empty; nothing to copy"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:570
+#: src/ui/job_logs_window/ctx.rs:247
 msgid "Logs copied to clipboard"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:574
+#: src/ui/job_logs_window/ctx.rs:251
 msgid "Unable to access the clipboard"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:601
+#: src/ui/job_logs_window/ctx.rs:278
 msgid "Logs are empty; nothing saved"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:608
+#: src/ui/job_logs_window/ctx.rs:285
 msgid "Unable to determine save location"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:620
+#: src/ui/job_logs_window/ctx.rs:297
 msgid "Logs saved"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:623
+#: src/ui/job_logs_window/ctx.rs:300
 msgid "Failed to save logs: {error}"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:664
+#: src/ui/job_logs_window/tests.rs:562 src/ui/job_logs_window.rs:303
+msgid "Save Logs"
+msgstr ""
+
+#: src/ui/job_logs_window/tests.rs:563 src/ui/job_logs_window.rs:304
+msgid "Save"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:142
+msgid "{title} - Logs"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:214
+msgid "Refresh logs"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:218
+msgid "Copy logs to clipboard"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:222
+msgid "Save logs to file"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:343
 msgid "Job"
 msgstr ""
 
@@ -704,7 +704,7 @@ msgid "Refresh repositories"
 msgstr ""
 
 #: src/ui/main_window/header_controls.rs:21
-#: src/ui/main_window/header_controls.rs:70 src/ui/utils/rate_limit.rs:40
+#: src/ui/main_window/header_controls.rs:70 src/ui/main_window/rate_limit.rs:40
 msgid "Rate limit: –"
 msgstr ""
 
@@ -713,7 +713,6 @@ msgid "Loading repositories..."
 msgstr ""
 
 #: src/ui/main_window/sidebar_panel.rs:109
-#: src/ui/main_window/sidebar_panel.rs:353
 msgid "Search repositories..."
 msgstr ""
 
@@ -745,7 +744,7 @@ msgstr ""
 msgid "Preferences are currently unavailable."
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:55 src/ui/main_window.rs:384
+#: src/ui/main_window/window_actions.rs:55 src/ui/main_window/app_actions.rs:21
 msgid "Keyboard Shortcuts"
 msgstr ""
 
@@ -818,7 +817,8 @@ msgstr ""
 msgid "Copy diagnostics"
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:279 src/ui/main_window.rs:387
+#: src/ui/main_window/window_actions.rs:279
+#: src/ui/main_window/app_actions.rs:24
 msgid "Report Issue"
 msgstr ""
 
@@ -826,7 +826,7 @@ msgstr ""
 msgid "Failed to open donation page in the browser."
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:331 src/ui/main_window.rs:736
+#: src/ui/main_window/window_actions.rs:331 src/ui/main_window.rs:510
 msgid "Actioneer notification test"
 msgstr ""
 
@@ -838,155 +838,159 @@ msgstr ""
 msgid "Notifications are currently unavailable."
 msgstr ""
 
-#: src/ui/main_window.rs:378
+#: src/ui/main_window/app_actions.rs:15
 msgid "Application menu"
 msgstr ""
 
-#: src/ui/main_window.rs:383 src/ui/preferences_window.rs:21
+#: src/ui/main_window/app_actions.rs:20 src/ui/preferences_window.rs:23
 msgid "Preferences"
 msgstr ""
 
-#: src/ui/main_window.rs:385
+#: src/ui/main_window/app_actions.rs:22
 msgid "Help"
 msgstr ""
 
-#: src/ui/main_window.rs:386
+#: src/ui/main_window/app_actions.rs:23
 msgid "Sign out"
 msgstr ""
 
-#: src/ui/main_window.rs:388
+#: src/ui/main_window/app_actions.rs:25
 msgid "About Actioneer"
 msgstr ""
 
-#: src/ui/main_window.rs:389
+#: src/ui/main_window/app_actions.rs:26
 msgid "Donate"
 msgstr ""
 
-#: src/ui/main_window.rs:390
+#: src/ui/main_window/app_actions.rs:27
 msgid "Debug"
 msgstr ""
 
-#: src/ui/main_window.rs:397
+#: src/ui/main_window/app_actions.rs:34
 msgid "Send test notification"
 msgstr ""
 
-#: src/ui/main_window.rs:398
+#: src/ui/main_window/app_actions.rs:35
 msgid "Trigger test crash"
 msgstr ""
 
-#: src/ui/main_window.rs:737
-msgid "If you see this, notifications are working."
-msgstr ""
-
-#: src/ui/preferences_window.rs:31
-msgid "Refresh"
-msgstr ""
-
-#: src/ui/preferences_window.rs:34
-msgid "2 seconds"
-msgstr ""
-
-#: src/ui/preferences_window.rs:35
-msgid "5 seconds"
-msgstr ""
-
-#: src/ui/preferences_window.rs:36
-msgid "10 seconds"
-msgstr ""
-
-#: src/ui/preferences_window.rs:37
-msgid "30 seconds"
-msgstr ""
-
-#: src/ui/preferences_window.rs:46
-msgid "Auto-refresh interval"
-msgstr ""
-
-#: src/ui/preferences_window.rs:47
-msgid "How often to check for workflow run updates"
-msgstr ""
-
-#: src/ui/preferences_window.rs:53
-msgid "Notifications"
-msgstr ""
-
-#: src/ui/preferences_window.rs:57
-msgid "Desktop Notifications"
-msgstr ""
-
-#: src/ui/preferences_window.rs:58
-msgid "Show a notification when a workflow run finishes"
-msgstr ""
-
-#: src/ui/preferences_window.rs:70
-msgid "Appearance"
-msgstr ""
-
-#: src/ui/preferences_window.rs:72
-msgid "System"
-msgstr ""
-
-#: src/ui/preferences_window.rs:73
-msgid "Light"
-msgstr ""
-
-#: src/ui/preferences_window.rs:74
-msgid "Dark"
-msgstr ""
-
-#: src/ui/preferences_window.rs:81
-msgid "Theme"
-msgstr ""
-
-#: src/ui/preferences_window.rs:82
-msgid "Select application theme"
-msgstr ""
-
-#: src/ui/preferences_window.rs:88
-msgid "Language"
-msgstr ""
-
-#: src/ui/preferences_window.rs:90
-msgid "System language (fallback: English)"
-msgstr ""
-
-#: src/ui/preferences_window.rs:109
-msgid "Application language"
-msgstr ""
-
-#: src/ui/preferences_window.rs:110
-msgid "Switch language instantly"
-msgstr ""
-
-#: src/ui/utils/rate_limit.rs:16
+#: src/ui/main_window/rate_limit.rs:16
 msgid "now"
 msgstr ""
 
-#: src/ui/utils/rate_limit.rs:26
+#: src/ui/main_window/rate_limit.rs:26
 msgid "Rate limit (low)"
 msgstr ""
 
-#: src/ui/utils/rate_limit.rs:28
+#: src/ui/main_window/rate_limit.rs:28
 msgid "Rate limit"
 msgstr ""
 
-#: src/ui/utils/rate_limit.rs:32
+#: src/ui/main_window/rate_limit.rs:32
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr ""
 
-#: src/main.rs:316
+#: src/ui/main_window.rs:511
+msgid "If you see this, notifications are working."
+msgstr ""
+
+#: src/ui/preferences_window.rs:33
+msgid "Refresh"
+msgstr ""
+
+#: src/ui/preferences_window.rs:36
+msgid "2 seconds"
+msgstr ""
+
+#: src/ui/preferences_window.rs:37
+msgid "5 seconds"
+msgstr ""
+
+#: src/ui/preferences_window.rs:38
+msgid "10 seconds"
+msgstr ""
+
+#: src/ui/preferences_window.rs:39
+msgid "30 seconds"
+msgstr ""
+
+#: src/ui/preferences_window.rs:48
+msgid "Auto-refresh interval"
+msgstr ""
+
+#: src/ui/preferences_window.rs:49
+msgid "How often to check for workflow run updates"
+msgstr ""
+
+#: src/ui/preferences_window.rs:55
+msgid "Notifications"
+msgstr ""
+
+#: src/ui/preferences_window.rs:59
+msgid "Desktop Notifications"
+msgstr ""
+
+#: src/ui/preferences_window.rs:60
+msgid "Show a notification when a workflow run finishes"
+msgstr ""
+
+#: src/ui/preferences_window.rs:72
+msgid "Appearance"
+msgstr ""
+
+#: src/ui/preferences_window.rs:74
+msgid "System"
+msgstr ""
+
+#: src/ui/preferences_window.rs:75
+msgid "Light"
+msgstr ""
+
+#: src/ui/preferences_window.rs:76
+msgid "Dark"
+msgstr ""
+
+#: src/ui/preferences_window.rs:83
+msgid "Theme"
+msgstr ""
+
+#: src/ui/preferences_window.rs:84
+msgid "Select application theme"
+msgstr ""
+
+#: src/ui/preferences_window.rs:90
+msgid "Language"
+msgstr ""
+
+#: src/ui/preferences_window.rs:92
+msgid "System language (fallback: English)"
+msgstr ""
+
+#: src/ui/preferences_window.rs:111
+msgid "Application language"
+msgstr ""
+
+#: src/ui/preferences_window.rs:112
+msgid "Switch language instantly"
+msgstr ""
+
+#: src/ui/error_text.rs:26
+msgid "Error: {message}"
+msgstr ""
+
+#: src/main.rs:173
 msgid "Send a test notification when the app starts"
 msgstr ""
 
-#: src/main.rs:317
+#: src/main.rs:174
 msgid "Set the application language (e.g., ru, en, zh_Hans)"
 msgstr ""
 
-#: src/main.rs:318
+#: src/main.rs:175
 msgid "Start the app with sample demo data"
 msgstr ""
 
-#: src/main.rs:319
+#: src/main.rs:176
 msgid "Print the version of Actioneer and the GTK stack it runs on"
 msgstr ""
 

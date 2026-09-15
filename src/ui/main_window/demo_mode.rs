@@ -1,8 +1,6 @@
 use super::MainWindow;
-use crate::api::GitHubClient;
-use crate::demo;
 use gtk4::glib;
-use tracing::{error, info};
+use tracing::info;
 
 impl MainWindow {
     pub(super) fn is_demo_mode(&self) -> bool {
@@ -18,19 +16,9 @@ impl MainWindow {
         info!("Entering demo mode with mock data");
         self.stop_background_refresh();
 
-        let repos = demo::enable();
-        let rate_info = demo::rate_limit_info();
-
-        match GitHubClient::new(None) {
-            Ok(client) => {
-                let mut client_guard = self.client.lock();
-                *client_guard = Some(client);
-            }
-            Err(err) => {
-                error!("Failed to initialize demo client: {}", err);
-                return;
-            }
-        }
+        // The slot transition belongs to the services; everything below it in
+        // this function is the UI reacting, which is why it stays here.
+        let (repos, rate_info) = self.services.enter_demo();
 
         {
             let mut flag = self.demo_mode.lock();

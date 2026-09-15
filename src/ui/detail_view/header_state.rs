@@ -1,7 +1,7 @@
 use super::filter_controls::FilterChips;
-use super::helpers::runs::filters::{RunStatusFilterKind, classify_run_status};
-use crate::api::models::WorkflowRun;
-use crate::i18n::tr;
+use crate::domain::filters::{RunStatusFilterKind, classify_run_status};
+use crate::kernel::i18n::tr;
+use crate::services::api::models::WorkflowRun;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
 use std::cell::{Cell, RefCell};
@@ -204,7 +204,7 @@ pub(crate) fn classify_run(run: &WorkflowRun) -> StatusGroup {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::i18n::{i18n_test_guard, init};
+    use crate::kernel::i18n::{i18n_test_guard, init};
 
     fn run_stub(status: Option<&str>, conclusion: Option<&str>) -> WorkflowRun {
         WorkflowRun {

@@ -1,14 +1,15 @@
 use super::WelcomeScreen;
-use crate::api::GitHubClient;
-use crate::api::models::{RateLimitInfo, Repo};
-use crate::cache::{CachePersistenceConfig, DataCache};
-use crate::demo;
-use crate::favorites::FavoritesManager;
-use crate::i18n::tr;
-use crate::notifications::NotificationManager;
-use crate::preferences::{Preferences, PreferencesManager, ThemePreference};
+use crate::kernel::i18n::tr;
+use crate::runtime::channel::MainContextChannelExt;
+use crate::services::api::models::{RateLimitInfo, Repo};
+use crate::services::app_services::AppServices;
+use crate::services::cache::DataCache;
+use crate::services::favorites::FavoritesManager;
+use crate::services::gateway::GitHubGateway;
+use crate::services::notifications::NotificationManager;
+use crate::services::preferences::{Preferences, PreferencesManager, ThemePreference};
 use crate::ui::detail_view::RepoDetailPane;
-use crate::ui::utils::{MainContextChannelExt, create_detail_clamp};
+use crate::ui::main_window::layout::create_detail_clamp;
 use gio::Menu;
 use gio::prelude::*;
 use gtk4::prelude::*;
@@ -48,7 +49,7 @@ const DONATION_URL: &str = "https://nowpayments.io/donation/makoni";
 #[derive(Clone)]
 pub struct MainWindow {
     window: adw::ApplicationWindow,
-    client: Arc<Mutex<Option<GitHubClient>>>,
+    client: Arc<Mutex<Option<GitHubGateway>>>,
     repos: Arc<Mutex<Vec<Repo>>>,
     sidebar_panel: SidebarPanel,
     repo_store: gio::ListStore,
@@ -76,11 +77,14 @@ pub struct MainWindow {
     handling_selection: Arc<Mutex<bool>>,
     notification_manager: Option<NotificationManager>,
     demo_mode: Arc<Mutex<bool>>,
+    /// Kept so the window can rebuild itself on a language change without
+    /// constructing a second set of real services.
+    services: AppServices,
 }
 
 impl MainWindow {
-    pub fn new(app: &adw::Application, start_demo_mode: bool) -> Self {
-        crate::apply_text_direction_for_language();
+    pub fn new(app: &adw::Application, services: AppServices, start_demo_mode: bool) -> Self {
+        crate::ui::style::apply_text_direction_for_language();
         let window = adw::ApplicationWindow::builder()
             .application(app)
             .title("Actioneer")
@@ -92,20 +96,11 @@ impl MainWindow {
 
         Self::ensure_app_focus_action(app, &window);
 
-        let client = Arc::new(Mutex::new(None));
+        // Everything below comes from the composition root now; the window
+        // constructs no service of its own.
+        let client = services.gateway.clone();
+        let cache = services.cache.clone();
         let repos = Arc::new(Mutex::new(Vec::new()));
-        let cache = Arc::new(
-            CachePersistenceConfig::for_app(crate::APP_ID)
-                .map_or_else(DataCache::new, DataCache::with_persistence),
-        );
-        if cache.has_persistence() {
-            let cache_clone = cache.clone();
-            crate::runtime_handle().spawn(async move {
-                if cache_clone.hydrate_from_disk().await {
-                    info!("Loaded cache snapshot from disk");
-                }
-            });
-        }
 
         let sidebar_panel = SidebarPanel::new();
         let repo_store = sidebar_panel.repo_store();
@@ -137,20 +132,8 @@ impl MainWindow {
         root_stack.set_hexpand(true);
         root_stack.set_vexpand(true);
         let active_detail: Rc<RefCell<Option<RepoDetailPane>>> = Rc::new(RefCell::new(None));
-        let favorites_manager = match FavoritesManager::new() {
-            Ok(manager) => Some(Arc::new(manager)),
-            Err(err) => {
-                warn!("Failed to initialize FavoritesManager: {}", err);
-                None
-            }
-        };
-        let preferences_manager = match PreferencesManager::new() {
-            Ok(manager) => Some(Arc::new(manager)),
-            Err(err) => {
-                warn!("Failed to initialize PreferencesManager: {}", err);
-                None
-            }
-        };
+        let favorites_manager = services.favorites.clone();
+        let preferences_manager = services.preferences.clone();
 
         let favorites = Arc::new(Mutex::new(HashSet::new()));
         let actions_states = Arc::new(Mutex::new(HashMap::new()));
@@ -161,7 +144,7 @@ impl MainWindow {
         let background_refresh_task = Arc::new(Mutex::new(None));
         let handling_selection = Arc::new(Mutex::new(false));
         let header_spinner = Rc::new(RefCell::new(None));
-        let notification_manager = Some(NotificationManager::for_application(app));
+        let notification_manager = services.notifications.clone();
         let demo_mode = Arc::new(Mutex::new(false));
 
         let main_window = Self {
@@ -194,6 +177,7 @@ impl MainWindow {
             handling_selection: handling_selection.clone(),
             notification_manager: notification_manager.clone(),
             demo_mode: demo_mode.clone(),
+            services: services.clone(),
         };
 
         main_window.ensure_app_actions(app);
@@ -226,7 +210,7 @@ impl MainWindow {
                 glib::ControlFlow::Break
             });
 
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let favorite_ids = manager.get_all().await;
                 let _ = sender.send(favorite_ids);
             });
@@ -298,7 +282,7 @@ impl MainWindow {
                 let width = win.width();
                 let height = win.height();
                 let manager = manager.clone();
-                crate::runtime_handle().spawn(async move {
+                crate::runtime::handle().spawn(async move {
                     if let Err(err) = manager.set_window_size(width, height).await {
                         warn!("Failed to persist window size: {}", err);
                     }
@@ -363,242 +347,34 @@ impl MainWindow {
             });
 
             let manager = manager.clone();
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 let prefs = manager.get().await;
                 let _ = sender.send(prefs);
             });
         }
     }
-
-    fn setup_header_menu(&self, header: &adw::HeaderBar) {
-        self.ensure_window_actions();
-
-        let menu_button = gtk::MenuButton::builder()
-            .icon_name("open-menu-symbolic")
-            .tooltip_text(tr("Application menu"))
-            .build();
-        menu_button.add_css_class("flat");
-
-        let menu = Menu::new();
-        let preferences_label = tr("Preferences");
-        let shortcuts_label = tr("Keyboard Shortcuts");
-        let help_label = tr("Help");
-        let sign_out_label = tr("Sign out");
-        let report_issue_label = tr("Report Issue");
-        let about_label = tr("About Actioneer");
-        let donate_label = tr("Donate");
-        let debug_label = tr("Debug");
-        let quit_label = tr("Quit");
-        menu.append(Some(preferences_label.as_str()), Some("app.preferences"));
-        menu.append(Some(shortcuts_label.as_str()), Some("app.shortcuts"));
-        menu.append(Some(help_label.as_str()), Some("app.help"));
-        if cfg!(debug_assertions) {
-            let debug_menu = Menu::new();
-            let test_notification_label = tr("Send test notification");
-            let trigger_test_crash_label = tr("Trigger test crash");
-            debug_menu.append(
-                Some(test_notification_label.as_str()),
-                Some("win.send_test_notification"),
-            );
-            debug_menu.append(
-                Some(trigger_test_crash_label.as_str()),
-                Some("win.trigger_test_crash"),
-            );
-            menu.append_submenu(Some(debug_label.as_str()), &debug_menu);
-        }
-        menu.append(Some(sign_out_label.as_str()), Some("win.sign_out"));
-        menu.append(Some(report_issue_label.as_str()), Some("app.report_issue"));
-        menu.append(Some(about_label.as_str()), Some("app.about"));
-        menu.append(Some(donate_label.as_str()), Some("app.donate"));
-        menu.append(Some(quit_label.as_str()), Some("app.quit"));
-
-        menu_button.set_menu_model(Some(&menu));
-        header.pack_end(&menu_button);
-    }
-
-    fn ensure_window_actions(&self) {
-        let window = self.window.clone();
-
-        if window.lookup_action("open_preferences").is_none() {
-            let this = self.clone();
-            let action = gio::SimpleAction::new("open_preferences", None);
-            action.connect_activate(move |_, _| {
-                this.open_preferences_window();
-            });
-            window.add_action(&action);
-        }
-
-        if window.lookup_action("sign_out").is_none() {
-            let this = self.clone();
-            let action = gio::SimpleAction::new("sign_out", None);
-            action.connect_activate(move |_, _| {
-                this.show_sign_out_dialog();
-            });
-            window.add_action(&action);
-        }
-
-        if cfg!(debug_assertions) && window.lookup_action("send_test_notification").is_none() {
-            let this = self.clone();
-            let action = gio::SimpleAction::new("send_test_notification", None);
-            action.connect_activate(move |_, _| {
-                this.dispatch_test_notification();
-            });
-            window.add_action(&action);
-        }
-
-        if cfg!(debug_assertions) && window.lookup_action("trigger_test_crash").is_none() {
-            let this = self.clone();
-            let action = gio::SimpleAction::new("trigger_test_crash", None);
-            action.connect_activate(move |_, _| {
-                this.trigger_test_crash();
-            });
-            window.add_action(&action);
-        }
-    }
-
-    fn ensure_app_actions(&self, app: &adw::Application) {
-        let replace_action = |name: &str, action: &gio::SimpleAction| {
-            if app.lookup_action(name).is_some() {
-                app.remove_action(name);
-            }
-            app.add_action(action);
-        };
-
-        {
-            let this = self.clone();
-            let action = gio::SimpleAction::new("preferences", None);
-            action.connect_activate(move |_, _| {
-                this.open_preferences_window();
-            });
-            replace_action("preferences", &action);
-        }
-
-        {
-            let this = self.clone();
-            let action = gio::SimpleAction::new("about", None);
-            action.connect_activate(move |_, _| {
-                this.open_about_window();
-            });
-            replace_action("about", &action);
-        }
-
-        {
-            let this = self.clone();
-            let action = gio::SimpleAction::new("shortcuts", None);
-            action.connect_activate(move |_, _| {
-                this.open_shortcuts_window();
-            });
-            replace_action("shortcuts", &action);
-        }
-
-        {
-            let this = self.clone();
-            let action = gio::SimpleAction::new("help", None);
-            action.connect_activate(move |_, _| {
-                this.open_help_window();
-            });
-            replace_action("help", &action);
-        }
-
-        {
-            let this = self.clone();
-            let action = gio::SimpleAction::new("report_issue", None);
-            action.connect_activate(move |_, _| {
-                this.open_report_issue();
-            });
-            replace_action("report_issue", &action);
-        }
-
-        {
-            let this = self.clone();
-            let action = gio::SimpleAction::new("donate", None);
-            action.connect_activate(move |_, _| {
-                this.open_donation_url();
-            });
-            replace_action("donate", &action);
-        }
-
-        {
-            let this = self.clone();
-            let action = gio::SimpleAction::new("refresh", None);
-            action.connect_activate(move |_, _| {
-                if this.client.lock().is_some() {
-                    this.load_repositories();
-                } else {
-                    warn!("Cannot refresh: GitHub client not initialized");
-                }
-            });
-            replace_action("refresh", &action);
-        }
-
-        if app.lookup_action("quit").is_none() {
-            let app_clone = app.clone();
-            let action = gio::SimpleAction::new("quit", None);
-            action.connect_activate(move |_, _| {
-                app_clone.quit();
-            });
-            app.add_action(&action);
-        }
-
-        let this = self.clone();
-        let action = gio::SimpleAction::new("reload-ui", None);
-        action.connect_activate(move |_, _| {
-            this.reload_window_for_language_change();
-        });
-        replace_action("reload-ui", &action);
-    }
-
-    fn ensure_app_accels(&self, app: &adw::Application) {
-        app.set_accels_for_action("app.refresh", &["F5"]);
-        app.set_accels_for_action("app.quit", &["<Primary>q"]);
-        app.set_accels_for_action("app.preferences", &["<Primary>comma"]);
-        app.set_accels_for_action("app.shortcuts", &["<Primary>question", "<Primary>slash"]);
-        app.set_accels_for_action("app.help", &["F1"]);
-    }
-
-    fn ensure_app_focus_action(app: &adw::Application, window: &adw::ApplicationWindow) {
-        if app.lookup_action("focus-main-window").is_some() {
-            return;
-        }
-
-        let window_weak = window.downgrade();
-        let action = gio::SimpleAction::new("focus-main-window", None);
-        action.connect_activate(move |_, _| {
-            if let Some(window) = window_weak.upgrade() {
-                window.present();
-            }
-        });
-
-        app.add_action(&action);
-    }
-
     fn initialize_client(&self, token: String) -> bool {
-        if self.is_demo_mode() {
-            demo::disable();
+        // The slot transition belongs to the services; the UI reaction below
+        // belongs here.
+        //
+        // The demo flag is cleared *after* the swap succeeds, not before:
+        // `authenticate` leaves the slot untouched when it fails, so clearing
+        // first would leave `is_demo_mode()` answering false while a
+        // `DemoBackend` was still installed — and the focus handler and the
+        // refresh paths both branch on that flag.
+        if self.services.authenticate(token) {
             *self.demo_mode.lock() = false;
-        }
-
-        match GitHubClient::new(Some(token)) {
-            Ok(client) => {
-                {
-                    let mut client_guard = self.client.lock();
-                    *client_guard = Some(client);
-                }
-
-                {
-                    let mut info_guard = self.rate_limit_info.lock();
-                    *info_guard = None;
-                }
-
-                self.update_rate_limit_display(None);
-                self.show_authenticated_ui();
-                self.load_repositories();
-                true
+            {
+                let mut info_guard = self.rate_limit_info.lock();
+                *info_guard = None;
             }
-            Err(e) => {
-                error!("Failed to create GitHub client: {}", e);
-                false
-            }
+
+            self.update_rate_limit_display(None);
+            self.show_authenticated_ui();
+            self.load_repositories();
+            true
+        } else {
+            false
         }
     }
 
@@ -614,7 +390,8 @@ impl MainWindow {
         self.stop_background_refresh();
 
         if self.is_demo_mode() {
-            demo::disable();
+            // Leaving demo mode is just dropping the demo gateway; the slot is
+            // replaced (or cleared) by the caller right below.
             *self.demo_mode.lock() = false;
         }
 
@@ -628,14 +405,11 @@ impl MainWindow {
             *selected = None;
         }
 
-        {
-            let mut client_guard = self.client.lock();
-            *client_guard = None;
-        }
+        self.services.sign_out();
 
         {
             let cache = self.cache.clone();
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 cache.clear_all().await;
             });
         }
@@ -652,7 +426,7 @@ impl MainWindow {
 
         if let Some(manager) = &self.favorites_manager {
             let manager = manager.clone();
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 if let Err(err) = manager.clear_all().await {
                     warn!("Failed to clear favorites during sign-out: {}", err);
                 }
@@ -675,7 +449,7 @@ impl MainWindow {
 
         if let Some(manager) = &self.preferences_manager {
             let manager = manager.clone();
-            crate::runtime_handle().spawn(async move {
+            crate::runtime::handle().spawn(async move {
                 if let Err(err) = manager.set_last_selected_repo(None).await {
                     warn!(
                         "Failed to reset stored repo selection during sign-out: {}",
@@ -770,7 +544,7 @@ impl MainWindow {
 
         self.stop_background_refresh();
 
-        let replacement = MainWindow::new(&app, was_demo_mode);
+        let replacement = MainWindow::new(&app, self.services.clone(), was_demo_mode);
         {
             let mut replacement_selected = replacement.selected_repo_id.lock();
             *replacement_selected = selected_repo;
@@ -797,3 +571,10 @@ impl MainWindow {
         self.window.close();
     }
 }
+
+mod app_actions;
+mod layout;
+mod rate_limit;
+
+#[cfg(test)]
+mod tests;

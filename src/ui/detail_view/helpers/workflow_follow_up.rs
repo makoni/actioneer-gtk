@@ -1,12 +1,12 @@
 use super::context::JobContextMap;
 use super::run_loader::RunLoadService;
 use super::runs::{LoadRunsParams, RunDigestStore, WorkflowRunListModel};
-use crate::api::GitHubClient;
-use crate::api::models::Repo;
-use crate::notifications::NotificationManager;
-use crate::preferences::PreferencesManager;
+use crate::services::api::models::Repo;
+use crate::services::gateway::GitHubGateway;
+use crate::services::notifications::NotificationManager;
+use crate::services::preferences::PreferencesManager;
 use crate::ui::detail_view::RunFilters;
-use crate::ui::utils::try_remove_source;
+use crate::ui::detail_view::source::try_remove_source;
 use crate::ui::utils::widget_data::{get_data_copy, set_data, steal_data};
 use gtk4::prelude::*;
 use gtk4::{self as gtk, gio, glib};
@@ -25,7 +25,7 @@ const MAX_FOLLOW_UP_TICKS: u32 = 12;
 
 #[derive(Clone)]
 pub(super) struct FollowUpRefreshParams {
-    pub(super) client: Arc<Mutex<GitHubClient>>,
+    pub(super) client: Arc<Mutex<GitHubGateway>>,
     pub(super) owner: String,
     pub(super) repo: String,
     pub(super) repo_model: Repo,
@@ -68,7 +68,7 @@ pub(super) fn schedule_follow_up_refresh(params: FollowUpRefreshParams) {
     glib::MainContext::default().spawn_local(async move {
         let interval_secs = match prefs_mgr {
             Some(manager) => manager.get().await.refresh_interval,
-            None => crate::preferences::Preferences::default().refresh_interval,
+            None => crate::services::preferences::Preferences::default().refresh_interval,
         };
 
         if interval_secs == 0 {

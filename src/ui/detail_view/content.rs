@@ -1,5 +1,5 @@
 use super::RepoDetailPane;
-use crate::i18n::tr;
+use crate::kernel::i18n::tr;
 #[cfg(test)]
 use gtk4::gio;
 use gtk4::prelude::*;

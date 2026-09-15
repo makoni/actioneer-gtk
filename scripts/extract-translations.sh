@@ -13,13 +13,25 @@ done
 
 mkdir -p po
 
-src_pot=po/actioneer-src.pot
+lib_pot=po/actioneer-lib.pot
+bin_pot=po/actioneer-bin.pot
 meta_pot=po/actioneer-metainfo.pot
+
+# `xtr` walks the module tree from the crate root it is given, so both crate
+# roots have to be scanned: `src/lib.rs` owns every module, and `src/main.rs`
+# has its own strings (the CLI option help texts). Scanning only `main.rs` — as
+# this script did while the crate was binary-only — now yields eight strings
+# instead of several hundred.
+xtr \
+  --default-domain=actioneer \
+  --keywords=tr \
+  --output="$lib_pot" \
+  src/lib.rs
 
 xtr \
   --default-domain=actioneer \
   --keywords=tr \
-  --output="$src_pot" \
+  --output="$bin_pot" \
   src/main.rs
 echo "Extracted Rust strings"
 
@@ -31,7 +43,7 @@ xgettext \
   data/metainfo.xml.in
 echo "Extracted metainfo strings"
 
-msgcat --use-first "$src_pot" "$meta_pot" -o po/actioneer.pot
-rm -f "$src_pot" "$meta_pot"
+msgcat --use-first "$lib_pot" "$bin_pot" "$meta_pot" -o po/actioneer.pot
+rm -f "$lib_pot" "$bin_pot" "$meta_pot"
 
 echo "Updated po/actioneer.pot"
