@@ -54,6 +54,19 @@ impl MainWindow {
 
         dialog.connect_response(None, move |_dialog, response| {
             if response == "signout" {
+                // Demo mode has no stored token, so there is nothing to delete
+                // and no reason to depend on the keyring being available. Before
+                // this, signing out of demo mode went through `TokenStorage`,
+                // and on a machine where that fails to open — no session
+                // keyring, a locked one, a sandboxed test environment — the
+                // error branch below logged and returned, leaving the user on a
+                // screen that still showed demo data.
+                if this.is_demo_mode() {
+                    info!("Leaving demo mode");
+                    this.enter_signed_out_state();
+                    return;
+                }
+
                 let this_for_ui = this.clone();
                 let (sender, receiver) = glib::MainContext::default()
                     .channel::<Result<(), String>>(glib::Priority::default());
@@ -62,10 +75,14 @@ impl MainWindow {
                     match result {
                         Ok(()) => {
                             info!("Signed out successfully");
-                            this_for_ui.enter_signed_out_state();
                         }
+                        // Still sign out. The user asked to; refusing silently
+                        // is the one outcome that helps nobody, and the stored
+                        // token — if there even is one — is reported rather
+                        // than swallowed.
                         Err(err) => error!("Failed to delete token: {}", err),
                     }
+                    this_for_ui.enter_signed_out_state();
                     glib::ControlFlow::Break
                 });
 

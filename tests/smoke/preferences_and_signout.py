@@ -9,12 +9,14 @@ Sign-out is the interesting half for the refactor: Phase 4 moves the gateway
 slot's `sign_out()` transition out of `MainWindow` into `AppServices`, and
 until step 6.4 lands the construction test this is the only check on it.
 
-Note what this pins, which is the app's *current* behaviour and not an opinion
-about the right one: in demo mode, confirming sign-out closes the dialog but
-leaves the demo repositories on screen — the app does not return to the welcome
-screen. That was established by probing, after the first version of this journey
-asserted the welcome screen would come back and failed. Freezing it here means
-Phase 4 cannot change it unnoticed, in either direction.
+Confirming sign-out must return to the welcome screen and clear the repository
+list. The first version of this journey asserted exactly that, found the app
+did not do it, and froze the broken behaviour instead — which was the wrong
+call. The cause turned out to be environmental rather than a refactor
+regression: demo-mode sign-out went through `TokenStorage`, and where that fails
+to open (no session keyring, a locked one, a sandboxed harness) the error branch
+only logged, leaving demo data on screen. Demo mode now skips the token path
+entirely, and a failed deletion no longer swallows the sign-out.
 """
 import sys
 import time
@@ -85,8 +87,7 @@ def main():
     require_named(frame, fixtures.MAIN_REPO)
     print("Cancelling left the session intact.", flush=True)
 
-    # Confirming dismisses it too. In demo mode the repository list stays —
-    # see the module docstring; this pins current behaviour.
+    # Confirming signs out: the welcome screen returns and the demo data goes.
     do_window_action(frame, fixtures.ACTION_SIGN_OUT)
 
     # Wait for a dialog that actually carries its buttons, not merely for an
@@ -110,7 +111,17 @@ def main():
         lambda: find_role(frame, "alert") is None,
         "confirming did not dismiss the sign-out confirmation",
     )
-    print("Confirming dismissed the dialog.", flush=True)
+
+    wait_until(
+        lambda: find_named(frame, fixtures.WELCOME_HEADING),
+        f"the welcome screen did not return after signing out. "
+        f"Visible: {visible_names(frame)}",
+    )
+    require_named(frame, fixtures.WELCOME_SIGN_IN)
+
+    if find_named(frame, fixtures.MAIN_REPO) is not None:
+        raise AssertionError("repositories are still listed after signing out")
+    print("Signed out: welcome screen returned and the repository list cleared.", flush=True)
 
     print("Preferences-and-sign-out journey passed.", flush=True)
 
