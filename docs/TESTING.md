@@ -158,10 +158,30 @@ When testing UI changes, verify the following:
 - [ ] Rate limit display updates after each API call
 - [ ] App remains responsive during data loading
 
+## What is deliberately not unit-tested
+
+Every file under `src/ui/` that owns behaviour has a test module, with two
+classes of exception. Neither is a gap, and a "one `#[cfg(test)]` per file"
+check would flag both — which is why there is no such check.
+
+- **Pure re-export files** — `ui/state.rs`, `ui/state/repo_list.rs`,
+  `ui/tasks.rs`, `ui/utils.rs`, `detail_view/helpers/runs.rs`. They contain only
+  `mod` and `pub use`; there is nothing to assert.
+- **Parts split out of a larger file** — `sidebar/{rows,store}.rs`,
+  `workflows/{row_widgets,trigger,logs_button,cancel_button}.rs`,
+  `workflow_refresh/pane.rs`, `job_logs_window/ctx.rs`,
+  `main_window/app_actions.rs`, `runs/list/placeholders.rs`. Their tests live in
+  the parent's `tests.rs`, because that is where the behaviour they implement is
+  observable. The trigger dialog additionally has its own AT-SPI journey, added
+  precisely because the extraction could have broken it silently.
+
+`demo/data.rs` is 1199 lines of fixtures and is exempt from the file-size guide
+for the same reason: there is no logic in it.
+
 ## Test metrics
 
-- **Headless:** 236 passing (`cargo test --workspace`)
-- **GTK, `#[ignore]`d:** 75 tests, run under Xvfb
+- **Headless:** 235 passing (`cargo test --workspace`)
+- **GTK, `#[ignore]`d:** 82 tests, run under Xvfb
 - **Smoke journeys:** 8
 - **Manual UI verification:** still required for each release
 
