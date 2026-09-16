@@ -57,11 +57,18 @@ src/ui/         GTK only
 Rules that the tree currently satisfies and that CI does not check for you:
 
 - `domain/` names no GTK type, and nothing outside `src/ui/` names `crate::ui`.
-  One deliberate exception: `kernel::app::version_string` calls
-  `gtk4::major_version()` and friends, because the whole point of that line is
-  to report the GTK that answered at runtime — an AppImage bundles its own — and
-  it must work with no display. That is the only `gtk4` reference outside
-  `src/ui/`.
+  Widgets stay in `src/ui/` and in `src/main.rs`, which is the composition root
+  and sets up the application, icon theme and display. Outside those two, the
+  only calls into GTK proper are the three version probes in
+  `kernel::app::version_string` — that line exists to report the GTK that
+  answered at runtime, since an AppImage bundles its own, and it must work with
+  no display.
+  Naming `gtk4` is not itself the violation: `runtime/` and `services/` reach
+  through it for GLib and GIO (`gtk4::glib`, `gtk4::gio`, and prelude traits) —
+  the main-context bridge in `runtime/channel.rs`, and `gio::Application`,
+  `gio::Notification` and `gio::Icon` in `services/notifications*` — because the
+  crate does not depend on `glib`/`gio` separately. Adding a widget type there
+  is the violation.
 - The data source is chosen once, at `GitHubGateway::{live,demo}`; the HTTP
   client knows nothing about demo mode.
 - Real services are constructed in exactly one place, `AppServices::build`.
