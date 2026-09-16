@@ -197,11 +197,16 @@ mod tests {
             );
 
             // Expanding a row twice in quick succession, or a refresh landing on
-            // top of a manual expand, must not queue the work twice — the second
-            // set of parameters is the current one.
+            // top of a manual expand, must not queue the work twice — and the
+            // survivor has to be the *second* set of parameters, because the
+            // first describes a state the user has already moved on from.
             service.request(params(11, false));
-            service.request(params(11, false));
+            service.request(params(11, true));
             assert_eq!(service.pending.lock().len(), 1, "coalesced by workflow id");
+            assert!(
+                service.pending.lock()[0].background,
+                "the later parameters replaced the earlier ones"
+            );
 
             service.request(params(22, false));
             assert_eq!(
