@@ -139,3 +139,106 @@ impl RunLoadService {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::domain::models::{Repo, User};
+    use crate::services::gateway::GitHubGateway;
+    use crate::ui::detail_view::helpers::runs::list::test_run_list_model;
+    use crate::ui::test_helpers::run_gtk_test;
+    use libadwaita as adw;
+
+    fn params(workflow_id: i64, background: bool) -> LoadRunsParams {
+        let app = adw::Application::builder()
+            .application_id("me.spaceinbox.actioneer.RunLoaderTest")
+            .build();
+        LoadRunsParams {
+            client: Arc::new(Mutex::new(GitHubGateway::demo())),
+            owner: "demo-org".into(),
+            repo: "actioneer-demo-app".into(),
+            repo_model: Repo {
+                id: 1,
+                name: "actioneer-demo-app".into(),
+                full_name: "demo-org/actioneer-demo-app".into(),
+                owner: User {
+                    login: "demo-org".into(),
+                },
+                is_private: false,
+                permissions: None,
+                default_branch: Some("main".into()),
+            },
+            workflow_id,
+            workflow_name: format!("Workflow {workflow_id}"),
+            run_list: test_run_list_model(),
+            parent_window: adw::ApplicationWindow::new(&app),
+            expander: gtk4::Expander::new(None),
+            toast_overlay: adw::ToastOverlay::new(),
+            job_contexts: Default::default(),
+            expanded_run_ids: Vec::new(),
+            workflows_with_active: Arc::new(Mutex::new(HashSet::new())),
+            workflows_last_loaded: Arc::new(Mutex::new(HashMap::new())),
+            workflows_loading: Arc::new(Mutex::new(HashSet::new())),
+            background,
+            run_digests: Default::default(),
+            notification_manager: None,
+            preferences_manager: None,
+            run_filters: Default::default(),
+        }
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn a_second_request_for_the_same_workflow_replaces_the_first() {
+        run_gtk_test("run_loader_coalesces", || {
+            let service = RunLoadService::new(
+                Arc::new(Mutex::new(HashMap::new())),
+                Arc::new(Mutex::new(HashSet::new())),
+            );
+
+            // Expanding a row twice in quick succession, or a refresh landing on
+            // top of a manual expand, must not queue the work twice — the second
+            // set of parameters is the current one.
+            service.request(params(11, false));
+            service.request(params(11, false));
+            assert_eq!(service.pending.lock().len(), 1, "coalesced by workflow id");
+
+            service.request(params(22, false));
+            assert_eq!(
+                service.pending.lock().len(),
+                2,
+                "a different workflow queues separately"
+            );
+        });
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn a_workflow_already_in_flight_is_left_queued() {
+        run_gtk_test("run_loader_in_flight_guard", || {
+            // The dispatch at the end of this test spawns onto the runtime.
+            crate::runtime::init_test_runtime();
+            let loading = Arc::new(Mutex::new(HashSet::from([11_i64])));
+            let service =
+                RunLoadService::new(Arc::new(Mutex::new(HashMap::new())), loading.clone());
+
+            service.request(params(11, false));
+            service.process_queue();
+
+            // Still queued: dispatching now would run two loads for the same
+            // workflow and let the slower one overwrite the newer result.
+            assert_eq!(
+                service.pending.lock().len(),
+                1,
+                "an in-flight workflow stays queued for the retry"
+            );
+
+            loading.lock().clear();
+            service.process_queue();
+            assert!(
+                service.pending.lock().is_empty(),
+                "once the flight ends the request is dispatched"
+            );
+        });
+    }
+}

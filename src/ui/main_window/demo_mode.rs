@@ -56,3 +56,96 @@ impl MainWindow {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::services::app_services::AppServices;
+    use crate::ui::test_helpers::run_gtk_test;
+    use gtk4::prelude::*;
+    use libadwaita as adw;
+
+    fn pump() {
+        let context = glib::MainContext::default();
+        for _ in 0..200 {
+            if !context.iteration(false) {
+                break;
+            }
+        }
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn entering_demo_mode_installs_a_demo_gateway_and_fills_the_sidebar() {
+        run_gtk_test("enter_demo_mode_installs_gateway", || {
+            crate::runtime::init_test_runtime();
+            let dir = tempfile::tempdir().expect("temp dir");
+            let app = adw::Application::builder()
+                .application_id("me.spaceinbox.actioneer.DemoModeTest")
+                .build();
+            let services = AppServices::test_fakes(dir.path());
+            services.sign_out();
+
+            let window = MainWindow::new(&app, services.clone(), false);
+            pump();
+            assert!(
+                !window.is_demo_mode(),
+                "the window starts outside demo mode"
+            );
+
+            window.enter_demo_mode();
+            pump();
+
+            assert!(window.is_demo_mode(), "the demo flag is set");
+            assert!(
+                services
+                    .gateway
+                    .lock()
+                    .as_ref()
+                    .is_some_and(|gateway| gateway.is_demo()),
+                "a demo gateway is installed in the slot"
+            );
+            assert!(
+                !window.repos.lock().is_empty(),
+                "the sidebar is seeded synchronously, not on a later tick"
+            );
+
+            window.window.destroy();
+            pump();
+        });
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn entering_demo_mode_twice_is_a_no_op() {
+        run_gtk_test("enter_demo_mode_twice", || {
+            crate::runtime::init_test_runtime();
+            let dir = tempfile::tempdir().expect("temp dir");
+            let app = adw::Application::builder()
+                .application_id("me.spaceinbox.actioneer.DemoModeTwiceTest")
+                .build();
+            let services = AppServices::test_fakes(dir.path());
+            services.sign_out();
+            let window = MainWindow::new(&app, services, false);
+            pump();
+
+            window.enter_demo_mode();
+            pump();
+            let first = window.repos.lock().len();
+
+            // The guard matters: a second entry would re-seed the sidebar and
+            // restart the selection timer while the first one is still pending.
+            window.enter_demo_mode();
+            pump();
+
+            assert_eq!(
+                window.repos.lock().len(),
+                first,
+                "the second call did nothing"
+            );
+
+            window.window.destroy();
+            pump();
+        });
+    }
+}

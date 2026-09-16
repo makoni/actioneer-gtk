@@ -48,3 +48,40 @@ pub fn observe_favorites<F>(
         }
     });
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::ui::test_helpers::run_gtk_test;
+    use std::cell::Cell;
+    use std::rc::Rc;
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn the_observer_seeds_local_state_before_it_waits_for_changes() {
+        run_gtk_test("favorites_observer_seeds", || {
+            crate::runtime::init_test_runtime();
+            let dir = tempfile::tempdir().expect("temp dir");
+            let manager = Arc::new(
+                FavoritesManager::with_path(dir.path().join("favorites.json"))
+                    .expect("favorites manager builds"),
+            );
+            let state = Arc::new(Mutex::new(HashSet::from([999_i64])));
+            let calls = Rc::new(Cell::new(0));
+            let counter = calls.clone();
+
+            observe_favorites(manager, state.clone(), move || {
+                counter.set(counter.get() + 1);
+            });
+
+            // The seed is synchronous: the caller repaints from `on_change`, so
+            // a sidebar built before the first watch tick must already show the
+            // stored favourites rather than whatever was in the state before.
+            assert_eq!(calls.get(), 1, "on_change fires once for the initial seed");
+            assert!(
+                !state.lock().contains(&999),
+                "the pre-existing state is replaced, not merged into"
+            );
+        });
+    }
+}
