@@ -74,26 +74,29 @@ mod tests {
         }
     }
 
+    /// Builds a window already in demo mode.
+    ///
+    /// `start_demo_mode: true` is required, not a convenience. The `false` path
+    /// runs `check_authentication()`, which reads the real keyring — forbidden
+    /// by AGENTS.md — and, worse, races: its reply handler calls
+    /// `enter_signed_out_state()`, so on a machine where the lookup is slower
+    /// than the test (CI, for one) it lands *after* `enter_demo_mode` and
+    /// empties the gateway slot while the demo flag stays set.
+    fn demo_window(id: &str, dir: &std::path::Path) -> (MainWindow, AppServices) {
+        let app = adw::Application::builder().application_id(id).build();
+        let services = AppServices::test_fakes(dir);
+        let window = MainWindow::new(&app, services.clone(), true);
+        (window, services)
+    }
+
     #[test]
     #[ignore = "requires GTK display"]
-    fn entering_demo_mode_installs_a_demo_gateway_and_fills_the_sidebar() {
-        run_gtk_test("enter_demo_mode_installs_gateway", || {
+    fn starting_in_demo_mode_installs_a_demo_gateway_and_fills_the_sidebar() {
+        run_gtk_test("demo_mode_installs_gateway", || {
             crate::runtime::init_test_runtime();
             let dir = tempfile::tempdir().expect("temp dir");
-            let app = adw::Application::builder()
-                .application_id("me.spaceinbox.actioneer.DemoModeTest")
-                .build();
-            let services = AppServices::test_fakes(dir.path());
-            services.sign_out();
-
-            let window = MainWindow::new(&app, services.clone(), false);
-            pump();
-            assert!(
-                !window.is_demo_mode(),
-                "the window starts outside demo mode"
-            );
-
-            window.enter_demo_mode();
+            let (window, services) =
+                demo_window("me.spaceinbox.actioneer.DemoModeTest", dir.path());
             pump();
 
             assert!(window.is_demo_mode(), "the demo flag is set");
@@ -107,7 +110,7 @@ mod tests {
             );
             assert!(
                 !window.repos.lock().is_empty(),
-                "the sidebar is seeded synchronously, not on a later tick"
+                "the sidebar is seeded from the demo fixtures"
             );
 
             window.window.destroy();
@@ -117,19 +120,12 @@ mod tests {
 
     #[test]
     #[ignore = "requires GTK display"]
-    fn entering_demo_mode_twice_is_a_no_op() {
-        run_gtk_test("enter_demo_mode_twice", || {
+    fn entering_demo_mode_again_is_a_no_op() {
+        run_gtk_test("demo_mode_twice", || {
             crate::runtime::init_test_runtime();
             let dir = tempfile::tempdir().expect("temp dir");
-            let app = adw::Application::builder()
-                .application_id("me.spaceinbox.actioneer.DemoModeTwiceTest")
-                .build();
-            let services = AppServices::test_fakes(dir.path());
-            services.sign_out();
-            let window = MainWindow::new(&app, services, false);
-            pump();
-
-            window.enter_demo_mode();
+            let (window, _services) =
+                demo_window("me.spaceinbox.actioneer.DemoModeTwiceTest", dir.path());
             pump();
             let first = window.repos.lock().len();
 

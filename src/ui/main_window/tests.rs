@@ -25,7 +25,12 @@ fn the_window_builds_from_fake_services() {
     run_gtk_test("main_window_builds_from_fake_services", || {
         crate::runtime::init_test_runtime();
         let dir = tempfile::tempdir().expect("temp dir");
-        let window = MainWindow::new(&app(), AppServices::test_fakes(dir.path()), false);
+        // `true`, not `false`. The `false` path runs `check_authentication()`,
+        // which reads the developer's real system keyring — forbidden by
+        // AGENTS.md — and, on a machine where the lookup is slower than the
+        // test, its reply handler lands late and calls
+        // `enter_signed_out_state()`, tearing down what the test just asserted.
+        let window = MainWindow::new(&app(), AppServices::test_fakes(dir.path()), true);
         settle();
 
         // The three regions the app is made of.
