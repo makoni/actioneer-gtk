@@ -18,8 +18,15 @@ Actioneer is a native GNOME desktop client for GitHub Actions. It combines a GTK
 
 ## Installation
 
-### Flatpak (local build)
-The repository ships with a Flatpak manifest. To build and install a local bundle:
+### Flatpak
+Install from [Flathub](https://flathub.org/en/apps/me.spaceinbox.actioneer):
+
+```bash
+flatpak install flathub me.spaceinbox.actioneer
+flatpak run me.spaceinbox.actioneer
+```
+
+To build and install a local bundle from this repository instead:
 
 ```bash
 scripts/render-flatpak-manifest.sh --mode local
