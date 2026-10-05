@@ -12,7 +12,7 @@ jobs:
 
   fmt-clippy:
     name: Format and lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     needs: lock-sync
     steps:
@@ -58,9 +58,9 @@ jobs:
       matrix:
         include:
           - arch: x86_64
-            runner: ubuntu-latest
+            runner: ubuntu-26.04
           - arch: aarch64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
     steps:
       - uses: actions/checkout@v7.0.1
 
@@ -118,9 +118,9 @@ jobs:
       matrix:
         include:
           - arch: x86_64
-            runner: ubuntu-latest
+            runner: ubuntu-26.04
           - arch: aarch64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
     steps:
       - uses: actions/checkout@v7.0.1
 
@@ -157,7 +157,7 @@ jobs:
 
   ui-smoke-tests:
     name: UI smoke tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     needs: build-test
     if: ${{ github.event_name != 'pull_request' }}

@@ -21,14 +21,19 @@ jobs:
     needs: build-release
     strategy:
       fail-fast: false
+      # The host's glibc is the floor for every user: the binary links
+      # against it, and an AppImage bundles GTK but not glibc. Ubuntu 26.04
+      # ships glibc 2.43, so these builds need 2.43+ to run (not Ubuntu
+      # 24.04, Debian 13, Fedora 42 or RHEL 10). Moving to a newer runner
+      # raises that floor again.
       matrix:
         include:
           - arch: x86_64
-            runner: ubuntu-24.04
+            runner: ubuntu-26.04
             linuxdeploy_suffix: x86_64
             linuxdeploy_sha256: c20cd71e3a4e3b80c3483cef793cda3f4e990aca14014d23c544ca3ce1270b4d
           - arch: aarch64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
             linuxdeploy_suffix: aarch64
             linuxdeploy_sha256: 620095110d693282b8ebeb244a95b5e911cf8f65f76c88b4b47d16ae6346fcff
     outputs:
