@@ -104,11 +104,13 @@ precisely the ignored tests — so the mark moves it *into* that batch rather th
 out of the run.
 
 **`-D warnings` is not optional.** CI installs the toolchain with
-`actions-rust-lang/setup-rust-toolchain`, whose `rustflags` input defaults to
-`-D warnings`, and no workflow overrides it. Every CI step — `build`, `test`,
-`clippy` — therefore fails on any warning, including `dead_code` on a function
-you just orphaned. Locally that flag is off by default, so a clean local run
-proves nothing unless you pass it yourself.
+`actions-rust-lang/setup-rust-toolchain` v2, whose `build-warnings` input
+defaults to `deny` and is exported as `CARGO_BUILD_WARNINGS` (cargo 1.97+; v1
+did the same through `RUSTFLAGS=-D warnings`), and no workflow overrides it.
+Every CI step — `build`, `test`, `clippy` — therefore fails on any warning,
+including `dead_code` on a function you just orphaned. Locally that is off by
+default, so a clean local run proves nothing unless you deny warnings yourself:
+pass `-D warnings` as above, or export `CARGO_BUILD_WARNINGS=deny`.
 
 Add or update tests for functional changes. Unit tests live beside the code in
 `#[cfg(test)]` modules; `tests/` holds the logic-level integration tests.
