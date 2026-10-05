@@ -43,6 +43,16 @@ Once the store listing is published you will be able to install with:
 sudo snap install actioneer
 ```
 
+### AppImage
+Every [GitHub release](https://github.com/makoni/actioneer-gtk/releases) ships an AppImage for x86_64 and aarch64, with zsync update information:
+
+```bash
+chmod +x actioneer-*-x86_64.AppImage
+./actioneer-*-x86_64.AppImage
+```
+
+The AppImage bundles GTK and libadwaita but not glibc, so it needs a glibc at least as new as the one it was built against. Releases after 1.1.2 are built on Ubuntu 26.04 and need **glibc 2.43 or newer**; they do not start on Ubuntu 24.04, Debian 13, Fedora 42, or RHEL 10. On those systems use the Flatpak or the Snap, which bring their own runtime (1.1.2 and earlier AppImages need glibc 2.39).
+
 ### Build From Source
 
 Install the build dependencies first:

@@ -9,10 +9,4 @@ drifts.
 
 ## Open items (optional / low priority)
 
-### Next release: say that the AppImage now needs glibc 2.43
-
-CI moved to Ubuntu 26.04, so the AppImage and the standalone binary of the next
-release link against glibc 2.43 and no longer run on Ubuntu 24.04, Debian 13,
-Fedora 42 or RHEL 10 (1.1.2 still does). Call this out in the release notes and
-point affected users to the Flatpak or the Snap. The next Flathub PR will also be
-the first on the GNOME 51 runtime.
+Nothing open right now.
