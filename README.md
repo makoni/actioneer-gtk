@@ -22,9 +22,12 @@ Actioneer is a native GNOME desktop client for GitHub Actions. It combines a GTK
 The repository ships with a Flatpak manifest. To build and install a local bundle:
 
 ```bash
+scripts/render-flatpak-manifest.sh --mode local
 flatpak-builder --user --install --force-clean builddir flatpak/me.spaceinbox.actioneer.yaml
 flatpak run me.spaceinbox.actioneer
 ```
+
+The manifest is rendered from `flatpak/me.spaceinbox.actioneer.yaml.in`; the rendered file is not committed.
 
 ### Snap (local build)
 Build and install an unsigned snap locally:
@@ -86,8 +89,6 @@ Actioneer ships with default OAuth credentials for developer testing. To use you
    cargo run
    ```
 
-Additional configuration details live in `CONFIGURATION_GUIDE.md`.
-
 ## Secret storage & sandbox expectations
 
 Actioneer picks a token backend automatically:
@@ -119,40 +120,43 @@ Log out/in or restart GNOME Shell to refresh the cache. For system-wide installs
 ## Development Workflow
 
 ```bash
-cargo fmt                # Format code
-cargo clippy -- -D warnings  # Lint with zero warnings
-cargo test               # Run unit tests
-cargo test -- --ignored  # Run UI integration tests (requires a display)
+cargo fmt --all
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace
 ```
 
-See `docs/` for API, caching, and UI guidelines. The project enforces zero warnings in `cargo build` and `cargo clippy`.
+The GTK tests (`#[ignore]`d) and the AT-SPI smoke tests need Xvfb and a session bus; the exact commands are in [`AGENTS.md`](AGENTS.md#validation). Do not run a bare `cargo test -- --ignored`: it includes a test that writes to your real system keyring.
+
+See `docs/` for API, caching, and UI guidelines, and [`docs/TESTING.md`](docs/TESTING.md) for the test layout. The project enforces zero warnings in `cargo build` and `cargo clippy`.
 
 ### Localization
 
-Actioneer uses gettext catalogs under `po/` (currently seeded with `en`, `de`, `nl`, `zh_Hans`, `hi`, `es`, `fr`, `ar`, `bn`, `pt_BR`, `ru`, and `ur`).
+Actioneer uses gettext catalogs under `po/`, one per language listed in `po/LINGUAS` (14: `en`, `de`, `nl`, `zh_Hans`, `hi`, `es`, `fr`, `ar`, `bn`, `pt_BR`, `ru`, `ur`, `it`, `ja`).
 
 ```bash
-scripts/extract-translations.sh   # requires xgettext (gettext package)
+scripts/extract-translations.sh   # requires xtr (cargo install xtr) and gettext
 scripts/compile-translations.sh   # requires msgfmt (gettext package)
 ```
 
 ## Packaging Notes
 
-- **Flatpak**: The manifest lives in `flatpak/me.spaceinbox.actioneer.yaml`. Local builds should vendor dependencies via `flatpak/vendor`, pass AppStream validation before submission, and can be run with `scripts/flathub-build.sh --install flatpak/me.spaceinbox.actioneer.yaml` when `rofiles-fuse` is unavailable (for example in virtualised hosts). Whenever `Cargo.lock` changes (including `cargo update`), regenerate `flatpak/me.spaceinbox.actioneer.cargo-sources.json` with `flatpak-cargo-generator -d Cargo.lock -o flatpak/me.spaceinbox.actioneer.cargo-sources.json` so the offline build has the updated crates. See “Secret storage & sandbox expectations” for the required portal verification steps before shipping a Flatpak build.
-- **Snap**: `snap/snapcraft.yaml` builds a strictly confined snap using the GNOME extension. Test locally with `snapcraft pack` or push to the Snap Store once the snap is registered. The snap no longer plugs `password-manager-service`; instead it depends on the xdg-desktop-portal Secret interface documented above, so capture the portal log line and encrypted file path mentioned in “Secret storage & sandbox expectations” when requesting store review.
+- **Flatpak**: The manifest template is `flatpak/me.spaceinbox.actioneer.yaml.in`; render it with `scripts/render-flatpak-manifest.sh` (`--mode local` for local and CI builds, `--mode flathub --commit <sha>` for the Flathub repository). Cargo dependencies are vendored offline through `flatpak/me.spaceinbox.actioneer.cargo-sources.json`: whenever `Cargo.lock` changes (including `cargo update`), run `scripts/regenerate-flatpak-sources.sh` and confirm with `scripts/check-flatpak-lock-sync.sh`. When `rofiles-fuse` is unavailable (for example in virtualised hosts), build with `scripts/flathub-build.sh --install flatpak/me.spaceinbox.actioneer.yaml`. See “Secret storage & sandbox expectations” for the required portal verification steps before shipping a Flatpak build.
+- **Snap**: `snapcraft.yaml` builds a strictly confined snap using the GNOME extension. Test locally with `snapcraft pack` or push to the Snap Store once the snap is registered. The snap no longer plugs `password-manager-service`; instead it depends on the xdg-desktop-portal Secret interface documented above, so capture the portal log line and encrypted file path mentioned in “Secret storage & sandbox expectations” when requesting store review.
 
 ## Architecture Overview
 
-- `src/main.rs` – Application entry point and Tokio runtime bootstrap
-- `src/api/` – GitHub API client, HTTP helpers, and typed models
-- `src/auth/` – OAuth device flow implementation
-- `src/storage/` – Secure token storage (keyring on classic installs, xdg-desktop-portal Secret inside sandboxes)
-- `src/cache.rs` – In-memory cache with ETag-aware helpers
-- `src/preferences.rs` / `src/favorites.rs` – Persistence for user state
-- `src/ui/` – GTK4/libadwaita UI components (main window, detail panes, dialogs)
-- `tests/` – Logic and UI integration tests
+The crate is a library (`src/lib.rs`) with a thin binary on top (`src/main.rs`), split into layers:
 
-For deeper architectural notes, see the documentation under `docs/`.
+- `src/main.rs` – composition root: sets up the application, icon theme, and display
+- `src/kernel/` – app identity, i18n, and shared value types; depends on nothing
+- `src/runtime/` – the Tokio runtime handle and the bridge onto the GLib main context
+- `src/domain/` – pure rules with no GTK: models, runs, filters, counts, formatting
+- `src/services/` – adapters: the GitHub API client (`api/`, with ETag caching), the OAuth device flow (`auth/`), token storage (`tokens/`: keyring on classic installs, xdg-desktop-portal Secret inside sandboxes), the gateway that picks the live or demo backend, cache, favourites, preferences, notifications, and crash reports; `app_services.rs` builds the real services in one place
+- `src/demo/` – the demo backend and its bundled sample data
+- `src/ui/` – GTK4/libadwaita widgets only
+- `tests/` – integration and characterization tests against the library; `tests/smoke/` holds the AT-SPI journeys
+
+The layering rules and the reasoning behind them are in [`AGENTS.md`](AGENTS.md) and [`docs/agent-guide.md`](docs/agent-guide.md).
 
 ## License
 

@@ -15,8 +15,8 @@ High-level plan (steps)
 
 1. Choose an application ID and manifest format
    - Use the existing desktop id as the Flatpak application id: `me.spaceinbox.actioneer`.
-   - Create a Flatpak build manifest in YAML or JSON. We recommend YAML, named `flatpak/me.spaceinbox.actioneer.yaml`.
-  - Select an SDK/runtime. Prefer a recent, non-EOL runtime. For GNOME/libadwaita apps the recommended approach is to target the latest supported `org.gnome.Platform` branch (for example `50` at time of writing) and the matching `org.gnome.Sdk` SDK. Pin the `runtime-version` in the manifest (for example `runtime-version: "50"`) and update it periodically when a new GNOME branch is released.
+   - Create a Flatpak build manifest in YAML or JSON. This repository uses YAML: the template `flatpak/me.spaceinbox.actioneer.yaml.in`, rendered to `flatpak/me.spaceinbox.actioneer.yaml` (not committed) by `scripts/render-flatpak-manifest.sh`.
+  - Select an SDK/runtime. Prefer a recent, non-EOL runtime. For GNOME/libadwaita apps the recommended approach is to target the latest supported `org.gnome.Platform` branch (for example `51` at time of writing) and the matching `org.gnome.Sdk` SDK. Pin the `runtime-version` in the manifest (for example `runtime-version: "51"`) and update it periodically when a new GNOME branch is released.
 
 2. Create a Flatpak manifest
    - The manifest should declare:
@@ -34,7 +34,7 @@ High-level plan (steps)
    app-id: me.spaceinbox.actioneer
    # For a GNOME/libadwaita app target the GNOME runtime and matching SDK
    runtime: org.gnome.Platform
-   runtime-version: "50"
+   runtime-version: "51"
    sdk: org.gnome.Sdk
    command: me.spaceinbox.actioneer
    modules:
@@ -74,7 +74,7 @@ flatpak remote-info flathub org.gnome.Platform
 flatpak remote-info flathub org.gnome.Sdk
 ```
 
-- Use the newest supported GNOME runtime (for example `50` at the time this document was updated) for GNOME/libadwaita apps. Pin the `runtime-version` in your manifest to a specific branch (do not use an unpinned/latest string). When a new GNOME runtime is released, update the manifest, run a local build and re-run AppStream validation.
+- Use the newest supported GNOME runtime (for example `51` at the time this document was updated) for GNOME/libadwaita apps. Pin the `runtime-version` in your manifest to a specific branch (do not use an unpinned/latest string). When a new GNOME runtime is released, update `runtime-version` in the `.yaml.in` template and the `flatpak-github-actions:gnome-NN` container in `.github/workflows/flatpak-ci.yml`, run a build and re-run AppStream validation.
 
 
 5. CI: automated flatpak builds & checks
@@ -145,7 +145,7 @@ Contract (inputs / outputs / success criteria)
   - Repository root (this workspace).
   - Access to GitHub (optional, only if you will create tags or PRs).
 - Outputs:
-  - `flatpak/me.spaceinbox.actioneer.yaml` manifest checked into the repo.
+  - `flatpak/me.spaceinbox.actioneer.yaml.in` manifest template checked into the repo (the rendered manifest is not committed).
   - `data/metainfo.xml` AppStream metadata.
   - A new docs page `docs/flatpak.md` (this file).
   - Optional: GitHub Actions workflow to run flatpak-builder and validate metainfo.
@@ -161,7 +161,7 @@ Steps for the agent (detailed)
    - Identify any runtime calls that require special sandbox permissions (keyring, host file access, dbus services).
 
 2. Create a `flatpak/` manifest
-   - Create `flatpak/me.spaceinbox.actioneer.yaml` with a pinned SDK/runtime and sources pointing to a stable tag or branch.
+   - Create the `flatpak/me.spaceinbox.actioneer.yaml.in` template with a pinned SDK/runtime and sources pointing to a stable tag or branch.
    - Use `build-commands` that run `cargo build --release`. If the SDK requires installing Rust, include commands to install rustup + rust toolchain or add the rust extension for the sdk.
    - Keep `flatpak/me.spaceinbox.actioneer.cargo-sources.json` in lockstep with `Cargo.lock`. Run `flatpak-cargo-generator -d Cargo.lock -o flatpak/me.spaceinbox.actioneer.cargo-sources.json` after every dependency change so `cargo --offline fetch` inside the sandbox can resolve the pinned crates.
 
@@ -206,12 +206,3 @@ Helpful references
   - https://docs.flathub.org/docs/for-app-authors/requirements
   - https://docs.flathub.org/docs/for-app-authors/metainfo-guidelines
   - https://docs.flathub.org/docs/for-app-authors/metainfo-guidelines/quality-guidelines
-
-Next steps for you or the agent
-
-- If you want, I can:
-  - scaffold `flatpak/me.spaceinbox.actioneer.yaml` with a conservative SDK/runtime pin and basic build-commands.
-  - create a `data/metainfo.xml` draft populated from `README.md` and the repo metadata.
-  - add a CI workflow for automated flatpak-builder validation.
-
-If you'd like me to proceed with any of the above, tell me which items to create and I'll implement them and run the local checks.

@@ -2,7 +2,7 @@
 
 ## 1) Update versions
 - `Cargo.toml` — `[package].version`.
-- `Cargo.lock` — regenerate via `cargo generate-lockfile` (the `actioneer` entry should update).
+- `Cargo.lock` — update only the crate's own entry with `cargo update -w`. Do not use `cargo generate-lockfile`: it re-resolves every dependency to its newest compatible version, which slips an unreviewed dependency refresh into the release commit.
 - `snapcraft.yaml` — `version`.
 - `docs/flatpak.md` — example tag (`vX.Y.Z`).
 - `src/demo/logs/job-43021.log` — update the release command example if the version appears.
@@ -23,7 +23,7 @@ scripts/check-flatpak-lock-sync.sh
 - Keep older entries intact.
 
 ## 4) Translate the new changelog bullets
-- Run `scripts/extract-translations.sh` to refresh `po/actioneer.pot` with the new msgids.
+- Run `scripts/extract-translations.sh` to refresh `po/actioneer.pot` with the new msgids (needs `xtr`: `cargo install xtr`). Check that the msgid set grew by exactly the new bullets; the rest of the diff is `#:` line references shifting.
 - For every locale in `po/LINGUAS` (except `en`), append a `msgid` + `msgstr` pair to `po/<lang>.po`.
 - Run `scripts/compile-translations.sh` to compile `.mo` catalogs and render the final `data/metainfo.xml`.
 

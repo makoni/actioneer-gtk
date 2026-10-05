@@ -33,21 +33,26 @@ cargo test --workspace          # everything headless
 
 ### 2. Unit Tests (in source files)
 
-The application includes unit tests within source files for specific modules:
+Unit tests live beside the code in `#[cfg(test)]` modules (or a `tests.rs`
+next to the module), by layer:
 
-- `src/api/client.rs` - HTTP client creation and configuration
-- `src/api/models.rs` - JSON deserialization, rate limit checks, workflow models
-- `src/auth/device.rs` - OAuth device flow structures
-- `src/cache.rs` - Workflow caching and cache clearing
-- `src/config.rs` - Configuration validation
-- `src/favorites.rs` - Favorite repository management
-- `src/notifications.rs` - Notification text formatting
-- `src/preferences.rs` - Preferences management
-- `src/storage/token_storage.rs` - Token storage lifecycle (runs live keyring tests)
+- `src/kernel/` - i18n: locale parsing and resolution, catalog lookup, locale
+  directories, RTL detection (`i18n/tests.rs`)
+- `src/domain/` - models (JSON deserialization, rate limits), runs, filters,
+  counts, duration formatting
+- `src/services/` - the API client and its ETag/rate-limit handling
+  (`api/client.rs`, `api/http.rs`, `api/workflows.rs`), the OAuth device flow,
+  token storage and the secret portal (`tokens/`), config, favourites,
+  preferences, notifications, crash reports
+- `src/ui/` - every widget file that owns behaviour; most of these need GTK and
+  are `#[ignore]`d (see "Running Tests")
 
-**Running all unit tests:**
+`tokens/token_storage.rs` holds `test_token_storage_lifecycle`, which writes the
+real system keyring; it is `#[ignore]`d and must be skipped explicitly.
+
+**Running all headless unit tests:**
 ```bash
-cargo test
+cargo test --workspace
 ```
 
 ## Testing Challenges & Approach
@@ -89,7 +94,7 @@ ACTIONEER_ARGS=--demo dbus-run-session -- \
   bash tests/smoke/run_smoke.sh tests/smoke/job_logs.py
 ```
 
-Seven journeys today: `welcome_screen`, `demo_mode`, `repos_to_workflows`,
+Eight journeys today: `welcome_screen`, `demo_mode`, `repos_to_workflows`,
 `runs_and_detail`, `job_logs`, `filters_and_favorites`, `trigger_dialog`,
 `preferences_and_signout`. `lib.py` holds the shared helpers and `fixtures.py`
 the frozen accessibility names; neither is a journey, which is why `run_all.sh`
@@ -98,7 +103,10 @@ lists scripts explicitly instead of globbing.
 **A release build is required** — `run_smoke.sh` defaults `ACTIONEER_BIN` to
 `target/release/actioneer`. On a Wayland desktop the harness pins
 `GDK_BACKEND=x11` itself; without that GTK prefers the inherited Wayland
-session and reports "Failed to open display" even though Xvfb is up.
+session and reports "Failed to open display" even though Xvfb is up. It also
+starts `at-spi2-registryd` itself when nothing owns the registry name: where the
+accessibility bus runs dbus-broker (Arch), the registry can only be activated
+through systemd, which the private `dbus-run-session` bus does not have.
 
 Three helpers exist because the obvious AT-SPI approaches silently do nothing on
 GTK4, which makes a test pass while checking nothing:
@@ -193,7 +201,7 @@ The full gate, in the order CI runs it:
 cargo fmt --all
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test --workspace
-xvfb-run -a dbus-run-session -- bash -lc \
+env -u WAYLAND_DISPLAY GDK_BACKEND=x11 xvfb-run -a dbus-run-session -- bash -lc \
   "RUST_TEST_THREADS=1 cargo test --workspace -- --ignored --test-threads=1 \
    --skip test_token_storage_lifecycle"
 cargo build --release && dbus-run-session -- bash tests/smoke/run_all.sh
