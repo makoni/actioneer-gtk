@@ -29,18 +29,18 @@ flatpak run me.spaceinbox.actioneer
 
 The manifest is rendered from `flatpak/me.spaceinbox.actioneer.yaml.in`; the rendered file is not committed.
 
-### Snap (local build)
-Build and install an unsigned snap locally:
-
-```bash
-snapcraft
-sudo snap install --dangerous actioneer_*.snap
-```
-
-Once the store listing is published you will be able to install with:
+### Snap
+Install from the [Snap Store](https://snapcraft.io/actioneer):
 
 ```bash
 sudo snap install actioneer
+```
+
+To build and install an unsigned snap locally instead (`scripts/snap-local.sh` does the same in devmode):
+
+```bash
+snapcraft pack
+sudo snap install --dangerous actioneer_*.snap
 ```
 
 ### AppImage
@@ -151,7 +151,7 @@ scripts/compile-translations.sh   # requires msgfmt (gettext package)
 ## Packaging Notes
 
 - **Flatpak**: The manifest template is `flatpak/me.spaceinbox.actioneer.yaml.in`; render it with `scripts/render-flatpak-manifest.sh` (`--mode local` for local and CI builds, `--mode flathub --commit <sha>` for the Flathub repository). Cargo dependencies are vendored offline through `flatpak/me.spaceinbox.actioneer.cargo-sources.json`: whenever `Cargo.lock` changes (including `cargo update`), run `scripts/regenerate-flatpak-sources.sh` and confirm with `scripts/check-flatpak-lock-sync.sh`. When `rofiles-fuse` is unavailable (for example in virtualised hosts), build with `scripts/flathub-build.sh --install flatpak/me.spaceinbox.actioneer.yaml`. See “Secret storage & sandbox expectations” for the required portal verification steps before shipping a Flatpak build.
-- **Snap**: `snapcraft.yaml` builds a strictly confined snap using the GNOME extension. Test locally with `snapcraft pack` or push to the Snap Store once the snap is registered. The snap no longer plugs `password-manager-service`; instead it depends on the xdg-desktop-portal Secret interface documented above, so capture the portal log line and encrypted file path mentioned in “Secret storage & sandbox expectations” when requesting store review.
+- **Snap**: `snapcraft.yaml` builds a strictly confined snap using the GNOME extension. It is published to the [Snap Store](https://snapcraft.io/actioneer); test a local build with `snapcraft pack` (or `scripts/snap-local.sh`). The snap no longer plugs `password-manager-service`; instead it depends on the xdg-desktop-portal Secret interface documented above, so capture the portal log line and encrypted file path mentioned in “Secret storage & sandbox expectations” when requesting store review.
 
 ## Architecture Overview
 
