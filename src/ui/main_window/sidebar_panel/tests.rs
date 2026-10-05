@@ -6,7 +6,7 @@
 use super::*;
 use crate::services::api::models::{Repo, User};
 use crate::ui::sidebar::{RepoListRenderContext, rebuild_repo_list};
-use crate::ui::test_helpers::{pump_frames, run_gtk_test};
+use crate::ui::test_helpers::{present_at_size, pump_frames, run_gtk_test};
 use parking_lot::Mutex;
 use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
@@ -54,10 +54,7 @@ fn sidebar_panel_initializes_widgets() {
 fn rebuild_keeps_the_top_visible_repo_in_place() {
     run_gtk_test("rebuild_keeps_the_top_visible_repo_in_place", || {
         let panel = SidebarPanel::new();
-        let window = gtk::Window::new();
-        window.set_default_size(360, 320);
-        window.set_child(Some(&panel.clamp()));
-        window.present();
+        present_at_size(&panel.clamp(), 360, 320);
         pump_frames();
 
         let repos = (1..=40)
@@ -155,10 +152,7 @@ fn rebuild_keeps_the_top_visible_repo_in_place() {
 fn rebuild_reuses_header_rows() {
     run_gtk_test("rebuild_reuses_header_rows", || {
         let panel = SidebarPanel::new();
-        let window = gtk::Window::new();
-        window.set_default_size(360, 320);
-        window.set_child(Some(&panel.clamp()));
-        window.present();
+        present_at_size(&panel.clamp(), 360, 320);
         pump_frames();
 
         // Two owners, several repos each: the store holds a section header,
@@ -277,10 +271,7 @@ fn rebuild_holds_position_when_workflow_counters_arrive() {
         "rebuild_holds_position_when_workflow_counters_arrive",
         || {
             let panel = SidebarPanel::new();
-            let window = gtk::Window::new();
-            window.set_default_size(360, 320);
-            window.set_child(Some(&panel.clamp()));
-            window.present();
+            present_at_size(&panel.clamp(), 360, 320);
             pump_frames();
 
             // One owner, many repos. Built first with no workflow counters (the

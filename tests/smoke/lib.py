@@ -46,6 +46,10 @@ def walk(node):
     try:
         for index in range(node.childCount):
             child = node.getChildAtIndex(index)
+            # A child removed while the tree is being walked (a rebuild right
+            # after a click) comes back as None; callers expect real nodes.
+            if child is None:
+                continue
             yield child
             yield from walk(child)
     except Exception:

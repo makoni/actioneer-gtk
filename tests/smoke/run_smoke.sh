@@ -65,16 +65,56 @@ xvfb_pid=$!
 sleep 1
 export DISPLAY="$xvfb_display"
 
+# Make sure the AT-SPI registry owns its name on the accessibility bus. Without
+# it the app never shows up in the tree. On Debian/Ubuntu the a11y bus runs
+# dbus-daemon, which activates the registry on demand. On Arch it runs
+# dbus-broker, which activates services only through systemd, and the private
+# bus from dbus-run-session has no systemd behind it, so activation fails with
+# "Could not activate remote peer 'org.a11y.atspi.Registry'". Starting the
+# registry by hand works in both cases; the check skips it when one is already
+# running.
+start_atspi_registry() {
+  local registryd="" candidate a11y_address has_owner
+  for candidate in /usr/libexec/at-spi2-registryd \
+    /usr/lib/at-spi2-core/at-spi2-registryd /usr/lib/at-spi2-registryd; do
+    if [ -x "$candidate" ]; then
+      registryd="$candidate"
+      break
+    fi
+  done
+  [ -n "$registryd" ] || return 0
+  command -v gdbus >/dev/null 2>&1 || return 0
+
+  # Asking for the address also activates the a11y bus launcher.
+  a11y_address="$(gdbus call --session --dest org.a11y.Bus \
+    --object-path /org/a11y/bus --method org.a11y.Bus.GetAddress 2>/dev/null |
+    sed -E "s/^\('(.*)',\)$/\1/")" || return 0
+  [ -n "$a11y_address" ] || return 0
+
+  has_owner="$(gdbus call --address "$a11y_address" \
+    --dest org.freedesktop.DBus --object-path /org/freedesktop/DBus \
+    --method org.freedesktop.DBus.NameHasOwner org.a11y.atspi.Registry 2>/dev/null)" || true
+  [ "$has_owner" = "(true,)" ] && return 0
+
+  "$registryd" >"$workdir/registryd.log" 2>&1 &
+  registry_pid=$!
+  sleep 0.5
+}
+
 cleanup() {
+  kill "${registry_pid:-0}" 2>/dev/null || true
   kill "${app_pid:-0}" 2>/dev/null || true
   kill "$xvfb_pid" 2>/dev/null || true
   sleep 0.5
+  kill -9 "${registry_pid:-0}" 2>/dev/null || true
   kill -9 "${app_pid:-0}" 2>/dev/null || true
   kill -9 "$xvfb_pid" 2>/dev/null || true
+  wait "${registry_pid:-0}" 2>/dev/null || true
   wait "${app_pid:-0}" 2>/dev/null || true
   wait "$xvfb_pid" 2>/dev/null || true
 }
 trap 'cleanup; rm -rf "$workdir"' EXIT
+start_atspi_registry
 
 # Launch the app; pyatspi will poll the accessibility tree.
 # ACTIONEER_ARGS lets a smoke script pick the launch mode it needs (e.g.

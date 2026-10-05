@@ -6,7 +6,7 @@
 use super::*;
 use crate::services::api::models::{Repo, User};
 use crate::ui::state::WorkflowStatusCounts;
-use crate::ui::test_helpers::run_gtk_test;
+use crate::ui::test_helpers::{present_at_size, run_gtk_test};
 use gtk4::{self as gtk, gio};
 use parking_lot::Mutex;
 use std::collections::{HashMap, HashSet};
@@ -49,10 +49,7 @@ fn favourite_buttons_line_up_regardless_of_name_length() {
                 list.append(row);
             }
 
-            let window = gtk::Window::new();
-            window.set_default_size(320, 200);
-            window.set_child(Some(&list));
-            window.present();
+            let window = present_at_size(&list, 320, 200);
             while glib::MainContext::default().pending() {
                 let _ = glib::MainContext::default().iteration(false);
             }

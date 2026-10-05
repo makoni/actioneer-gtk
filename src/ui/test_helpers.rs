@@ -196,6 +196,27 @@ pub fn pump_frames() {
     }
 }
 
+/// Presents `child` in a new window, allocated exactly `width` × `height`
+/// however large the window itself ends up.
+///
+/// `set_default_size` is only a request: a tiling window manager (Hyprland,
+/// GNOME's tiling, …) resizes the toplevel as it pleases, and when the tests
+/// run on a desktop session GTK prefers Wayland over the Xvfb display, so the
+/// window lands on the real desktop and gets tiled. A test that scrolls a list
+/// then sees a viewport two or three times taller than it assumed. A
+/// `gtk::Fixed` gives its child the child's own size rather than stretching it
+/// to the window, so the size request below holds under any window manager.
+pub fn present_at_size(child: &impl IsA<gtk::Widget>, width: i32, height: i32) -> gtk::Window {
+    child.set_size_request(width, height);
+    let fixed = gtk::Fixed::new();
+    fixed.put(child, 0.0, 0.0);
+    let window = gtk::Window::new();
+    window.set_default_size(width, height);
+    window.set_child(Some(&fixed));
+    window.present();
+    window
+}
+
 /// Collects weak references to every widget under `widget`, including the parts
 /// hung off a `GtkExpander` (its label widget and its child), which a plain
 /// first_child/next_sibling walk does not reach.

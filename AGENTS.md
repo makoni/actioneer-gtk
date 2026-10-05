@@ -94,7 +94,7 @@ nothing validates a PR unless you do it locally. Run all of these:
 cargo fmt --all
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test --workspace
-xvfb-run -a dbus-run-session -- bash -lc "RUST_TEST_THREADS=1 cargo test --workspace -- --ignored --test-threads=1 --skip test_token_storage_lifecycle"
+env -u WAYLAND_DISPLAY GDK_BACKEND=x11 xvfb-run -a dbus-run-session -- bash -lc "RUST_TEST_THREADS=1 cargo test --workspace -- --ignored --test-threads=1 --skip test_token_storage_lifecycle"
 cargo build --release && dbus-run-session -- bash tests/smoke/run_all.sh
 ```
 
@@ -125,6 +125,14 @@ that guard silently skipped 30 of 31 UI tests while reporting them as passed.
 If a headless run needs to render — screenshots, or GL errors from a bare Xvfb —
 set `GSK_RENDERER=cairo`.
 
+On a Wayland desktop `xvfb-run` alone is not headless: GTK prefers the inherited
+`WAYLAND_DISPLAY`, so the test windows open on the real desktop, and a tiling
+compositor resizes them. Hence `env -u WAYLAND_DISPLAY GDK_BACKEND=x11` in the
+command above. A test that depends on geometry must not trust
+`set_default_size` either way: present the widget with
+`test_helpers::present_at_size`, which pins its allocation under any window
+manager.
+
 ### Smoke tests
 
 `tests/smoke/run_smoke.sh <script.py>` drives the built binary through AT-SPI
@@ -138,6 +146,11 @@ Without a bus the a11y bridge comes up half-initialised: the app frame is
 visible but its widget tree reads as almost empty, which looks like a UI bug and
 is not one. Note also that GTK4 buttons surface with role name `button`, not
 `push button` — filtering on the latter silently finds nothing.
+
+`run_smoke.sh` starts `at-spi2-registryd` itself when nothing owns
+`org.a11y.atspi.Registry`: on distributions whose a11y bus is dbus-broker (Arch),
+the registry can only be activated through systemd, which a private
+`dbus-run-session` bus does not have.
 
 ## Progress tracking
 
