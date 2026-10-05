@@ -960,3 +960,6 @@ msgstr "Componentes embutidos atualizados ajudam a manter o Actioneer confiável
 
 msgid "AppImage packages now include zsync update information, so package managers can update the app incrementally."
 msgstr "Os pacotes AppImage agora incluem informações de atualização zsync, permitindo que os gerenciadores de pacotes atualizem o aplicativo de forma incremental."
+
+msgid "Signing out now always returns to the welcome screen right away, including in demo mode and when the system keyring is unavailable."
+msgstr "Sair da conta agora sempre volta imediatamente para a tela de boas-vindas, inclusive no modo de demonstração e quando o chaveiro do sistema não está disponível."

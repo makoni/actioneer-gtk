@@ -961,3 +961,6 @@ msgstr "Обновлённые компоненты помогают Actioneer �
 
 msgid "AppImage packages now include zsync update information, so package managers can update the app incrementally."
 msgstr "Пакеты AppImage теперь содержат информацию для обновления zsync, чтобы менеджеры пакетов могли обновлять приложение инкрементально."
+
+msgid "Signing out now always returns to the welcome screen right away, including in demo mode and when the system keyring is unavailable."
+msgstr "При выходе из аккаунта приложение теперь всегда сразу возвращается на экран приветствия — в том числе в демо-режиме и когда системная связка ключей недоступна."

@@ -958,3 +958,6 @@ msgstr "اپ ڈیٹ شدہ بندلڈ اجزاء Actioneer کو قابلِ اع�
 
 msgid "AppImage packages now include zsync update information, so package managers can update the app incrementally."
 msgstr "AppImage پیکجز اب zsync کی اپ ڈیٹ معلومات شامل کرتے ہیں، تاکہ پیکج مینیجرز ایپ کو تدریجی طور پر اپ ڈیٹ کر سکیں۔"
+
+msgid "Signing out now always returns to the welcome screen right away, including in demo mode and when the system keyring is unavailable."
+msgstr "سائن آؤٹ کرنے پر اب ایپ ہمیشہ فوراً خوش آمدید اسکرین پر واپس آ جاتی ہے، ڈیمو موڈ میں بھی اور اس وقت بھی جب سسٹم کی رنگ دستیاب نہ ہو۔"

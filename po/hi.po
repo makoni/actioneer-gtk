@@ -957,3 +957,6 @@ msgstr "अपडेटेड बंडल्ड कंपोनेंट Action
 
 msgid "AppImage packages now include zsync update information, so package managers can update the app incrementally."
 msgstr "AppImage पैकेज अब zsync अपडेट जानकारी शामिल करते हैं, जिससे पैकेज मैनेजर एप्लिकेशन को क्रमिक रूप से अपडेट कर सकें।"
+
+msgid "Signing out now always returns to the welcome screen right away, including in demo mode and when the system keyring is unavailable."
+msgstr "साइन आउट करने पर अब ऐप हमेशा तुरंत स्वागत स्क्रीन पर लौट आता है, डेमो मोड में भी और तब भी जब सिस्टम कीरिंग उपलब्ध न हो।"

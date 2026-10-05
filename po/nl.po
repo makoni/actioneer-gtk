@@ -1003,3 +1003,6 @@ msgstr "Afhankelijkheidsupdates en stabiliteitscorrecties."
 
 msgid "AppImage packages now include zsync update information, so package managers can update the app incrementally."
 msgstr "AppImage-pakketten bevatten nu zsync-updateinformatie, zodat pakketbeheerders de app incrementaal kunnen bijwerken."
+
+msgid "Signing out now always returns to the welcome screen right away, including in demo mode and when the system keyring is unavailable."
+msgstr "Afmelden brengt je nu altijd direct terug naar het welkomstscherm, ook in de demomodus en wanneer de systeemsleutelbos niet beschikbaar is."

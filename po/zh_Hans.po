@@ -950,3 +950,6 @@ msgstr "更新内置组件，让 Actioneer 保持可靠且持续更新。"
 
 msgid "AppImage packages now include zsync update information, so package managers can update the app incrementally."
 msgstr "AppImage 软件包现在包含 zsync 更新信息，因此包管理器可以增量更新该应用。"
+
+msgid "Signing out now always returns to the welcome screen right away, including in demo mode and when the system keyring is unavailable."
+msgstr "退出登录后现在总会立即返回欢迎界面，包括在演示模式下以及系统密钥环不可用时。"

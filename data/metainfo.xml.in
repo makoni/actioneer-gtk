@@ -103,6 +103,14 @@
   </screenshots>
 
   <releases>
+    <release version="1.1.2" date="2026-10-05">
+      <description>
+        <ul>
+          <li>Signing out now always returns to the welcome screen right away, including in demo mode and when the system keyring is unavailable.</li>
+          <li>Updated bundled components help keep Actioneer reliable and up to date.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.1.1" date="2026-08-31">
       <description>
         <ul>

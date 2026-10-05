@@ -957,3 +957,6 @@ msgstr "হালনাগাদ করা বান্ডল্ড উপাদ
 
 msgid "AppImage packages now include zsync update information, so package managers can update the app incrementally."
 msgstr "AppImage প্যাকেজে এখন zsync আপডেট তথ্য রয়েছে, ফলে প্যাকেজ ম্যানেজাররা অ্যাপটি ক্রমিকভাবে আপডেট করতে পারবেন।"
+
+msgid "Signing out now always returns to the welcome screen right away, including in demo mode and when the system keyring is unavailable."
+msgstr "সাইন আউট করলে এখন অ্যাপ সবসময় সঙ্গে সঙ্গে স্বাগত স্ক্রিনে ফিরে যায়, ডেমো মোডেও এবং যখন সিস্টেম কীরিং উপলব্ধ থাকে না তখনও।"

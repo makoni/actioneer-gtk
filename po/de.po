@@ -1006,3 +1006,6 @@ msgstr "Abhängigkeitsupdates und Stabilitätsfixes."
 
 msgid "AppImage packages now include zsync update information, so package managers can update the app incrementally."
 msgstr "AppImage-Pakete enthalten jetzt zsync-Updateinformationen, damit Paketmanager die App inkrementell aktualisieren können."
+
+msgid "Signing out now always returns to the welcome screen right away, including in demo mode and when the system keyring is unavailable."
+msgstr "Beim Abmelden kehrt die App jetzt immer sofort zum Willkommensbildschirm zurück, auch im Demo-Modus und wenn der Systemschlüsselbund nicht verfügbar ist."

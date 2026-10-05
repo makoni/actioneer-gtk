@@ -953,3 +953,6 @@ msgstr "المكوّنات المضمّنة المحدّثة تساعد على �
 
 msgid "AppImage packages now include zsync update information, so package managers can update the app incrementally."
 msgstr "تتضمن حزم AppImage الآن معلومات تحديث zsync، مما يتيح لمشرفي الحزم تحديث التطبيق بشكل تدريجي."
+
+msgid "Signing out now always returns to the welcome screen right away, including in demo mode and when the system keyring is unavailable."
+msgstr "يعيدك تسجيل الخروج الآن دائمًا إلى شاشة الترحيب فورًا، بما في ذلك في وضع العرض التجريبي وعندما تكون حلقة مفاتيح النظام غير متاحة."
