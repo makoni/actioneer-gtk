@@ -1,5 +1,5 @@
 name: actioneer
-base: core24
+base: core26
 version: '1.1.2'
 title: Actioneer
 summary: GitHub Actions desktop client for GNOME
@@ -77,7 +77,7 @@ parts:
         - libgtk-4-dev
         - libssl-dev
     stage-packages:
-      - libssl3
+      - libssl3t64
     override-build: |
       craftctl default
       install -Dm644 "$CRAFT_PART_SRC/data/me.spaceinbox.actioneer.desktop" "$SNAPCRAFT_PART_INSTALL/meta/gui/me.spaceinbox.actioneer.desktop"
@@ -90,7 +90,7 @@ parts:
       cp -a "$CRAFT_PART_SRC/po"/*.po "$SNAPCRAFT_PART_INSTALL/usr/share/actioneer/po/"
     prime:
       # Drop development-only ICU helpers that trigger snap lint warnings but aren't needed at runtime
-      - -usr/lib/aarch64-linux-gnu/libicutest.so.74.2
-      - -usr/lib/aarch64-linux-gnu/libicuio.so.74.2
+      - -usr/lib/aarch64-linux-gnu/libicutest.so.*
+      - -usr/lib/aarch64-linux-gnu/libicuio.so.*
       - -usr/lib/x86_64-linux-gnu/libicutest.so.*
       - -usr/lib/x86_64-linux-gnu/libicuio.so.*
