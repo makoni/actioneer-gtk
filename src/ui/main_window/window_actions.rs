@@ -32,8 +32,7 @@ impl MainWindow {
     }
 
     pub(super) fn open_about_window(&self) {
-        let about = adw::AboutWindow::builder()
-            .transient_for(&self.window)
+        let about = adw::AboutDialog::builder()
             .application_name("Actioneer")
             .application_icon(crate::kernel::app::APP_ICON_NAME)
             .developer_name("Sergey Armodin")
@@ -42,7 +41,7 @@ impl MainWindow {
             .issue_url(ISSUE_URL)
             .license_type(gtk::License::MitX11)
             .build();
-        about.present();
+        about.present(Some(&self.window));
     }
 
     pub(super) fn open_shortcuts_window(&self) {
