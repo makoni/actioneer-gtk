@@ -157,9 +157,11 @@ pub struct RunHeadCommit {
     pub message: String,
 }
 
+/// `total_count` is deliberately not modelled: nothing reads it, and GitHub now
+/// reports counts above 2,500 as "2,500+", so a typed field could only ever
+/// turn a working page of runs into a deserialization error.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowRunsResponse {
-    pub total_count: i64,
     pub workflow_runs: Vec<WorkflowRun>,
 }
 
