@@ -49,8 +49,8 @@ jobs:
       LINUXDEPLOY_PLUGIN_GTK_COMMIT: 7a3fbc31a9e5075073ff8790f26effbac5f84453
       LINUXDEPLOY_PLUGIN_GTK_SHA256: b0f4cbc684a0103a9651f0955b635eaea0096b3a66c0f5a2c2aa337960375171
       # The GTK the AppImage must ship: the floor the crate compiles against
-      # (`gtk4` feature `v4_14`). Anything older would load but lack symbols.
-      MIN_BUNDLED_GTK: "4.14"
+      # (`gtk4` feature `v4_18`). Anything older would load but lack symbols.
+      MIN_BUNDLED_GTK: "4.18"
     steps:
       - uses: actions/checkout@v7.0.1
 
