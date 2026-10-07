@@ -67,7 +67,7 @@ pub struct MainWindow {
     content_header_bar: adw::HeaderBar,
     rate_limit_box: gtk::Box,
     split_view: adw::NavigationSplitView,
-    header_spinner: Rc<RefCell<Option<gtk::Spinner>>>,
+    header_spinner: Rc<RefCell<Option<adw::Spinner>>>,
     favorites_manager: Option<Arc<FavoritesManager>>,
     favorites: Arc<Mutex<HashSet<i64>>>,
     cache: Arc<DataCache>,
