@@ -524,8 +524,19 @@ on:
 
         let response: WorkflowRunsResponse =
             serde_json::from_value(json).expect("workflow runs response");
-        assert_eq!(response.total_count, 1);
         assert_eq!(response.workflow_runs[0].id, 42);
         assert_eq!(response.workflow_runs[0].workflow_id, Some(9));
+    }
+
+    #[test]
+    fn workflow_runs_response_tolerates_an_approximate_total_count() {
+        let json = serde_json::json!({
+            "total_count": "2,500+",
+            "workflow_runs": [{ "id": 42 }]
+        });
+
+        let response: WorkflowRunsResponse =
+            serde_json::from_value(json).expect("workflow runs response");
+        assert_eq!(response.workflow_runs.len(), 1);
     }
 }
