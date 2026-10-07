@@ -3525,14 +3525,14 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/tokio-test/tokio-test-0.4.5.crate",
-        "sha256": "3f6d24790a10a7af737693a3e8f1d03faef7e6ca0cc99aae5066f533766de545",
-        "dest": "cargo/vendor/tokio-test-0.4.5"
+        "url": "https://static.crates.io/crates/tokio-test/tokio-test-0.4.6.crate",
+        "sha256": "12bc5db7778a8e08ee255090861e0e7aac55e784300077e7ed293c7be36168b2",
+        "dest": "cargo/vendor/tokio-test-0.4.6"
     },
     {
         "type": "inline",
-        "contents": "{\"package\": \"3f6d24790a10a7af737693a3e8f1d03faef7e6ca0cc99aae5066f533766de545\", \"files\": {}}",
-        "dest": "cargo/vendor/tokio-test-0.4.5",
+        "contents": "{\"package\": \"12bc5db7778a8e08ee255090861e0e7aac55e784300077e7ed293c7be36168b2\", \"files\": {}}",
+        "dest": "cargo/vendor/tokio-test-0.4.6",
         "dest-filename": ".cargo-checksum.json"
     },
     {
