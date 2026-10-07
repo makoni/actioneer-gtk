@@ -13,18 +13,17 @@ use std::sync::Arc;
 use tracing::warn;
 
 pub struct PreferencesWindow {
-    window: adw::PreferencesWindow,
+    dialog: adw::PreferencesDialog,
+    parent: adw::ApplicationWindow,
     manager: Arc<PreferencesManager>,
 }
 
 impl PreferencesWindow {
     pub fn new(parent: &adw::ApplicationWindow, manager: Arc<PreferencesManager>) -> Self {
-        let window = adw::PreferencesWindow::builder()
+        let dialog = adw::PreferencesDialog::builder()
             .title(tr("Preferences"))
-            .transient_for(parent)
-            .modal(true)
-            .default_width(420)
-            .default_height(420)
+            .content_width(420)
+            .content_height(420)
             .build();
 
         let general_page = adw::PreferencesPage::new();
@@ -118,12 +117,15 @@ impl PreferencesWindow {
         general_page.add(&notifications_group);
         general_page.add(&appearance_group);
         general_page.add(&language_group);
-        window.add(&general_page);
+        dialog.add(&general_page);
 
-        let refresh_row_clone = refresh_row.clone();
-        let notify_clone = notify_switch.clone();
-        let theme_row_clone = theme_row.clone();
-        let language_row_clone = language_row.clone();
+        // The subscription outlives the dialog — the manager lives as long as
+        // the app — so it must not keep the rows alive. Hold them weakly and
+        // detach once the dialog is gone.
+        let refresh_row_weak = refresh_row.downgrade();
+        let notify_weak = notify_switch.downgrade();
+        let theme_row_weak = theme_row.downgrade();
+        let language_row_weak = language_row.downgrade();
         let (sender, receiver) =
             glib::MainContext::default().channel::<Preferences>(glib::Priority::default());
 
@@ -144,6 +146,14 @@ impl PreferencesWindow {
         });
 
         receiver.attach(None, move |prefs| {
+            let (Some(refresh_row), Some(notify_switch), Some(theme_row), Some(language_row)) = (
+                refresh_row_weak.upgrade(),
+                notify_weak.upgrade(),
+                theme_row_weak.upgrade(),
+                language_row_weak.upgrade(),
+            ) else {
+                return glib::ControlFlow::Break;
+            };
             let refresh_index = match prefs.refresh_interval {
                 2 => 0,
                 5 => 1,
@@ -151,10 +161,10 @@ impl PreferencesWindow {
                 30 => 3,
                 _ => 2,
             };
-            refresh_row_clone.set_selected(refresh_index);
-            notify_clone.set_active(prefs.enable_notifications);
-            theme_row_clone.set_selected(theme_to_index(prefs.theme_preference));
-            language_row_clone.set_selected(language_to_index(prefs.language_preference));
+            refresh_row.set_selected(refresh_index);
+            notify_switch.set_active(prefs.enable_notifications);
+            theme_row.set_selected(theme_to_index(prefs.theme_preference));
+            language_row.set_selected(language_to_index(prefs.language_preference));
             glib::ControlFlow::Continue
         });
 
@@ -200,8 +210,10 @@ impl PreferencesWindow {
         });
 
         let manager_for_language = manager.clone();
-        let window_for_language = window.clone();
-        let parent_for_language = parent.clone();
+        // The dialog is hosted inside the parent window, so both are ancestors
+        // of this row: hold them weakly or the handler pins the whole tree.
+        let dialog_for_language = dialog.downgrade();
+        let parent_for_language = parent.downgrade();
         language_row.connect_selected_notify(move |combo| {
             let language_preference = index_to_language(combo.selected());
             let changed = apply_language_preference(language_preference);
@@ -213,21 +225,27 @@ impl PreferencesWindow {
                 }
             });
 
-            let app = window_for_language
-                .application()
-                .or_else(|| parent_for_language.application());
+            let app = parent_for_language
+                .upgrade()
+                .and_then(|parent| parent.application());
             if changed && let Some(app) = app {
-                window_for_language.close();
+                if let Some(dialog) = dialog_for_language.upgrade() {
+                    dialog.close();
+                }
                 app.activate_action("reload-ui", None);
             }
         });
 
-        Self { window, manager }
+        Self {
+            dialog,
+            parent: parent.clone(),
+            manager,
+        }
     }
 
     pub fn present(&self) {
         let _ = &self.manager;
-        self.window.present();
+        self.dialog.present(Some(&self.parent));
     }
 }
 
@@ -298,8 +316,65 @@ fn index_to_language(index: u32) -> LanguagePreference {
 
 #[cfg(test)]
 mod tests {
-    use super::{index_to_language, language_to_index};
-    use crate::services::preferences::LanguagePreference;
+    use super::{PreferencesWindow, index_to_language, language_to_index};
+    use crate::services::preferences::{LanguagePreference, PreferencesManager};
+    use crate::ui::test_helpers::{collect_widget_weaks, run_gtk_test};
+    use gtk4::prelude::*;
+    use gtk4::{self as gtk, glib};
+    use libadwaita as adw;
+    use libadwaita::prelude::*;
+    use std::sync::Arc;
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn dialog_is_released_once_closed() {
+        run_gtk_test("dialog_is_released_once_closed", || {
+            crate::runtime::init_test_runtime();
+            // The dialog lives inside the parent window, so a handler holding
+            // either one strongly — or the preferences subscription holding
+            // the rows — would keep the dialog's widgets alive after it closes,
+            // once per opening.
+            let dir = tempfile::tempdir().expect("temp dir");
+            let manager = Arc::new(PreferencesManager::with_dir(dir.path()).expect("manager"));
+            let parent = adw::ApplicationWindow::builder().build();
+            let mut weaks: Vec<(String, glib::WeakRef<gtk::Widget>)> = Vec::new();
+
+            let weak = {
+                let prefs = PreferencesWindow::new(&parent, manager.clone());
+                prefs.present();
+                let dialog = prefs.dialog.clone();
+                collect_widget_weaks(&dialog.clone().upcast::<gtk::Widget>(), &mut weaks);
+                dialog.force_close();
+                dialog.downgrade()
+            };
+
+            let context = glib::MainContext::default();
+            for _ in 0..50 {
+                while context.pending() {
+                    let _ = context.iteration(false);
+                }
+                if weak.upgrade().is_none() && weaks.iter().all(|(_, w)| w.upgrade().is_none()) {
+                    break;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(10));
+            }
+
+            assert!(
+                weak.upgrade().is_none(),
+                "preferences dialog outlived its last strong reference"
+            );
+            let survivors: Vec<&str> = weaks
+                .iter()
+                .filter(|(_, weak)| weak.upgrade().is_some())
+                .map(|(name, _)| name.as_str())
+                .collect();
+            assert!(
+                survivors.is_empty(),
+                "widgets under the preferences dialog survived it: {survivors:?}"
+            );
+            parent.destroy();
+        });
+    }
 
     #[test]
     fn language_index_mapping_handles_de_and_nl() {

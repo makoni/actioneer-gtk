@@ -3,6 +3,11 @@ name: Snap CI
 
 "on":
   workflow_dispatch:
+    inputs:
+      snapcraft-channel:
+        description: Snapcraft channel to build with (e.g. latest/edge to try unreleased fixes)
+        required: false
+        default: latest/stable
   workflow_call:
     outputs:
       run-id:
@@ -35,6 +40,7 @@ jobs:
         id: build
         with:
           snapcraft-args: --build-for=${{ matrix.platform }}
+          snapcraft-channel: ${{ inputs.snapcraft-channel || 'latest/stable' }}
 
       - name: Upload snap artifact
         uses: actions/upload-artifact@v7

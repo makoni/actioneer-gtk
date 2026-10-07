@@ -53,7 +53,7 @@ ACTION_PREFERENCES = "win.open_preferences"
 ACTION_SIGN_OUT = "win.sign_out"
 
 # The preferences window is a separate toplevel.
-PREFS_FRAME_TITLE = "Preferences"
+PREFS_TITLE = "Preferences"
 PREFS_SECTIONS = ["Appearance", "Theme", "Language", "Notifications"]
 PREFS_ROWS = ["Application language", "Auto-refresh interval", "Desktop Notifications"]
 

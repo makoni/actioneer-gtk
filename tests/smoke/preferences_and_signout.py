@@ -26,13 +26,24 @@ from lib import (
     click,
     do_window_action,
     find_frame,
-    find_frame_titled,
     find_named,
     find_role,
     require_named,
     visible_names,
     wait_until,
+    walk,
 )
+
+
+def find_dialog_titled(root, title):
+    """An `adw::Dialog` is hosted inside its parent frame, not a toplevel."""
+    for node in walk(root):
+        try:
+            if node.getRoleName() == "dialog" and (node.name or "") == title:
+                return node
+        except Exception:
+            continue
+    return None
 
 
 def main():
@@ -42,17 +53,17 @@ def main():
         "demo repositories never appeared, so the app is not in its signed-in state",
     )
 
-    # ---- preferences open as their own toplevel ---------------------------
+    # ---- preferences open as a dialog inside the frame ---------------------
     do_window_action(frame, fixtures.ACTION_PREFERENCES)
     prefs = wait_until(
-        lambda: find_frame_titled(fixtures.PREFS_FRAME_TITLE),
-        "the preferences window never appeared",
+        lambda: find_dialog_titled(frame, fixtures.PREFS_TITLE),
+        f"the preferences dialog never appeared. Visible: {visible_names(frame)}",
     )
-    print(f"Preferences frame: {prefs.name!r}", flush=True)
+    print(f"Preferences dialog: {prefs.name!r}", flush=True)
 
     missing = [s for s in fixtures.PREFS_SECTIONS if find_named(prefs, s) is None]
     if missing:
-        raise AssertionError(
+        raise SystemExit(
             f"preference sections missing: {missing}. Visible: {visible_names(prefs)}"
         )
     for row in fixtures.PREFS_ROWS:
@@ -60,8 +71,8 @@ def main():
 
     click(require_named(prefs, "Close"))
     wait_until(
-        lambda: find_frame_titled(fixtures.PREFS_FRAME_TITLE) is None,
-        "the preferences window did not close",
+        lambda: find_dialog_titled(frame, fixtures.PREFS_TITLE) is None,
+        "the preferences dialog did not close",
     )
     print("Preferences opened and closed.", flush=True)
 
