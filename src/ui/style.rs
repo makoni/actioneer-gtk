@@ -120,6 +120,31 @@ const APP_CSS: &str = r#"
     background-color: transparent;
 }
 
+/* The expanded area is indented to line up with the workflow title, past the
+   disclosure arrow and the status dot. A narrow detail pane (a phone, or the
+   content half of a small window) cannot spare that, so `.narrow` — set by the
+   pane's breakpoint — pulls it back to a plain inset. GTK CSS has no logical
+   margins, hence the explicit :dir() pairs. */
+.workflow-detail:dir(ltr) {
+    margin-left: 62px;
+    margin-right: 14px;
+}
+
+.workflow-detail:dir(rtl) {
+    margin-right: 62px;
+    margin-left: 14px;
+}
+
+.narrow .workflow-detail:dir(ltr) {
+    margin-left: 12px;
+    margin-right: 6px;
+}
+
+.narrow .workflow-detail:dir(rtl) {
+    margin-right: 12px;
+    margin-left: 6px;
+}
+
 .workflow-title {
     font-weight: 700;
 }

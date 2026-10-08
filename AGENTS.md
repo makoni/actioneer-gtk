@@ -187,6 +187,43 @@ Guard new widget trees with a release test — see
 its root: a cycle pinning one inner widget passes a root-only check. When you add
 such a test, prove it can fail by reintroducing the cycle once.
 
+## Adaptive layout
+
+The main window supports phones: its minimum size is 360×294, the size GNOME
+asks adaptive apps to handle.
+
+- The repository list and the detail pane are an `adw::NavigationSplitView`.
+  A window breakpoint (`COLLAPSE_CONDITION` in `main_window.rs`) collapses it
+  into two pages below 720 sp.
+- Collapsed, only a **tap** on a repository row opens its page
+  (`connect_repo_tap`), plus `activate` (Enter, double click). Selection must
+  not navigate: it also changes when the app restores the last repository or
+  rebuilds the list. `single-click-activate` is not the answer either — it
+  selects rows on hover, which opens repositories as the pointer passes.
+- The detail pane adapts to its *own* width through an `adw::BreakpointBin`
+  (`NARROW_PANE_CONDITION`), since the content half of a mid-sized window is as
+  narrow as a phone. Widgets that exist when the pane is built get breakpoint
+  setters; rows built later are styled by the `.narrow` class the breakpoint
+  puts on the pane's root (see `.workflow-detail` in `style.rs`), with explicit
+  `:dir(ltr)`/`:dir(rtl)` pairs because GTK CSS has no logical margins.
+
+To look at it:
+
+- `ADW_DEBUG_ADAPTIVE_PREVIEW=1 cargo run -- --demo` (or `Ctrl+Shift+M` in a
+  running window) opens libadwaita's adaptive preview: the window rendered
+  inside a phone frame, with presets, rotation and the mobile shell's bars. It
+  needs libadwaita ≥ 1.7 at runtime, whatever the crate features say.
+- Phosh nested on the desktop exercises the real mobile shell:
+  `WLR_BACKENDS=wayland GSETTINGS_BACKEND=memory phoc -C /usr/share/phosh/phoc.ini -E 'actioneer --demo'`
+  (packages `phosh phoc squeekboard`).
+
+Guarded by `a_phone_sized_window_shows_one_page_at_a_time`,
+`a_phone_width_pane_switches_to_the_narrow_layout_and_fits` and the
+`narrow_window.py` smoke journey, which `run_all.sh` runs on a 360×720 screen
+and which taps through XTest (`lib.tap`): GTK4 list rows have no AT-SPI
+activate action, and AT-SPI's own mouse events never deliver button presses
+under Xvfb.
+
 ## Toolchain and dependencies
 
 - Rust `stable`; no toolchain file is pinned, and CI installs `stable`. After

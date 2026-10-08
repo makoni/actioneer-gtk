@@ -57,6 +57,9 @@ PREFS_TITLE = "Preferences"
 PREFS_SECTIONS = ["Appearance", "Theme", "Language", "Notifications"]
 PREFS_ROWS = ["Application language", "Auto-refresh interval", "Desktop Notifications"]
 
+# The back button a collapsed split view puts on the detail page.
+BACK_BUTTON = "Back"
+
 # The welcome screen, shown again after signing out.
 WELCOME_HEADING = "Welcome to Actioneer"
 WELCOME_SIGN_IN = "Sign in with GitHub"

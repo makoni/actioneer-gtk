@@ -15,8 +15,12 @@ nothing on GTK4:
   goes through the enclosing list's `Selection` interface — `select_row()`.
 * Menu items behind a `GtkMenuButton` never appear in the accessibility tree.
   Window actions are reachable on the frame node instead — `do_window_action()`.
+* What a finger does — a tap on a row — has no AT-SPI equivalent either, and
+  `pyatspi.Registry.generateMouseEvent` moves the pointer under Xvfb but its
+  button events never arrive. `tap()` sends them through XTest instead.
 """
 
+import ctypes
 import os
 import time
 
@@ -25,6 +29,50 @@ import pyatspi
 TARGET_PID = int(os.environ["APP_PID"])
 APP_NAME_MATCH = os.environ.get("APP_NAME_MATCH", "actioneer").lower()
 TIMEOUT = float(os.environ.get("SMOKE_TIMEOUT", "40"))
+
+
+# --------------------------------------------------------------------------
+# pointer input
+# --------------------------------------------------------------------------
+
+def _xlib():
+    x11 = ctypes.CDLL("libX11.so.6")
+    xtst = ctypes.CDLL("libXtst.so.6")
+    x11.XOpenDisplay.restype = ctypes.c_void_p
+    x11.XOpenDisplay.argtypes = [ctypes.c_char_p]
+    x11.XFlush.argtypes = [ctypes.c_void_p]
+    x11.XCloseDisplay.argtypes = [ctypes.c_void_p]
+    xtst.XTestFakeMotionEvent.argtypes = [
+        ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_ulong,
+    ]
+    xtst.XTestFakeButtonEvent.argtypes = [
+        ctypes.c_void_p, ctypes.c_uint, ctypes.c_int, ctypes.c_ulong,
+    ]
+    return x11, xtst
+
+
+def tap(node):
+    """Press and release the primary button over the middle of `node`.
+
+    GTK4 reports no screen position over AT-SPI (desktop coordinates come back
+    as 0, 0), only one relative to the window. That is enough here: with no
+    window manager under Xvfb the window sits at the screen's origin.
+    """
+    x, y, width, height = node.queryComponent().getExtents(pyatspi.WINDOW_COORDS)
+    x11, xtst = _xlib()
+    display = x11.XOpenDisplay(None)
+    if not display:
+        raise AssertionError("cannot open the X display to tap")
+    try:
+        xtst.XTestFakeMotionEvent(display, -1, x + width // 2, y + height // 2, 0)
+        x11.XFlush(display)
+        time.sleep(0.2)
+        for pressed in (1, 0):
+            xtst.XTestFakeButtonEvent(display, 1, pressed, 0)
+            x11.XFlush(display)
+            time.sleep(0.08)
+    finally:
+        x11.XCloseDisplay(display)
 
 
 # --------------------------------------------------------------------------

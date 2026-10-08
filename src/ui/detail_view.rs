@@ -8,6 +8,7 @@ use crate::services::preferences::{PreferencesManager, RunFilterPreferences};
 use gtk4::prelude::*;
 use gtk4::{self as gtk, gio, glib};
 use libadwaita as adw;
+use libadwaita::prelude::BreakpointBinExt;
 use parking_lot::Mutex;
 use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
@@ -34,6 +35,12 @@ use header_state::DetailHeaderState;
 pub(crate) use helpers::build_job_status_dot;
 use helpers::{JobContextMap, RunBadgeSummaryMap, RunDigestStore, RunLoadService};
 
+/// Below this pane width (a phone, or the content half of a small window) the
+/// header stacks and the margins shrink.
+const NARROW_PANE_CONDITION: &str = "max-width: 520sp";
+/// The narrowest the pane lays itself out for.
+const NARROWEST_PANE_WIDTH: i32 = 300;
+
 #[derive(Clone)]
 pub struct RepoDetailPane {
     parent: adw::ApplicationWindow,
@@ -51,6 +58,10 @@ pub struct RepoDetailPane {
     workflow_store: gio::ListStore,
     root: gtk::Box,
     toast_overlay: adw::ToastOverlay,
+    /// The pane's outermost widget: it lays the pane out by the pane's own
+    /// width, which is what matters — a phone, or the content half of a small
+    /// window, both leave it narrow.
+    breakpoint_bin: adw::BreakpointBin,
     filter_chips: FilterChips,
     run_filters: Arc<Mutex<RunFilters>>,
     filter_guard: Rc<Cell<bool>>,
@@ -211,6 +222,13 @@ impl RepoDetailPane {
         root.set_hexpand(true);
         root.set_vexpand(true);
         toast_overlay.set_child(Some(&root));
+        let breakpoint_bin = adw::BreakpointBin::new();
+        // A breakpoint bin needs an explicit minimum size. 300 leaves room in
+        // the 360 px a phone gives the content page.
+        breakpoint_bin.set_size_request(NARROWEST_PANE_WIDTH, 200);
+        breakpoint_bin.set_hexpand(true);
+        breakpoint_bin.set_vexpand(true);
+        breakpoint_bin.set_child(Some(&toast_overlay));
 
         let filter_controls = FilterControls::new();
         let filter_chips = filter_controls.chips.clone();
@@ -272,6 +290,7 @@ impl RepoDetailPane {
             workflow_store: workflow_store.clone(),
             root: root.clone(),
             toast_overlay: toast_overlay.clone(),
+            breakpoint_bin,
             filter_chips: filter_chips.clone(),
             run_filters: run_filters.clone(),
             filter_guard: filter_guard.clone(),
@@ -315,7 +334,7 @@ impl RepoDetailPane {
     }
 
     pub fn widget(&self) -> gtk::Widget {
-        self.toast_overlay.clone().upcast::<gtk::Widget>()
+        self.breakpoint_bin.clone().upcast::<gtk::Widget>()
     }
 
     pub fn repo(&self) -> &Repo {
@@ -358,8 +377,9 @@ impl RepoDetailPane {
     }
 
     fn build_ui(&self) {
-        self.build_header();
-        self.attach_run_list();
+        let header_box = self.build_header();
+        let runs_clamp = self.attach_run_list();
+        self.add_narrow_layout(&header_box, &runs_clamp);
 
         let refresh_button = self.refresh_button.clone();
         self.connect_refresh_button(&refresh_button);
@@ -380,7 +400,38 @@ impl RepoDetailPane {
         });
     }
 
-    fn build_header(&self) {
+    /// On a narrow pane the header's buttons move under the title, and the
+    /// generous desktop margins shrink; `.narrow` on the root does the same
+    /// for the workflow rows (see `style.rs`).
+    fn add_narrow_layout(&self, header_box: &gtk::Box, runs_clamp: &adw::Clamp) {
+        let narrow = adw::Breakpoint::new(
+            adw::BreakpointCondition::parse(NARROW_PANE_CONDITION)
+                .expect("the narrow-pane condition is a valid breakpoint condition"),
+        );
+        let setters: [(&gtk::Widget, &str, glib::Value); 7] = [
+            (
+                header_box.upcast_ref(),
+                "orientation",
+                gtk::Orientation::Vertical.to_value(),
+            ),
+            (header_box.upcast_ref(), "margin-start", 12.to_value()),
+            (header_box.upcast_ref(), "margin-end", 12.to_value()),
+            (
+                self.buttons_box.upcast_ref(),
+                "halign",
+                gtk::Align::Start.to_value(),
+            ),
+            (runs_clamp.upcast_ref(), "margin-start", 12.to_value()),
+            (runs_clamp.upcast_ref(), "margin-end", 12.to_value()),
+            (self.root.upcast_ref(), "css-classes", ["narrow"].to_value()),
+        ];
+        for (object, property, value) in &setters {
+            narrow.add_setter(*object, property, Some(value));
+        }
+        self.breakpoint_bin.add_breakpoint(narrow);
+    }
+
+    fn build_header(&self) -> gtk::Box {
         let header_box = gtk::Box::new(gtk::Orientation::Horizontal, 12);
         header_box.set_margin_top(16);
         header_box.set_margin_bottom(14);
@@ -448,6 +499,7 @@ impl RepoDetailPane {
 
         header_box.append(&buttons_box);
         self.root.append(&header_box);
+        header_box
     }
 
     fn connect_workflow_selected(&self) {
@@ -530,6 +582,77 @@ mod tests {
                 "the detail pane outlived its last strong reference — a signal \
                  handler is holding it in a reference cycle. Survivors: {survivors:?}"
             );
+        });
+    }
+
+    /// A demo pane for the busiest demo repository, laid out at `width`, with
+    /// its workflows loaded and the first one expanded — the widest state.
+    fn demo_pane_at(width: i32) -> (RepoDetailPane, gtk::Window) {
+        crate::runtime::init_test_runtime();
+        crate::ui::style::install_app_css();
+        let repo = crate::demo::DemoBackend::new()
+            .seed()
+            .0
+            .into_iter()
+            .find(|repo| repo.full_name == "demo-org/actioneer-demo-app")
+            .expect("the demo data has the main repository");
+        let app = adw::Application::builder()
+            .application_id("me.spaceinbox.actioneer.PaneLayoutTest")
+            .build();
+        let pane = RepoDetailPane::new(
+            adw::ApplicationWindow::new(&app),
+            repo,
+            Arc::new(parking_lot::Mutex::new(
+                crate::services::gateway::GitHubGateway::demo(),
+            )),
+            RepoDetailDeps {
+                favorites_manager: None,
+                preferences_manager: None,
+                favorites: Arc::new(parking_lot::Mutex::new(HashSet::new())),
+                notification_manager: None,
+            },
+            true,
+        );
+        let host = crate::ui::test_helpers::present_at_size(&pane.widget(), width, 700);
+        for _ in 0..6 {
+            settle();
+        }
+        (pane, host)
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn a_phone_width_pane_switches_to_the_narrow_layout_and_fits() {
+        run_gtk_test("detail_pane_phone_width", || {
+            let (pane, host) = demo_pane_at(360);
+
+            assert!(
+                pane.root.has_css_class("narrow"),
+                "the narrow layout applied"
+            );
+            // Measured below the breakpoint bin, which reports its own size
+            // request rather than what its content needs.
+            let (needed, _, _, _) = pane.toast_overlay.measure(gtk::Orientation::Horizontal, -1);
+            assert!(
+                needed <= 360,
+                "the pane needs {needed}px, more than the 360 a phone gives it"
+            );
+
+            pane.deactivate();
+            host.destroy();
+        });
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn a_wide_pane_keeps_the_desktop_layout() {
+        run_gtk_test("detail_pane_desktop_width", || {
+            let (pane, host) = demo_pane_at(900);
+
+            assert!(!pane.root.has_css_class("narrow"));
+
+            pane.deactivate();
+            host.destroy();
         });
     }
 
