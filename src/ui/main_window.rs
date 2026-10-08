@@ -59,7 +59,7 @@ pub struct MainWindow {
     rate_limit_label: gtk::Label,
     refresh_button: gtk::Button,
     header_bar: adw::HeaderBar,
-    header_spinner: Rc<RefCell<Option<gtk::Spinner>>>,
+    header_spinner: Rc<RefCell<Option<adw::Spinner>>>,
     favorites_manager: Option<Arc<FavoritesManager>>,
     favorites: Arc<Mutex<HashSet<i64>>>,
     cache: Arc<DataCache>,

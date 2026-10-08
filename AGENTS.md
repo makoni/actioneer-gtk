@@ -191,13 +191,17 @@ such a test, prove it can fail by reintroducing the cycle once.
 
 - Rust `stable`; no toolchain file is pinned, and CI installs `stable`. After
   switching toolchains run `cargo clean` before `cargo build`.
-- `gtk4` 0.11 with feature `v4_14`, `libadwaita` 0.9 with `v1_5`. Because CI
+- `gtk4` 0.11 with feature `v4_18`, `libadwaita` 0.9 with `v1_7` (GNOME 48).
+  These are the *floor* the app runs on, not the version it builds against, and
+  every channel must ship at least that much: the Snap (`gnome-core26`), the
+  Flatpak runtime and the GTK the AppImage bundles (`MIN_BUNDLED_GTK` in
+  `appimage-ci.yml`). Raise them only together. Because CI
   denies warnings, deprecated APIs are effectively banned — e.g. use
   `adw::AlertDialog`/`adw::Dialog`, not `gtk::MessageDialog`. `ListItem` factory
   closures need an explicit downcast of the list item — that is a gtk4-rs API
   shape from feature `v4_8` onward (the closure is handed a `&glib::Object`,
   because a factory may also produce a `ColumnViewCell`), not something specific
-  to `v4_14`.
+  to the floor.
 - When anything edits `Cargo.lock` (including `cargo update`), regenerate the
   Flatpak vendored-sources manifest with `scripts/regenerate-flatpak-sources.sh`
   and commit `flatpak/me.spaceinbox.actioneer.cargo-sources.json` alongside it;

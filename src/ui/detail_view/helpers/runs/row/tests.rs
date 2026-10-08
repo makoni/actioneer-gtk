@@ -178,7 +178,7 @@ fn remove_job_context_only_removes_matching_expander() {
         let old_expander = gtk::Expander::new(None);
         let new_expander = gtk::Expander::new(None);
         let jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        jobs_box.append(&gtk::Spinner::new());
+        jobs_box.append(&adw::Spinner::new());
         let job_contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
 
         job_contexts.borrow_mut().insert(
@@ -222,7 +222,7 @@ fn rebind_preserved_job_context_keeps_cached_jobs() {
         let job_contexts: JobContextMap = Rc::new(RefCell::new(HashMap::new()));
         let old_expander = gtk::Expander::new(None);
         let old_jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        old_jobs_box.append(&gtk::Spinner::new());
+        old_jobs_box.append(&adw::Spinner::new());
 
         let cached_jobs = Arc::new(vec![Job {
             id: 1,
@@ -243,7 +243,7 @@ fn rebind_preserved_job_context_keeps_cached_jobs() {
 
         let new_expander = gtk::Expander::new(None);
         let new_jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        new_jobs_box.append(&gtk::Spinner::new());
+        new_jobs_box.append(&adw::Spinner::new());
 
         rebind_preserved_job_context(
             &job_contexts,

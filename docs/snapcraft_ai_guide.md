@@ -14,12 +14,12 @@ This note distills the Snapcraft documentation fetched during the investigation 
 
 ## Snapcraft.yaml checkpoints
 1. **Metadata** — confirm `name`, `version`, `summary`, `description`, `grade`, `confinement`, `license`, `contact`, and URLs stay accurate (see docs on "Configure package information").
-2. **Base** — `core24` matches the GNOME 46 extension. Changing it requires revisiting build dependencies.
+2. **Base** — `core26` pairs with the `gnome` extension's `gnome-core26` platform, which is built from GNOME 51 sources rather than the 26.04 archive (GTK 4.24, libadwaita 1.10 at the time of the switch; see the `gnome-core26-sdk` branch of `ubuntu/gnome-sdk`). The snap's GTK floor is that platform, so the `v4_*`/`v1_*` features in `Cargo.toml` must stay at or below it; changing the base means revisiting them and the build dependencies. On 26.04 the OpenSSL runtime package is `libssl3t64`; `libssl3` is only a virtual name.
 3. **Architectures** — Snapcraft 8 replaces `architectures` with `platforms`. `platforms:` already declares `amd64` and `arm64`; keep both so the matrix build succeeds.
 4. **Part configuration** — the `rust` plugin plus `source: .` assumes the workspace has `Cargo.toml` at the root. Do not move the manifest.
 5. **Override build hook** — `craftctl default` runs the stock Rust build (`cargo install ...`). Extra installs copy desktop and icon assets into `meta/gui`.
 6. **Stage packages** — libadwaita/libgtk/libssl ship runtime GTK stack. Use `stage-packages` for runtime libraries, `build-packages` for headers + pkgconfig.
-7. **Slots/plugs** — the snap no longer exposes a custom D-Bus name, and Actioneer now relies on `org.freedesktop.portal.Secret` for secret storage instead of the `password-manager-service` plug. Keep the plug list minimal and verify the portal is present on GNOME 46/base core24 images before publishing.
+7. **Slots/plugs** — the snap no longer exposes a custom D-Bus name, and Actioneer now relies on `org.freedesktop.portal.Secret` for secret storage instead of the `password-manager-service` plug. Keep the plug list minimal and verify the portal is present on core26 GNOME images before publishing.
 
 ## Local build flow (native snapcraft)
 1. `snapcraft clean actioneer --destructive-mode` to wipe `parts/`, `prime/`, and related directories when dependencies or layout change.
@@ -36,7 +36,7 @@ This note distills the Snapcraft documentation fetched during the investigation 
 - After `pack`, call `snapcraft upload` (alias `snapcraft push`) with `--release edge` as currently configured.
 
 ## Secret portal verification
-- Launch the snap (`snap run actioneer`) on a confined session (core24 GNOME image). `ACTIONEER_LOG=info` will show whether the portal backend is selected (`Using secret portal storage...`).
+- Launch the snap (`snap run actioneer`) on a confined session (core26 GNOME image). `ACTIONEER_LOG=info` will show whether the portal backend is selected (`Using secret portal storage...`).
 - If the log falls back to "system keyring storage", inspect the host (`busctl --user list | grep portal`, `gdbus introspect --session --dest org.freedesktop.portal.Desktop ...`) and ensure `xdg-desktop-portal` plus the GNOME backend are present.
 - The snap no longer declares `password-manager-service`, so portal failures will break token storage — run this check before requesting store review.
 
