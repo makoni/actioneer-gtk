@@ -5,6 +5,7 @@ use crate::ui::detail_placeholder::{schedule_actions_disabled_page, schedule_sta
 use crate::ui::detail_view::{RepoDetailDeps, RepoDetailPane};
 use gtk4::prelude::WidgetExt;
 use gtk4::{self as gtk, glib};
+use libadwaita::prelude::NavigationPageExt;
 use parking_lot::Mutex;
 use std::sync::Arc;
 use tracing::{debug, info, warn};
@@ -113,6 +114,7 @@ impl MainWindow {
                     });
                 }
                 self.stop_background_refresh();
+                self.split_view.set_show_content(false);
                 self.show_detail_placeholder();
             }
         }
@@ -174,6 +176,7 @@ impl MainWindow {
                 );
                 let stack = self.detail_stack.clone();
                 let active_detail = self.active_detail.clone();
+                let split_view = self.split_view.clone();
 
                 {
                     // Mark the active pane immediately so concurrent selections skip
@@ -197,6 +200,11 @@ impl MainWindow {
                     }
 
                     let widget = pane.widget();
+                    if let Some(page) = split_view.content() {
+                        // Read by screen readers and used as the back button's
+                        // tooltip on the sidebar page.
+                        page.set_title(&pane.repo().full_name);
+                    }
                     stack.add_named(&widget, Some("detail"));
                     stack.set_visible_child_name("detail");
                 });
@@ -212,8 +220,12 @@ impl MainWindow {
         let stack = self.detail_stack.clone();
         let active_detail = self.active_detail.clone();
         let status_page = self.detail_status_page.clone();
+        let split_view = self.split_view.clone();
 
         glib::idle_add_local_once(move || {
+            if let Some(page) = split_view.content() {
+                page.set_title(&tr("Select a repository"));
+            }
             if let Some(detail_child) = stack.child_by_name("detail") {
                 stack.remove(&detail_child);
             }

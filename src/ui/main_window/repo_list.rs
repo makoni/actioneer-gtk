@@ -1,5 +1,7 @@
 use super::MainWindow;
-use crate::ui::sidebar::{find_first_repo_index, find_repo_index, repo_from_object};
+use crate::ui::sidebar::{
+    find_first_repo_index, find_repo_index, repo_from_object, repo_id_from_row,
+};
 use gtk4::{self as gtk, glib, prelude::*};
 use parking_lot::Mutex;
 use std::sync::Arc;
@@ -123,7 +125,47 @@ impl MainWindow {
                 }
                 RepoActivationAction::None => {}
             }
+            // Only an activation moves to the detail page: selection changes
+            // also come from restoring the last repo and from list rebuilds,
+            // and those must not navigate away from the list when collapsed.
+            // Expanded, the content page is always visible and this is a no-op.
+            window.split_view.set_show_content(true);
         });
+    }
+
+    /// Opens the detail page when a repository row is tapped while the split
+    /// view is collapsed.
+    ///
+    /// Selection alone cannot drive this: it does not change when the tapped
+    /// repository is the one already open (the user came back to the list and
+    /// wants it again), and it also changes when the window restores the last
+    /// repository or rebuilds the list, which must not navigate. `activate`
+    /// cannot either: it fires on a double click, and `single-click-activate`
+    /// would select rows on hover — which opens a repository just by moving
+    /// the pointer over it.
+    ///
+    /// The gesture runs in the capture phase, ahead of the row's own, and never
+    /// claims the sequence, so selection and the star button behave as before.
+    pub(super) fn connect_repo_tap(&self) {
+        let repo_view = self.sidebar_panel.repo_list();
+        let tap = gtk::GestureClick::new();
+        tap.set_propagation_phase(gtk::PropagationPhase::Capture);
+        // The split view is an ancestor of the list that owns this gesture.
+        let split_view = self.split_view.downgrade();
+        tap.connect_released(move |gesture, n_press, x, y| {
+            if n_press != 1 {
+                return;
+            }
+            let (Some(view), Some(split_view)) = (gesture.widget(), split_view.upgrade()) else {
+                return;
+            };
+            if !split_view.is_collapsed() || !picks_repo_row(&view, x, y) {
+                return;
+            }
+            // After the row's own handler has selected the repository.
+            glib::idle_add_local_once(move || split_view.set_show_content(true));
+        });
+        repo_view.add_controller(tap);
     }
 
     pub(super) fn restore_repo_selection_async(&self) {
@@ -169,6 +211,25 @@ impl MainWindow {
 
         self.ensure_detail_matches_selection();
     }
+}
+
+/// Whether the point lands on a repository row of the sidebar list, rather than
+/// on a section header, an empty area or a button inside the row (the star).
+fn picks_repo_row(view: &gtk::Widget, x: f64, y: f64) -> bool {
+    let mut node = view.pick(x, y, gtk::PickFlags::DEFAULT);
+    while let Some(widget) = node {
+        if &widget == view || widget.is::<gtk::Button>() {
+            return false;
+        }
+        // Over the row's labels `pick` answers with the list item that wraps
+        // the row, not the row itself, so look one level down as well.
+        let is_repo_row = |w: &gtk::Widget| repo_id_from_row(w).is_some();
+        if is_repo_row(&widget) || widget.first_child().is_some_and(|c| is_repo_row(&c)) {
+            return true;
+        }
+        node = widget.parent();
+    }
+    false
 }
 
 /// Re-applies the sidebar highlight after a pill filter changed.
