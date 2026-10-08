@@ -60,7 +60,8 @@ unset WAYLAND_DISPLAY
 app_log="$workdir/app.log"
 
 xvfb_display=":${XVFB_DISPLAY_NUM:-98}"
-Xvfb "$xvfb_display" -screen 0 1280x1024x24 >"$workdir/xvfb.log" 2>&1 &
+# SMOKE_SCREEN picks the screen size; a narrow one exercises the phone layout.
+Xvfb "$xvfb_display" -screen 0 "${SMOKE_SCREEN:-1280x1024}x24" >"$workdir/xvfb.log" 2>&1 &
 xvfb_pid=$!
 sleep 1
 export DISPLAY="$xvfb_display"
