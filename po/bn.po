@@ -203,8 +203,8 @@ msgstr "অ্যাপ্লিকেশনের থিম নির্বা�
 msgid "Follow Omarchy theme"
 msgstr "Omarchy থিম অনুসরণ করুন"
 
-msgid "Use the colors of the active Omarchy theme"
-msgstr "সক্রিয় Omarchy থিমের রং ব্যবহার করুন"
+msgid "Use the colors and shapes of the active Omarchy theme"
+msgstr "সক্রিয় Omarchy থিমের রং ও আকার ব্যবহার করুন"
 
 msgid "Language"
 msgstr "ভাষা"

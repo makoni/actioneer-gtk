@@ -471,20 +471,130 @@ const APP_CSS: &str = r#"
 }
 "#;
 
+/// The square-corner variant of the app stylesheet, loaded on top of
+/// [`APP_CSS`] while the app follows the Omarchy desktop theme.
+///
+/// Hyprland desktops — Omarchy ships `decoration:rounding = 0` by default —
+/// are all right angles, so following the theme squares the app's own
+/// surfaces and the libadwaita chrome instead of GNOME's rounded shapes.
+/// Shapes that are round by meaning (status dots, switches, radio buttons,
+/// sliders, spinners) keep their radius; circular icon buttons — window
+/// controls, the dialog close button, the token copy button — square like
+/// every other button.
+const SQUARE_CSS: &str = r#"
+/* ------------------------------------------------------------------ */
+/* Hyprland-style square corners (following Omarchy)                   */
+/* ------------------------------------------------------------------ */
+
+/* App surfaces, cards, chips and rows: same selectors as the stylesheet
+   above, declared later, so they win within this provider. */
+.sidebar-surface,
+.detail-surface,
+.workflows-card,
+.runs-card,
+.job-card,
+.row-action-btn,
+.header-action-btn,
+.visibility-badge,
+.segmented-status-filter,
+.segmented-status-filter > .filter-segment:first-child,
+.segmented-status-filter > .filter-segment:last-child,
+.filter-pill,
+.sidebar-surface listview row:selected,
+.sidebar-surface listview row:selected:hover,
+.sidebar-surface listview row.activatable:hover:not(:selected),
+.job-sidebar > row:selected,
+.job-sidebar > row:selected:hover,
+.job-sidebar > row:hover:not(:selected) {
+    border-radius: 0;
+}
+
+/* libadwaita chrome. The selectors mirror where the theme actually draws a
+   radius: dialog surfaces on `sheet` (15px floating sheets, 18px alerts),
+   preference groups on `list.boxed-list` (12px), window controls on the
+   button's image (100%), the scrollbar track on `range > trough` (99px),
+   and the alert body's scrolling viewport (18px top corners). */
+window,
+sheet,
+.card,
+list.boxed-list,
+list.content,
+popover > contents,
+modelbutton,
+toast,
+tooltip,
+button,
+entry,
+spinbutton,
+dropdown > button,
+checkbutton > check,
+windowcontrols > button > image,
+progressbar trough,
+progressbar progress,
+scrollbar slider,
+scrollbar > range > trough,
+.app-version,
+viewport,
+row {
+    border-radius: 0;
+}
+"#;
+
+thread_local! {
+    /// One provider carries the app stylesheet for the whole display: the
+    /// square-corner mode reloads it with [`SQUARE_CSS`] appended instead of
+    /// registering a second provider, so the shape rules sit later in the
+    /// same sheet and win over the rounded radii above.
+    static APP_PROVIDER: RefCell<Option<gtk::CssProvider>> = const { RefCell::new(None) };
+}
+
 pub fn install_app_css() {
     let Some(display) = gdk::Display::default() else {
         warn!("No display available for CSS provider");
         return;
     };
 
-    let provider = gtk::CssProvider::new();
-    provider.load_from_bytes(&gtk::glib::Bytes::from(APP_CSS.as_bytes()));
+    APP_PROVIDER.with(|slot| {
+        let mut slot = slot.borrow_mut();
+        let provider = slot.get_or_insert_with(|| {
+            let provider = gtk::CssProvider::new();
+            gtk::style_context_add_provider_for_display(
+                &display,
+                &provider,
+                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+            );
+            provider
+        });
+        provider.load_from_string(APP_CSS);
+    });
+}
 
-    gtk::style_context_add_provider_for_display(
-        &display,
-        &provider,
-        gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
-    );
+/// Squares the app's corners to match the Hyprland/Omarchy desktop look.
+///
+/// Reloads the app stylesheet with [`SQUARE_CSS`] appended, so the square
+/// radii replace the rounded ones inside the same provider. A no-op when no
+/// display (and thus no stylesheet) exists.
+pub fn apply_square_corners() {
+    reload_app_css(true);
+}
+
+/// Returns the app to its default rounded corners.
+pub fn clear_square_corners() {
+    reload_app_css(false);
+}
+
+fn reload_app_css(square: bool) {
+    APP_PROVIDER.with(|slot| {
+        let slot = slot.borrow();
+        let Some(provider) = slot.as_ref() else {
+            return;
+        };
+        if square {
+            provider.load_from_string(&format!("{APP_CSS}{SQUARE_CSS}"));
+        } else {
+            provider.load_from_string(APP_CSS);
+        }
+    });
 }
 
 thread_local! {
@@ -623,12 +733,17 @@ pub fn apply_text_direction_for_language() {
 
 #[cfg(test)]
 mod tests {
-    use super::{APP_CSS, apply_omarchy_palette, clear_omarchy_palette, omarchy_css};
+    use super::{
+        APP_CSS, SQUARE_CSS, apply_omarchy_palette, apply_square_corners, clear_omarchy_palette,
+        clear_square_corners, install_app_css, omarchy_css,
+    };
     use crate::services::omarchy_theme::{OmarchyTheme, PaletteMode};
     use crate::ui::test_helpers::run_gtk_test;
     use gtk4 as gtk;
     use gtk4::gdk;
     use gtk4::prelude::*;
+    use std::cell::RefCell;
+    use std::rc::Rc;
 
     /// The Tokyo Night palette as Omarchy ships it.
     fn sample_theme() -> OmarchyTheme {
@@ -647,31 +762,61 @@ mod tests {
         }
     }
 
-    /// Selectors in `APP_CSS`, one per line, comments and bodies stripped.
-    fn selectors() -> Vec<String> {
-        let mut out = Vec::new();
-        let mut css = APP_CSS;
-        // drop /* … */ comments, which may legitimately mention a selector
-        let mut stripped = String::new();
+    /// `css` without `/* … */` comments, which may legitimately mention a
+    /// selector.
+    fn strip_comments(css: &str) -> String {
+        let mut out = String::new();
+        let mut css = css;
         while let Some(start) = css.find("/*") {
-            stripped.push_str(&css[..start]);
+            out.push_str(&css[..start]);
             match css[start..].find("*/") {
                 Some(end) => css = &css[start + end + 2..],
-                None => {
-                    css = "";
-                    break;
-                }
+                None => return out,
             }
         }
-        stripped.push_str(css);
+        out.push_str(css);
+        out
+    }
 
-        for block in stripped.split('}') {
+    /// Selectors in `css`, one per line, comments and bodies stripped.
+    fn selectors_in(css: &str) -> Vec<String> {
+        let mut out = Vec::new();
+        for block in strip_comments(css).split('}') {
             if let Some((head, _)) = block.split_once('{') {
                 for selector in head.split(',') {
                     let selector = selector.trim();
                     if !selector.is_empty() {
                         out.push(selector.to_string());
                     }
+                }
+            }
+        }
+        out
+    }
+
+    /// Selectors in `APP_CSS`, one per line, comments and bodies stripped.
+    fn selectors() -> Vec<String> {
+        selectors_in(APP_CSS)
+    }
+
+    /// Selectors in `css` whose rule body rounds a corner with a non-zero
+    /// value.
+    fn rounded_selectors(css: &str) -> Vec<String> {
+        let mut out = Vec::new();
+        for block in strip_comments(css).split('}') {
+            let Some((head, body)) = block.split_once('{') else {
+                continue;
+            };
+            let rounds = body
+                .lines()
+                .any(|line| line.contains("radius") && !line.trim_end().ends_with(": 0;"));
+            if !rounds {
+                continue;
+            }
+            for selector in head.split(',') {
+                let selector = selector.trim();
+                if !selector.is_empty() {
+                    out.push(selector.to_string());
                 }
             }
         }
@@ -775,6 +920,105 @@ mod tests {
         assert!(!css.contains("success"));
         assert!(!css.contains("warning"));
         assert!(!css.contains("error"));
+    }
+
+    #[test]
+    fn square_corners_cover_every_rounded_app_surface() {
+        // Every rule that rounds an app surface must be flattened in square
+        // mode; the status dot is round by meaning and stays. A new rounded
+        // surface without a SQUARE_CSS counterpart fails here.
+        let square = selectors_in(SQUARE_CSS);
+        let rounded = rounded_selectors(APP_CSS);
+        let missing: Vec<&str> = rounded
+            .iter()
+            .map(String::as_str)
+            .filter(|selector| *selector != ".status-dot")
+            .filter(|selector| !square.iter().any(|candidate| candidate == selector))
+            .collect();
+        assert!(
+            missing.is_empty(),
+            "square mode leaves these rounded selectors behind: {missing:?}"
+        );
+    }
+
+    #[test]
+    fn square_corners_cover_the_libadwaita_chrome() {
+        // Checked against libadwaita's compiled stylesheet: the theme rounds
+        // dialog surfaces on `sheet` (15px floating sheets, 18px alerts),
+        // preference groups on `list.boxed-list` (12px), window controls on
+        // the button's image (100%), the scrollbar track on `range > trough`
+        // (99px) and the alert body's scrolling viewport (18px top corners).
+        // The app-surface test above cannot see any of these — they are theme
+        // selectors, not APP_CSS ones — so a regression here must fail this
+        // list.
+        let square = selectors_in(SQUARE_CSS);
+        for selector in [
+            "window",
+            "sheet",
+            ".card",
+            "list.boxed-list",
+            "list.content",
+            "popover > contents",
+            "modelbutton",
+            "toast",
+            "tooltip",
+            "button",
+            "entry",
+            "spinbutton",
+            "dropdown > button",
+            "checkbutton > check",
+            "windowcontrols > button > image",
+            "progressbar trough",
+            "progressbar progress",
+            "scrollbar slider",
+            "scrollbar > range > trough",
+            ".app-version",
+            "viewport",
+            "row",
+        ] {
+            assert!(
+                square.iter().any(|candidate| candidate == selector),
+                "square mode misses the libadwaita chrome selector {selector}"
+            );
+        }
+    }
+
+    #[test]
+    fn square_corners_leave_round_affordances_alone() {
+        // Switches, radios, sliders and the status dot are round by meaning;
+        // flattening them would read as a rendering bug. The square layer
+        // must not name them at all.
+        for selector in ["switch", "radio", "scale", "spinner", ".status-dot"] {
+            assert!(
+                !SQUARE_CSS.contains(selector),
+                "square mode must not touch {selector}"
+            );
+        }
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn square_corners_stylesheet_parses_and_reloads() {
+        run_gtk_test("square_corners_stylesheet_parses_and_reloads", || {
+            let provider = gtk::CssProvider::new();
+            let errors = Rc::new(RefCell::new(Vec::<String>::new()));
+            let collected = Rc::clone(&errors);
+            provider.connect_parsing_error(move |_, _, error| {
+                collected.borrow_mut().push(error.to_string());
+            });
+            provider.load_from_string(&format!("{APP_CSS}{SQUARE_CSS}"));
+            assert!(
+                errors.borrow().is_empty(),
+                "the square stylesheet has parse errors: {:?}",
+                errors.borrow()
+            );
+
+            // The real plumbing: install the app stylesheet, square it, and
+            // return to the rounded default.
+            install_app_css();
+            apply_square_corners();
+            clear_square_corners();
+        });
     }
 
     #[test]

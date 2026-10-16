@@ -203,8 +203,8 @@ msgstr "اختر سمة التطبيق"
 msgid "Follow Omarchy theme"
 msgstr "متابعة سمة Omarchy"
 
-msgid "Use the colors of the active Omarchy theme"
-msgstr "استخدام ألوان سمة Omarchy النشطة"
+msgid "Use the colors and shapes of the active Omarchy theme"
+msgstr "استخدام ألوان وأشكال سمة Omarchy النشطة"
 
 msgid "Language"
 msgstr "اللغة"

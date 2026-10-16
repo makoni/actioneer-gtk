@@ -985,8 +985,8 @@ msgstr "アプリのテーマを選択"
 msgid "Follow Omarchy theme"
 msgstr "Omarchyテーマに合わせる"
 
-msgid "Use the colors of the active Omarchy theme"
-msgstr "現在のOmarchyテーマの配色を使用する"
+msgid "Use the colors and shapes of the active Omarchy theme"
+msgstr "現在のOmarchyテーマの配色と形状を使用する"
 
 #: src/ui/preferences_window.rs:88
 msgid "Language"

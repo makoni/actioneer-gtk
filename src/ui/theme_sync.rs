@@ -34,8 +34,9 @@ thread_local! {
     static PENDING_REFRESH: RefCell<Option<glib::SourceId>> = const { RefCell::new(None) };
 }
 
-/// Applies the effective appearance: the Omarchy palette when following is
-/// enabled and a theme is available, the plain preference otherwise.
+/// Applies the effective appearance: the Omarchy palette and its square
+/// corners when following is enabled and a theme is available, the plain
+/// preference otherwise.
 pub fn apply_preferences(prefs: &Preferences) {
     let theme = if prefs.follow_omarchy {
         omarchy_theme::load()
@@ -46,11 +47,13 @@ pub fn apply_preferences(prefs: &Preferences) {
     match &theme {
         Some(theme) => {
             style::apply_omarchy_palette(theme);
+            style::apply_square_corners();
             adw::StyleManager::default().set_color_scheme(scheme_for_mode(theme.mode));
             info!(theme = %theme.name, "Following the Omarchy theme");
         }
         None => {
             style::clear_omarchy_palette();
+            style::clear_square_corners();
             adw::StyleManager::default()
                 .set_color_scheme(scheme_for_preference(prefs.theme_preference));
         }

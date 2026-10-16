@@ -14,7 +14,7 @@ Actioneer is a native GNOME desktop client for GitHub Actions. It combines a GTK
 - Detailed workflow, run, and job views with real-time log streaming and status indicators
 - Background refreshes with rate-limit awareness and optional notifications
 - Preference pane for window state, refresh cadence, and favorites
-- Follows the active Omarchy theme on Omarchy desktops (live palette and light/dark switching, toggleable in Preferences)
+- Follows the active Omarchy theme on Omarchy desktops (live palette, light/dark switching and square corners, toggleable in Preferences)
 - Works on both Wayland and X11 thanks to libadwaita’s adaptive widgets and GTK4 renderers
 - Fits a phone as well as a desktop: every window adapts down to 360 px wide, so it can run on Linux phones with Phosh (postmarketOS, Mobian, PureOS) too
 
@@ -147,10 +147,12 @@ Log out/in or restart GNOME Shell to refresh the cache. For system-wide installs
 On [Omarchy](https://omarchy.org/) desktops Actioneer follows the active
 desktop theme by default. It reads the palette Omarchy publishes under
 `~/.local/state/omarchy/current/` and re-colors itself — including switching
-between the light and dark Adwaita schemes — whenever the desktop theme
-changes. Turn **Follow Omarchy theme** off in *Preferences → Appearance* to
-pick System/Light/Dark manually instead; the app then falls back to its own
-theme settings and the palette is ignored.
+between the light and dark Adwaita schemes and dropping GNOME's rounded corners
+for the square Hyprland shapes (`decoration:rounding = 0` is the Omarchy
+default) — whenever the desktop theme changes. Turn **Follow Omarchy theme**
+off in *Preferences → Appearance* to pick System/Light/Dark manually instead;
+the app then falls back to its own theme settings, the palette is ignored and
+the rounded corners return.
 
 - **Flatpak:** the sandbox grants read-only access to the state directory
   (`--filesystem=~/.local/state/omarchy:ro` in the manifest), so following

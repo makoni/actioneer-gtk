@@ -227,8 +227,8 @@ msgstr "Selecteer applicatiethema"
 msgid "Follow Omarchy theme"
 msgstr "Omarchy-thema volgen"
 
-msgid "Use the colors of the active Omarchy theme"
-msgstr "De kleuren van het actieve Omarchy-thema gebruiken"
+msgid "Use the colors and shapes of the active Omarchy theme"
+msgstr "De kleuren en vormen van het actieve Omarchy-thema gebruiken"
 
 msgid "Language"
 msgstr "Taal"

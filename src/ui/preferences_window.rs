@@ -83,7 +83,7 @@ impl PreferencesWindow {
         let omarchy_available = omarchy_theme::load().is_some();
         let follow_row = adw::ActionRow::builder()
             .title(tr("Follow Omarchy theme"))
-            .subtitle(tr("Use the colors of the active Omarchy theme"))
+            .subtitle(tr("Use the colors and shapes of the active Omarchy theme"))
             .build();
         let follow_switch = gtk::Switch::new();
         follow_switch.set_hexpand(false);

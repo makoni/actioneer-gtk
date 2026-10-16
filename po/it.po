@@ -983,8 +983,8 @@ msgstr "Seleziona il tema dell'applicazione"
 msgid "Follow Omarchy theme"
 msgstr "Segui il tema Omarchy"
 
-msgid "Use the colors of the active Omarchy theme"
-msgstr "Usa i colori del tema attivo di Omarchy"
+msgid "Use the colors and shapes of the active Omarchy theme"
+msgstr "Usa i colori e le forme del tema attivo di Omarchy"
 
 #: src/ui/preferences_window.rs:88
 msgid "Language"
