@@ -15,3 +15,7 @@ drifts.
   `services/notifications/env_config.rs::is_sandboxed` and `kernel/i18n.rs`
   check environment variables only. One probe in `kernel/` should serve all
   three.
+- Snap: strict confinement cannot read `~/.local/state/omarchy`, so the
+  Omarchy theme-follow feature is unavailable in the Snap build (its `$HOME`
+  is the snap's private data directory). Exposing the host path would need a
+  `personal-files` plug and a store request.

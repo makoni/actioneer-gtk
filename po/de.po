@@ -227,6 +227,12 @@ msgstr "Thema"
 msgid "Select application theme"
 msgstr "Anwendungsthema auswählen"
 
+msgid "Follow Omarchy theme"
+msgstr "Omarchy-Thema folgen"
+
+msgid "Use the colors of the active Omarchy theme"
+msgstr "Die Farben des aktiven Omarchy-Themas verwenden"
+
 msgid "Language"
 msgstr "Sprache"
 

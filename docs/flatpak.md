@@ -62,6 +62,7 @@ High-level plan (steps)
      - Notifications
      - Network is allowed by default in Flatpak, but be explicit if you need to allow network in a restrictive setup.
      - Secret/keyring access: Flatpak sandbox blocks direct access to the system keyring. Replace or adapt `src/storage/token_storage.rs` to use a portal-friendly solution or guard keyring tests so they don't run inside the sandbox. Consider using the `xdg-desktop-portal` secrets API or `libsecret` behind a portal-compatible interface.
+     - Theming (no portal exists for the desktop palette): read-only access to the Omarchy theme state (`--filesystem=~/.local/state/omarchy:ro`) lets the app follow the desktop theme; the feature degrades gracefully when the path is missing or the grant is absent (see "Omarchy theme integration" in the README).
    - Ensure the app uses the portal APIs where possible (notifications via libnotify and portals, file chooser via portals, etc.).
    - Make sure the app does not call into system resources without explicit user consent.
 

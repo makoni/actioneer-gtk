@@ -9,6 +9,7 @@ pub mod job_logs_window;
 pub mod main_window;
 pub mod preferences_window;
 pub mod style;
+pub mod theme_sync;
 
 // New modules for better organization
 pub mod error_text;

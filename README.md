@@ -14,6 +14,7 @@ Actioneer is a native GNOME desktop client for GitHub Actions. It combines a GTK
 - Detailed workflow, run, and job views with real-time log streaming and status indicators
 - Background refreshes with rate-limit awareness and optional notifications
 - Preference pane for window state, refresh cadence, and favorites
+- Follows the active Omarchy theme on Omarchy desktops (live palette and light/dark switching, toggleable in Preferences)
 - Works on both Wayland and X11 thanks to libadwaita’s adaptive widgets and GTK4 renderers
 - Fits a phone as well as a desktop: every window adapts down to 360 px wide, so it can run on Linux phones with Phosh (postmarketOS, Mobian, PureOS) too
 
@@ -140,6 +141,27 @@ gtk-update-icon-cache ~/.local/share/icons/hicolor
 ```
 
 Log out/in or restart GNOME Shell to refresh the cache. For system-wide installs, copy the files to `/usr/share/applications` and `/usr/share/icons/hicolor` instead.
+
+## Omarchy theme integration
+
+On [Omarchy](https://omarchy.org/) desktops Actioneer follows the active
+desktop theme by default. It reads the palette Omarchy publishes under
+`~/.local/state/omarchy/current/` and re-colors itself — including switching
+between the light and dark Adwaita schemes — whenever the desktop theme
+changes. Turn **Follow Omarchy theme** off in *Preferences → Appearance* to
+pick System/Light/Dark manually instead; the app then falls back to its own
+theme settings and the palette is ignored.
+
+- **Flatpak:** the sandbox grants read-only access to the state directory
+  (`--filesystem=~/.local/state/omarchy:ro` in the manifest), so following
+  works there too. Without the grant — for example in a manifest rendered
+  before this permission existed — the switch is hidden and the app falls
+  back to its own theme settings.
+- **Snap:** strict confinement cannot read `~/.local/state`, so the feature is
+  not available in the Snap build; the switch stays hidden.
+
+The feature needs no configuration on other desktops: when the Omarchy state is
+absent it stays out of the way.
 
 ## Development Workflow
 

@@ -1,4 +1,6 @@
+use crate::services::omarchy_theme::{OmarchyTheme, contrasting_foreground, readable_foreground};
 use gtk4::{self as gtk, gdk};
+use std::cell::RefCell;
 use tracing::warn;
 
 const APP_CSS: &str = r#"
@@ -485,6 +487,127 @@ pub fn install_app_css() {
     );
 }
 
+thread_local! {
+    /// One provider carries the Omarchy palette for the whole display: every
+    /// apply redefines its contents instead of registering a new provider, so
+    /// switching themes cannot pile up registrations.
+    static OMARCHY_PROVIDER: RefCell<Option<gtk::CssProvider>> = const { RefCell::new(None) };
+}
+
+/// Re-colors the app with the active Omarchy theme's palette.
+///
+/// The definitions land in a provider at `STYLE_PROVIDER_PRIORITY_APPLICATION`
+/// — the priority `APP_CSS` already uses, above the theme stylesheet — so the
+/// `@define-color` names override Adwaita's own and every widget that reads
+/// them (`@accent_bg_color`, `@card_bg_color`, …) follows the desktop theme.
+pub fn apply_omarchy_palette(theme: &OmarchyTheme) {
+    let Some(display) = gdk::Display::default() else {
+        warn!("No display available for the Omarchy palette");
+        return;
+    };
+    OMARCHY_PROVIDER.with(|slot| {
+        let mut slot = slot.borrow_mut();
+        let provider = slot.get_or_insert_with(|| {
+            let provider = gtk::CssProvider::new();
+            gtk::style_context_add_provider_for_display(
+                &display,
+                &provider,
+                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
+            );
+            provider
+        });
+        provider.load_from_string(&omarchy_css(theme));
+    });
+}
+
+/// Drops the palette overrides so Adwaita's own colors return.
+pub fn clear_omarchy_palette() {
+    OMARCHY_PROVIDER.with(|slot| {
+        if let Some(provider) = slot.borrow().as_ref() {
+            provider.load_from_string("");
+        }
+    });
+}
+
+/// Builds the `@define-color` block that re-points Adwaita's named colors at
+/// the Omarchy palette. Every value went through the palette's color
+/// validation, so interpolation cannot smuggle arbitrary CSS into the
+/// stylesheet.
+fn omarchy_css(theme: &OmarchyTheme) -> String {
+    let mut css = String::from("/* Colors follow the active Omarchy theme. */\n");
+    let mut define = |name: &str, value: &str| {
+        css.push_str(&format!("@define-color {name} {value};\n"));
+    };
+
+    // The standalone `*_color` names are text and icon colors: Omarchy's
+    // fills are tuned for filled surfaces and can sit below AA as text on its
+    // light palettes, so they get a readable variant. `*_bg_color` keeps the
+    // raw fill and pairs it with a contrasting foreground.
+    let text_surfaces: [&str; 2] = [&theme.background, &theme.lighter_background];
+
+    define("window_bg_color", &theme.background);
+    define("window_fg_color", &theme.foreground);
+    define("view_bg_color", &theme.background);
+    define("view_fg_color", &theme.foreground);
+    define("headerbar_bg_color", &theme.background);
+    define("headerbar_fg_color", &theme.foreground);
+    define("headerbar_border_color", &theme.dark_background);
+    define("headerbar_backdrop_color", &theme.background);
+    define("sidebar_bg_color", &theme.dark_background);
+    define("sidebar_fg_color", &theme.foreground);
+    define("sidebar_backdrop_color", &theme.dark_background);
+    define("secondary_sidebar_bg_color", &theme.darker_background);
+    define("secondary_sidebar_fg_color", &theme.foreground);
+    define("secondary_sidebar_backdrop_color", &theme.darker_background);
+    define("card_bg_color", &theme.lighter_background);
+    define("card_fg_color", &theme.foreground);
+    define("dialog_bg_color", &theme.background);
+    define("dialog_fg_color", &theme.foreground);
+    define("popover_bg_color", &theme.lighter_background);
+    define("popover_fg_color", &theme.foreground);
+
+    let accent_foreground = contrasting_foreground(&theme.accent, &theme.background);
+    define("accent_bg_color", &theme.accent);
+    define("accent_fg_color", &accent_foreground);
+    define(
+        "accent_color",
+        &readable_foreground(&theme.accent, &text_surfaces),
+    );
+    // `theme_selected_*` predate libadwaita's accent names and still drive
+    // GTK's selection styling, so they follow the accent too. Shade colors
+    // stay Adwaita's: they are mode-tuned translucent overlays for borders
+    // and shadows, not palette colors.
+    define("theme_selected_bg_color", &theme.accent);
+    define("theme_selected_fg_color", &accent_foreground);
+
+    if let Some(red) = &theme.red {
+        let foreground = contrasting_foreground(red, &theme.background);
+        let text = readable_foreground(red, &text_surfaces);
+        define("destructive_bg_color", red);
+        define("destructive_fg_color", &foreground);
+        define("destructive_color", &text);
+        define("error_bg_color", red);
+        define("error_fg_color", &foreground);
+        define("error_color", &text);
+    }
+    if let Some(green) = &theme.green {
+        let foreground = contrasting_foreground(green, &theme.background);
+        define("success_bg_color", green);
+        define("success_fg_color", &foreground);
+        define("success_color", &readable_foreground(green, &text_surfaces));
+    }
+    if let Some(yellow) = &theme.yellow {
+        let foreground = contrasting_foreground(yellow, &theme.background);
+        define("warning_bg_color", yellow);
+        define("warning_fg_color", &foreground);
+        define(
+            "warning_color",
+            &readable_foreground(yellow, &text_surfaces),
+        );
+    }
+    css
+}
+
 /// Applies the default text direction for the effective UI language.
 ///
 /// Lives here rather than in `kernel/` because it drives a GTK widget default;
@@ -500,7 +623,29 @@ pub fn apply_text_direction_for_language() {
 
 #[cfg(test)]
 mod tests {
-    use super::APP_CSS;
+    use super::{APP_CSS, apply_omarchy_palette, clear_omarchy_palette, omarchy_css};
+    use crate::services::omarchy_theme::{OmarchyTheme, PaletteMode};
+    use crate::ui::test_helpers::run_gtk_test;
+    use gtk4 as gtk;
+    use gtk4::gdk;
+    use gtk4::prelude::*;
+
+    /// The Tokyo Night palette as Omarchy ships it.
+    fn sample_theme() -> OmarchyTheme {
+        OmarchyTheme {
+            name: "tokyo-night".to_owned(),
+            mode: PaletteMode::Dark,
+            background: "#1a1b26".to_owned(),
+            dark_background: "#13141c".to_owned(),
+            darker_background: "#0e0e14".to_owned(),
+            lighter_background: "#24283b".to_owned(),
+            foreground: "#a9b1d6".to_owned(),
+            accent: "#7aa2f7".to_owned(),
+            red: Some("#f7768e".to_owned()),
+            green: Some("#9ece6a".to_owned()),
+            yellow: Some("#e0af68".to_owned()),
+        }
+    }
 
     /// Selectors in `APP_CSS`, one per line, comments and bodies stripped.
     fn selectors() -> Vec<String> {
@@ -571,5 +716,89 @@ mod tests {
                 .any(|selector| selector.contains("row.activatable:hover")),
             "the repository row's hover rule is gone"
         );
+    }
+
+    #[test]
+    fn omarchy_css_repoints_adwaita_named_colors() {
+        let css = omarchy_css(&sample_theme());
+        assert!(css.contains("@define-color window_bg_color #1a1b26;"));
+        assert!(css.contains("@define-color view_bg_color #1a1b26;"));
+        assert!(css.contains("@define-color headerbar_border_color #13141c;"));
+        assert!(css.contains("@define-color sidebar_bg_color #13141c;"));
+        assert!(css.contains("@define-color secondary_sidebar_bg_color #0e0e14;"));
+        assert!(css.contains("@define-color card_bg_color #24283b;"));
+        assert!(css.contains("@define-color popover_bg_color #24283b;"));
+        assert!(css.contains("@define-color accent_bg_color #7aa2f7;"));
+        assert!(css.contains("@define-color accent_fg_color #1a1b26;"));
+        assert!(css.contains("@define-color accent_color #7aa2f7;"));
+        assert!(css.contains("@define-color theme_selected_bg_color #7aa2f7;"));
+        assert!(css.contains("@define-color theme_selected_fg_color #1a1b26;"));
+        assert!(css.contains("@define-color destructive_bg_color #f7768e;"));
+        assert!(css.contains("@define-color error_color #f7768e;"));
+        assert!(css.contains("@define-color success_color #9ece6a;"));
+        assert!(css.contains("@define-color warning_color #e0af68;"));
+    }
+
+    #[test]
+    fn omarchy_css_keeps_standalone_colors_readable_on_light_themes() {
+        // Flexoki Light: the fills are fine as fills but below AA as text, so
+        // the standalone colors are adjusted while `*_bg_color` keeps them.
+        let mut theme = sample_theme();
+        theme.mode = PaletteMode::Light;
+        theme.background = "#fffcf0".to_owned();
+        theme.lighter_background = "#e6e4d9".to_owned();
+        theme.foreground = "#100f0f".to_owned();
+        theme.accent = "#205ea6".to_owned();
+        theme.red = Some("#d14d41".to_owned());
+        theme.green = Some("#879a39".to_owned());
+        theme.yellow = Some("#d0a215".to_owned());
+
+        let css = omarchy_css(&theme);
+        assert!(css.contains("@define-color destructive_bg_color #d14d41;"));
+        assert!(css.contains("@define-color error_bg_color #d14d41;"));
+        assert!(css.contains("@define-color success_bg_color #879a39;"));
+        assert!(css.contains("@define-color warning_bg_color #d0a215;"));
+        assert!(!css.contains("@define-color destructive_color #d14d41;"));
+        assert!(!css.contains("@define-color error_color #d14d41;"));
+        assert!(!css.contains("@define-color success_color #879a39;"));
+        assert!(!css.contains("@define-color warning_color #d0a215;"));
+    }
+
+    #[test]
+    fn omarchy_css_omits_semantic_colors_a_theme_does_not_ship() {
+        let mut theme = sample_theme();
+        theme.red = None;
+        theme.green = None;
+        theme.yellow = None;
+        let css = omarchy_css(&theme);
+        assert!(!css.contains("destructive"));
+        assert!(!css.contains("success"));
+        assert!(!css.contains("warning"));
+        assert!(!css.contains("error"));
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    // `style_context().lookup_color()` is the only API that resolves named
+    // colors; GTK deprecated it in 4.10 without a replacement, and this test
+    // is the one place that pins the override precedence.
+    #[allow(deprecated)]
+    fn omarchy_palette_overrides_libadwaita_named_colors() {
+        run_gtk_test("omarchy_palette_overrides_libadwaita_named_colors", || {
+            let expected = gdk::RGBA::parse("#7aa2f7").expect("parse the accent");
+            apply_omarchy_palette(&sample_theme());
+            let window = gtk::Window::new();
+            assert_eq!(
+                window.style_context().lookup_color("accent_bg_color"),
+                Some(expected),
+                "the palette definition must override Adwaita's accent"
+            );
+            clear_omarchy_palette();
+            assert_ne!(
+                window.style_context().lookup_color("accent_bg_color"),
+                Some(expected),
+                "clearing the palette must restore Adwaita's accent"
+            );
+        });
     }
 }

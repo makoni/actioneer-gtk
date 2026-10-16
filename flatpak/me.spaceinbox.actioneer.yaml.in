@@ -21,6 +21,9 @@ finish-args:
   - --socket=wayland
   - --socket=fallback-x11
   - --device=dri
+  # Read-only access to the Omarchy theme state so the app can follow the
+  # desktop theme; without the grant the follow feature is simply unavailable.
+  - --filesystem=~/.local/state/omarchy:ro
 
 modules:
   - name: actioneer

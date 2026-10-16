@@ -13,5 +13,6 @@ pub mod crash_report;
 pub mod favorites;
 pub mod gateway;
 pub mod notifications;
+pub mod omarchy_theme;
 pub mod preferences;
 pub mod tokens;
