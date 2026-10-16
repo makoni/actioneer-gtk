@@ -191,6 +191,52 @@ Edge cases and checks
 - Platform/runtime mismatches: pin the runtime and test on the target runtime version used by Flathub.
 - Portals availability: some environments may not have portals installed; provide graceful fallbacks.
 
+Troubleshooting
+
+- Sign-in fails inside the Flatpak build with `Error saving token: Secure
+  storage is unavailable...` (older builds report `Secure keyring storage is
+  not available`), while the log shows `Secret portal initialization failed`
+  and then `Failed to initialize system keyring backend`.
+  - Inside the sandbox the token can only be stored through
+    `org.freedesktop.portal.Secret`; the manifest deliberately grants no direct
+    keyring access. The error therefore means the *desktop* provides no usable
+    Secret portal backend; it is not an app bug and not a broken keyring.
+  - `xdg-desktop-portal` exports `org.freedesktop.portal.Secret` only when a
+    configured backend implements `org.freedesktop.impl.portal.Secret`. Out of
+    the box this holds on GNOME (`gnome-keyring`, `UseIn=gnome`) and KDE Plasma
+    (`kwallet`, `UseIn=kde`). `xdg-desktop-portal-hyprland` provides only
+    Screenshot, ScreenCast, GlobalShortcuts and InputCapture, so on Hyprland,
+    Sway and similar wlroots sessions nothing routes Secret until it is
+    configured explicitly.
+  - Configure a Secret backend through the portal configuration,
+    `portals.conf(5)`. On Hyprland, add these lines to the `[preferred]`
+    section of `~/.config/xdg-desktop-portal/hyprland-portals.conf` (create
+    the file if it does not exist); other sessions use the matching
+    `<desktop>-portals.conf` (`sway-portals.conf` for Sway, and so on):
+
+    ```ini
+    [preferred]
+    org.freedesktop.impl.portal.Secret=gnome-keyring;
+    ```
+
+    Use `kwallet;` where KWallet is installed (the package that ships the
+    portal backend varies by distribution; on Arch it is `kwallet` itself).
+    Install the backend first if missing.
+  - Restart the portal frontend and verify that the interface is now exported:
+
+    ```bash
+    systemctl --user restart xdg-desktop-portal.service
+    busctl --user introspect org.freedesktop.portal.Desktop /org/freedesktop/portal/desktop | grep -i secret
+    ```
+
+  - Sign in again. The log must show `Using secret portal storage`, and the
+    encrypted token appears at
+    `~/.var/app/me.spaceinbox.actioneer/config/actioneer/secret-portal/github_token.portal`
+    once sign-in completes.
+- The Snap build depends on the same `org.freedesktop.portal.Secret` interface
+  and shows equivalent symptoms on desktops without a configured backend; the
+  steps above apply, with snapd's portal stack in front.
+
 Quality gates for PRs
 
 - `cargo test` passes on native environment for unit tests (mock out or skip integration tests that touch system resources).
