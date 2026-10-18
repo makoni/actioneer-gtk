@@ -80,6 +80,17 @@
     <binary>actioneer</binary>
   </provides>
 
+  <!-- Adaptive down to a phone in portrait (360 px wide): the store shows the
+       app as working on phones, and Phosh offers it in its app list. -->
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>touch</control>
+  </supports>
+
   <!-- Icons and screenshots: include icon names that match files in the icons/ directory.
        Add screenshot entries when screenshots are available in data/screenshots/ or icons/preview. -->
   <screenshots>
