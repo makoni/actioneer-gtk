@@ -189,12 +189,14 @@ such a test, prove it can fail by reintroducing the cycle once.
 
 ## Adaptive layout
 
-The main window supports phones: its minimum size is 360×294, the size GNOME
-asks adaptive apps to handle.
+The whole app supports phones: every window and dialog lays out down to
+360×294, the size GNOME asks adaptive apps to handle, and the desktop entry
+(`X-Purism-FormFactor`) and AppStream data (`display_length`, `touch`) say so.
 
 - The repository list and the detail pane are an `adw::NavigationSplitView`.
   A window breakpoint (`COLLAPSE_CONDITION` in `main_window.rs`) collapses it
-  into two pages below 720 sp.
+  into two pages below 720 sp; the rate limit then moves from the content
+  header to the bottom of the list.
 - Collapsed, only a **tap** on a repository row opens its page
   (`connect_repo_tap`), plus `activate` (Enter, double click). Selection must
   not navigate: it also changes when the app restores the last repository or
@@ -206,23 +208,47 @@ asks adaptive apps to handle.
   setters; rows built later are styled by the `.narrow` class the breakpoint
   puts on the pane's root (see `.workflow-detail` in `style.rs`), with explicit
   `:dir(ltr)`/`:dir(rtl)` pairs because GTK CSS has no logical margins.
+- The job logs window keeps its job list in an `adw::OverlaySplitView`: on a
+  narrow window the list slides over the log from a header button.
+- Secondary windows are `adw::Dialog`s (bottom sheets on a phone). A dialog
+  with breakpoints must set `width-request`/`height-request`, or libadwaita
+  warns on every open.
 
-To look at it:
+**Widths come from the strings, not just the layout.** The English UI can fit
+while Russian or German is cut off, and a hidden page still widens a `GtkStack`
+unless it is non-homogeneous. Any label that can be long gets
+`ui::utils::allow_wrap` (word boundaries only) or an ellipsis; never let one set
+a minimum width.
+
+`phone_layout_<language>` (`main_window/adaptive_tests.rs`) is the guard: in
+each of the 14 catalogs it builds the window at 360×720 in Ubuntu Sans (wider
+than GTK's default) and walks the list, the detail pane, every dialog and the
+logs window, failing on any visible widget past the edge with the chain of
+widgets that demands the width. To look at what it checks:
+
+```bash
+env -u WAYLAND_DISPLAY GDK_BACKEND=x11 GSK_RENDERER=cairo ACTIONEER_UI_SHOTS=/tmp/shots \
+  xvfb-run -a dbus-run-session -- bash -lc "cargo test --lib phone_layout -- --ignored --test-threads=1"
+```
+
+saves `<language>-<screen>.png` for each. Interactively:
 
 - `ADW_DEBUG_ADAPTIVE_PREVIEW=1 cargo run -- --demo` (or `Ctrl+Shift+M` in a
   running window) opens libadwaita's adaptive preview: the window rendered
   inside a phone frame, with presets, rotation and the mobile shell's bars. It
-  needs libadwaita ≥ 1.7 at runtime, whatever the crate features say.
+  needs libadwaita ≥ 1.7 at runtime, whatever the crate features say. Overflow
+  shows on the terminal as `Adwaita-WARNING … exceeds … width`.
 - Phosh nested on the desktop exercises the real mobile shell:
   `WLR_BACKENDS=wayland GSETTINGS_BACKEND=memory phoc -C /usr/share/phosh/phoc.ini -E 'actioneer --demo'`
   (packages `phosh phoc squeekboard`).
 
-Guarded by `a_phone_sized_window_shows_one_page_at_a_time`,
-`a_phone_width_pane_switches_to_the_narrow_layout_and_fits` and the
-`narrow_window.py` smoke journey, which `run_all.sh` runs on a 360×720 screen
-and which taps through XTest (`lib.tap`): GTK4 list rows have no AT-SPI
-activate action, and AT-SPI's own mouse events never deliver button presses
-under Xvfb.
+The `narrow_window.py` smoke journey, which `run_all.sh` runs on a 360×720
+screen in Ubuntu Sans (`SMOKE_SCREEN`, `SMOKE_FONT`), walks the navigation and
+fails on any `exceeds` warning in the app's output. It taps through XTest
+(`lib.tap`): GTK4 list rows have no AT-SPI activate action, and AT-SPI's own
+mouse events never deliver button presses under Xvfb. Note that `run_smoke.sh`
+runs with a private config home, so without `SMOKE_FONT` it uses GTK's default
+font, not the developer's.
 
 ## Toolchain and dependencies
 

@@ -3,7 +3,12 @@
 the detail pane become two pages a tap moves between.
 
 `run_all.sh` launches this one on a 360x720 Xvfb screen, the narrowest GNOME
-asks adaptive apps to support. With no window manager the window takes the
+asks adaptive apps to support, in Ubuntu Sans — wider than GTK's default font.
+Whatever overflows, libadwaita reports as "<widget> exceeds <container> width"
+on the app's output; the journey fails on any such warning.
+
+Translations are not covered here (the names below are the English ones):
+the `phone_layout_<language>` GTK tests walk every screen in every catalog. With no window manager the window takes the
 screen's width only if its minimum size allows it, so the width check below
 is a check on the minimum size too.
 
@@ -12,6 +17,8 @@ journeys use: in the collapsed layout only a tap navigates — selection also
 changes when the app restores the last repository, and that must not leave
 the list.
 """
+import os
+
 import fixtures
 from lib import (
     click,
@@ -73,6 +80,16 @@ def main():
         lambda: find_named(frame, fixtures.BACK_BUTTON),
         "tapping the repository that was already open did not reopen it",
     )
+
+    log_path = os.environ.get("SMOKE_APP_LOG")
+    if log_path:
+        with open(log_path, encoding="utf-8", errors="replace") as log:
+            overflow = [line.strip() for line in log if "exceeds" in line]
+        if overflow:
+            raise SystemExit(
+                "libadwaita reported content wider than its container:\n"
+                + "\n".join(sorted(set(overflow))[:10])
+            )
     print("Narrow-window journey passed.", flush=True)
 
 
