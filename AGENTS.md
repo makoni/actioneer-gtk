@@ -298,7 +298,8 @@ your change in a five-figure diff.
 ## Continuous integration
 
 No workflow runs on `push` or `pull_request`. `ci.yml` (lock-sync → fmt/clippy →
-build+test on x86_64/aarch64 → UI tests + welcome-screen smoke test) is
+build+test on x86_64/aarch64 → UI tests + welcome-screen smoke test, and in
+parallel a Flatpak build of both architectures under the GNOME SDK) is
 `workflow_dispatch` only; the package and release workflows are manual or
 `workflow_call`. To exercise the real pipeline:
 

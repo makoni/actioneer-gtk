@@ -10,6 +10,13 @@ jobs:
   lock-sync:
     uses: ./.github/workflows/lock-sync.yml
 
+  # The GNOME SDK builds with its own CFLAGS (-O2, _FORTIFY_SOURCE=3), which
+  # can break a dependency the jobs below build cleanly: aws-lc-sys 0.45.0 did,
+  # and it surfaced only when publish.yml ran for 1.2.0.
+  flatpak:
+    needs: lock-sync
+    uses: ./.github/workflows/flatpak-ci.yml
+
   fmt-clippy:
     name: Format and lint
     runs-on: ubuntu-26.04

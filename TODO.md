@@ -19,8 +19,3 @@ drifts.
   Omarchy theme-follow feature is unavailable in the Snap build (its `$HOME`
   is the snap's private data directory). Exposing the host path would need a
   `personal-files` plug and a store request.
-- `ci.yml` never builds the Flatpak, so a dependency that breaks only under
-  the GNOME SDK's `CFLAGS` surfaces when `publish.yml` runs. aws-lc-sys 0.45.0
-  did exactly that (jitterentropy refuses `-O2`) and was found at 1.2.0.
-  Running `flatpak-ci.yml` from `ci.yml`, or at least after any `Cargo.lock`
-  change, would catch it earlier.
