@@ -66,7 +66,7 @@ chmod +x actioneer-*-x86_64.AppImage
 ./actioneer-*-x86_64.AppImage
 ```
 
-The AppImage bundles GTK and libadwaita but not glibc, so it needs a glibc at least as new as the one it was built against. Releases from 1.2.0 on are built on Ubuntu 26.04 and need **glibc 2.43 or newer**; they do not start on Ubuntu 24.04, Debian 13, Fedora 42, or RHEL 10. On those systems use the Flatpak or the Snap, which bring their own runtime (1.1.2 and earlier AppImages need glibc 2.39).
+The AppImage is self-contained: it bundles GTK, libadwaita and the C library itself, so it runs on any x86_64 or aarch64 Linux, old LTS releases and musl-based distributions included. (The 1.2.0 AppImage was the exception: it needs glibc 2.43, as in Ubuntu 26.04.)
 
 ### Build From Source
 

@@ -39,13 +39,11 @@ scripts/check-flatpak-lock-sync.sh
   ```bash
   git diff <last-tag>..HEAD -- .github/workflows | grep -E '^[-+].*(runs-on|runner):'
   ```
-  The AppImage and the standalone binary need at least the glibc of the runner
-  that built them (`appimage-ci.yml`, `build-release.yml`). If that runner moved
-  to a newer Ubuntu, the release notes (`metainfo.xml.in`, `RELEASE.md`, the
-  GitHub release) must say which glibc is now required and which distributions
-  lose the AppImage, pointing them to the Flatpak or the Snap; update the
-  AppImage section of `README.md` to match. 1.2.0 was such a release:
-  24.04 → 26.04, glibc 2.39 → 2.43.
+  The standalone binary needs at least the glibc of the runner that built it
+  (`build-release.yml`). If that runner moved to a newer Ubuntu, the GitHub
+  release notes must say which glibc it now requires. The AppImage is exempt:
+  it bundles its own glibc (`packaging/anylinux-appimage.sh`), and
+  `appimage-ci.yml` runs it on Ubuntu 22.04 to prove it.
 
 ## 4) Translate the new changelog bullets
 - Run `scripts/extract-translations.sh` to refresh `po/actioneer.pot` with the new msgids (needs `xtr`: `cargo install xtr`). Check that the msgid set grew by exactly the new bullets; the rest of the diff is `#:` line references shifting.

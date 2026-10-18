@@ -95,7 +95,7 @@ impl MainWindow {
         crate::ui::style::apply_text_direction_for_language();
         let window = adw::ApplicationWindow::builder()
             .application(app)
-            .title("Actioneer")
+            .title(crate::kernel::app::APP_NAME)
             .default_width(1000)
             .default_height(700)
             .build();
@@ -278,7 +278,7 @@ impl MainWindow {
             .build();
         sidebar_toolbar.add_bottom_bar(&narrow_rate_limit);
         let sidebar_page = adw::NavigationPage::builder()
-            .title("Actioneer")
+            .title(crate::kernel::app::APP_NAME)
             .tag("sidebar")
             .child(&sidebar_toolbar)
             .build();

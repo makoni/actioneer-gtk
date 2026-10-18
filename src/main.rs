@@ -150,7 +150,12 @@ fn main() -> anyhow::Result<()> {
     install_panic_hook();
 
     info!("Starting Actioneer for Linux");
+    glib::set_application_name(actioneer::kernel::app::APP_NAME);
     let runtime_app_id = actioneer::resolved_app_id();
+    // The program name becomes the X11 WM_CLASS, which docks match against a
+    // desktop entry's StartupWMClass; left alone it is the binary's name.
+    // Wayland already sends the app ID.
+    glib::set_prgname(Some(runtime_app_id.as_ref()));
     actioneer::services::notifications::initialize_portal_env(runtime_app_id.as_ref());
     actioneer::runtime::install_runtime(actioneer::runtime::tokio_worker_threads());
 
