@@ -928,6 +928,9 @@ msgstr "OK"
 msgid "Saving token..."
 msgstr "Enregistrement du jeton…"
 
+msgid "No secure storage is available for the GitHub token. Your desktop needs a Secret portal backend, such as GNOME Keyring or KWallet."
+msgstr "Aucun stockage sécurisé n’est disponible pour le jeton GitHub. Votre environnement de bureau a besoin d’un backend de portail Secret, comme GNOME Keyring ou KWallet."
+
 msgid "Set the application language (e.g., ru, en, zh_Hans)"
 msgstr "Définir la langue de l’application (par ex. ru, en, zh_Hans)"
 

@@ -192,10 +192,14 @@ fn sandbox_reason_impl(
         }
     }
 
-    if let Some(value) = lookup("CONTAINER").and_then(|value| value.into_string().ok())
-        && (value.eq_ignore_ascii_case("flatpak") || value.eq_ignore_ascii_case("snap"))
-    {
-        return Some("CONTAINER");
+    // Conventionally lowercase (systemd's `container`); the uppercase form is
+    // kept as it was checked before.
+    for var in ["container", "CONTAINER"] {
+        if let Some(value) = lookup(var).and_then(|value| value.into_string().ok())
+            && (value.eq_ignore_ascii_case("flatpak") || value.eq_ignore_ascii_case("snap"))
+        {
+            return Some("CONTAINER");
+        }
     }
 
     if flatpak_marker.exists() {
@@ -293,11 +297,14 @@ mod tests {
 
     #[test]
     fn sandbox_reason_reports_container_values() {
-        let env = |name: &str| (name == "CONTAINER").then(|| OsString::from("FlatPak"));
-        assert_eq!(
-            sandbox_reason_impl(env, Path::new("/nonexistent")),
-            Some("CONTAINER")
-        );
+        for name in ["container", "CONTAINER"] {
+            let env = |var: &str| (var == name).then(|| OsString::from("FlatPak"));
+            assert_eq!(
+                sandbox_reason_impl(env, Path::new("/nonexistent")),
+                Some("CONTAINER"),
+                "{name}"
+            );
+        }
     }
 
     #[test]

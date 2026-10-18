@@ -2,21 +2,29 @@ use super::{
     portal_token_store::{PortalStoreError, PortalTokenStore},
     secret_portal::{self, PortalPreference},
 };
+use crate::kernel::i18n::tr;
 use keyring::v1::Entry;
 use keyring_core::Error as KeyringCoreError;
 use std::sync::OnceLock;
+use std::sync::atomic::{AtomicBool, Ordering};
 use thiserror::Error;
 use tracing::{debug, info, warn};
 
 const SERVICE_NAME: &str = "me.spaceinbox.actioneer";
 const TOKEN_KEY: &str = "github_token";
 
-/// Logged when both secure-storage paths fail. Inside a sandbox the app cannot
-/// fix this itself: the desktop has to provide a Secret portal backend.
-const NO_STORAGE_HINT: &str = "No usable secure storage: the Secret portal failed and the system keyring is unreachable. \
-In a sandbox this usually means the desktop provides no org.freedesktop.impl.portal.Secret backend \
-(common on Hyprland and other wlroots sessions). Configure one on the host, e.g. gnome-keyring or kwallet \
-(see docs/flatpak.md, Troubleshooting), then sign in again.";
+/// Logged once when a sandboxed build cannot reach the Secret portal. Inside a
+/// sandbox the app cannot fix this itself: the desktop has to provide a Secret
+/// portal backend. A URL, not a source path: installed builds ship no docs.
+const SANDBOX_NO_STORAGE_HINT: &str = "No usable secure storage: the Secret portal failed, and inside the sandbox \
+the system keyring is out of reach. This usually means the desktop provides no \
+org.freedesktop.impl.portal.Secret backend (common on Hyprland and other wlroots sessions). \
+Configure one on the host, e.g. gnome-keyring or kwallet, then sign in again: \
+https://github.com/makoni/actioneer-gtk/blob/develop/docs/flatpak.md (Troubleshooting)";
+
+/// Set once the hint is logged: `TokenStorage::new` runs for every token
+/// operation, and the hint is long.
+static SANDBOX_HINT_LOGGED: AtomicBool = AtomicBool::new(false);
 
 #[derive(Debug, Error)]
 pub enum StorageError {
@@ -29,13 +37,12 @@ pub enum StorageError {
     #[error("Secure keyring storage is not available")]
     KeyringUnavailable,
 
-    /// Returned when the Secret portal was attempted (a sandbox or a forced
-    /// override) and the keyring reported itself unavailable as well, so no
-    /// secure storage backend is usable.
-    #[error(
-        "Secure storage is unavailable: no usable Secret portal backend and no reachable system keyring"
-    )]
-    StorageUnavailable,
+    /// The Secret portal was the intended path (a sandbox, or a forced
+    /// override) and it failed, and no keyring could stand in. The message is
+    /// translated — the sign-in dialog shows it — and `cause` says what failed,
+    /// for the log.
+    #[error("{message}")]
+    StorageUnavailable { message: String, cause: String },
 
     #[error("Secret portal storage error: {0}")]
     SecretPortal(PortalStoreError),
@@ -65,20 +72,26 @@ impl TokenStorage {
         );
         let preference = secret_portal::portal_preference();
 
-        if let Some(backend) = try_portal_backend(preference) {
-            return Ok(Self { backend });
+        let portal_failure = match try_portal_backend(preference) {
+            PortalAttempt::Ready(backend) => return Ok(Self { backend }),
+            PortalAttempt::NotRequested => None,
+            PortalAttempt::Failed(cause) => Some(cause),
+        };
+
+        // Inside a sandbox the keyring is out of reach — the Flatpak manifest
+        // grants no access to it and the Snap plugs none — so probing it only
+        // costs time and replaces the portal's error with an irrelevant one.
+        if let (Some(cause), PortalPreference::Sandboxed(_)) = (&portal_failure, preference) {
+            if !SANDBOX_HINT_LOGGED.swap(true, Ordering::Relaxed) {
+                warn!("{SANDBOX_NO_STORAGE_HINT}");
+            }
+            return Err(storage_unavailable(cause.clone()));
         }
 
         info!("Falling back to system keyring storage");
         let backend = match keyring_backend() {
             Ok(backend) => backend,
-            Err(err) => {
-                let err = map_keyring_failure(err, preference);
-                if matches!(err, StorageError::StorageUnavailable) {
-                    warn!("{NO_STORAGE_HINT}");
-                }
-                return Err(err);
-            }
+            Err(err) => return Err(map_keyring_failure(err, portal_failure)),
         };
         info!("✅ Keyring is available and working");
         info!("TokenStorage initialized (keyring backend)");
@@ -189,10 +202,19 @@ impl Default for TokenStorage {
     }
 }
 
-fn try_portal_backend(preference: PortalPreference) -> Option<Backend> {
+/// The outcome of trying the Secret portal.
+enum PortalAttempt {
+    Ready(Backend),
+    /// Not a sandbox and not forced: the keyring is the backend.
+    NotRequested,
+    /// The portal was the intended path and failed; the error, for the log.
+    Failed(String),
+}
+
+fn try_portal_backend(preference: PortalPreference) -> PortalAttempt {
     if !preference.use_portal() {
         debug!("Secret portal disabled (reason: {})", preference.describe());
-        return None;
+        return PortalAttempt::NotRequested;
     }
 
     match secret_portal::secret_portal_available() {
@@ -211,15 +233,24 @@ fn try_portal_backend(preference: PortalPreference) -> Option<Backend> {
             );
             let legacy_entry = keyring_entry_for_migration();
             migrate_keyring_token(legacy_entry.as_ref(), &store);
-            Some(Backend::Portal {
+            PortalAttempt::Ready(Backend::Portal {
                 store,
                 legacy_entry,
             })
         }
         Err(err) => {
             warn!("Secret portal initialization failed: {err}");
-            None
+            PortalAttempt::Failed(err.to_string())
         }
+    }
+}
+
+fn storage_unavailable(cause: String) -> StorageError {
+    StorageError::StorageUnavailable {
+        message: tr(
+            "No secure storage is available for the GitHub token. Your desktop needs a Secret portal backend, such as GNOME Keyring or KWallet.",
+        ),
+        cause,
     }
 }
 
@@ -229,15 +260,19 @@ fn keyring_backend() -> Result<Backend, StorageError> {
     Ok(Backend::Keyring { entry })
 }
 
-/// Keyring setup failed. When the Secret portal was the intended path (a
-/// sandbox or a forced override), report a single "nothing works" error
-/// instead: inside a sandbox the user cannot repair the keyring anyway.
-fn map_keyring_failure(err: StorageError, preference: PortalPreference) -> StorageError {
-    match err {
-        StorageError::KeyringUnavailable if preference.use_portal() => {
-            StorageError::StorageUnavailable
+/// Keyring setup failed. If the Secret portal had been tried first and failed
+/// too (only a forced override on a desktop gets here: a sandbox returns
+/// earlier), no backend is left; report that, with both causes for the log —
+/// the keyring may only be locked, which the portal message alone would hide.
+/// Otherwise the keyring's own error stands.
+fn map_keyring_failure(err: StorageError, portal_failure: Option<String>) -> StorageError {
+    match portal_failure {
+        Some(portal) => {
+            let cause = format!("Secret portal: {portal}; system keyring: {err}");
+            warn!("No usable secure storage ({cause})");
+            storage_unavailable(cause)
         }
-        other => other,
+        None => err,
     }
 }
 
@@ -396,7 +431,7 @@ mod tests {
     fn test_token_storage_lifecycle() {
         let storage = match TokenStorage::new() {
             Ok(storage) => storage,
-            Err(StorageError::KeyringUnavailable | StorageError::StorageUnavailable) => {
+            Err(StorageError::KeyringUnavailable | StorageError::StorageUnavailable { .. }) => {
                 eprintln!("Skipping token storage lifecycle test: secure storage unavailable");
                 return;
             }
@@ -418,39 +453,39 @@ mod tests {
     }
 
     #[test]
-    fn keyring_failure_with_portal_intent_becomes_storage_unavailable() {
-        for preference in [
-            PortalPreference::Sandboxed("FLATPAK_ID"),
-            PortalPreference::ForcedEnabled("ACTIONEER_ENABLE_SECRET_PORTAL"),
+    fn a_keyring_failure_after_a_failed_portal_reports_both() {
+        for err in [
+            StorageError::KeyringUnavailable,
+            StorageError::KeyringError(KeyringCoreError::NoEntry),
         ] {
-            assert!(matches!(
-                map_keyring_failure(StorageError::KeyringUnavailable, preference),
-                StorageError::StorageUnavailable
-            ));
+            match map_keyring_failure(err, Some("timed out".into())) {
+                StorageError::StorageUnavailable { cause, .. } => {
+                    assert!(cause.contains("timed out"), "{cause}");
+                    assert!(cause.contains("system keyring"), "{cause}");
+                }
+                other => panic!("expected StorageUnavailable, got {other:?}"),
+            }
         }
     }
 
     #[test]
-    fn keyring_failure_without_portal_intent_stays_keyring_unavailable() {
-        for preference in [
-            PortalPreference::Disabled,
-            PortalPreference::ForcedDisabled("ACTIONEER_DISABLE_SECRET_PORTAL"),
-        ] {
-            assert!(matches!(
-                map_keyring_failure(StorageError::KeyringUnavailable, preference),
-                StorageError::KeyringUnavailable
-            ));
-        }
-    }
-
-    #[test]
-    fn unrelated_errors_pass_through_the_mapping() {
+    fn a_keyring_failure_without_a_portal_attempt_stands() {
         assert!(matches!(
-            map_keyring_failure(
-                StorageError::TokenNotFound,
-                PortalPreference::Sandboxed("FLATPAK_ID")
-            ),
+            map_keyring_failure(StorageError::KeyringUnavailable, None),
+            StorageError::KeyringUnavailable
+        ));
+        assert!(matches!(
+            map_keyring_failure(StorageError::TokenNotFound, None),
             StorageError::TokenNotFound
         ));
+    }
+
+    #[test]
+    fn storage_unavailable_shows_the_user_message_and_keeps_the_cause() {
+        let err = storage_unavailable("portal error".into());
+        assert!(!err.to_string().contains("portal error"));
+        assert!(
+            matches!(err, StorageError::StorageUnavailable { ref cause, .. } if cause == "portal error")
+        );
     }
 }

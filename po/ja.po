@@ -615,6 +615,9 @@ msgstr "認可を待っています..."
 msgid "Saving token..."
 msgstr "トークンを保存中..."
 
+msgid "No secure storage is available for the GitHub token. Your desktop needs a Secret portal backend, such as GNOME Keyring or KWallet."
+msgstr "GitHub トークンを保存できる安全な保存先がありません。デスクトップに GNOME Keyring や KWallet などの Secret ポータルのバックエンドが必要です。"
+
 #: src/ui/auth_window.rs:448
 msgid "Signed in successfully"
 msgstr "サインインに成功しました"
