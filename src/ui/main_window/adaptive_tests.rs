@@ -15,46 +15,125 @@ use super::*;
 use crate::kernel::i18n::{apply_language_preference, i18n_test_guard, tr};
 use crate::services::preferences::LanguagePreference;
 use crate::ui::sidebar::repo_from_object;
-use crate::ui::test_helpers::{horizontal_overflow, run_gtk_test, save_screenshot};
+use crate::ui::test_helpers::{
+    find_widget, horizontal_overflow, present_window_at, run_gtk_test, save_screenshot,
+    save_screenshot_to, settle_main_loop, toplevel_windows, wait_for_new_toplevel,
+};
 
 const PHONE_WIDTH: i32 = 360;
 const PHONE_HEIGHT: i32 = 720;
+/// A phone on its side: wide enough to collapse nothing more, and as low as
+/// GNOME asks adaptive apps to go.
+const LANDSCAPE_WIDTH: i32 = 720;
+const LANDSCAPE_HEIGHT: i32 = 294;
 const WIDE_FONT: &str = "Ubuntu Sans 11";
 const MAIN_REPO: &str = "demo-org/actioneer-demo-app";
 
-/// Runs the main loop for a moment: demo data and stored preferences arrive
-/// from the Tokio side, and dialogs animate in. Not "until idle": in demo mode
-/// running jobs tick their timers every second, so it never is.
+/// A crash report line long enough to need wrapping, and with no spaces in
+/// the path, so it has to break inside words.
+const LONG_REPORT: &str = "thread 'main' panicked at /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/some-crate-1.2.3/src/lib.rs:42:13\n";
+
 fn settle_for_a_while() {
-    let context = glib::MainContext::default();
-    for _ in 0..50 {
-        while context.pending() {
-            let _ = context.iteration(false);
-        }
-        std::thread::sleep(Duration::from_millis(5));
-    }
+    settle_main_loop(50);
 }
 
-/// Switches the UI language for one test and puts English back however the
-/// test ends, so a failure does not leak a language into the next test.
-struct LanguageScope {
+/// The look a test lays the app out in: its language, the wide font, and for
+/// store screenshots the light style, Yaru icons and no window buttons.
+///
+/// All of it is process-wide — every GTK test shares one worker — so it is put
+/// back however the test ends; otherwise the tests after this one would lay
+/// out in its font or language, and pass or fail by the order they ran in.
+struct LookScope {
     _guard: std::sync::MutexGuard<'static, ()>,
 }
 
-impl LanguageScope {
+impl LookScope {
     fn enter(language: LanguagePreference) -> Self {
         let guard = i18n_test_guard();
         apply_language_preference(language);
         crate::ui::style::apply_text_direction_for_language();
+        crate::runtime::init_test_runtime();
+        crate::ui::style::install_app_css();
+        if let Some(settings) = gtk::Settings::default() {
+            settings.set_gtk_font_name(Some(WIDE_FONT));
+        }
         Self { _guard: guard }
+    }
+
+    /// The desktop store screenshots' look. Call once the window exists: it
+    /// applies the stored theme when it is built, which would win.
+    fn store_look(&self) {
+        if let Some(settings) = gtk::Settings::default() {
+            settings.set_gtk_icon_theme_name(Some("Yaru"));
+            settings.set_gtk_decoration_layout(Some(":"));
+        }
+        adw::StyleManager::default().set_color_scheme(adw::ColorScheme::ForceLight);
     }
 }
 
-impl Drop for LanguageScope {
+impl Drop for LookScope {
     fn drop(&mut self) {
         apply_language_preference(LanguagePreference::En);
         crate::ui::style::apply_text_direction_for_language();
+        if let Some(settings) = gtk::Settings::default() {
+            for property in [
+                "gtk-font-name",
+                "gtk-icon-theme-name",
+                "gtk-decoration-layout",
+            ] {
+                settings.reset_property(property);
+            }
+        }
+        adw::StyleManager::default().set_color_scheme(adw::ColorScheme::Default);
     }
+}
+
+/// A demo-mode main window, presented at the given size with its
+/// repositories loaded.
+fn demo_window(services: AppServices, width: i32, height: i32) -> MainWindow {
+    let app = adw::Application::builder()
+        .application_id("me.spaceinbox.actioneer.PhoneLayoutTest")
+        .build();
+    let window = MainWindow::new(&app, services, true);
+    // The stored window size arrives asynchronously; let it land first.
+    settle_for_a_while();
+    present_window_at(&window.window, width, height);
+    window
+}
+
+/// Opens `MAIN_REPO` as a tap or Enter would.
+fn open_main_repo(window: &MainWindow) {
+    let position = (0..window.repo_filter_model.n_items())
+        .find(|&index| {
+            window
+                .repo_filter_model
+                .item(index)
+                .and_then(|item| repo_from_object(&item))
+                .is_some_and(|repo| repo.full_name == MAIN_REPO)
+        })
+        .expect("the main demo repository is listed");
+    window
+        .sidebar_panel
+        .repo_list()
+        .emit_by_name::<()>("activate", &[&position]);
+}
+
+/// Clicks the first button in the window described as `description` (the
+/// tooltip `describe_control` sets).
+fn click_control(window: &MainWindow, description: &str) {
+    find_widget::<gtk::Button>(&window.window, |button| {
+        button.tooltip_text().as_deref() == Some(description)
+    })
+    .unwrap_or_else(|| panic!("no button described as {description:?}"))
+    .emit_clicked();
+}
+
+/// Opens the logs of the run whose control is first in the window; they
+/// arrive in a window of their own.
+fn open_job_logs(window: &MainWindow) -> Option<gtk::Window> {
+    let before = toplevel_windows();
+    click_control(window, &tr("View logs"));
+    wait_for_new_toplevel(&before)
 }
 
 /// Lays the window out, saves a screenshot and records what overflows.
@@ -65,12 +144,6 @@ fn inspect(window: &MainWindow, code: &str, screen: &str, problems: &mut Vec<Str
         problems.push(format!("{screen}: {overflow}"));
     }
 }
-
-/// A crash report line long enough to need wrapping, and with no spaces in
-/// the path, so it has to break inside words.
-const LONG_REPORT: &str = "thread 'main' panicked at /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/some-crate-1.2.3/src/lib.rs:42:13\n";
-
-type OpenDialog = dyn Fn(&MainWindow);
 
 /// Checks the dialog the last action opened, then closes it.
 ///
@@ -88,113 +161,24 @@ fn inspect_dialog(window: &MainWindow, code: &str, screen: &str, problems: &mut 
     for overflow in horizontal_overflow(&content) {
         problems.push(format!("{screen}: {overflow}"));
     }
+    // Too tall is cut off as surely as too wide; on a phone on its side it is
+    // height that runs out.
+    let (needed, _, _, _) = content.measure(gtk::Orientation::Vertical, content.width());
+    if needed > content.height() + 1 {
+        problems.push(format!(
+            "{screen}: needs {needed} px of height, has {}",
+            content.height()
+        ));
+    }
     dialog.force_close();
     settle_for_a_while();
 }
 
-/// Clicks the first button in the window described as `description` (the
-/// tooltip `describe_control` sets).
-fn click_control(window: &MainWindow, description: &str) {
-    fn find(widget: &gtk::Widget, description: &str) -> Option<gtk::Button> {
-        if let Some(button) = widget.downcast_ref::<gtk::Button>()
-            && button.is_mapped()
-            && button.tooltip_text().as_deref() == Some(description)
-        {
-            return Some(button.clone());
-        }
-        let mut child = widget.first_child();
-        while let Some(current) = child {
-            if let Some(found) = find(&current, description) {
-                return Some(found);
-            }
-            child = current.next_sibling();
-        }
-        None
-    }
-    let button = find(window.window.upcast_ref(), description)
-        .unwrap_or_else(|| panic!("no button described as {description:?}"));
-    button.emit_clicked();
-}
+type OpenDialog = dyn Fn(&MainWindow);
 
-/// Opens a run's logs, which arrive in a window of their own, and checks it at
-/// the phone's size.
-fn check_job_logs_window(window: &MainWindow, code: &str, problems: &mut Vec<String>) {
-    let before: Vec<gtk::Window> = gtk::Window::list_toplevels()
-        .into_iter()
-        .filter_map(|w| w.downcast::<gtk::Window>().ok())
-        .collect();
-    click_control(window, &tr("View logs"));
-    let mut logs = None;
-    for _ in 0..20 {
-        settle_for_a_while();
-        logs = gtk::Window::list_toplevels()
-            .into_iter()
-            .filter_map(|w| w.downcast::<gtk::Window>().ok())
-            .find(|w| w.is_visible() && !before.contains(w));
-        if logs.is_some() {
-            break;
-        }
-    }
-    let Some(logs) = logs else {
-        problems.push("job-logs: no window opened".to_string());
-        return;
-    };
-    logs.set_default_size(PHONE_WIDTH, PHONE_HEIGHT);
-    settle_for_a_while();
-    save_screenshot(&logs, &format!("{code}-job-logs"));
-    for overflow in horizontal_overflow(&logs) {
-        problems.push(format!("job-logs: {overflow}"));
-    }
-    logs.destroy();
-    settle_for_a_while();
-}
-
-fn check_phone_layout(language: LanguagePreference, code: &str) {
-    let _language = LanguageScope::enter(language);
-    crate::runtime::init_test_runtime();
-    crate::ui::style::install_app_css();
-    if let Some(settings) = gtk::Settings::default() {
-        settings.set_gtk_font_name(Some(WIDE_FONT));
-    }
-
-    let dir = tempfile::tempdir().expect("temp dir");
-    let app = adw::Application::builder()
-        .application_id("me.spaceinbox.actioneer.PhoneLayoutTest")
-        .build();
-    let window = MainWindow::new(&app, AppServices::test_fakes(dir.path()), true);
-    // The stored window size arrives asynchronously; let it land first.
-    settle_for_a_while();
-    window.window.set_default_size(PHONE_WIDTH, PHONE_HEIGHT);
-    window.window.present();
-
-    let mut problems = Vec::new();
-    inspect(&window, code, "list", &mut problems);
-    assert!(
-        window.split_view.is_collapsed(),
-        "{code}: a phone collapses the split view"
-    );
-
-    let position = (0..window.repo_filter_model.n_items())
-        .find(|&index| {
-            window
-                .repo_filter_model
-                .item(index)
-                .and_then(|item| repo_from_object(&item))
-                .is_some_and(|repo| repo.full_name == MAIN_REPO)
-        })
-        .expect("the main demo repository is listed");
-    window
-        .sidebar_panel
-        .repo_list()
-        .emit_by_name::<()>("activate", &[&position]);
-    inspect(&window, code, "detail", &mut problems);
-    assert!(
-        window.split_view.shows_content(),
-        "{code}: the detail page opened"
-    );
-
-    // The dialogs. Each is hosted inside the window, as a bottom sheet at
-    // this width, so checking the window checks the dialog.
+/// The dialogs reached from the window and its menu. Each is hosted inside
+/// the window, as a bottom sheet on a phone.
+fn inspect_window_dialogs(window: &MainWindow, code: &str, problems: &mut Vec<String>) {
     let dialogs: [(&str, &OpenDialog); 6] = [
         ("preferences", &|w| w.open_preferences_window()),
         ("about", &|w| w.open_about_window()),
@@ -211,11 +195,37 @@ fn check_phone_layout(language: LanguagePreference, code: &str) {
         }),
     ];
     for (screen, open) in dialogs {
-        open(&window);
-        inspect_dialog(&window, code, screen, &mut problems);
+        open(window);
+        inspect_dialog(window, code, screen, problems);
     }
     WidgetExt::activate_action(&window.window, "win.sign_out", None).ok();
-    inspect_dialog(&window, code, "sign-out", &mut problems);
+    inspect_dialog(window, code, "sign-out", problems);
+}
+
+fn check_phone_layout(language: LanguagePreference, code: &str) {
+    let _look = LookScope::enter(language);
+    let dir = tempfile::tempdir().expect("temp dir");
+    let window = demo_window(
+        AppServices::test_fakes(dir.path()),
+        PHONE_WIDTH,
+        PHONE_HEIGHT,
+    );
+
+    let mut problems = Vec::new();
+    inspect(&window, code, "list", &mut problems);
+    assert!(
+        window.split_view.is_collapsed(),
+        "{code}: a phone collapses the split view"
+    );
+
+    open_main_repo(&window);
+    inspect(&window, code, "detail", &mut problems);
+    assert!(
+        window.split_view.shows_content(),
+        "{code}: the detail page opened"
+    );
+
+    inspect_window_dialogs(&window, code, &mut problems);
 
     // Dialogs and windows opened from the detail pane.
     for (screen, control) in [
@@ -226,7 +236,17 @@ fn check_phone_layout(language: LanguagePreference, code: &str) {
         click_control(&window, &tr(control));
         inspect_dialog(&window, code, screen, &mut problems);
     }
-    check_job_logs_window(&window, code, &mut problems);
+    match open_job_logs(&window) {
+        Some(logs) => {
+            present_window_at(&logs, PHONE_WIDTH, PHONE_HEIGHT);
+            save_screenshot(&logs, &format!("{code}-job-logs"));
+            for overflow in horizontal_overflow(&logs) {
+                problems.push(format!("job-logs: {overflow}"));
+            }
+            logs.destroy();
+        }
+        None => problems.push("job-logs: no window opened".to_string()),
+    }
 
     window.window.destroy();
     settle_for_a_while();
@@ -234,6 +254,29 @@ fn check_phone_layout(language: LanguagePreference, code: &str) {
     assert!(
         problems.is_empty(),
         "{code}: content is cut off at {PHONE_WIDTH} px:\n{}",
+        problems.join("\n")
+    );
+}
+
+/// The dialogs on a phone on its side, where the height runs out first.
+fn check_landscape_dialogs(language: LanguagePreference, code: &str) {
+    let _look = LookScope::enter(language);
+    let dir = tempfile::tempdir().expect("temp dir");
+    let window = demo_window(
+        AppServices::test_fakes(dir.path()),
+        LANDSCAPE_WIDTH,
+        LANDSCAPE_HEIGHT,
+    );
+
+    let mut problems = Vec::new();
+    inspect_window_dialogs(&window, &format!("{code}-landscape"), &mut problems);
+
+    window.window.destroy();
+    settle_for_a_while();
+
+    assert!(
+        problems.is_empty(),
+        "{code}: a dialog does not fit {LANDSCAPE_WIDTH}x{LANDSCAPE_HEIGHT}:\n{}",
         problems.join("\n")
     );
 }
@@ -267,14 +310,40 @@ phone_layout_tests! {
     phone_layout_ja => Ja, "ja";
 }
 
+// Two languages are enough here: height comes from the number of lines, and
+// these two wrap the most — Russian on long words, German on long compounds.
+#[test]
+#[ignore = "requires GTK display"]
+fn landscape_dialogs_en() {
+    run_gtk_test("landscape_dialogs_en", || {
+        check_landscape_dialogs(LanguagePreference::En, "en")
+    });
+}
+
+#[test]
+#[ignore = "requires GTK display"]
+fn landscape_dialogs_ru() {
+    run_gtk_test("landscape_dialogs_ru", || {
+        check_landscape_dialogs(LanguagePreference::Ru, "ru")
+    });
+}
+
+#[test]
+#[ignore = "requires GTK display"]
+fn landscape_dialogs_de() {
+    run_gtk_test("landscape_dialogs_de", || {
+        check_landscape_dialogs(LanguagePreference::De, "de")
+    });
+}
+
 /// Renders the phone screenshots the AppStream data ships
 /// (`data/screenshots/en-mobile-*.png`), when `ACTIONEER_STORE_SHOTS=<dir>` is
 /// set; otherwise does nothing, so it is harmless in the `--ignored` run.
 ///
 /// Light style, English, Ubuntu Sans and the Yaru icons, like the desktop
 /// screenshots; no window buttons, as on a phone's shell; drawn at twice the
-/// size. The frame (rounded corners, shadow) is added afterwards, see
-/// `data/screenshots/README.md`.
+/// size. `scripts/render-mobile-screenshots.sh` runs it and adds the frame
+/// (rounded corners, shadow).
 #[test]
 #[ignore = "requires GTK display"]
 fn store_screenshots() {
@@ -284,14 +353,7 @@ fn store_screenshots() {
     let dir = std::path::PathBuf::from(dir);
     std::fs::create_dir_all(&dir).expect("screenshot directory");
     run_gtk_test("store_screenshots", move || {
-        let _language = LanguageScope::enter(LanguagePreference::En);
-        crate::runtime::init_test_runtime();
-        crate::ui::style::install_app_css();
-        if let Some(settings) = gtk::Settings::default() {
-            settings.set_gtk_font_name(Some(WIDE_FONT));
-            settings.set_gtk_icon_theme_name(Some("Yaru"));
-            settings.set_gtk_decoration_layout(Some(":"));
-        }
+        let look = LookScope::enter(LanguagePreference::En);
 
         let temp = tempfile::tempdir().expect("temp dir");
         let services = AppServices::test_fakes(temp.path());
@@ -309,111 +371,36 @@ fn store_screenshots() {
                 .expect("favourite saved");
         }
 
-        let app = adw::Application::builder()
-            .application_id("me.spaceinbox.actioneer.StoreScreenshots")
-            .build();
-        let window = MainWindow::new(&app, services, true);
-        settle_for_a_while();
-        // After the window has applied the stored theme, which would win.
-        adw::StyleManager::default().set_color_scheme(adw::ColorScheme::ForceLight);
-        window.window.set_default_size(PHONE_WIDTH, PHONE_HEIGHT);
-        window.window.present();
-        for _ in 0..4 {
-            settle_for_a_while();
-        }
+        let window = demo_window(services, PHONE_WIDTH, PHONE_HEIGHT);
+        look.store_look();
+        settle_main_loop(200);
         // No caret blinking in the search field.
         gtk::prelude::GtkWindowExt::set_focus(&window.window, None::<&gtk::Widget>);
         settle_for_a_while();
         let save = |widget: &gtk::Widget, name: &str| {
-            crate::ui::test_helpers::save_screenshot_to(widget, &dir.join(name), 2.0);
+            save_screenshot_to(widget, &dir.join(name), 2.0);
         };
         save(window.window.upcast_ref(), "en-mobile-1.png");
 
-        let position = (0..window.repo_filter_model.n_items())
-            .find(|&index| {
-                window
-                    .repo_filter_model
-                    .item(index)
-                    .and_then(|item| repo_from_object(&item))
-                    .is_some_and(|repo| repo.full_name == MAIN_REPO)
-            })
-            .expect("the main demo repository is listed");
-        window
-            .sidebar_panel
-            .repo_list()
-            .emit_by_name::<()>("activate", &[&position]);
-        for _ in 0..4 {
-            settle_for_a_while();
-        }
+        open_main_repo(&window);
+        settle_main_loop(200);
         // Open the newest run, so its jobs and steps show.
-        if let Some(run) = first_widget_with_class(window.window.upcast_ref(), "run-item")
-            && let Some(expander) = first_expander(&run)
+        if let Some(run) =
+            find_widget::<gtk::Widget>(&window.window, |widget| widget.has_css_class("run-item"))
+            && let Some(expander) = find_widget::<gtk::Expander>(&run, |_| true)
         {
             expander.set_expanded(true);
         }
-        for _ in 0..6 {
-            settle_for_a_while();
-        }
+        settle_main_loop(300);
         save(window.window.upcast_ref(), "en-mobile-2.png");
 
-        let before: Vec<gtk::Window> = gtk::Window::list_toplevels()
-            .into_iter()
-            .filter_map(|w| w.downcast::<gtk::Window>().ok())
-            .collect();
-        click_control(&window, &tr("View logs"));
-        let mut logs = None;
-        for _ in 0..20 {
-            settle_for_a_while();
-            logs = gtk::Window::list_toplevels()
-                .into_iter()
-                .filter_map(|w| w.downcast::<gtk::Window>().ok())
-                .find(|w| w.is_visible() && !before.contains(w));
-            if logs.is_some() {
-                break;
-            }
-        }
-        let logs = logs.expect("the logs window opened");
-        logs.set_default_size(PHONE_WIDTH, PHONE_HEIGHT);
-        for _ in 0..6 {
-            settle_for_a_while();
-        }
+        let logs = open_job_logs(&window).expect("the logs window opened");
+        present_window_at(&logs, PHONE_WIDTH, PHONE_HEIGHT);
+        settle_main_loop(300);
         save(logs.upcast_ref(), "en-mobile-3.png");
 
         logs.destroy();
         window.window.destroy();
-        adw::StyleManager::default().set_color_scheme(adw::ColorScheme::Default);
-        if let Some(settings) = gtk::Settings::default() {
-            settings.reset_property("gtk-icon-theme-name");
-            settings.reset_property("gtk-decoration-layout");
-        }
         settle_for_a_while();
     });
-}
-
-fn first_widget_with_class(widget: &gtk::Widget, class: &str) -> Option<gtk::Widget> {
-    if widget.is_mapped() && widget.has_css_class(class) {
-        return Some(widget.clone());
-    }
-    let mut child = widget.first_child();
-    while let Some(current) = child {
-        if let Some(found) = first_widget_with_class(&current, class) {
-            return Some(found);
-        }
-        child = current.next_sibling();
-    }
-    None
-}
-
-fn first_expander(widget: &gtk::Widget) -> Option<gtk::Expander> {
-    if let Some(expander) = widget.downcast_ref::<gtk::Expander>() {
-        return Some(expander.clone());
-    }
-    let mut child = widget.first_child();
-    while let Some(current) = child {
-        if let Some(found) = first_expander(&current) {
-            return Some(found);
-        }
-        child = current.next_sibling();
-    }
-    None
 }

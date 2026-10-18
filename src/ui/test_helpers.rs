@@ -392,3 +392,94 @@ pub fn save_screenshot_to(widget: &impl IsA<gtk::Widget>, path: &std::path::Path
         eprintln!("could not save {}: {err}", path.display());
     }
 }
+
+/// Runs the main loop for `rounds` × 5 ms. Not "until idle": in demo mode the
+/// running jobs tick their timers every second, so it never is.
+#[cfg(test)]
+pub fn settle_main_loop(rounds: u32) {
+    let context = gtk::glib::MainContext::default();
+    for _ in 0..rounds {
+        while context.pending() {
+            let _ = context.iteration(false);
+        }
+        thread::sleep(Duration::from_millis(5));
+    }
+}
+
+/// The first mapped widget under `root`, `root` included, that is a `W` and
+/// satisfies `predicate`, in depth-first order.
+#[cfg(test)]
+pub fn find_widget<W: IsA<gtk::Widget>>(
+    root: &impl IsA<gtk::Widget>,
+    predicate: impl Fn(&W) -> bool,
+) -> Option<W> {
+    fn walk<W: IsA<gtk::Widget>>(
+        widget: &gtk::Widget,
+        predicate: &dyn Fn(&W) -> bool,
+    ) -> Option<W> {
+        if widget.is_mapped()
+            && let Some(candidate) = widget.downcast_ref::<W>()
+            && predicate(candidate)
+        {
+            return Some(candidate.clone());
+        }
+        let mut child = widget.first_child();
+        while let Some(current) = child {
+            if let Some(found) = walk(&current, predicate) {
+                return Some(found);
+            }
+            child = current.next_sibling();
+        }
+        None
+    }
+    walk(root.as_ref(), &predicate)
+}
+
+/// Every toplevel window that exists right now.
+#[cfg(test)]
+pub fn toplevel_windows() -> Vec<gtk::Window> {
+    gtk::Window::list_toplevels()
+        .into_iter()
+        .filter_map(|window| window.downcast::<gtk::Window>().ok())
+        .collect()
+}
+
+/// Waits a few seconds for a visible window that is not in `before` — one a
+/// click opened, after whatever loading it does first.
+#[cfg(test)]
+pub fn wait_for_new_toplevel(before: &[gtk::Window]) -> Option<gtk::Window> {
+    for _ in 0..20 {
+        settle_main_loop(50);
+        if let Some(window) = toplevel_windows()
+            .into_iter()
+            .find(|window| window.is_visible() && !before.contains(window))
+        {
+            return Some(window);
+        }
+    }
+    None
+}
+
+/// Presents a toplevel at `width` × `height` and fails at once if it did not
+/// get that size.
+///
+/// `present_at_size` cannot stand in here: a window's breakpoints follow the
+/// window's own size, so the window itself has to be that big. A window manager
+/// that resizes it (a tiling one, on a desktop session the run was not
+/// isolated from) would otherwise turn every layout assertion after this into
+/// a flaky one; this way it is one clear failure. The slack allows for the
+/// client-side decorations taken out of the default size.
+#[cfg(test)]
+pub fn present_window_at(window: &impl IsA<gtk::Window>, width: i32, height: i32) {
+    let window = window.as_ref();
+    window.set_default_size(width, height);
+    window.present();
+    settle_main_loop(50);
+    let (got_width, got_height) = (window.width(), window.height());
+    assert!(
+        (width - 24..=width).contains(&got_width) && (height - 24..=height).contains(&got_height),
+        "asked for a {width}x{height} window and got {got_width}x{got_height}: run the GTK \
+         tests under a bare Xvfb (`env -u WAYLAND_DISPLAY GDK_BACKEND=x11 xvfb-run ...`), \
+         where no window manager resizes them"
+    );
+}

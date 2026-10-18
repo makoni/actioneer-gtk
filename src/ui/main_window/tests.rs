@@ -90,11 +90,7 @@ fn the_gateway_slot_follows_the_session_transitions() {
 /// Runs the main loop for a while: the demo data and the stored preferences
 /// arrive from the Tokio side, and the breakpoint needs a layout pass.
 fn settle_for_a_while() {
-    for _ in 0..100 {
-        settle();
-        std::thread::sleep(std::time::Duration::from_millis(5));
-    }
-    settle();
+    crate::ui::test_helpers::settle_main_loop(100);
 }
 
 /// The text of every label on screen.
@@ -121,8 +117,7 @@ fn demo_window_at(dir: &std::path::Path, width: i32, height: i32) -> MainWindow 
     // The stored window size is restored asynchronously; let it land before
     // overriding it, or it overrides the size under test.
     settle_for_a_while();
-    window.window.set_default_size(width, height);
-    window.window.present();
+    crate::ui::test_helpers::present_window_at(&window.window, width, height);
     settle_for_a_while();
     assert!(
         crate::ui::sidebar::find_first_repo_index(&window.repo_filter_model).is_some(),

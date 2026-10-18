@@ -581,14 +581,7 @@ fn logs_window_at(width: i32) -> JobLogsWindow {
         1,
         Arc::new(Mutex::new(GitHubGateway::demo())),
     );
-    logs.window.set_default_size(width, 700);
-    logs.window.present();
-    for _ in 0..40 {
-        while glib::MainContext::default().pending() {
-            let _ = glib::MainContext::default().iteration(false);
-        }
-        std::thread::sleep(std::time::Duration::from_millis(5));
-    }
+    crate::ui::test_helpers::present_window_at(&logs.window, width, 700);
     logs
 }
 
@@ -611,8 +604,24 @@ fn on_a_phone_the_job_list_slides_over_the_log_on_demand() {
 
         split.set_show_sidebar(true);
         let job_list = logs.ctx.job_list.upgrade().expect("job list");
-        job_list.select_row(job_list.row_at_index(2).as_ref());
+        // Arrowing through the list selects as it goes; the list must stay.
+        job_list.select_row(job_list.row_at_index(0).as_ref());
+        assert!(
+            split.shows_sidebar(),
+            "moving through the list keeps it open"
+        );
+        assert_eq!(logs.ctx.selected.get(), 0);
+
+        // A tap activates — even on the job already selected.
+        let row = job_list.row_at_index(0).expect("first job");
+        row.activate();
         assert!(!split.shows_sidebar(), "picking a job uncovers its log");
+
+        split.set_show_sidebar(true);
+        let row = job_list.row_at_index(2).expect("third job");
+        job_list.select_row(Some(&row));
+        row.activate();
+        assert!(!split.shows_sidebar());
         assert_eq!(logs.ctx.selected.get(), 2);
 
         logs.window.destroy();

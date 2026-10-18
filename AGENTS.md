@@ -224,7 +224,10 @@ a minimum width.
 each of the 14 catalogs it builds the window at 360×720 in Ubuntu Sans (wider
 than GTK's default) and walks the list, the detail pane, every dialog and the
 logs window, failing on any visible widget past the edge with the chain of
-widgets that demands the width. To look at what it checks:
+widgets that demands the width. `landscape_dialogs_<language>` opens the
+dialogs at 720×294, a phone on its side, where height runs out first: a dialog
+must scroll or shrink rather than overflow, and one with breakpoints must not
+ask for a minimum height a short window cannot give. To look at what it checks:
 
 ```bash
 env -u WAYLAND_DISPLAY GDK_BACKEND=x11 GSK_RENDERER=cairo ACTIONEER_UI_SHOTS=/tmp/shots \
@@ -280,7 +283,7 @@ User-facing strings go through `tr(...)`. There are 14 catalogs in `po/`.
 crate roots, `src/lib.rs` and `src/main.rs`, because `xtr` walks the module tree
 from the root it is given and `main.rs` declares no modules. After running it,
 sanity-check the msgid *set*, not the diff size: a pure file move churns every
-`file:line` comment while leaving the set identical (241 today).
+`file:line` comment while leaving the set identical (299 today).
 
 When adding a string, insert the new `msgid`/`msgstr` pair into each `.po`
 surgically. Do not run a
