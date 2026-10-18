@@ -6,7 +6,7 @@
 //! applies the effective appearance and watches the Omarchy state directory
 //! so a theme switch reaches the app without a restart.
 
-use crate::services::omarchy_theme::{self, PaletteMode};
+use crate::services::omarchy_theme::{self, OmarchyTheme, PaletteMode};
 use crate::services::preferences::{Preferences, PreferencesManager, ThemePreference};
 use crate::ui::style;
 use gtk4::gio::prelude::{FileExt, FileMonitorExt};
@@ -36,15 +36,19 @@ thread_local! {
 
 /// Applies the effective appearance: the Omarchy palette and its square
 /// corners when following is enabled and a theme is available, the plain
-/// preference otherwise.
+/// preference otherwise. Re-applying what is already applied re-parses no
+/// stylesheet (see `style`).
 pub fn apply_preferences(prefs: &Preferences) {
     let theme = if prefs.follow_omarchy {
         omarchy_theme::load()
     } else {
         None
     };
+    apply_appearance(prefs, theme.as_ref());
+}
 
-    match &theme {
+fn apply_appearance(prefs: &Preferences, theme: Option<&OmarchyTheme>) {
+    match theme {
         Some(theme) => {
             style::apply_omarchy_palette(theme);
             style::apply_square_corners();
@@ -110,11 +114,41 @@ fn schedule_refresh(manager: Arc<PreferencesManager>) {
                 pending.borrow_mut().take();
             });
             let prefs = manager.current();
-            apply_preferences(&prefs);
+            let theme = if prefs.follow_omarchy {
+                omarchy_theme::load()
+            } else {
+                None
+            };
+            let state_present = omarchy_theme::current_state_dir().is_some();
+            match refresh_action(prefs.follow_omarchy, theme.is_some(), state_present) {
+                Refresh::Apply => apply_appearance(&prefs, theme.as_ref()),
+                Refresh::KeepCurrent => {
+                    info!("The Omarchy theme is being replaced; keeping the current appearance")
+                }
+            }
             arm_theme_monitor(&manager);
         });
         pending.replace(Some(source));
     });
+}
+
+/// What a refresh triggered by a change under the Omarchy state does.
+#[derive(Debug, PartialEq, Eq)]
+enum Refresh {
+    Apply,
+    /// The theme is missing while the state that names it is still there:
+    /// `omarchy theme set` is between `rm -rf theme` and `mv next-theme
+    /// theme`. Dropping the palette now would flash stock Adwaita — rounded,
+    /// perhaps light — until the next event; the move fires one, so wait.
+    KeepCurrent,
+}
+
+fn refresh_action(follow: bool, theme_loaded: bool, state_present: bool) -> Refresh {
+    if follow && !theme_loaded && state_present {
+        Refresh::KeepCurrent
+    } else {
+        Refresh::Apply
+    }
 }
 
 fn scheme_for_mode(mode: PaletteMode) -> adw::ColorScheme {
@@ -129,5 +163,56 @@ fn scheme_for_preference(preference: ThemePreference) -> adw::ColorScheme {
         ThemePreference::System => adw::ColorScheme::Default,
         ThemePreference::Light => adw::ColorScheme::ForceLight,
         ThemePreference::Dark => adw::ColorScheme::ForceDark,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_refresh_mid_theme_switch_keeps_the_current_appearance() {
+        assert_eq!(refresh_action(true, false, true), Refresh::KeepCurrent);
+    }
+
+    #[test]
+    fn a_refresh_applies_once_the_theme_is_back_or_the_state_is_gone() {
+        assert_eq!(refresh_action(true, true, true), Refresh::Apply);
+        // No Omarchy state at all: the desktop stopped being Omarchy.
+        assert_eq!(refresh_action(true, false, false), Refresh::Apply);
+    }
+
+    #[test]
+    fn a_refresh_applies_when_not_following() {
+        assert_eq!(refresh_action(false, false, true), Refresh::Apply);
+        assert_eq!(refresh_action(false, false, false), Refresh::Apply);
+    }
+
+    #[test]
+    fn a_palette_mode_forces_the_matching_scheme() {
+        assert_eq!(
+            scheme_for_mode(PaletteMode::Dark),
+            adw::ColorScheme::ForceDark
+        );
+        assert_eq!(
+            scheme_for_mode(PaletteMode::Light),
+            adw::ColorScheme::ForceLight
+        );
+    }
+
+    #[test]
+    fn the_preference_maps_to_its_scheme() {
+        assert_eq!(
+            scheme_for_preference(ThemePreference::System),
+            adw::ColorScheme::Default
+        );
+        assert_eq!(
+            scheme_for_preference(ThemePreference::Light),
+            adw::ColorScheme::ForceLight
+        );
+        assert_eq!(
+            scheme_for_preference(ThemePreference::Dark),
+            adw::ColorScheme::ForceDark
+        );
     }
 }

@@ -123,7 +123,11 @@ fn load_from(state_dir: &Path) -> Option<OmarchyTheme> {
     let lighter_background = pick(colors.lighter_background.as_deref(), &background);
 
     Some(OmarchyTheme {
-        mode: palette_mode(colors.mode.as_deref(), &background),
+        mode: palette_mode(
+            colors.mode.as_deref(),
+            state_dir.join("theme/light.mode").is_file(),
+            &background,
+        ),
         name,
         background,
         dark_background,
@@ -210,12 +214,14 @@ pub fn readable_foreground(color: &str, surfaces: &[&str]) -> String {
     }
 }
 
-/// `mode` when the palette declares one, otherwise inferred from how light
-/// the background is.
-fn palette_mode(declared: Option<&str>, background: &str) -> PaletteMode {
+/// `mode` when the palette declares one; otherwise light when the theme
+/// ships Omarchy's `light.mode` marker file, which is how Omarchy itself tells
+/// light themes apart; otherwise inferred from how light the background is.
+fn palette_mode(declared: Option<&str>, light_marker: bool, background: &str) -> PaletteMode {
     match declared {
         Some(mode) if mode.eq_ignore_ascii_case("light") => PaletteMode::Light,
         Some(mode) if mode.eq_ignore_ascii_case("dark") => PaletteMode::Dark,
+        _ if light_marker => PaletteMode::Light,
         _ => {
             if relative_luminance(background) > 0.5 {
                 PaletteMode::Light
@@ -428,6 +434,33 @@ brown = "#75493d"
         assert_eq!(
             load_from(dir.path()).map(|theme| theme.mode),
             Some(PaletteMode::Light)
+        );
+    }
+
+    #[test]
+    fn the_light_mode_marker_wins_over_the_background() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        // A light theme whose palette keeps a dark-ish background.
+        write_state(
+            dir.path(),
+            "marked",
+            "background = \"#1a1b26\"\nforeground = \"#ffffff\"\naccent = \"#123456\"\n",
+        );
+        fs::write(dir.path().join("theme/light.mode"), "").expect("light.mode");
+        assert_eq!(
+            load_from(dir.path()).map(|theme| theme.mode),
+            Some(PaletteMode::Light)
+        );
+
+        // A declared mode still wins over the marker.
+        write_state(
+            dir.path(),
+            "marked",
+            "mode = \"dark\"\nbackground = \"#fffcf0\"\nforeground = \"#100f0f\"\naccent = \"#205ea6\"\n",
+        );
+        assert_eq!(
+            load_from(dir.path()).map(|theme| theme.mode),
+            Some(PaletteMode::Dark)
         );
     }
 

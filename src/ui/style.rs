@@ -1,5 +1,6 @@
 use crate::services::omarchy_theme::{OmarchyTheme, contrasting_foreground, readable_foreground};
 use gtk4::{self as gtk, gdk};
+use libadwaita as adw;
 use std::cell::RefCell;
 use tracing::warn;
 
@@ -541,11 +542,15 @@ row {
 "#;
 
 thread_local! {
-    /// One provider carries the app stylesheet for the whole display: the
-    /// square-corner mode reloads it with [`SQUARE_CSS`] appended instead of
-    /// registering a second provider, so the shape rules sit later in the
-    /// same sheet and win over the rounded radii above.
+    /// One provider carries the app stylesheet for the whole display.
     static APP_PROVIDER: RefCell<Option<gtk::CssProvider>> = const { RefCell::new(None) };
+    /// The square-corner rules, in a provider of their own one step above the
+    /// app stylesheet, so they win over its rounded radii whatever order the
+    /// two were installed in. Empty while the app keeps its rounded corners.
+    static SQUARE_PROVIDER: RefCell<Option<gtk::CssProvider>> = const { RefCell::new(None) };
+    /// Whether the square rules are loaded, so an unchanged apply re-parses
+    /// nothing.
+    static SQUARE_APPLIED: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
 }
 
 pub fn install_app_css() {
@@ -570,31 +575,37 @@ pub fn install_app_css() {
 }
 
 /// Squares the app's corners to match the Hyprland/Omarchy desktop look.
-///
-/// Reloads the app stylesheet with [`SQUARE_CSS`] appended, so the square
-/// radii replace the rounded ones inside the same provider. A no-op when no
-/// display (and thus no stylesheet) exists.
 pub fn apply_square_corners() {
-    reload_app_css(true);
+    set_square_corners(true);
 }
 
 /// Returns the app to its default rounded corners.
 pub fn clear_square_corners() {
-    reload_app_css(false);
+    set_square_corners(false);
 }
 
-fn reload_app_css(square: bool) {
-    APP_PROVIDER.with(|slot| {
-        let slot = slot.borrow();
-        let Some(provider) = slot.as_ref() else {
-            return;
-        };
-        if square {
-            provider.load_from_string(&format!("{APP_CSS}{SQUARE_CSS}"));
-        } else {
-            provider.load_from_string(APP_CSS);
-        }
+fn set_square_corners(square: bool) {
+    if SQUARE_APPLIED.with(|applied| applied.get()) == square {
+        return;
+    }
+    let Some(display) = gdk::Display::default() else {
+        warn!("No display available for the square-corner rules");
+        return;
+    };
+    SQUARE_PROVIDER.with(|slot| {
+        let mut slot = slot.borrow_mut();
+        let provider = slot.get_or_insert_with(|| {
+            let provider = gtk::CssProvider::new();
+            gtk::style_context_add_provider_for_display(
+                &display,
+                &provider,
+                gtk::STYLE_PROVIDER_PRIORITY_APPLICATION + 1,
+            );
+            provider
+        });
+        provider.load_from_string(if square { SQUARE_CSS } else { "" });
     });
+    SQUARE_APPLIED.with(|applied| applied.set(square));
 }
 
 thread_local! {
@@ -602,6 +613,10 @@ thread_local! {
     /// apply redefines its contents instead of registering a new provider, so
     /// switching themes cannot pile up registrations.
     static OMARCHY_PROVIDER: RefCell<Option<gtk::CssProvider>> = const { RefCell::new(None) };
+    /// The palette stylesheet last loaded, so re-applying the same theme —
+    /// a preferences round trip, a wallpaper change in the watched directory —
+    /// re-parses nothing.
+    static OMARCHY_LOADED: RefCell<String> = const { RefCell::new(String::new()) };
 }
 
 /// Re-colors the app with the active Omarchy theme's palette.
@@ -615,45 +630,78 @@ pub fn apply_omarchy_palette(theme: &OmarchyTheme) {
         warn!("No display available for the Omarchy palette");
         return;
     };
+    let css = omarchy_css(theme, libadwaita_derives_standalone_colors());
+    load_omarchy_css(&display, &css);
+}
+
+/// Drops the palette overrides so Adwaita's own colors return.
+pub fn clear_omarchy_palette() {
+    if let Some(display) = gdk::Display::default() {
+        load_omarchy_css(&display, "");
+    }
+}
+
+fn load_omarchy_css(display: &gdk::Display, css: &str) {
+    if OMARCHY_LOADED.with(|loaded| *loaded.borrow() == css) {
+        return;
+    }
     OMARCHY_PROVIDER.with(|slot| {
         let mut slot = slot.borrow_mut();
         let provider = slot.get_or_insert_with(|| {
             let provider = gtk::CssProvider::new();
             gtk::style_context_add_provider_for_display(
-                &display,
+                display,
                 &provider,
                 gtk::STYLE_PROVIDER_PRIORITY_APPLICATION,
             );
             provider
         });
-        provider.load_from_string(&omarchy_css(theme));
+        provider.load_from_string(css);
     });
+    OMARCHY_LOADED.with(|loaded| *loaded.borrow_mut() = css.to_owned());
 }
 
-/// Drops the palette overrides so Adwaita's own colors return.
-pub fn clear_omarchy_palette() {
-    OMARCHY_PROVIDER.with(|slot| {
-        if let Some(provider) = slot.borrow().as_ref() {
-            provider.load_from_string("");
-        }
-    });
+/// From libadwaita 1.6 the standalone text colors are CSS variables derived
+/// from the fills (`--accent-color: oklab(from var(--accent-bg-color) …)`),
+/// and its widgets read those, not `@accent_color`. Redefining the named
+/// color then reaches only this app's own stylesheet; the variables have to
+/// be set as well. GTK reads CSS variables from 4.16, which 1.6 requires.
+fn libadwaita_derives_standalone_colors() -> bool {
+    (adw::major_version(), adw::minor_version()) >= (1, 6)
 }
 
 /// Builds the `@define-color` block that re-points Adwaita's named colors at
-/// the Omarchy palette. Every value went through the palette's color
-/// validation, so interpolation cannot smuggle arbitrary CSS into the
-/// stylesheet.
-fn omarchy_css(theme: &OmarchyTheme) -> String {
+/// the Omarchy palette, and with `css_variables` the `:root` block libadwaita
+/// 1.6+ reads its standalone colors from (see
+/// `libadwaita_derives_standalone_colors`). Every value went through the
+/// palette's color validation, so interpolation cannot smuggle arbitrary CSS
+/// into the stylesheet.
+fn omarchy_css(theme: &OmarchyTheme, css_variables: bool) -> String {
     let mut css = String::from("/* Colors follow the active Omarchy theme. */\n");
+    let mut variables = String::new();
     let mut define = |name: &str, value: &str| {
         css.push_str(&format!("@define-color {name} {value};\n"));
+        // Only the standalone text colors: libadwaita derives them itself,
+        // while the fills and surfaces it takes from the named colors.
+        if let Some(variable) = STANDALONE_COLOR_VARIABLES
+            .iter()
+            .find_map(|(named, variable)| (*named == name).then_some(*variable))
+        {
+            variables.push_str(&format!("  {variable}: {value};\n"));
+        }
     };
 
     // The standalone `*_color` names are text and icon colors: Omarchy's
     // fills are tuned for filled surfaces and can sit below AA as text on its
-    // light palettes, so they get a readable variant. `*_bg_color` keeps the
+    // light palettes, so they get a readable variant — readable on every
+    // surface text is drawn on, the sidebars included. `*_bg_color` keeps the
     // raw fill and pairs it with a contrasting foreground.
-    let text_surfaces: [&str; 2] = [&theme.background, &theme.lighter_background];
+    let text_surfaces: [&str; 4] = [
+        &theme.background,
+        &theme.lighter_background,
+        &theme.dark_background,
+        &theme.darker_background,
+    ];
 
     define("window_bg_color", &theme.background);
     define("window_fg_color", &theme.foreground);
@@ -661,7 +709,9 @@ fn omarchy_css(theme: &OmarchyTheme) -> String {
     define("view_fg_color", &theme.foreground);
     define("headerbar_bg_color", &theme.background);
     define("headerbar_fg_color", &theme.foreground);
-    define("headerbar_border_color", &theme.dark_background);
+    // A foreground color: libadwaita mixes it into transparency at the
+    // border opacity, so a background shade would vanish.
+    define("headerbar_border_color", &theme.foreground);
     define("headerbar_backdrop_color", &theme.background);
     define("sidebar_bg_color", &theme.dark_background);
     define("sidebar_fg_color", &theme.foreground);
@@ -715,8 +765,21 @@ fn omarchy_css(theme: &OmarchyTheme) -> String {
             &readable_foreground(yellow, &text_surfaces),
         );
     }
+    if css_variables && !variables.is_empty() {
+        css.push_str(&format!(":root {{\n{variables}}}\n"));
+    }
     css
 }
+
+/// The standalone text colors and the CSS variables libadwaita 1.6+ derives
+/// them into.
+const STANDALONE_COLOR_VARIABLES: [(&str, &str); 5] = [
+    ("accent_color", "--accent-color"),
+    ("destructive_color", "--destructive-color"),
+    ("error_color", "--error-color"),
+    ("success_color", "--success-color"),
+    ("warning_color", "--warning-color"),
+];
 
 /// Applies the default text direction for the effective UI language.
 ///
@@ -735,7 +798,7 @@ pub fn apply_text_direction_for_language() {
 mod tests {
     use super::{
         APP_CSS, SQUARE_CSS, apply_omarchy_palette, apply_square_corners, clear_omarchy_palette,
-        clear_square_corners, install_app_css, omarchy_css,
+        clear_square_corners, omarchy_css,
     };
     use crate::services::omarchy_theme::{OmarchyTheme, PaletteMode};
     use crate::ui::test_helpers::run_gtk_test;
@@ -865,10 +928,10 @@ mod tests {
 
     #[test]
     fn omarchy_css_repoints_adwaita_named_colors() {
-        let css = omarchy_css(&sample_theme());
+        let css = omarchy_css(&sample_theme(), false);
         assert!(css.contains("@define-color window_bg_color #1a1b26;"));
         assert!(css.contains("@define-color view_bg_color #1a1b26;"));
-        assert!(css.contains("@define-color headerbar_border_color #13141c;"));
+        assert!(css.contains("@define-color headerbar_border_color #a9b1d6;"));
         assert!(css.contains("@define-color sidebar_bg_color #13141c;"));
         assert!(css.contains("@define-color secondary_sidebar_bg_color #0e0e14;"));
         assert!(css.contains("@define-color card_bg_color #24283b;"));
@@ -898,7 +961,7 @@ mod tests {
         theme.green = Some("#879a39".to_owned());
         theme.yellow = Some("#d0a215".to_owned());
 
-        let css = omarchy_css(&theme);
+        let css = omarchy_css(&theme, false);
         assert!(css.contains("@define-color destructive_bg_color #d14d41;"));
         assert!(css.contains("@define-color error_bg_color #d14d41;"));
         assert!(css.contains("@define-color success_bg_color #879a39;"));
@@ -915,7 +978,7 @@ mod tests {
         theme.red = None;
         theme.green = None;
         theme.yellow = None;
-        let css = omarchy_css(&theme);
+        let css = omarchy_css(&theme, false);
         assert!(!css.contains("destructive"));
         assert!(!css.contains("success"));
         assert!(!css.contains("warning"));
@@ -1013,12 +1076,42 @@ mod tests {
                 errors.borrow()
             );
 
-            // The real plumbing: install the app stylesheet, square it, and
-            // return to the rounded default.
-            install_app_css();
+            // The real plumbing: square, then back to the rounded default —
+            // which leaves nothing behind for the tests after this one (they
+            // share the display), the stylesheet the run installs once
+            // included.
+            crate::ui::test_helpers::ensure_app_css();
             apply_square_corners();
             clear_square_corners();
         });
+    }
+
+    #[test]
+    fn omarchy_css_sets_libadwaitas_standalone_color_variables_when_it_reads_them() {
+        let theme = sample_theme();
+        let legacy = omarchy_css(&theme, false);
+        assert!(!legacy.contains(":root"), "1.5 and older have no variables");
+
+        let css = omarchy_css(&theme, true);
+        let root = css.split(":root").nth(1).expect("a :root block");
+        for variable in [
+            "--accent-color",
+            "--destructive-color",
+            "--error-color",
+            "--success-color",
+            "--warning-color",
+        ] {
+            assert!(root.contains(variable), "{variable} is set: {root}");
+        }
+        // The fills come from the named colors, which libadwaita reads.
+        assert!(!root.contains("--accent-bg-color"));
+        // A variable carries the same value as its named color.
+        let named = legacy
+            .lines()
+            .find(|line| line.starts_with("@define-color accent_color "))
+            .and_then(|line| line.trim_end_matches(';').rsplit(' ').next())
+            .expect("accent_color is defined");
+        assert!(root.contains(&format!("--accent-color: {named};")));
     }
 
     #[test]

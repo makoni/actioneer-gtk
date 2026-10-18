@@ -235,10 +235,17 @@ impl PreferencesWindow {
         });
 
         let manager_for_theme = manager.clone();
+        // The other half of the appearance comes from the switch, not from
+        // `manager.current()`: the last toggle may still be on its way to the
+        // store, and the stale value would undo it.
+        let follow_switch_for_theme = follow_switch.downgrade();
         theme_row.connect_selected_notify(move |combo| {
             let theme_preference = index_to_theme(combo.selected());
             let mut prefs = manager_for_theme.current();
             prefs.theme_preference = theme_preference;
+            if let Some(follow_switch) = follow_switch_for_theme.upgrade() {
+                prefs.follow_omarchy = follow_switch.is_active();
+            }
             theme_sync::apply_preferences(&prefs);
 
             let manager = manager_for_theme.clone();
@@ -254,10 +261,12 @@ impl PreferencesWindow {
         follow_switch.connect_state_set(move |_, state| {
             let mut prefs = manager_for_follow.current();
             prefs.follow_omarchy = state;
-            theme_sync::apply_preferences(&prefs);
+            // Likewise the theme choice comes from its row.
             if let Some(theme_row) = theme_row_for_follow.upgrade() {
+                prefs.theme_preference = index_to_theme(theme_row.selected());
                 theme_row.set_sensitive(!(state && omarchy_available));
             }
+            theme_sync::apply_preferences(&prefs);
 
             let manager = manager_for_follow.clone();
             handle().spawn(async move {
