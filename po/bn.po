@@ -128,9 +128,6 @@ msgstr "Actioneer সহায়তা\n\nশুরু করা\n1. স্ব�
 msgid "Need more help? Use “Report Issue” in the app menu or visit:"
 msgstr "আরও সহায়তা দরকার? অ্যাপ মেনুতে “সমস্যা রিপোর্ট করুন” ব্যবহার করুন অথবা দেখুন:"
 
-msgid "Close"
-msgstr "বন্ধ করুন"
-
 msgid "Failed to open issue tracker in the browser."
 msgstr "ব্রাউজারে ইস্যু ট্র্যাকার খোলা যায়নি।"
 

@@ -128,9 +128,6 @@ msgstr "Справка Actioneer\n\nНачало работы\n1. Войдите
 msgid "Need more help? Use “Report Issue” in the app menu or visit:"
 msgstr "Нужна дополнительная помощь? Используйте «Сообщить о проблеме» в меню приложения или посетите:"
 
-msgid "Close"
-msgstr "Закрыть"
-
 msgid "Failed to open issue tracker in the browser."
 msgstr "Не удалось открыть трекер проблем в браузере."
 

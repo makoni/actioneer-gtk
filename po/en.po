@@ -131,9 +131,6 @@ msgstr "Actioneer Help\n\nGetting started\n1. Sign in with your GitHub account o
 msgid "Need more help? Use “Report Issue” in the app menu or visit:"
 msgstr "Need more help? Use “Report Issue” in the app menu or visit:"
 
-msgid "Close"
-msgstr "Close"
-
 msgid "Failed to open issue tracker in the browser."
 msgstr "Failed to open issue tracker in the browser."
 

@@ -128,9 +128,6 @@ msgstr "Actioneer 帮助\n\n入门\n1. 在欢迎界面使用你的 GitHub 账号
 msgid "Need more help? Use “Report Issue” in the app menu or visit:"
 msgstr "还需要帮助？请在应用菜单中使用“报告问题”或访问："
 
-msgid "Close"
-msgstr "关闭"
-
 msgid "Failed to open issue tracker in the browser."
 msgstr "无法在浏览器中打开问题跟踪器。"
 

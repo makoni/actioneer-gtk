@@ -128,9 +128,6 @@ msgstr "مساعدة Actioneer\n\nالبدء\n1. سجّل الدخول بحسا�
 msgid "Need more help? Use “Report Issue” in the app menu or visit:"
 msgstr "هل تحتاج إلى مزيد من المساعدة؟ استخدم «الإبلاغ عن مشكلة» من قائمة التطبيق أو تفضّل بزيارة:"
 
-msgid "Close"
-msgstr "إغلاق"
-
 msgid "Failed to open issue tracker in the browser."
 msgstr "تعذر فتح متتبع المشكلات في المتصفح."
 

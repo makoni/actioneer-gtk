@@ -780,12 +780,6 @@ msgstr "ヘルプを開く"
 msgid "Quit application"
 msgstr "アプリケーションを終了"
 
-#: src/ui/main_window/window_actions.rs:95
-#: src/ui/main_window/window_actions.rs:192
-#: src/ui/main_window/window_actions.rs:279
-msgid "Close"
-msgstr "閉じる"
-
 #: src/ui/main_window/window_actions.rs:126
 msgid "Actioneer Help"
 msgstr "Actioneer ヘルプ"
