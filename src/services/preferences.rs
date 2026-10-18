@@ -205,7 +205,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_preferences_update() {
-        let manager = PreferencesManager::new().unwrap();
+        // A directory of its own: `PreferencesManager::new()` is the
+        // developer's real preferences, which this test used to rewrite.
+        let dir = tempfile::tempdir().unwrap();
+        let manager = PreferencesManager::with_dir(dir.path()).unwrap();
 
         manager.set_refresh_interval(30).await.unwrap();
 
