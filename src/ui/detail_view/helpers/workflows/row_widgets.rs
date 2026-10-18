@@ -156,12 +156,10 @@ pub(super) fn build_row_widgets(
         recent_label.add_css_class("no-tracking");
     }
     recent_label.add_css_class("section-label");
-    recent_label.set_halign(gtk::Align::Start);
-    recent_label.set_xalign(0.0);
     recent_label.set_hexpand(true);
     // The sub-header shares a narrow card with three more items; in the longer
     // languages each of them may need a second line on a phone.
-    crate::ui::utils::allow_wrap(&recent_label);
+    crate::ui::utils::leading_wrapping(&recent_label);
     subheader.append(&recent_label);
 
     let counts_label = gtk::Label::new(None);

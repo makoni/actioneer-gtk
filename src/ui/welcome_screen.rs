@@ -153,9 +153,7 @@ impl WelcomeScreen {
         feature_box.append(&icon);
 
         let label = gtk::Label::new(Some(text));
-        label.set_halign(gtk::Align::Start);
-        label.set_xalign(0.0);
-        crate::ui::utils::allow_wrap(&label);
+        crate::ui::utils::leading_wrapping(&label);
         feature_box.append(&label);
 
         container.append(&feature_box);

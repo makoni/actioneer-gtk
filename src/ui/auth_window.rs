@@ -121,10 +121,7 @@ impl AuthWindow {
             .build();
         dialog.set_child(Some(&scroller));
 
-        // A dialog with breakpoints has to state the smallest size it lays
-        // out for: narrower than a phone in portrait, lower than one on its
-        // side, once the bottom sheet's frame is taken off both.
-        dialog.set_size_request(300, 200);
+        crate::ui::utils::set_adaptive_dialog_min_size(&dialog);
         // A phone's bottom sheet cannot spare the desktop's 48 px either side.
         let narrow = adw::Breakpoint::new(
             adw::BreakpointCondition::parse("max-width: 450sp")

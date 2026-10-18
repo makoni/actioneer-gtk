@@ -191,3 +191,31 @@ fn a_desktop_window_keeps_list_and_detail_side_by_side() {
 // the per-row release tests (`runs/row.rs`, `job_logs_window.rs`) and by
 // the `--demo` smoke journeys, which drive the real app through a full
 // session.
+
+#[test]
+#[ignore = "requires GTK display"]
+fn a_menu_dialog_is_not_stacked_on_another() {
+    run_gtk_test("menu_dialog_not_stacked", || {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let window = demo_window(AppServices::test_fakes(dir.path()), 1000, 700);
+
+        window.open_shortcuts_window();
+        settle();
+        let first = window.window.visible_dialog().expect("shortcuts opened");
+        // The accelerators still reach the window behind an open dialog.
+        window.open_shortcuts_window();
+        window.open_help_window();
+        settle();
+        assert_eq!(window.window.visible_dialog().as_ref(), Some(&first));
+
+        first.force_close();
+        crate::ui::test_helpers::settle_main_loop(50);
+        assert!(
+            window.window.visible_dialog().is_none(),
+            "another dialog was stacked under the first"
+        );
+
+        window.window.destroy();
+        settle();
+    });
+}

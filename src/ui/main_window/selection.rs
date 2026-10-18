@@ -206,8 +206,8 @@ impl MainWindow {
 
                     let widget = pane.widget();
                     if let Some(page) = split_view.content() {
-                        // Read by screen readers and used as the back button's
-                        // tooltip on the sidebar page.
+                        // The page's accessible name: what a screen reader
+                        // announces when the detail page opens.
                         page.set_title(&pane.repo().full_name);
                     }
                     stack.add_named(&widget, Some("detail"));

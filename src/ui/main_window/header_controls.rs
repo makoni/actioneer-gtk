@@ -29,6 +29,11 @@ impl HeaderControls {
         // Just past the collapse width the content header has ~420 px, and in
         // the longer languages the low-budget text alone is nearly that.
         rate_limit_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
+        // So the whole text stays readable once it is cut short.
+        rate_limit_label
+            .bind_property("label", &rate_limit_label, "tooltip-text")
+            .sync_create()
+            .build();
 
         let rate_limit_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         rate_limit_box.add_css_class("linked");

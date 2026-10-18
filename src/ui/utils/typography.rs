@@ -1,4 +1,5 @@
 use gtk4 as gtk;
+use gtk4::prelude::WidgetExt;
 
 /// Scripts where inter-letter tracking is harmful: it breaks the cursive
 /// joining of Arabic, Hebrew and Urdu, and detaches Devanagari, Bengali and Thai
@@ -47,6 +48,15 @@ pub fn section_heading(text: &str) -> (String, bool) {
 pub fn allow_wrap(label: &gtk::Label) {
     label.set_wrap(true);
     label.set_wrap_mode(gtk::pango::WrapMode::Word);
+}
+
+/// A label that starts at the leading edge and wraps between words: the
+/// usual shape of a block of text in a narrow column. Without the `xalign`,
+/// a wrapped label centres its lines.
+pub fn leading_wrapping(label: &gtk::Label) {
+    label.set_halign(gtk::Align::Start);
+    label.set_xalign(0.0);
+    allow_wrap(label);
 }
 
 #[cfg(test)]

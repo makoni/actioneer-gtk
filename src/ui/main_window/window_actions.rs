@@ -18,7 +18,18 @@ impl MainWindow {
         dialog
     }
 
+    /// Whether a dialog is already open in the window. The menu's dialogs
+    /// are hosted inside the window, so its accelerators (Ctrl+,, Ctrl+?, F1)
+    /// still reach it while one is open — unlike the separate modal windows
+    /// these used to be — and pressing one again would stack a second copy.
+    fn dialog_is_open(&self) -> bool {
+        self.window.visible_dialog().is_some()
+    }
+
     pub(super) fn open_preferences_window(&self) {
+        if self.dialog_is_open() {
+            return;
+        }
         if let Some(manager) = &self.preferences_manager {
             let parent = self.window.clone();
             let window = PreferencesWindow::new(&parent, manager.clone());
@@ -32,6 +43,9 @@ impl MainWindow {
     }
 
     pub(super) fn open_about_window(&self) {
+        if self.dialog_is_open() {
+            return;
+        }
         let about = adw::AboutDialog::builder()
             .application_name("Actioneer")
             .application_icon(crate::kernel::app::APP_ICON_NAME)
@@ -45,6 +59,9 @@ impl MainWindow {
     }
 
     pub(super) fn open_shortcuts_window(&self) {
+        if self.dialog_is_open() {
+            return;
+        }
         Self::build_shortcuts_dialog().present(Some(&self.window));
     }
 
@@ -88,6 +105,9 @@ impl MainWindow {
     }
 
     pub(super) fn open_help_window(&self) {
+        if self.dialog_is_open() {
+            return;
+        }
         Self::build_help_dialog().present(Some(&self.window));
     }
 
@@ -212,8 +232,7 @@ Troubleshooting\n\
             tr("Actioneer detected a crash report from the previous run. You can report it on GitHub and attach the crash file.")
                 .as_str(),
         ));
-        crate::ui::utils::allow_wrap(&message_label);
-        message_label.set_xalign(0.0);
+        crate::ui::utils::leading_wrapping(&message_label);
         content.append(&message_label);
 
         let text_view = gtk::TextView::new();
@@ -265,10 +284,7 @@ Troubleshooting\n\
             .content_height(480)
             .child(&toolbar)
             .build();
-        // A dialog with breakpoints has to state the smallest size it lays
-        // out for: narrower than a phone in portrait, lower than one on its
-        // side, once the bottom sheet's frame is taken off both.
-        dialog.set_size_request(300, 200);
+        crate::ui::utils::set_adaptive_dialog_min_size(&dialog);
         // Three buttons side by side outgrow a phone in the longer languages.
         let narrow = adw::Breakpoint::new(
             adw::BreakpointCondition::parse("max-width: 480sp")

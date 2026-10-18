@@ -59,13 +59,23 @@ pub(crate) fn repo_at_point(
         };
         // With its margins: the list selects a row when its margin is pressed
         // too, and a finger lands there as often as on the text.
-        let Some(bounds) = row.compute_bounds(view).filter(|_| row.is_mapped()) else {
+        if !row.is_mapped() {
+            continue;
+        }
+        let Some(bounds) = row.compute_bounds(view) else {
             continue;
         };
+        // Start and end are logical: in a right-to-left language the start
+        // margin is the one on the right.
+        let (left, right) = if row.direction() == gtk::TextDirection::Rtl {
+            (row.margin_end(), row.margin_start())
+        } else {
+            (row.margin_start(), row.margin_end())
+        };
         let area = gtk::graphene::Rect::new(
-            bounds.x() - row.margin_start() as f32,
+            bounds.x() - left as f32,
             bounds.y() - row.margin_top() as f32,
-            bounds.width() + (row.margin_start() + row.margin_end()) as f32,
+            bounds.width() + (left + right) as f32,
             bounds.height() + (row.margin_top() + row.margin_bottom()) as f32,
         );
         if !area.contains_point(&point) {
