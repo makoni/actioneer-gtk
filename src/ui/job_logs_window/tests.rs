@@ -563,3 +563,85 @@ fn save_dialog_prefills_default_name() {
         assert_eq!(dialog.accept_label().as_deref(), Some(tr("Save").as_str()));
     });
 }
+
+/// A logs window for a three-job run at `width`, laid out.
+fn logs_window_at(width: i32) -> JobLogsWindow {
+    // Picking a job loads its log on Tokio.
+    crate::runtime::init_test_runtime();
+    let parent = gtk::Window::new();
+    let logs = JobLogsWindow::build(
+        &parent,
+        repo_stub(),
+        "CI • main #1".to_string(),
+        vec![
+            job_stub("lint", Some("success")),
+            job_stub("build", Some("failure")),
+            job_stub("test", Some("success")),
+        ],
+        1,
+        Arc::new(Mutex::new(GitHubGateway::demo())),
+    );
+    crate::ui::test_helpers::present_window_at(&logs.window, width, 700);
+    logs
+}
+
+#[test]
+#[ignore = "requires GTK display"]
+fn on_a_phone_the_job_list_slides_over_the_log_on_demand() {
+    run_gtk_test("logs_window_phone_width", || {
+        let logs = logs_window_at(360);
+        let split = logs
+            .ctx
+            .split_view
+            .upgrade()
+            .expect("a split view for several jobs");
+
+        assert!(split.is_collapsed());
+        assert!(
+            !split.shows_sidebar(),
+            "the log, not the job list, is what a phone opens on"
+        );
+
+        split.set_show_sidebar(true);
+        let job_list = logs.ctx.job_list.upgrade().expect("job list");
+        // Arrowing through the list selects as it goes; the list must stay.
+        job_list.select_row(job_list.row_at_index(0).as_ref());
+        assert!(
+            split.shows_sidebar(),
+            "moving through the list keeps it open"
+        );
+        assert_eq!(logs.ctx.selected.get(), 0);
+
+        // A tap activates — even on the job already selected.
+        let row = job_list.row_at_index(0).expect("first job");
+        row.activate();
+        assert!(!split.shows_sidebar(), "picking a job uncovers its log");
+
+        split.set_show_sidebar(true);
+        let row = job_list.row_at_index(2).expect("third job");
+        job_list.select_row(Some(&row));
+        row.activate();
+        assert!(!split.shows_sidebar());
+        assert_eq!(logs.ctx.selected.get(), 2);
+
+        logs.window.destroy();
+    });
+}
+
+#[test]
+#[ignore = "requires GTK display"]
+fn on_a_desktop_the_job_list_stays_beside_the_log() {
+    run_gtk_test("logs_window_desktop_width", || {
+        let logs = logs_window_at(1180);
+        let split = logs
+            .ctx
+            .split_view
+            .upgrade()
+            .expect("a split view for several jobs");
+
+        assert!(!split.is_collapsed());
+        assert!(split.shows_sidebar());
+
+        logs.window.destroy();
+    });
+}

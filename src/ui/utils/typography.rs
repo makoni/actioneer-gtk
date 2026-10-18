@@ -1,3 +1,6 @@
+use gtk4 as gtk;
+use gtk4::prelude::WidgetExt;
+
 /// Scripts where inter-letter tracking is harmful: it breaks the cursive
 /// joining of Arabic, Hebrew and Urdu, and detaches Devanagari, Bengali and Thai
 /// matras from their base glyphs. CJK and Hangul are included because tracking
@@ -32,6 +35,28 @@ fn tracking_is_harmful(ch: char) -> bool {
 pub fn section_heading(text: &str) -> (String, bool) {
     let suppress_tracking = text.chars().any(tracking_is_harmful);
     (text.to_uppercase(), suppress_tracking)
+}
+
+/// Lets a label break over lines instead of setting a minimum width the
+/// size of its whole text, which on a phone — or in a language with longer
+/// words than English — is wider than the screen.
+///
+/// Only between words: `WordChar` would also split a word whenever space is
+/// short, which hyphenates headings mid-word ("НЕДАВНИ-Е") long before it is
+/// needed. Pango already treats each CJK character as breakable, so Chinese
+/// and Japanese wrap without it.
+pub fn allow_wrap(label: &gtk::Label) {
+    label.set_wrap(true);
+    label.set_wrap_mode(gtk::pango::WrapMode::Word);
+}
+
+/// A label that starts at the leading edge and wraps between words: the
+/// usual shape of a block of text in a narrow column. Without the `xalign`,
+/// a wrapped label centres its lines.
+pub fn leading_wrapping(label: &gtk::Label) {
+    label.set_halign(gtk::Align::Start);
+    label.set_xalign(0.0);
+    allow_wrap(label);
 }
 
 #[cfg(test)]

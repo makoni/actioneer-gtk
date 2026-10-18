@@ -10,7 +10,8 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
 runner="$repo_root/tests/smoke/run_smoke.sh"
 
-# script:launch arguments
+# script:launch arguments[|screen size, default 1280x1024[|GTK font]]
+# The launch arguments run up to the first '|', so they may contain ':'.
 scripts=(
   "welcome_screen.py:"
   "demo_mode.py:--demo"
@@ -20,14 +21,17 @@ scripts=(
   "filters_and_favorites.py:--demo"
   "trigger_dialog.py:--demo"
   "preferences_and_signout.py:--demo"
+  "narrow_window.py:--demo|360x720|Ubuntu Sans 11"
 )
 
 failed=0
 for entry in "${scripts[@]}"; do
   script="${entry%%:*}"
-  args="${entry#*:}"
-  echo "=== smoke: $script ${args:+($args)} ==="
-  if ACTIONEER_ARGS="$args" bash "$runner" "$repo_root/tests/smoke/$script"; then
+  rest="${entry#*:}"
+  IFS='|' read -r args screen font <<<"$rest"
+  echo "=== smoke: $script ${args:+($args)} ${screen:+[$screen]} ${font:+[$font]} ==="
+  if SMOKE_SCREEN="${screen:-1280x1024}" SMOKE_FONT="$font" ACTIONEER_ARGS="$args" \
+    bash "$runner" "$repo_root/tests/smoke/$script"; then
     echo "--- $script: PASS"
   else
     echo "--- $script: FAIL" >&2

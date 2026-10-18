@@ -336,6 +336,9 @@ msgstr "लॉग प्राप्त किए जा रहे हैं..."
 msgid "Refresh logs"
 msgstr "लॉग रीफ्रेश करें"
 
+msgid "Show jobs"
+msgstr "जॉब दिखाएँ"
+
 msgid "Copy logs to clipboard"
 msgstr "लॉग को क्लिपबोर्ड पर कॉपी करें"
 
@@ -718,6 +721,15 @@ msgstr "ऐप छोड़े बिना जॉब लॉग यहीं द
 
 msgid "Run a job on any branch"
 msgstr "किसी भी ब्रांच पर जॉब चलाएँ"
+
+msgid "Browse repositories on your phone"
+msgstr "अपने फ़ोन पर रिपॉज़िटरी ब्राउज़ करें"
+
+msgid "Follow runs and their jobs on a phone"
+msgstr "फ़ोन पर रन और उनके जॉब देखें"
+
+msgid "Read job logs on the go"
+msgstr "कहीं भी जॉब लॉग पढ़ें"
 
 msgid "This release includes an important security update to help keep Actioneer safer to use."
 msgstr "इस रिलीज़ में एक महत्वपूर्ण सुरक्षा अपडेट शामिल है, जिससे Actioneer का उपयोग और सुरक्षित रहता है।"

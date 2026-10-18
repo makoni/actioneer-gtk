@@ -34,6 +34,54 @@ pub(crate) fn find_label_by_name(widget: &gtk::Widget, name: &str) -> Option<gtk
     None
 }
 
+/// The window action a tap on a repository row asks for, with the row's
+/// repository id. The window decides what it means: on a phone-sized window it
+/// opens the repository's page, otherwise nothing (see `MainWindow`).
+pub(crate) const OPEN_REPOSITORY_ACTION: &str = "win.open-repository";
+
+/// The repository whose row is at `(x, y)` in `view`'s coordinates, unless the
+/// point is on the row's star or on a header.
+///
+/// Found by geometry rather than `view.pick()`: a list item takes the press
+/// before its row sees it, and what `pick` answers there depends on how GTK
+/// nests list items, which is not API. The area is the row's parent — the
+/// list item `ListItem::set_child` put it in — so the row's margins, the list
+/// item's padding and right-to-left all come with it: the list selects a row
+/// when any of that is pressed, and a finger lands there as often as on text.
+pub(crate) fn repo_at_point(
+    view: &impl IsA<gtk::Widget>,
+    rows: &impl IsA<gio::ListModel>,
+    x: f64,
+    y: f64,
+) -> Option<i64> {
+    let point = gtk::graphene::Point::new(x as f32, y as f32);
+    let rows = rows.as_ref();
+    for index in 0..rows.n_items() {
+        let Some(row) = rows.item(index).and_downcast::<gtk::Widget>() else {
+            continue;
+        };
+        if !row.is_mapped() {
+            continue;
+        }
+        let item = row.parent().unwrap_or_else(|| row.clone());
+        if !item
+            .compute_bounds(view)
+            .is_some_and(|bounds| bounds.contains_point(&point))
+        {
+            continue;
+        }
+        let on_star = get_data_clone::<gtk::ToggleButton, _>(&row, REPO_FAV_BUTTON_KEY)
+            .and_then(|star| star.compute_bounds(view))
+            .is_some_and(|bounds| bounds.contains_point(&point));
+        return if on_star {
+            None
+        } else {
+            repo_id_from_row(&row)
+        };
+    }
+    None
+}
+
 pub(crate) fn build_repo_row(
     repo: Repo,
     is_favorite: bool,

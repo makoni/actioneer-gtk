@@ -125,9 +125,17 @@ impl Default for FavoritesManager {
 mod tests {
     use super::*;
 
+    /// A manager on a file of its own. `FavoritesManager::new()` is the
+    /// developer's real favourites list, which these tests used to clear and
+    /// overwrite on every run.
+    fn scratch_manager(dir: &tempfile::TempDir) -> FavoritesManager {
+        FavoritesManager::with_path(dir.path().join("favorites.json")).unwrap()
+    }
+
     #[tokio::test]
     async fn test_favorites_toggle() {
-        let manager = FavoritesManager::new().unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let manager = scratch_manager(&dir);
         let repo_id = 12345;
 
         // Initially not a favorite
@@ -146,10 +154,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_favorites_get_all() {
-        let manager = FavoritesManager::new().unwrap();
-
-        // Ensure a clean slate in case prior runs left persisted favorites
-        manager.clear_all().await.unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let manager = scratch_manager(&dir);
 
         manager.add_favorite(1).await.unwrap();
         manager.add_favorite(2).await.unwrap();

@@ -336,6 +336,9 @@ msgstr "Obteniendo registros..."
 msgid "Refresh logs"
 msgstr "Actualizar registros"
 
+msgid "Show jobs"
+msgstr "Mostrar jobs"
+
 msgid "Copy logs to clipboard"
 msgstr "Copiar registros al portapapeles"
 
@@ -719,6 +722,15 @@ msgstr "Revisa logs de jobs en línea sin salir de la aplicación"
 
 msgid "Run a job on any branch"
 msgstr "Ejecuta un job en cualquier rama"
+
+msgid "Browse repositories on your phone"
+msgstr "Explora repositorios en tu teléfono"
+
+msgid "Follow runs and their jobs on a phone"
+msgstr "Sigue las ejecuciones y sus jobs en el teléfono"
+
+msgid "Read job logs on the go"
+msgstr "Lee los logs de los jobs desde cualquier lugar"
 
 msgid "This release includes an important security update to help keep Actioneer safer to use."
 msgstr "Esta versión incluye una importante actualización de seguridad para ayudar a que Actioneer siga siendo más seguro de usar."

@@ -40,8 +40,13 @@ use sidebar_panel::SidebarPanel;
 use crate::ui::state::{RepoActionsState, WorkflowStatusCounts};
 
 const REPO_STATUS_TTL: Duration = Duration::from_secs(300);
-const MIN_WINDOW_WIDTH: i32 = 860;
-const MIN_WINDOW_HEIGHT: i32 = 520;
+// The smallest size GNOME asks adaptive apps to support: a phone in portrait
+// is 360 wide, and 294 high is a phone in landscape minus the shell's bars.
+const MIN_WINDOW_WIDTH: i32 = 360;
+const MIN_WINDOW_HEIGHT: i32 = 294;
+// Below this the sidebar and the detail pane no longer fit side by side, so the
+// split view collapses into two pages: the repository list, then its detail.
+const COLLAPSE_CONDITION: &str = "max-width: 720sp";
 const HOMEPAGE_URL: &str = "https://github.com/makoni/actioneer-gtk";
 const ISSUE_URL: &str = "https://github.com/makoni/actioneer-gtk/issues";
 const DONATION_URL: &str = "https://nowpayments.io/donation/makoni";
@@ -59,6 +64,9 @@ pub struct MainWindow {
     rate_limit_label: gtk::Label,
     refresh_button: gtk::Button,
     header_bar: adw::HeaderBar,
+    content_header_bar: adw::HeaderBar,
+    rate_limit_box: gtk::Box,
+    split_view: adw::NavigationSplitView,
     header_spinner: Rc<RefCell<Option<gtk::Spinner>>>,
     favorites_manager: Option<Arc<FavoritesManager>>,
     favorites: Arc<Mutex<HashSet<i64>>>,
@@ -112,6 +120,13 @@ impl MainWindow {
         let header_bar = header_controls.header_bar();
         let refresh_button = header_controls.refresh_button();
         let rate_limit_label = header_controls.rate_limit_label();
+        let content_header_bar = header_controls.content_header_bar();
+        let rate_limit_box = header_controls.rate_limit_box();
+        let split_view = adw::NavigationSplitView::builder()
+            .min_sidebar_width(300.0)
+            .max_sidebar_width(400.0)
+            .sidebar_width_fraction(0.36)
+            .build();
 
         let detail_status_page = adw::StatusPage::builder()
             .title(tr("Select a repository"))
@@ -131,6 +146,9 @@ impl MainWindow {
             .build();
         root_stack.set_hexpand(true);
         root_stack.set_vexpand(true);
+        // Only the visible page decides how narrow the window may get: the
+        // welcome screen must not hold the signed-in app wider, or the reverse.
+        root_stack.set_hhomogeneous(false);
         let active_detail: Rc<RefCell<Option<RepoDetailPane>>> = Rc::new(RefCell::new(None));
         let favorites_manager = services.favorites.clone();
         let preferences_manager = services.preferences.clone();
@@ -159,6 +177,9 @@ impl MainWindow {
             rate_limit_label: rate_limit_label.clone(),
             refresh_button: refresh_button.clone(),
             header_bar: header_bar.clone(),
+            content_header_bar,
+            rate_limit_box,
+            split_view,
             header_spinner: header_spinner.clone(),
             favorites_manager: favorites_manager.clone(),
             favorites: favorites.clone(),
@@ -223,9 +244,6 @@ impl MainWindow {
 
         self.setup_header_menu(&header);
 
-        let main_box = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        main_box.append(&header);
-
         let sidebar_clamp = self.sidebar_panel.clamp();
 
         let detail_status_page = self.detail_status_page.clone();
@@ -242,22 +260,55 @@ impl MainWindow {
         }
         detail_stack.set_visible_child_name("placeholder");
 
-        let split_pane = gtk::Paned::builder()
-            .orientation(gtk::Orientation::Horizontal)
-            .wide_handle(true)
-            .start_child(&sidebar_clamp)
-            .end_child(&detail_stack)
-            .shrink_start_child(false)
-            .shrink_end_child(true)
+        let sidebar_toolbar = adw::ToolbarView::new();
+        sidebar_toolbar.add_top_bar(&header);
+        sidebar_toolbar.set_content(Some(&sidebar_clamp));
+        // Collapsed, the content header has no room for the rate limit; it
+        // moves under the repository list instead, mirroring the header's.
+        let narrow_rate_limit = gtk::Label::new(None);
+        narrow_rate_limit.add_css_class("dim-label");
+        narrow_rate_limit.add_css_class("caption");
+        crate::ui::utils::allow_wrap(&narrow_rate_limit);
+        narrow_rate_limit.set_justify(gtk::Justification::Center);
+        narrow_rate_limit.set_margin_bottom(8);
+        narrow_rate_limit.set_visible(false);
+        self.rate_limit_label
+            .bind_property("label", &narrow_rate_limit, "label")
+            .sync_create()
             .build();
-        // Keep the sidebar at its natural width and let the detail pane use remaining space.
-        split_pane.set_resize_start_child(false);
-        split_pane.set_resize_end_child(true);
-        split_pane.set_position(360);
+        sidebar_toolbar.add_bottom_bar(&narrow_rate_limit);
+        let sidebar_page = adw::NavigationPage::builder()
+            .title("Actioneer")
+            .tag("sidebar")
+            .child(&sidebar_toolbar)
+            .build();
 
-        main_box.append(&split_pane);
+        let content_toolbar = adw::ToolbarView::new();
+        content_toolbar.add_top_bar(&self.content_header_bar);
+        content_toolbar.set_content(Some(&detail_stack));
+        let content_page = adw::NavigationPage::builder()
+            .title(tr("Select a repository"))
+            .tag("content")
+            .child(&content_toolbar)
+            .build();
 
-        root_stack.add_named(&main_box, Some("app"));
+        let split_view = self.split_view.clone();
+        split_view.set_sidebar(Some(&sidebar_page));
+        split_view.set_content(Some(&content_page));
+
+        root_stack.add_named(&split_view, Some("app"));
+
+        // Collapsed, the split view shows one page at a time; a tap on a
+        // repository opens its page through the `open-repository` action. The rate limit
+        // gives way to the back button.
+        let collapse = adw::Breakpoint::new(
+            adw::BreakpointCondition::parse(COLLAPSE_CONDITION)
+                .expect("the collapse condition is a valid breakpoint condition"),
+        );
+        collapse.add_setter(&split_view, "collapsed", Some(&true.to_value()));
+        collapse.add_setter(&self.rate_limit_box, "visible", Some(&false.to_value()));
+        collapse.add_setter(&narrow_rate_limit, "visible", Some(&true.to_value()));
+        self.window.add_breakpoint(collapse);
 
         let welcome_screen = WelcomeScreen::new();
         let welcome_widget = welcome_screen.widget();
@@ -316,6 +367,7 @@ impl MainWindow {
         self.connect_search();
         self.connect_repo_selection();
         self.connect_repo_activation();
+        self.connect_repo_tap();
     }
 
     fn restore_preferences(&self) {
@@ -443,6 +495,7 @@ impl MainWindow {
         }
 
         self.schedule_repo_list_refresh();
+        self.split_view.set_show_content(false);
         self.show_detail_placeholder();
         self.update_rate_limit_display(None);
         self.show_header_loading(false);
@@ -576,5 +629,7 @@ mod app_actions;
 mod layout;
 mod rate_limit;
 
+#[cfg(test)]
+mod adaptive_tests;
 #[cfg(test)]
 mod tests;

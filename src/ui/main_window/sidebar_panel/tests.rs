@@ -375,3 +375,146 @@ fn rebuild_holds_position_when_workflow_counters_arrive() {
         },
     );
 }
+
+#[test]
+#[ignore = "requires GTK display"]
+fn a_point_finds_the_repository_row_under_it_but_not_its_star() {
+    run_gtk_test("repo_at_point", || {
+        use crate::ui::sidebar::repo_at_point;
+
+        let panel = SidebarPanel::new();
+        present_at_size(&panel.clamp(), 360, 400);
+        pump_frames();
+        let repos = (1..=2)
+            .map(|id: i64| Repo {
+                id,
+                name: format!("repo-{id}"),
+                full_name: format!("makoni/repo-{id}"),
+                owner: User {
+                    login: "makoni".into(),
+                },
+                is_private: false,
+                permissions: None,
+                default_branch: Some("main".into()),
+            })
+            .collect::<Vec<_>>();
+        rebuild_repo_list(
+            panel.repo_store(),
+            RepoListRenderContext {
+                repos,
+                actions_snapshot: HashMap::new(),
+                workflow_snapshot: HashMap::new(),
+                favorites_state: Arc::new(Mutex::new(HashSet::new())),
+                favorites_manager: None,
+            },
+        );
+        pump_frames();
+
+        let view = panel.repo_list();
+        let rows = panel.filter_model();
+        let row_of = |id: i64| {
+            (0..rows.n_items())
+                .filter_map(|i| rows.item(i).and_downcast::<gtk::Widget>())
+                .find(|row| crate::ui::sidebar::repo_id_from_row(row) == Some(id))
+                .expect("row is listed")
+        };
+        let row = row_of(2);
+        let bounds = row.compute_bounds(&view).expect("row is laid out");
+        let at = |x: f32, y: f32| repo_at_point(&view, &rows, x as f64, y as f64);
+
+        // The row's own text, and its margin: the list selects on both.
+        assert_eq!(
+            at(bounds.x() + 40.0, bounds.y() + bounds.height() / 2.0),
+            Some(2)
+        );
+        assert_eq!(at(bounds.x() + 40.0, bounds.y() - 2.0), Some(2));
+
+        // Its star toggles the favourite; it must not also open the repository.
+        let star = crate::ui::test_helpers::find_widget::<gtk::ToggleButton>(&row, |_| true)
+            .expect("the row has a star");
+        let star = star.compute_bounds(&view).expect("star is laid out");
+        assert_eq!(
+            at(
+                star.x() + star.width() / 2.0,
+                star.y() + star.height() / 2.0
+            ),
+            None
+        );
+
+        // A header is no repository.
+        let header = (0..rows.n_items())
+            .filter_map(|i| rows.item(i).and_downcast::<gtk::Widget>())
+            .find(|row| crate::ui::sidebar::repo_id_from_row(row).is_none())
+            .expect("the list has a header");
+        let header = header.compute_bounds(&view).expect("header is laid out");
+        assert_eq!(
+            at(header.x() + 10.0, header.y() + header.height() / 2.0),
+            None
+        );
+    });
+}
+
+#[test]
+#[ignore = "requires GTK display"]
+fn in_right_to_left_the_tap_area_takes_the_start_margin_on_the_right() {
+    run_gtk_test("repo_at_point_rtl", || {
+        use crate::ui::sidebar::repo_at_point;
+
+        // How the app goes right-to-left (`style::apply_text_direction_for_language`):
+        // a widget's own direction does not reach its children, the default does.
+        struct DefaultDirection(gtk::TextDirection);
+        impl Drop for DefaultDirection {
+            fn drop(&mut self) {
+                gtk::Widget::set_default_direction(self.0);
+            }
+        }
+        let _restore = DefaultDirection(gtk::Widget::default_direction());
+        gtk::Widget::set_default_direction(gtk::TextDirection::Rtl);
+
+        let panel = SidebarPanel::new();
+        present_at_size(&panel.clamp(), 360, 400);
+        pump_frames();
+        rebuild_repo_list(
+            panel.repo_store(),
+            RepoListRenderContext {
+                repos: vec![Repo {
+                    id: 7,
+                    name: "repo-7".into(),
+                    full_name: "makoni/repo-7".into(),
+                    owner: User {
+                        login: "makoni".into(),
+                    },
+                    is_private: false,
+                    permissions: None,
+                    default_branch: Some("main".into()),
+                }],
+                actions_snapshot: HashMap::new(),
+                workflow_snapshot: HashMap::new(),
+                favorites_state: Arc::new(Mutex::new(HashSet::new())),
+                favorites_manager: None,
+            },
+        );
+        pump_frames();
+
+        let view = panel.repo_list();
+        let rows = panel.filter_model();
+        let row = (0..rows.n_items())
+            .filter_map(|i| rows.item(i).and_downcast::<gtk::Widget>())
+            .find(|row| crate::ui::sidebar::repo_id_from_row(row) == Some(7))
+            .expect("row is listed");
+        let bounds = row.compute_bounds(&view).expect("row is laid out");
+        let middle = bounds.y() + bounds.height() / 2.0;
+        // In right-to-left the start margin is on the right, the end margin on
+        // the left; just inside each belongs to the row.
+        let right = bounds.x() + bounds.width() + row.margin_start() as f32 - 1.0;
+        let left = bounds.x() - row.margin_end() as f32 + 1.0;
+        assert_eq!(
+            repo_at_point(&view, &rows, right as f64, middle as f64),
+            Some(7)
+        );
+        assert_eq!(
+            repo_at_point(&view, &rows, left as f64, middle as f64),
+            Some(7)
+        );
+    });
+}

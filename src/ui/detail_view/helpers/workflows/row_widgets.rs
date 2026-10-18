@@ -122,9 +122,10 @@ pub(super) fn build_row_widgets(
 
     // ---- Expanded area: progress + "Recent runs" sub-header + runs card
     let detail_box = gtk::Box::new(gtk::Orientation::Vertical, 8);
+    // Its side margins live in CSS (`.workflow-detail`), not here: they shrink
+    // when the detail pane is narrow, and these rows are built long after the
+    // pane's breakpoint was set up, so only a stylesheet rule can reach them.
     detail_box.add_css_class("workflow-detail");
-    detail_box.set_margin_start(62);
-    detail_box.set_margin_end(14);
     detail_box.set_margin_bottom(14);
 
     let progress_row = gtk::Box::new(gtk::Orientation::Horizontal, 10);
@@ -155,14 +156,18 @@ pub(super) fn build_row_widgets(
         recent_label.add_css_class("no-tracking");
     }
     recent_label.add_css_class("section-label");
-    recent_label.set_halign(gtk::Align::Start);
     recent_label.set_hexpand(true);
+    // The sub-header shares a narrow card with three more items; in the longer
+    // languages each of them may need a second line on a phone.
+    crate::ui::utils::leading_wrapping(&recent_label);
     subheader.append(&recent_label);
 
     let counts_label = gtk::Label::new(None);
     counts_label.add_css_class("dim-label");
     counts_label.add_css_class("caption");
     counts_label.set_visible(false);
+    counts_label.set_justify(gtk::Justification::Right);
+    crate::ui::utils::allow_wrap(&counts_label);
     subheader.append(&counts_label);
 
     let counts_separator = gtk::Label::new(Some("·"));
@@ -181,6 +186,9 @@ pub(super) fn build_row_widgets(
     let all_link = gtk::LinkButton::with_label(&actions_url, tr("All on GitHub").as_str());
     all_link.add_css_class("caption");
     all_link.set_valign(gtk::Align::Center);
+    if let Some(link_label) = all_link.child().and_downcast::<gtk::Label>() {
+        crate::ui::utils::allow_wrap(&link_label);
+    }
     subheader.append(&all_link);
 
     detail_box.append(&subheader);

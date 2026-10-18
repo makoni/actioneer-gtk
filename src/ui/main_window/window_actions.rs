@@ -1,13 +1,18 @@
 use super::{DONATION_URL, HOMEPAGE_URL, ISSUE_URL, MainWindow};
 use crate::kernel::i18n::tr;
 use crate::services::crash_report;
-use crate::ui::preferences_window::PreferencesWindow;
+use crate::ui::preferences_window::{PREFERENCES_DIALOG_NAME, PreferencesWindow};
 use gtk4::prelude::*;
 use gtk4::{self as gtk};
 use libadwaita as adw;
 use libadwaita::prelude::*;
 use std::fs;
 use tracing::{error, info, warn};
+
+/// Widget names of the menu's dialogs; see `dialog_is_on_top`.
+const ABOUT_DIALOG_NAME: &str = "about-dialog";
+const SHORTCUTS_DIALOG_NAME: &str = "shortcuts-dialog";
+const HELP_DIALOG_NAME: &str = "help-dialog";
 
 impl MainWindow {
     /// Builds a simple informational alert with a single dismiss button.
@@ -18,7 +23,22 @@ impl MainWindow {
         dialog
     }
 
+    /// Whether the dialog named `name` is the one on top in the window.
+    ///
+    /// The menu's dialogs are hosted inside the window, so their accelerators
+    /// (Ctrl+,, Ctrl+?, F1) still reach it while one is open, and pressing the
+    /// same one again would stack a second copy. Only that is refused: another
+    /// dialog may still open over, say, the crash report shown at startup.
+    fn dialog_is_on_top(&self, name: &str) -> bool {
+        self.window
+            .visible_dialog()
+            .is_some_and(|dialog| dialog.widget_name() == name)
+    }
+
     pub(super) fn open_preferences_window(&self) {
+        if self.dialog_is_on_top(PREFERENCES_DIALOG_NAME) {
+            return;
+        }
         if let Some(manager) = &self.preferences_manager {
             let parent = self.window.clone();
             let window = PreferencesWindow::new(&parent, manager.clone());
@@ -32,7 +52,11 @@ impl MainWindow {
     }
 
     pub(super) fn open_about_window(&self) {
+        if self.dialog_is_on_top(ABOUT_DIALOG_NAME) {
+            return;
+        }
         let about = adw::AboutDialog::builder()
+            .name(ABOUT_DIALOG_NAME)
             .application_name("Actioneer")
             .application_icon(crate::kernel::app::APP_ICON_NAME)
             .developer_name("Sergey Armodin")
@@ -45,95 +69,60 @@ impl MainWindow {
     }
 
     pub(super) fn open_shortcuts_window(&self) {
-        let window = Self::build_shortcuts_window(&self.window);
-        window.present();
+        if self.dialog_is_on_top(SHORTCUTS_DIALOG_NAME) {
+            return;
+        }
+        Self::build_shortcuts_dialog().present(Some(&self.window));
     }
 
-    fn build_shortcuts_window(parent: &adw::ApplicationWindow) -> adw::Window {
-        let window = adw::Window::builder()
+    /// The app's accelerators as a list. `adw::ShortcutsDialog` is the native
+    /// widget for this, but it arrived in libadwaita 1.8, past this crate's
+    /// floor. An `adw::Dialog` becomes a bottom sheet on a phone, and the rows'
+    /// titles wrap, so long translations fit.
+    fn build_shortcuts_dialog() -> adw::Dialog {
+        let group = adw::PreferencesGroup::new();
+        for (title, accelerator) in [
+            (tr("Refresh repositories"), "F5"),
+            (tr("Open preferences"), "Ctrl+,"),
+            (tr("Show keyboard shortcuts"), "Ctrl+?"),
+            (tr("Open help"), "F1"),
+            (tr("Quit application"), "Ctrl+Q"),
+        ] {
+            group.add(&Self::shortcut_row(&title, accelerator));
+        }
+        let page = adw::PreferencesPage::new();
+        page.add(&group);
+
+        let toolbar = adw::ToolbarView::new();
+        toolbar.add_top_bar(&adw::HeaderBar::new());
+        toolbar.set_content(Some(&page));
+
+        adw::Dialog::builder()
+            .name(SHORTCUTS_DIALOG_NAME)
             .title(tr("Keyboard Shortcuts"))
-            .transient_for(parent)
-            .modal(true)
-            .default_width(460)
-            .default_height(340)
-            .build();
-
-        let content = gtk::Box::new(gtk::Orientation::Vertical, 12);
-        content.set_margin_top(18);
-        content.set_margin_bottom(18);
-        content.set_margin_start(18);
-        content.set_margin_end(18);
-
-        content.append(&Self::shortcut_item(
-            tr("Refresh repositories").as_str(),
-            "F5",
-        ));
-        content.append(&Self::shortcut_item(
-            tr("Open preferences").as_str(),
-            "Ctrl+,",
-        ));
-        content.append(&Self::shortcut_item(
-            tr("Show keyboard shortcuts").as_str(),
-            "Ctrl+?",
-        ));
-        content.append(&Self::shortcut_item(tr("Open help").as_str(), "F1"));
-        content.append(&Self::shortcut_item(
-            tr("Quit application").as_str(),
-            "Ctrl+Q",
-        ));
-
-        let spacer = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        spacer.set_vexpand(true);
-        content.append(&spacer);
-
-        let button_row = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-        let button_spacer = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-        button_spacer.set_hexpand(true);
-        button_row.append(&button_spacer);
-
-        let close_button = gtk::Button::with_label(tr("Close").as_str());
-        close_button.add_css_class("suggested-action");
-        let window_for_close = window.clone();
-        close_button.connect_clicked(move |_| {
-            window_for_close.close();
-        });
-        button_row.append(&close_button);
-        content.append(&button_row);
-
-        window.set_content(Some(&content));
-        window
+            .content_width(420)
+            .child(&toolbar)
+            .build()
     }
 
-    fn shortcut_item(title: &str, accelerator: &str) -> gtk::Box {
-        let row = gtk::Box::new(gtk::Orientation::Horizontal, 12);
-
-        let title_label = gtk::Label::new(Some(title));
-        title_label.set_xalign(0.0);
-        title_label.set_hexpand(true);
-
+    fn shortcut_row(title: &str, accelerator: &str) -> adw::ActionRow {
+        let row = adw::ActionRow::builder().title(title).build();
         let accelerator_label = gtk::Label::new(Some(accelerator));
         accelerator_label.add_css_class("dim-label");
-        accelerator_label.set_xalign(1.0);
-
-        row.append(&title_label);
-        row.append(&accelerator_label);
+        // Key names read left to right in every language.
+        accelerator_label.set_direction(gtk::TextDirection::Ltr);
+        row.add_suffix(&accelerator_label);
         row
     }
 
     pub(super) fn open_help_window(&self) {
-        let window = adw::Window::builder()
-            .title(tr("Actioneer Help"))
-            .transient_for(&self.window)
-            .modal(true)
-            .default_width(620)
-            .default_height(520)
-            .build();
+        if self.dialog_is_on_top(HELP_DIALOG_NAME) {
+            return;
+        }
+        Self::build_help_dialog().present(Some(&self.window));
+    }
 
-        let scrolled = gtk::ScrolledWindow::builder()
-            .hscrollbar_policy(gtk::PolicyType::Never)
-            .vexpand(true)
-            .hexpand(true)
-            .build();
+    fn build_help_dialog() -> adw::Dialog {
         let content = gtk::Box::new(gtk::Orientation::Vertical, 12);
         content.set_margin_top(18);
         content.set_margin_bottom(18);
@@ -155,9 +144,8 @@ Troubleshooting\n\
 - For expired logs, retry from the latest run or trigger a new run.\n\
 - Use Report Issue from the menu to send diagnostics and steps.");
         let label = gtk::Label::new(Some(help_text.as_str()));
-        label.set_wrap(true);
         label.set_selectable(false);
-        label.set_xalign(0.0);
+        crate::ui::utils::leading_wrapping(&label);
         content.append(&label);
 
         let issue_hint_text = format!(
@@ -166,42 +154,39 @@ Troubleshooting\n\
             ISSUE_URL
         );
         let issue_hint = gtk::Label::new(Some(issue_hint_text.as_str()));
-        issue_hint.set_wrap(true);
-        issue_hint.set_xalign(0.0);
+        crate::ui::utils::leading_wrapping(&issue_hint);
+        // The issue tracker's URL has no spaces to break at.
+        issue_hint.set_wrap_mode(gtk::pango::WrapMode::WordChar);
         issue_hint.add_css_class("dim-label");
         content.append(&issue_hint);
 
-        scrolled.set_child(Some(&content));
+        let scrolled = gtk::ScrolledWindow::builder()
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .vexpand(true)
+            .hexpand(true)
+            .child(&content)
+            .build();
 
-        let container = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        container.set_vexpand(true);
-        container.set_hexpand(true);
-        container.append(&scrolled);
+        let toolbar = adw::ToolbarView::new();
+        toolbar.add_top_bar(&adw::HeaderBar::new());
+        toolbar.set_content(Some(&scrolled));
 
-        let button_row = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-        button_row.set_margin_top(12);
-        button_row.set_margin_bottom(18);
-        button_row.set_margin_start(18);
-        button_row.set_margin_end(18);
-
-        let spacer = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-        spacer.set_hexpand(true);
-        button_row.append(&spacer);
-
-        let close_button = gtk::Button::with_label(tr("Close").as_str());
-        close_button.add_css_class("suggested-action");
-        let window_for_close = window.clone();
-        close_button.connect_clicked(move |_| {
-            window_for_close.close();
-        });
-        button_row.append(&close_button);
-
-        container.append(&button_row);
-        window.set_content(Some(&container));
-        window.present();
+        adw::Dialog::builder()
+            .name(HELP_DIALOG_NAME)
+            .title(tr("Actioneer Help"))
+            .content_width(560)
+            .content_height(560)
+            .child(&toolbar)
+            .build()
     }
 
     pub(super) fn open_report_issue(&self) {
+        Self::report_issue(&self.window);
+    }
+
+    /// Opens the issue tracker, prefilled from a pending crash report if there
+    /// is one; `window` parents the error alert if the browser cannot open.
+    fn report_issue(window: &adw::ApplicationWindow) {
         let issue_url = crash_report::build_issue_url_for_pending_report()
             .map(|url| url.unwrap_or_else(|| ISSUE_URL.to_string()))
             .unwrap_or_else(|err| {
@@ -212,7 +197,7 @@ Troubleshooting\n\
             error!("Failed to open issue tracker URL: {}", err);
             let open_issue_error = tr("Failed to open issue tracker in the browser.");
             let dialog = Self::info_alert(open_issue_error.as_str());
-            dialog.present(Some(&self.window));
+            dialog.present(Some(window));
         }
     }
 
@@ -238,77 +223,103 @@ Troubleshooting\n\
             }
         };
 
-        let popover = gtk::Popover::builder()
-            .autohide(false)
-            .has_arrow(true)
-            .build();
-        popover.set_parent(&self.header_bar);
+        self.build_crash_report_dialog(report_text)
+            .present(Some(&self.window));
+    }
 
-        let content = gtk::Box::new(gtk::Orientation::Vertical, 8);
-        content.set_margin_top(12);
-        content.set_margin_bottom(12);
-        content.set_margin_start(12);
-        content.set_margin_end(12);
-        content.set_size_request(640, 420);
+    /// Offers last run's crash report for copying or filing.
+    ///
+    /// Only the Close button marks the report as seen, as it did when this
+    /// was a popover: a dialog can also be dismissed by Escape, or on a phone
+    /// by swiping the sheet away, which is too easy to do by accident to cost
+    /// the report — dismissed that way it is offered again next launch.
+    pub(super) fn build_crash_report_dialog(&self, report_text: String) -> adw::Dialog {
+        let content = gtk::Box::new(gtk::Orientation::Vertical, 12);
+        content.set_margin_top(6);
+        content.set_margin_bottom(18);
+        content.set_margin_start(18);
+        content.set_margin_end(18);
 
         let message_label = gtk::Label::new(Some(
             tr("Actioneer detected a crash report from the previous run. You can report it on GitHub and attach the crash file.")
                 .as_str(),
         ));
-        message_label.set_wrap(true);
-        message_label.set_xalign(0.0);
+        crate::ui::utils::leading_wrapping(&message_label);
         content.append(&message_label);
 
-        let scrolled = gtk::ScrolledWindow::builder()
-            .hexpand(true)
-            .vexpand(true)
-            .min_content_height(260)
-            .build();
         let text_view = gtk::TextView::new();
         text_view.set_editable(false);
         text_view.set_monospace(true);
         text_view.set_direction(gtk::TextDirection::Ltr);
         text_view.set_wrap_mode(gtk::WrapMode::WordChar);
         text_view.buffer().set_text(report_text.as_str());
-        scrolled.set_child(Some(&text_view));
+        let scrolled = gtk::ScrolledWindow::builder()
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .vexpand(true)
+            .min_content_height(80)
+            .child(&text_view)
+            .build();
+        scrolled.add_css_class("card");
         content.append(&scrolled);
 
-        let button_row = gtk::Box::new(gtk::Orientation::Horizontal, 8);
         let copy_button = gtk::Button::with_label(tr("Copy diagnostics").as_str());
         let issue_button = gtk::Button::with_label(tr("Report Issue").as_str());
         let close_button = gtk::Button::with_label(tr("Close").as_str());
         close_button.add_css_class("suggested-action");
+        let button_row = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+        button_row.set_halign(gtk::Align::End);
+        button_row.append(&copy_button);
+        button_row.append(&issue_button);
+        button_row.append(&close_button);
+        content.append(&button_row);
 
-        let report_text_for_copy = report_text.clone();
         copy_button.connect_clicked(move |_| {
             if let Some(display) = gtk::gdk::Display::default() {
-                display.clipboard().set_text(report_text_for_copy.as_str());
+                display.clipboard().set_text(report_text.as_str());
+            }
+        });
+        // Weak: the dialog is hosted inside this window.
+        let window = self.window.downgrade();
+        issue_button.connect_clicked(move |_| {
+            if let Some(window) = window.upgrade() {
+                Self::report_issue(&window);
             }
         });
 
-        let this = self.clone();
-        issue_button.connect_clicked(move |_| {
-            this.open_report_issue();
-        });
+        let toolbar = adw::ToolbarView::new();
+        toolbar.add_top_bar(&adw::HeaderBar::new());
+        toolbar.set_content(Some(&content));
 
-        let popover_for_close = popover.clone();
+        let dialog = adw::Dialog::builder()
+            .title("Actioneer")
+            .content_width(640)
+            .content_height(480)
+            .child(&toolbar)
+            .build();
+        crate::ui::utils::set_adaptive_dialog_min_size(&dialog);
+        // Three buttons side by side outgrow a phone in the longer languages.
+        let narrow = adw::Breakpoint::new(
+            adw::BreakpointCondition::parse("max-width: 480sp")
+                .expect("a valid breakpoint condition"),
+        );
+        narrow.add_setter(
+            &button_row,
+            "orientation",
+            Some(&gtk::Orientation::Vertical.to_value()),
+        );
+        narrow.add_setter(&button_row, "halign", Some(&gtk::Align::Fill.to_value()));
+        dialog.add_breakpoint(narrow);
+        // Weak: the button sits inside the dialog.
+        let dialog_for_close = dialog.downgrade();
         close_button.connect_clicked(move |_| {
             if let Err(err) = crash_report::clear_pending_report() {
                 warn!("Failed to clear pending crash report marker: {}", err);
             }
-            popover_for_close.popdown();
+            if let Some(dialog) = dialog_for_close.upgrade() {
+                dialog.close();
+            }
         });
-
-        button_row.append(&copy_button);
-        button_row.append(&issue_button);
-        let spacer = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-        spacer.set_hexpand(true);
-        button_row.append(&spacer);
-        button_row.append(&close_button);
-        content.append(&button_row);
-
-        popover.set_child(Some(&content));
-        popover.popup();
+        dialog
     }
 
     pub(super) fn open_donation_url(&self) {
@@ -360,25 +371,48 @@ mod tests {
 
     #[test]
     #[ignore = "requires GTK display"]
-    fn shortcuts_window_builds_and_closes() {
-        run_gtk_test("shortcuts_window_builds_and_closes", || {
+    fn shortcuts_dialog_builds_and_closes() {
+        run_gtk_test("shortcuts_dialog_builds_and_closes", || {
             let app = adw::Application::builder()
                 .application_id("me.spaceinbox.actioneer.tests.shortcuts")
                 .build();
             let parent = adw::ApplicationWindow::new(&app);
 
-            let window = MainWindow::build_shortcuts_window(&parent);
-            window.present();
+            let dialog = MainWindow::build_shortcuts_dialog();
+            dialog.present(Some(&parent));
+            while glib::MainContext::default().pending() {
+                let _ = glib::MainContext::default().iteration(false);
+            }
+            assert_eq!(parent.visible_dialog().as_ref(), Some(&dialog));
+
+            dialog.force_close();
             while glib::MainContext::default().pending() {
                 let _ = glib::MainContext::default().iteration(false);
             }
 
-            window.close();
-            while glib::MainContext::default().pending() {
-                let _ = glib::MainContext::default().iteration(false);
-            }
+            assert!(parent.visible_dialog().is_none());
+        });
+    }
 
-            assert!(!window.is_visible());
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn shortcuts_and_help_dialogs_are_released_once_closed() {
+        run_gtk_test("shortcuts_and_help_released", || {
+            let app = adw::Application::builder()
+                .application_id("me.spaceinbox.actioneer.tests.dialogs")
+                .build();
+            let parent = adw::ApplicationWindow::new(&app);
+            crate::ui::test_helpers::assert_dialog_released(
+                &parent,
+                MainWindow::build_shortcuts_dialog,
+                "shortcuts dialog",
+            );
+            crate::ui::test_helpers::assert_dialog_released(
+                &parent,
+                MainWindow::build_help_dialog,
+                "help dialog",
+            );
+            parent.destroy();
         });
     }
 

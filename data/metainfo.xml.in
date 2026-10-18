@@ -80,6 +80,17 @@
     <binary>actioneer</binary>
   </provides>
 
+  <!-- Adaptive down to a phone in portrait (360 px wide): the store shows the
+       app as working on phones, and Phosh offers it in its app list. -->
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>touch</control>
+  </supports>
+
   <!-- Icons and screenshots: include icon names that match files in the icons/ directory.
        Add screenshot entries when screenshots are available in data/screenshots/ or icons/preview. -->
   <screenshots>
@@ -99,6 +110,18 @@
     <screenshot type="detail">
       <caption>Run a job on any branch</caption>
       <image type="source" width="2000" height="1400">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-4.png</image>
+    </screenshot>
+    <screenshot type="detail">
+      <caption>Browse repositories on your phone</caption>
+      <image type="source" width="796" height="1516">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-mobile-1.png</image>
+    </screenshot>
+    <screenshot type="detail">
+      <caption>Follow runs and their jobs on a phone</caption>
+      <image type="source" width="796" height="1516">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-mobile-2.png</image>
+    </screenshot>
+    <screenshot type="detail">
+      <caption>Read job logs on the go</caption>
+      <image type="source" width="796" height="1516">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-mobile-3.png</image>
     </screenshot>
   </screenshots>
 

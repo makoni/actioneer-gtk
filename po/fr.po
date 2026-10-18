@@ -336,6 +336,9 @@ msgstr "Récupération des journaux..."
 msgid "Refresh logs"
 msgstr "Actualiser les journaux"
 
+msgid "Show jobs"
+msgstr "Afficher les jobs"
+
 msgid "Copy logs to clipboard"
 msgstr "Copier les journaux dans le presse-papiers"
 
@@ -719,6 +722,15 @@ msgstr "Consultez les journaux des jobs directement dans l’application"
 
 msgid "Run a job on any branch"
 msgstr "Exécutez un job sur n’importe quelle branche"
+
+msgid "Browse repositories on your phone"
+msgstr "Parcourez les dépôts sur votre téléphone"
+
+msgid "Follow runs and their jobs on a phone"
+msgstr "Suivez les exécutions et leurs jobs sur votre téléphone"
+
+msgid "Read job logs on the go"
+msgstr "Lisez les journaux des jobs où que vous soyez"
 
 msgid "This release includes an important security update to help keep Actioneer safer to use."
 msgstr "Cette version inclut une importante mise à jour de sécurité afin de rendre Actioneer plus sûr à l’usage."

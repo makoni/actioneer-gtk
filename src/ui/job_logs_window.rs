@@ -52,6 +52,9 @@ struct Ctx {
     /// Weak, for the same reason: the sidebar's row-selected handler owns this
     /// `Rc`, so a strong link would close a cycle that outlives the window.
     job_list: glib::WeakRef<gtk::ListBox>,
+    /// The job list's split view, when the run has more than one job. Weak for
+    /// the same reason as `job_list`, which it contains.
+    split_view: glib::WeakRef<adw::OverlaySplitView>,
     /// Set while the sidebar is being rebuilt, so the row-selected signals the
     /// rebuild itself fires are not mistaken for the reader's choice.
     rebuilding: Cell<bool>,
@@ -89,7 +92,12 @@ struct WindowParts {
     save: gtk::Button,
     job_label: gtk::Label,
     job_list: gtk::ListBox,
+    split_view: Option<adw::OverlaySplitView>,
 }
+
+/// Below this width the job list stops sitting beside the log and slides over
+/// it instead, on demand: on a phone the log is what the window is for.
+const JOB_LIST_COLLAPSE_CONDITION: &str = "max-width: 640sp";
 
 /// Picks the job a reader most likely wants: the one that failed, else the one
 /// still running, else the first. Used when the caller names a run rather than
@@ -145,6 +153,8 @@ impl JobLogsWindow {
             .default_height(700)
             .transient_for(parent)
             .build();
+        // The smallest size GNOME asks adaptive apps to support (a phone).
+        window.set_size_request(360, 294);
         if let Some(app) = parent.application() {
             window.set_application(Some(&app));
         }
@@ -183,6 +193,11 @@ impl JobLogsWindow {
             run_id,
             job_label: parts.job_label.clone(),
             job_list: parts.job_list.downgrade(),
+            split_view: parts
+                .split_view
+                .as_ref()
+                .map(|split| split.downgrade())
+                .unwrap_or_default(),
             rebuilding: Cell::new(false),
             copy_button: parts.copy.downgrade(),
             save_button: parts.save.downgrade(),
@@ -252,7 +267,7 @@ impl JobLogsWindow {
 
         let job_list = build_job_list(jobs, selected);
 
-        if jobs.len() > 1 {
+        let split_view = if jobs.len() > 1 {
             // A run's "logs" are the logs of its jobs, so the reader picks one
             // instead of the caller guessing. With a single job there is nothing
             // to pick, and the sidebar would only take space.
@@ -261,21 +276,39 @@ impl JobLogsWindow {
                 .vexpand(true)
                 .child(&job_list)
                 .build();
-            sidebar_scroller.set_size_request(220, -1);
+            sidebar_scroller.add_css_class("background");
 
-            let split = gtk::Paned::builder()
-                .orientation(gtk::Orientation::Horizontal)
-                .position(240)
-                .shrink_start_child(false)
-                .resize_start_child(false)
-                .start_child(&sidebar_scroller)
-                .end_child(&scrolled)
+            let split = adw::OverlaySplitView::builder()
+                .sidebar(&sidebar_scroller)
+                .content(&scrolled)
+                .min_sidebar_width(220.0)
+                .max_sidebar_width(280.0)
                 .vexpand(true)
                 .build();
             main_box.append(&split);
+
+            let toggle = gtk::ToggleButton::new();
+            toggle.set_icon_name("sidebar-show-symbolic");
+            crate::ui::utils::describe_control(&toggle, tr("Show jobs").as_str());
+            split
+                .bind_property("show-sidebar", &toggle, "active")
+                .bidirectional()
+                .sync_create()
+                .build();
+            header.pack_start(&toggle);
+
+            let collapse = adw::Breakpoint::new(
+                adw::BreakpointCondition::parse(JOB_LIST_COLLAPSE_CONDITION)
+                    .expect("a valid breakpoint condition"),
+            );
+            collapse.add_setter(&split, "collapsed", Some(&true.to_value()));
+            collapse.add_setter(&split, "show-sidebar", Some(&false.to_value()));
+            window.add_breakpoint(collapse);
+            Some(split)
         } else {
             main_box.append(&scrolled);
-        }
+            None
+        };
 
         toast_overlay.set_child(Some(&main_box));
         window.set_content(Some(toast_overlay));
@@ -286,6 +319,7 @@ impl JobLogsWindow {
             save: save_button,
             job_label,
             job_list,
+            split_view,
         }
     }
 

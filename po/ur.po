@@ -336,6 +336,9 @@ msgstr "لاگ حاصل کیے جا رہے ہیں..."
 msgid "Refresh logs"
 msgstr "لاگ ریفریش کریں"
 
+msgid "Show jobs"
+msgstr "جابز دکھائیں"
+
 msgid "Copy logs to clipboard"
 msgstr "لاگ کو کلپ بورڈ پر کاپی کریں"
 
@@ -719,6 +722,15 @@ msgstr "ایپ چھوڑے بغیر جاب لاگز یہیں دیکھیں"
 
 msgid "Run a job on any branch"
 msgstr "کسی بھی برانچ پر جاب چلائیں"
+
+msgid "Browse repositories on your phone"
+msgstr "اپنے فون پر ریپوزٹریز دیکھیں"
+
+msgid "Follow runs and their jobs on a phone"
+msgstr "فون پر رنز اور ان کی جابز پر نظر رکھیں"
+
+msgid "Read job logs on the go"
+msgstr "کہیں بھی جاب لاگز پڑھیں"
 
 msgid "This release includes an important security update to help keep Actioneer safer to use."
 msgstr "اس ریلیز میں ایک اہم سیکیورٹی اپ ڈیٹ شامل ہے تاکہ Actioneer کا استعمال زیادہ محفوظ رہے۔"

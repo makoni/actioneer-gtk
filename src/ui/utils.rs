@@ -12,7 +12,10 @@ mod a11y;
 pub use a11y::describe_control;
 
 mod typography;
-pub use typography::section_heading;
+pub use typography::{allow_wrap, leading_wrapping, section_heading};
+
+mod dialogs;
+pub use dialogs::set_adaptive_dialog_min_size;
 
 mod favorites;
 pub use favorites::apply_favorite_result;

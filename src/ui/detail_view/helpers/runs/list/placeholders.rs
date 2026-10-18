@@ -5,6 +5,7 @@
 
 use super::RetryHandler;
 use crate::kernel::i18n::tr;
+use crate::ui::utils::leading_wrapping;
 use gtk4::prelude::*;
 use gtk4::{self as gtk};
 use std::cell::RefCell;
@@ -25,7 +26,7 @@ pub(super) fn build_spinner() -> gtk::Widget {
 pub(super) fn build_idle_placeholder() -> gtk::Widget {
     let label = gtk::Label::new(Some(tr("Click to load runs...").as_str()));
     label.add_css_class("dim-label");
-    label.set_halign(gtk::Align::Start);
+    leading_wrapping(&label);
     let container = gtk::Box::new(gtk::Orientation::Vertical, 4);
     container.set_halign(gtk::Align::Start);
     container.append(&label);
@@ -37,7 +38,7 @@ pub(super) fn build_empty_placeholder() -> gtk::Widget {
     container.set_halign(gtk::Align::Start);
     let label = gtk::Label::new(Some(tr("No recent runs").as_str()));
     label.add_css_class("dim-label");
-    label.set_halign(gtk::Align::Start);
+    leading_wrapping(&label);
     container.append(&label);
 
     let info_label = gtk::Label::new(Some(
@@ -45,7 +46,7 @@ pub(super) fn build_empty_placeholder() -> gtk::Widget {
     ));
     info_label.add_css_class("dim-label");
     info_label.add_css_class("caption");
-    info_label.set_halign(gtk::Align::Start);
+    leading_wrapping(&info_label);
     container.append(&info_label);
     container.upcast()
 }
@@ -56,7 +57,7 @@ pub(super) fn build_filtered_placeholder() -> gtk::Widget {
 
     let label = gtk::Label::new(Some(tr("No runs match the current filters").as_str()));
     label.add_css_class("dim-label");
-    label.set_halign(gtk::Align::Start);
+    leading_wrapping(&label);
     container.append(&label);
 
     let hint = gtk::Label::new(Some(
@@ -64,7 +65,7 @@ pub(super) fn build_filtered_placeholder() -> gtk::Widget {
     ));
     hint.add_css_class("dim-label");
     hint.add_css_class("caption");
-    hint.set_halign(gtk::Align::Start);
+    leading_wrapping(&hint);
     container.append(&hint);
     container.upcast()
 }
@@ -75,13 +76,16 @@ pub(super) fn build_error_placeholder() -> (gtk::Widget, gtk::Label, RetryHandle
 
     let label = gtk::Label::new(Some(tr("Unable to load workflow runs").as_str()));
     label.add_css_class("dim-label");
-    label.set_halign(gtk::Align::Start);
+    leading_wrapping(&label);
     container.append(&label);
 
     let detail_label = gtk::Label::new(None);
     detail_label.add_css_class("caption");
     detail_label.add_css_class("dim-label");
-    detail_label.set_halign(gtk::Align::Start);
+    leading_wrapping(&detail_label);
+    // Error text carries URLs and paths with no spaces to break at; between
+    // words only, one of them would set the pane's width on a phone.
+    detail_label.set_wrap_mode(gtk::pango::WrapMode::WordChar);
     container.append(&detail_label);
 
     let retry_button = gtk::Button::with_label(tr("Retry").as_str());

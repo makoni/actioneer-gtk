@@ -12,6 +12,10 @@ use libadwaita::prelude::*;
 use std::sync::Arc;
 use tracing::warn;
 
+/// The preferences dialog's widget name, by which the window tells it is
+/// already open.
+pub const PREFERENCES_DIALOG_NAME: &str = "preferences-dialog";
+
 pub struct PreferencesWindow {
     dialog: adw::PreferencesDialog,
     parent: adw::ApplicationWindow,
@@ -21,6 +25,7 @@ pub struct PreferencesWindow {
 impl PreferencesWindow {
     pub fn new(parent: &adw::ApplicationWindow, manager: Arc<PreferencesManager>) -> Self {
         let dialog = adw::PreferencesDialog::builder()
+            .name(PREFERENCES_DIALOG_NAME)
             .title(tr("Preferences"))
             .content_width(420)
             .content_height(420)

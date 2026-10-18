@@ -639,6 +639,9 @@ msgstr "ログを取得中..."
 msgid "Refresh logs"
 msgstr "ログを更新"
 
+msgid "Show jobs"
+msgstr "ジョブを表示"
+
 #: src/ui/job_logs_window.rs:121
 msgid "Copy logs to clipboard"
 msgstr "ログをクリップボードにコピー"
@@ -1137,6 +1140,15 @@ msgstr "アプリを離れずにジョブログをインラインで確認しま
 #: data/metainfo.xml.in:81
 msgid "Run a job on any branch"
 msgstr "任意のブランチでジョブを実行します"
+
+msgid "Browse repositories on your phone"
+msgstr "スマートフォンでリポジトリを閲覧"
+
+msgid "Follow runs and their jobs on a phone"
+msgstr "スマートフォンで実行とそのジョブを追跡"
+
+msgid "Read job logs on the go"
+msgstr "外出先でジョブログを確認"
 
 #: data/metainfo.xml.in:90
 msgid ""

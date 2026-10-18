@@ -338,6 +338,9 @@ msgstr "Fetching logs..."
 msgid "Refresh logs"
 msgstr "Refresh logs"
 
+msgid "Show jobs"
+msgstr "Show jobs"
+
 msgid "Copy logs to clipboard"
 msgstr "Copy logs to clipboard"
 

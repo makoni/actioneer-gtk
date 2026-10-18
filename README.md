@@ -15,6 +15,13 @@ Actioneer is a native GNOME desktop client for GitHub Actions. It combines a GTK
 - Background refreshes with rate-limit awareness and optional notifications
 - Preference pane for window state, refresh cadence, and favorites
 - Works on both Wayland and X11 thanks to libadwaita’s adaptive widgets and GTK4 renderers
+- Fits a phone as well as a desktop: every window adapts down to 360 px wide, so it can run on Linux phones with Phosh (postmarketOS, Mobian, PureOS) too
+
+<p align="center">
+  <img src="data/screenshots/en-mobile-1.png" width="240" alt="The repository list on a phone">
+  <img src="data/screenshots/en-mobile-2.png" width="240" alt="A workflow run and its jobs on a phone">
+  <img src="data/screenshots/en-mobile-3.png" width="240" alt="Job logs on a phone">
+</p>
 
 ## Installation
 

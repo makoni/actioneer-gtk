@@ -1,5 +1,7 @@
 use super::MainWindow;
-use crate::ui::sidebar::{find_first_repo_index, find_repo_index, repo_from_object};
+use crate::ui::sidebar::{
+    OPEN_REPOSITORY_ACTION, find_first_repo_index, find_repo_index, repo_at_point, repo_from_object,
+};
 use gtk4::{self as gtk, glib, prelude::*};
 use parking_lot::Mutex;
 use std::sync::Arc;
@@ -91,7 +93,7 @@ impl MainWindow {
         let selection = self.repo_selection.clone();
         let repo_view = self.sidebar_panel.repo_list();
 
-        repo_view.connect_activate(move |_, position| {
+        repo_view.connect_activate(move |view, position| {
             let Some(obj) = window.repo_filter_model.item(position) else {
                 return;
             };
@@ -99,6 +101,7 @@ impl MainWindow {
                 return;
             };
 
+            let repo_id = repo.id;
             let active_detail_repo_id = window
                 .active_detail
                 .borrow()
@@ -123,7 +126,46 @@ impl MainWindow {
                 }
                 RepoActivationAction::None => {}
             }
+            // Only an activation (Enter, a double click) or a tap moves to the
+            // detail page: selection changes also come from restoring the last
+            // repo and from list rebuilds, and those must not navigate away
+            // from the list when collapsed. The same action as a tap, so the
+            // same rules: collapsed only, and only once this repository is the
+            // selected one.
+            let _ = view.activate_action(OPEN_REPOSITORY_ACTION, Some(&repo_id.to_variant()));
         });
+    }
+
+    /// Turns a tap on a repository row into `OPEN_REPOSITORY_ACTION`, which
+    /// opens the repository's page when the window is collapsed.
+    ///
+    /// Selection cannot drive this: it does not change when the tapped
+    /// repository is the one already open, and it also changes when the window
+    /// restores the last repository or rebuilds the list, which must not
+    /// navigate. `activate` cannot either: it fires on a double click, and
+    /// `single-click-activate` selects rows on hover. A gesture on each row
+    /// would be neatest, but the list item wrapping a row takes the press
+    /// before the row sees it. So the gesture sits on the list, in the capture
+    /// phase, ahead of the list items, and never claims the press: selection
+    /// and the star behave as before.
+    pub(super) fn connect_repo_tap(&self) {
+        let repo_view = self.sidebar_panel.repo_list();
+        let tap = gtk::GestureClick::new();
+        tap.set_propagation_phase(gtk::PropagationPhase::Capture);
+        // The model, not the window: the list owns this gesture.
+        let rows = self.repo_filter_model.clone();
+        tap.connect_released(move |gesture, n_press, x, y| {
+            if n_press != 1 {
+                return;
+            }
+            let Some(view) = gesture.widget() else {
+                return;
+            };
+            if let Some(repo_id) = repo_at_point(&view, &rows, x, y) {
+                let _ = view.activate_action(OPEN_REPOSITORY_ACTION, Some(&repo_id.to_variant()));
+            }
+        });
+        repo_view.add_controller(tap);
     }
 
     pub(super) fn restore_repo_selection_async(&self) {
@@ -166,6 +208,14 @@ impl MainWindow {
             restore_sidebar_selection(&self.repo_selection, &self.repo_filter_model, target);
         *self.selected_repo_id.lock() = restored_repo_id;
         *self.handling_selection.lock() = false;
+
+        // The open repository is gone (deleted, transferred, access revoked)
+        // and the list fell back to another. Side by side that is visible;
+        // collapsed, the detail page would switch to a repository the reader
+        // never chose, under the same back button. Back to the list instead.
+        if target.is_some() && restored_repo_id != target && self.split_view.is_collapsed() {
+            self.split_view.set_show_content(false);
+        }
 
         self.ensure_detail_matches_selection();
     }

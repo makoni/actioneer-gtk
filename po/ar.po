@@ -335,6 +335,9 @@ msgstr "جارٍ جلب السجلات..."
 msgid "Refresh logs"
 msgstr "تحديث السجلات"
 
+msgid "Show jobs"
+msgstr "عرض المهام"
+
 msgid "Copy logs to clipboard"
 msgstr "نسخ السجلات إلى الحافظة"
 
@@ -715,6 +718,15 @@ msgstr "راجع سجلات المهام داخل التطبيق دون مغاد
 
 msgid "Run a job on any branch"
 msgstr "شغّل مهمة على أي فرع"
+
+msgid "Browse repositories on your phone"
+msgstr "تصفح المستودعات على هاتفك"
+
+msgid "Follow runs and their jobs on a phone"
+msgstr "تابع عمليات التشغيل ومهامها على الهاتف"
+
+msgid "Read job logs on the go"
+msgstr "اقرأ سجلات المهام أينما كنت"
 
 msgid "This release includes an important security update to help keep Actioneer safer to use."
 msgstr "يتضمن هذا الإصدار تحديثًا أمنيًا مهمًا للمساعدة في جعل استخدام Actioneer أكثر أمانًا."

@@ -336,6 +336,9 @@ msgstr "Buscando logs..."
 msgid "Refresh logs"
 msgstr "Atualizar logs"
 
+msgid "Show jobs"
+msgstr "Mostrar jobs"
+
 msgid "Copy logs to clipboard"
 msgstr "Copiar logs para a área de transferência"
 
@@ -719,6 +722,15 @@ msgstr "Revise logs de jobs no próprio app, sem sair dele"
 
 msgid "Run a job on any branch"
 msgstr "Execute um job em qualquer branch"
+
+msgid "Browse repositories on your phone"
+msgstr "Navegue pelos repositórios no seu celular"
+
+msgid "Follow runs and their jobs on a phone"
+msgstr "Acompanhe execuções e seus jobs no celular"
+
+msgid "Read job logs on the go"
+msgstr "Leia logs de jobs em qualquer lugar"
 
 msgid "This release includes an important security update to help keep Actioneer safer to use."
 msgstr "Esta versão inclui uma importante atualização de segurança para ajudar a manter o Actioneer mais seguro de usar."

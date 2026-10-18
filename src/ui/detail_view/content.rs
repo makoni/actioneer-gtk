@@ -7,7 +7,9 @@ use gtk4::{self as gtk};
 use libadwaita as adw;
 
 impl RepoDetailPane {
-    pub(super) fn attach_run_list(&self) {
+    /// Returns the clamp around the runs, whose margins the pane's narrow
+    /// breakpoint reduces.
+    pub(super) fn attach_run_list(&self) -> adw::Clamp {
         let separator = gtk::Separator::new(gtk::Orientation::Horizontal);
         self.root.append(&separator);
 
@@ -47,6 +49,7 @@ impl RepoDetailPane {
             .build();
         scrolled_window.set_child(Some(&viewport));
         self.root.append(&scrolled_window);
+        clamp
     }
 }
 

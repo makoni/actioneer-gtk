@@ -187,6 +187,82 @@ Guard new widget trees with a release test — see
 its root: a cycle pinning one inner widget passes a root-only check. When you add
 such a test, prove it can fail by reintroducing the cycle once.
 
+## Adaptive layout
+
+The whole app supports phones: every window and dialog lays out down to
+360×294, the size GNOME asks adaptive apps to handle, and the desktop entry
+(`X-Purism-FormFactor`) and AppStream data (`display_length`, `touch`) say so.
+
+- The repository list and the detail pane are an `adw::NavigationSplitView`.
+  A window breakpoint (`COLLAPSE_CONDITION` in `main_window.rs`) collapses it
+  into two pages below 720 sp; the rate limit then moves from the content
+  header to the bottom of the list.
+- Collapsed, only a **tap** on a repository row opens its page, plus
+  `activate` (Enter, double click). Selection must not navigate: it also
+  changes when the app restores the last repository or rebuilds the list.
+  `single-click-activate` is not the answer either — it selects rows on hover,
+  which opens repositories as the pointer passes. Nor is a gesture on each row:
+  the list item wrapping a row takes the press first. So `connect_repo_tap`
+  puts a capture-phase gesture on the list, finds the row under the press by
+  the rows' own bounds (`sidebar::repo_at_point`, star excluded), and fires
+  `win.open-repository`, which navigates once the list has selected that
+  repository.
+- The detail pane adapts to its *own* width through an `adw::BreakpointBin`
+  (`NARROW_PANE_CONDITION`), since the content half of a mid-sized window is as
+  narrow as a phone. Widgets that exist when the pane is built get breakpoint
+  setters; rows built later are styled by the `.narrow` class the breakpoint
+  puts on the pane's root (see `.workflow-detail` in `style.rs`), with explicit
+  `:dir(ltr)`/`:dir(rtl)` pairs because GTK CSS has no logical margins.
+- The job logs window keeps its job list in an `adw::OverlaySplitView`: on a
+  narrow window the list slides over the log from a header button.
+- Secondary windows are `adw::Dialog`s (bottom sheets on a phone). A dialog
+  with breakpoints must set `width-request`/`height-request`, or libadwaita
+  warns on every open.
+
+**Widths come from the strings, not just the layout.** The English UI can fit
+while Russian or German is cut off, and a hidden page still widens a `GtkStack`
+unless it is non-homogeneous. Any label that can be long gets
+`ui::utils::allow_wrap` (word boundaries only) or an ellipsis; never let one set
+a minimum width.
+
+`phone_layout_<language>` (`main_window/adaptive_tests.rs`) is the guard: in
+each of the 14 catalogs it builds the window at 360×720 in Ubuntu Sans (wider
+than GTK's default) and walks the list, the detail pane, every dialog and the
+logs window, failing on any visible widget past the edge with the chain of
+widgets that demands the width. `landscape_dialogs_<language>` opens the
+dialogs at 720×294, a phone on its side, where height runs out first: a dialog
+must scroll or shrink rather than overflow, and one with breakpoints must not
+ask for a minimum height a short window cannot give. To look at what it checks:
+
+```bash
+env -u WAYLAND_DISPLAY GDK_BACKEND=x11 GSK_RENDERER=cairo ACTIONEER_UI_SHOTS=/tmp/shots \
+  xvfb-run -a dbus-run-session -- bash -lc "cargo test --lib phone_layout -- --ignored --test-threads=1"
+```
+
+saves `<language>-<screen>.png` for each. The phone screenshots in
+`data/screenshots/en-mobile-*.png` (listed in the AppStream data and the
+README) come from the same machinery: regenerate them with
+`scripts/render-mobile-screenshots.sh` after a visible UI change.
+
+Interactively:
+
+- `ADW_DEBUG_ADAPTIVE_PREVIEW=1 cargo run -- --demo` (or `Ctrl+Shift+M` in a
+  running window) opens libadwaita's adaptive preview: the window rendered
+  inside a phone frame, with presets, rotation and the mobile shell's bars. It
+  needs libadwaita ≥ 1.7 at runtime, whatever the crate features say. Overflow
+  shows on the terminal as `Adwaita-WARNING … exceeds … width`.
+- Phosh nested on the desktop exercises the real mobile shell:
+  `WLR_BACKENDS=wayland GSETTINGS_BACKEND=memory phoc -C /usr/share/phosh/phoc.ini -E 'actioneer --demo'`
+  (packages `phosh phoc squeekboard`).
+
+The `narrow_window.py` smoke journey, which `run_all.sh` runs on a 360×720
+screen in Ubuntu Sans (`SMOKE_SCREEN`, `SMOKE_FONT`), walks the navigation and
+fails on any `exceeds` warning in the app's output. It taps through XTest
+(`lib.tap`): GTK4 list rows have no AT-SPI activate action, and AT-SPI's own
+mouse events never deliver button presses under Xvfb. Note that `run_smoke.sh`
+runs with a private config home, so without `SMOKE_FONT` it uses GTK's default
+font, not the developer's.
+
 ## Toolchain and dependencies
 
 - Rust `stable`; no toolchain file is pinned, and CI installs `stable`. After
@@ -212,7 +288,7 @@ User-facing strings go through `tr(...)`. There are 14 catalogs in `po/`.
 crate roots, `src/lib.rs` and `src/main.rs`, because `xtr` walks the module tree
 from the root it is given and `main.rs` declares no modules. After running it,
 sanity-check the msgid *set*, not the diff size: a pure file move churns every
-`file:line` comment while leaving the set identical (241 today).
+`file:line` comment while leaving the set identical (300 today).
 
 When adding a string, insert the new `msgid`/`msgstr` pair into each `.po`
 surgically. Do not run a

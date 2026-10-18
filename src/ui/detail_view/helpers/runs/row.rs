@@ -260,20 +260,12 @@ fn build_expander(run: &WorkflowRun) -> gtk::Expander {
     expander
 }
 
-/// Inset of the job cards inside an expanded run, on both sides: the leading
-/// one aligns them under the run title, and the trailing one matches it so the
-/// block sits square in the row.
-const JOBS_BOX_INSET: i32 = 42;
-
 fn build_jobs_placeholder() -> gtk::Box {
     let jobs_box = gtk::Box::new(gtk::Orientation::Vertical, 8);
-    // Keeps the job cards aligned under the run title: the title sits 6px
-    // further in than before (the header's disclosure gap), so the jobs shift
-    // by the same amount to stay in line. The trailing inset matches the
-    // leading one — the mockup had them differ (37 vs 12), which reads as the
-    // block having slipped sideways rather than as a deliberate indent.
-    jobs_box.set_margin_start(JOBS_BOX_INSET);
-    jobs_box.set_margin_end(JOBS_BOX_INSET);
+    // Inset to line the job cards up under the run title, by `.run-jobs` in
+    // `style.rs`: CSS rather than code, because a narrow detail pane pulls
+    // it in (`.narrow`) and these rows are built long after its breakpoint.
+    jobs_box.add_css_class("run-jobs");
     jobs_box.set_margin_top(2);
     jobs_box.set_margin_bottom(12);
     jobs_box.set_hexpand(true);

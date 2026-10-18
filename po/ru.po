@@ -338,6 +338,9 @@ msgstr "Загрузка логов..."
 msgid "Refresh logs"
 msgstr "Обновить логи"
 
+msgid "Show jobs"
+msgstr "Показать задания"
+
 msgid "Copy logs to clipboard"
 msgstr "Скопировать логи в буфер обмена"
 
@@ -722,6 +725,15 @@ msgstr "Просматривайте логи заданий прямо в пр�
 
 msgid "Run a job on any branch"
 msgstr "Запускайте задание на любой ветке"
+
+msgid "Browse repositories on your phone"
+msgstr "Просматривайте репозитории на телефоне"
+
+msgid "Follow runs and their jobs on a phone"
+msgstr "Следите за запусками и их заданиями на телефоне"
+
+msgid "Read job logs on the go"
+msgstr "Читайте логи заданий где угодно"
 
 msgid "This release includes an important security update to help keep Actioneer safer to use."
 msgstr "Этот выпуск включает важное обновление безопасности, которое помогает сделать использование Actioneer более безопасным."

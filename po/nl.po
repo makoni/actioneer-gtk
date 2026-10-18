@@ -363,6 +363,9 @@ msgstr "Logboeken ophalen..."
 msgid "Refresh logs"
 msgstr "Logboeken vernieuwen"
 
+msgid "Show jobs"
+msgstr "Taken tonen"
+
 msgid "Copy logs to clipboard"
 msgstr "Logboeken kopiëren naar klembord"
 
@@ -762,6 +765,15 @@ msgstr "Bekijk joblogs inline zonder de app te verlaten"
 
 msgid "Run a job on any branch"
 msgstr "Voer een job uit op elke branch"
+
+msgid "Browse repositories on your phone"
+msgstr "Blader door repositories op je telefoon"
+
+msgid "Follow runs and their jobs on a phone"
+msgstr "Volg uitvoeringen en hun taken op je telefoon"
+
+msgid "Read job logs on the go"
+msgstr "Lees joblogs onderweg"
 
 msgid "This release includes an important security update to help keep Actioneer safer to use."
 msgstr "Deze release bevat een belangrijke beveiligingsupdate om Actioneer veiliger in gebruik te houden."
