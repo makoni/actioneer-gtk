@@ -175,7 +175,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ldd --version | head -n 1
+          ldd --version | sed -n 1p
           APPIMAGE="dist/actioneer-${{ steps.get_version.outputs.version }}-${{ matrix.arch }}.AppImage"
           chmod +x "$APPIMAGE"
           reported=$("./$APPIMAGE" --appimage-extract-and-run --version | tail -n 1)
