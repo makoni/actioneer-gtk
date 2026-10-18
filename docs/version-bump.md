@@ -70,5 +70,24 @@ gh workflow run publish.yml --ref develop -f tag=X.Y.Z
 **draft** GitHub release with them. Its body is a placeholder: replace it with
 the technical notes (what changed and why, dependency and packaging changes,
 anything a packager or contributor needs, and the compare link
-`https://github.com/makoni/actioneer-gtk/compare/<last-tag>...X.Y.Z`), then
-publish the draft, which creates the tag on `develop`.
+`https://github.com/makoni/actioneer-gtk/compare/<last-tag>...X.Y.Z`).
+
+Pin the draft to the exact commit, so the tag lands where Flathub points even
+if `develop` moves before publishing:
+```bash
+gh release edit X.Y.Z --target <sha>
+```
+
+## 7) Flathub
+The Flathub manifest lives in `flathub/me.spaceinbox.actioneer` (one PR per
+release, branch `release-X.Y.Z`). Render it from the template, pinned to the
+same commit, and copy the vendored sources:
+```bash
+scripts/render-flatpak-manifest.sh --mode flathub --commit <sha> \
+  --output <flathub-checkout>/me.spaceinbox.actioneer.yaml
+cp flatpak/me.spaceinbox.actioneer.cargo-sources.json <flathub-checkout>/
+flatpak run --command=flatpak-builder-lint org.flatpak.Builder manifest \
+  <flathub-checkout>/me.spaceinbox.actioneer.yaml
+```
+Open the PR against `master` and wait for the Flathub test build. Publish the
+GitHub draft once that PR is green, then merge it.
