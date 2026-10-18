@@ -288,7 +288,7 @@ User-facing strings go through `tr(...)`. There are 14 catalogs in `po/`.
 crate roots, `src/lib.rs` and `src/main.rs`, because `xtr` walks the module tree
 from the root it is given and `main.rs` declares no modules. After running it,
 sanity-check the msgid *set*, not the diff size: a pure file move churns every
-`file:line` comment while leaving the set identical (301 today).
+`file:line` comment while leaving the set identical (303 today).
 
 When adding a string, insert the new `msgid`/`msgstr` pair into each `.po`
 surgically. Do not run a
