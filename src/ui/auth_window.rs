@@ -57,6 +57,10 @@ impl AuthAttemptTracker {
     }
 }
 
+/// The dialog's width on a desktop, margins included.
+const DIALOG_WIDTH: i32 = 460;
+const DESKTOP_MARGIN: i32 = 48;
+
 pub struct AuthWindow {
     dialog: adw::Dialog,
     device_info: Arc<Mutex<Option<DeviceFlowInfo>>>,
@@ -91,10 +95,13 @@ impl AuthWindow {
     }
 
     pub fn new() -> Self {
+        // The dialog opens before GitHub answers, with only the status line;
+        // the code and its buttons arrive later. A dialog sizes itself once,
+        // when it opens, unless it follows its content.
         let dialog = adw::Dialog::builder()
             .title(tr("Sign in to GitHub"))
+            .follows_content_size(true)
             .build();
-        dialog.set_content_width(460);
 
         let device_info = Arc::new(Mutex::new(None));
         let attempt_tracker = Arc::new(AuthAttemptTracker::default());
@@ -111,23 +118,36 @@ impl AuthWindow {
             cancel_button,
         ) = Self::build_ui_content();
 
+        // Following its content, the dialog would also take the width of its
+        // longest line. Hold it at DIALOG_WIDTH on a desktop: the request
+        // keeps it from narrowing as the content changes, the clamp keeps a
+        // long error from widening it.
+        content_box.set_width_request(DIALOG_WIDTH - 2 * DESKTOP_MARGIN);
+        let clamp = adw::Clamp::builder()
+            .maximum_size(DIALOG_WIDTH)
+            .tightening_threshold(DIALOG_WIDTH)
+            .child(&content_box)
+            .build();
+
         // Scrolls rather than overflows when the window is short — a phone on
         // its side leaves less height than the code and its buttons need.
         let scroller = gtk::ScrolledWindow::builder()
             .hscrollbar_policy(gtk::PolicyType::Never)
             .propagate_natural_height(true)
             .propagate_natural_width(true)
-            .child(&content_box)
+            .child(&clamp)
             .build();
         dialog.set_child(Some(&scroller));
 
         crate::ui::utils::set_adaptive_dialog_min_size(&dialog);
-        // A phone's bottom sheet cannot spare the desktop's 48 px either side.
+        // A phone's bottom sheet cannot spare the desktop's 48 px either side,
+        // nor the desktop's width.
         let narrow = adw::Breakpoint::new(
             adw::BreakpointCondition::parse("max-width: 450sp")
                 .expect("a valid breakpoint condition"),
         );
         for (property, value) in [
+            ("width-request", -1),
             ("margin-start", 18),
             ("margin-end", 18),
             ("margin-top", 24),
@@ -191,10 +211,10 @@ impl AuthWindow {
         gtk::Button,
     ) {
         let content_box = gtk::Box::new(gtk::Orientation::Vertical, 24);
-        content_box.set_margin_top(48);
-        content_box.set_margin_bottom(48);
-        content_box.set_margin_start(48);
-        content_box.set_margin_end(48);
+        content_box.set_margin_top(DESKTOP_MARGIN);
+        content_box.set_margin_bottom(DESKTOP_MARGIN);
+        content_box.set_margin_start(DESKTOP_MARGIN);
+        content_box.set_margin_end(DESKTOP_MARGIN);
         content_box.set_valign(gtk::Align::Center);
 
         let title = gtk::Label::new(Some(tr("Sign in to GitHub").as_str()));
@@ -536,7 +556,70 @@ fn save_token(token: AccessToken) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
-    use super::AuthAttemptTracker;
+    use super::{AuthAttemptTracker, AuthWindow};
+    use crate::ui::test_helpers::{
+        ensure_app_css, present_window_at, run_gtk_test, save_screenshot, settle_main_loop,
+    };
+    use gtk4::prelude::*;
+    use libadwaita as adw;
+    use libadwaita::prelude::*;
+
+    /// Fails unless the dialog shows all of its content at the desktop width.
+    fn assert_fits(dialog: &adw::Dialog, state: &str) {
+        let content = dialog.child().expect("the dialog has content");
+        save_screenshot(
+            dialog,
+            &format!("sign-in-desktop-{}", state.replace(' ', "-")),
+        );
+        let (_, needed, _, _) = content.measure(gtk4::Orientation::Vertical, content.width());
+        assert!(
+            content.height() >= needed,
+            "{state}: the sign-in dialog shows {} px of the {needed} px its content needs",
+            content.height()
+        );
+        assert_eq!(
+            content.width(),
+            super::DIALOG_WIDTH,
+            "{state}: the sign-in dialog changed width"
+        );
+    }
+
+    /// On a desktop the dialog opens before GitHub has answered, showing only
+    /// the status line; the code and its buttons arrive later, and an error
+    /// can replace the status with a long message. The dialog must grow to
+    /// take each of them in rather than keep its first size and scroll, and
+    /// keep its width while it does.
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn sign_in_dialog_grows_to_show_the_code_on_a_desktop() {
+        run_gtk_test("sign_in_dialog_grows_to_show_the_code_on_a_desktop", || {
+            ensure_app_css();
+            let window = adw::ApplicationWindow::builder().build();
+            present_window_at(&window, 1200, 800);
+
+            let auth = AuthWindow::new();
+            auth.reset_ui();
+            auth.dialog.present(Some(&window));
+            settle_main_loop(50);
+            assert_fits(&auth.dialog, "waiting for GitHub");
+
+            auth.dialog_showing_code("ABCD-1234");
+            settle_main_loop(50);
+            assert_fits(&auth.dialog, "showing the code");
+
+            auth.status_label.set_text(
+                "Authentication failed: HTTP request failed: error sending request for url \
+                 (https://github.com/login/oauth/access_token): connection closed before \
+                 message completed",
+            );
+            settle_main_loop(50);
+            assert_fits(&auth.dialog, "showing an error");
+
+            auth.dialog.force_close();
+            window.destroy();
+            settle_main_loop(20);
+        });
+    }
 
     #[test]
     fn auth_attempt_tracker_invalidates_stale_attempts() {
