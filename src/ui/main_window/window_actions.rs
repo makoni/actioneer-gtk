@@ -195,8 +195,12 @@ Troubleshooting\n\
             .present(Some(&self.window));
     }
 
-    /// Offers last run's crash report for copying or filing. Closing the
-    /// dialog, however it is closed, marks the report as seen.
+    /// Offers last run's crash report for copying or filing.
+    ///
+    /// Only the Close button marks the report as seen, as it did when this
+    /// was a popover: a dialog can also be dismissed by Escape, or on a phone
+    /// by swiping the sheet away, which is too easy to do by accident to cost
+    /// the report — dismissed that way it is offered again next launch.
     pub(super) fn build_crash_report_dialog(&self, report_text: String) -> adw::Dialog {
         let content = gtk::Box::new(gtk::Orientation::Vertical, 12);
         content.set_margin_top(6);
@@ -229,11 +233,13 @@ Troubleshooting\n\
 
         let copy_button = gtk::Button::with_label(tr("Copy diagnostics").as_str());
         let issue_button = gtk::Button::with_label(tr("Report Issue").as_str());
-        issue_button.add_css_class("suggested-action");
+        let close_button = gtk::Button::with_label(tr("Close").as_str());
+        close_button.add_css_class("suggested-action");
         let button_row = gtk::Box::new(gtk::Orientation::Horizontal, 8);
         button_row.set_halign(gtk::Align::End);
         button_row.append(&copy_button);
         button_row.append(&issue_button);
+        button_row.append(&close_button);
         content.append(&button_row);
 
         copy_button.connect_clicked(move |_| {
@@ -263,7 +269,7 @@ Troubleshooting\n\
         // out for: narrower than a phone in portrait, lower than one on its
         // side, once the bottom sheet's frame is taken off both.
         dialog.set_size_request(300, 200);
-        // Two buttons side by side outgrow a phone in the longer languages.
+        // Three buttons side by side outgrow a phone in the longer languages.
         let narrow = adw::Breakpoint::new(
             adw::BreakpointCondition::parse("max-width: 480sp")
                 .expect("a valid breakpoint condition"),
@@ -275,9 +281,14 @@ Troubleshooting\n\
         );
         narrow.add_setter(&button_row, "halign", Some(&gtk::Align::Fill.to_value()));
         dialog.add_breakpoint(narrow);
-        dialog.connect_closed(|_| {
+        // Weak: the button sits inside the dialog.
+        let dialog_for_close = dialog.downgrade();
+        close_button.connect_clicked(move |_| {
             if let Err(err) = crash_report::clear_pending_report() {
                 warn!("Failed to clear pending crash report marker: {}", err);
+            }
+            if let Some(dialog) = dialog_for_close.upgrade() {
+                dialog.close();
             }
         });
         dialog
