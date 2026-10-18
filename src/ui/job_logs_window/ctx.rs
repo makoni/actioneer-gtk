@@ -219,6 +219,14 @@ impl Ctx {
         job_list.connect_row_selected(move |_, row| {
             if let Some(row) = row {
                 this.show_job(row.index().max(0) as usize);
+                // Collapsed, the list covers the log; a reader who picked a job
+                // wants to read it.
+                if !this.rebuilding.get()
+                    && let Some(split) = this.split_view.upgrade()
+                    && split.is_collapsed()
+                {
+                    split.set_show_sidebar(false);
+                }
             }
         });
     }

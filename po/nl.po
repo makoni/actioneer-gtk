@@ -363,6 +363,9 @@ msgstr "Logboeken ophalen..."
 msgid "Refresh logs"
 msgstr "Logboeken vernieuwen"
 
+msgid "Show jobs"
+msgstr "Taken tonen"
+
 msgid "Copy logs to clipboard"
 msgstr "Logboeken kopiëren naar klembord"
 

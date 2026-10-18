@@ -639,6 +639,9 @@ msgstr "Recupero dei log..."
 msgid "Refresh logs"
 msgstr "Aggiorna log"
 
+msgid "Show jobs"
+msgstr "Mostra job"
+
 #: src/ui/job_logs_window.rs:121
 msgid "Copy logs to clipboard"
 msgstr "Copia i log negli appunti"

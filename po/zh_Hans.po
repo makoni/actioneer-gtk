@@ -335,6 +335,9 @@ msgstr "正在获取日志..."
 msgid "Refresh logs"
 msgstr "刷新日志"
 
+msgid "Show jobs"
+msgstr "显示作业"
+
 msgid "Copy logs to clipboard"
 msgstr "将日志复制到剪贴板"
 

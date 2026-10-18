@@ -338,6 +338,9 @@ msgstr "Загрузка логов..."
 msgid "Refresh logs"
 msgstr "Обновить логи"
 
+msgid "Show jobs"
+msgstr "Показать задания"
+
 msgid "Copy logs to clipboard"
 msgstr "Скопировать логи в буфер обмена"
 

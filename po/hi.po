@@ -336,6 +336,9 @@ msgstr "लॉग प्राप्त किए जा रहे हैं..."
 msgid "Refresh logs"
 msgstr "लॉग रीफ्रेश करें"
 
+msgid "Show jobs"
+msgstr "जॉब दिखाएँ"
+
 msgid "Copy logs to clipboard"
 msgstr "लॉग को क्लिपबोर्ड पर कॉपी करें"
 

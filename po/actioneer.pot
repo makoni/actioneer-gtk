@@ -678,6 +678,10 @@ msgstr ""
 msgid "Refresh logs"
 msgstr ""
 
+#: src/ui/job_logs_window.rs
+msgid "Show jobs"
+msgstr ""
+
 #: src/ui/job_logs_window.rs:218
 msgid "Copy logs to clipboard"
 msgstr ""

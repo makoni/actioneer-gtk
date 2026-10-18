@@ -336,6 +336,9 @@ msgstr "لاگ حاصل کیے جا رہے ہیں..."
 msgid "Refresh logs"
 msgstr "لاگ ریفریش کریں"
 
+msgid "Show jobs"
+msgstr "جابز دکھائیں"
+
 msgid "Copy logs to clipboard"
 msgstr "لاگ کو کلپ بورڈ پر کاپی کریں"
 

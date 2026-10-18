@@ -366,6 +366,9 @@ msgstr "Protokolle werden abgerufen..."
 msgid "Refresh logs"
 msgstr "Protokolle aktualisieren"
 
+msgid "Show jobs"
+msgstr "Aufgaben anzeigen"
+
 msgid "Copy logs to clipboard"
 msgstr "Protokolle in Zwischenablage kopieren"
 

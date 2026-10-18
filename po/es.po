@@ -336,6 +336,9 @@ msgstr "Obteniendo registros..."
 msgid "Refresh logs"
 msgstr "Actualizar registros"
 
+msgid "Show jobs"
+msgstr "Mostrar jobs"
+
 msgid "Copy logs to clipboard"
 msgstr "Copiar registros al portapapeles"
 

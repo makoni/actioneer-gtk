@@ -336,6 +336,9 @@ msgstr "লগ আনা হচ্ছে..."
 msgid "Refresh logs"
 msgstr "লগ আপডেট করুন"
 
+msgid "Show jobs"
+msgstr "জবগুলো দেখান"
+
 msgid "Copy logs to clipboard"
 msgstr "লগ ক্লিপবোর্ডে কপি করুন"
 

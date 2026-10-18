@@ -77,6 +77,19 @@ impl Default for AuthWindow {
 }
 
 impl AuthWindow {
+    /// The dialog in its widest state — the device code and its buttons
+    /// shown — without starting a device flow, for layout tests.
+    #[cfg(test)]
+    pub(crate) fn dialog_showing_code(&self, code: &str) -> adw::Dialog {
+        self.user_code.set_text(code);
+        self.code_box.set_visible(true);
+        self.open_button.set_visible(true);
+        self.copy_button.set_visible(true);
+        self.status_label
+            .set_text(tr("Open GitHub in your browser and enter the code.").as_str());
+        self.dialog.clone()
+    }
+
     pub fn new() -> Self {
         let dialog = adw::Dialog::builder()
             .title(tr("Sign in to GitHub"))
@@ -99,6 +112,24 @@ impl AuthWindow {
         ) = Self::build_ui_content();
 
         dialog.set_child(Some(&content_box));
+
+        // A dialog with breakpoints has to state the smallest size it lays
+        // out for; this is a phone's, less the bottom sheet's frame.
+        dialog.set_size_request(300, 294);
+        // A phone's bottom sheet cannot spare the desktop's 48 px either side.
+        let narrow = adw::Breakpoint::new(
+            adw::BreakpointCondition::parse("max-width: 450sp")
+                .expect("a valid breakpoint condition"),
+        );
+        for (property, value) in [
+            ("margin-start", 18),
+            ("margin-end", 18),
+            ("margin-top", 24),
+            ("margin-bottom", 24),
+        ] {
+            narrow.add_setter(&content_box, property, Some(&value.to_value()));
+        }
+        dialog.add_breakpoint(narrow);
 
         let auth_window = Self {
             dialog: dialog.clone(),
@@ -162,6 +193,8 @@ impl AuthWindow {
 
         let title = gtk::Label::new(Some(tr("Sign in to GitHub").as_str()));
         title.add_css_class("title-1");
+        title.set_justify(gtk::Justification::Center);
+        crate::ui::utils::allow_wrap(&title);
         content_box.append(&title);
 
         // Status with spinner in a horizontal box
@@ -169,7 +202,7 @@ impl AuthWindow {
         status_box.set_halign(gtk::Align::Center);
 
         let status_label = gtk::Label::new(Some(tr("Initializing authentication...").as_str()));
-        status_label.set_wrap(true);
+        crate::ui::utils::allow_wrap(&status_label);
         status_label.set_justify(gtk::Justification::Center);
         status_box.append(&status_label);
 
@@ -183,6 +216,8 @@ impl AuthWindow {
         code_box.set_visible(false);
 
         let code_label = gtk::Label::new(Some(tr("Enter this code on GitHub:").as_str()));
+        code_label.set_justify(gtk::Justification::Center);
+        crate::ui::utils::allow_wrap(&code_label);
         code_box.append(&code_label);
 
         // Code display with copy button
@@ -227,6 +262,10 @@ impl AuthWindow {
         open_button.add_css_class("suggested-action");
         open_button.add_css_class("pill");
         open_button.set_visible(false);
+        if let Some(label) = open_button.child().and_downcast::<gtk::Label>() {
+            label.set_justify(gtk::Justification::Center);
+            crate::ui::utils::allow_wrap(&label);
+        }
         content_box.append(&open_button);
 
         let cancel_button = gtk::Button::with_label(tr("Cancel").as_str());

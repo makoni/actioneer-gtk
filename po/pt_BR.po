@@ -336,6 +336,9 @@ msgstr "Buscando logs..."
 msgid "Refresh logs"
 msgstr "Atualizar logs"
 
+msgid "Show jobs"
+msgstr "Mostrar jobs"
+
 msgid "Copy logs to clipboard"
 msgstr "Copiar logs para a área de transferência"
 

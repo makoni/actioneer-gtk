@@ -335,6 +335,9 @@ msgstr "جارٍ جلب السجلات..."
 msgid "Refresh logs"
 msgstr "تحديث السجلات"
 
+msgid "Show jobs"
+msgstr "عرض المهام"
+
 msgid "Copy logs to clipboard"
 msgstr "نسخ السجلات إلى الحافظة"
 

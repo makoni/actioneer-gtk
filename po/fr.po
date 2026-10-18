@@ -336,6 +336,9 @@ msgstr "Récupération des journaux..."
 msgid "Refresh logs"
 msgstr "Actualiser les journaux"
 
+msgid "Show jobs"
+msgstr "Afficher les jobs"
+
 msgid "Copy logs to clipboard"
 msgstr "Copier les journaux dans le presse-papiers"
 
