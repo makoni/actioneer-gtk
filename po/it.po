@@ -1139,6 +1139,15 @@ msgstr "Consulta i log dei job in linea senza lasciare l'app"
 msgid "Run a job on any branch"
 msgstr "Esegui un job su qualsiasi branch"
 
+msgid "Browse repositories on your phone"
+msgstr "Sfoglia i repository dal telefono"
+
+msgid "Follow runs and their jobs on a phone"
+msgstr "Segui le esecuzioni e i loro job dal telefono"
+
+msgid "Read job logs on the go"
+msgstr "Leggi i log dei job ovunque tu sia"
+
 #: data/metainfo.xml.in:90
 msgid ""
 "Sign-in works more reliably on newer Linux systems thanks to improved secure "

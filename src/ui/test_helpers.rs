@@ -357,9 +357,22 @@ pub fn save_screenshot(widget: &impl IsA<gtk::Widget>, name: &str) {
     let Some(dir) = std::env::var_os("ACTIONEER_UI_SHOTS") else {
         return;
     };
+    let path = std::path::Path::new(&dir).join(format!("{name}.png"));
+    let _ = std::fs::create_dir_all(&dir);
+    save_screenshot_to(widget, &path, 1.0);
+}
+
+/// Renders `widget` to a PNG at `scale` times its size. The widget is drawn
+/// at that size rather than its pixels stretched, so text and icons stay sharp
+/// at 2 — what store screenshots are taken at.
+#[cfg(test)]
+pub fn save_screenshot_to(widget: &impl IsA<gtk::Widget>, path: &std::path::Path, scale: f32) {
     let widget = widget.as_ref();
-    let (width, height) = (widget.width(), widget.height());
-    if width <= 0 || height <= 0 {
+    let (width, height) = (
+        widget.width() as f32 * scale,
+        widget.height() as f32 * scale,
+    );
+    if width <= 0.0 || height <= 0.0 {
         return;
     }
     let paintable = gtk::WidgetPaintable::new(Some(widget));
@@ -373,16 +386,9 @@ pub fn save_screenshot(widget: &impl IsA<gtk::Widget>, name: &str) {
     };
     let texture = renderer.render_texture(
         node,
-        Some(&gtk::graphene::Rect::new(
-            0.0,
-            0.0,
-            width as f32,
-            height as f32,
-        )),
+        Some(&gtk::graphene::Rect::new(0.0, 0.0, width, height)),
     );
-    let path = std::path::Path::new(&dir).join(format!("{name}.png"));
-    let _ = std::fs::create_dir_all(&dir);
-    if let Err(err) = texture.save_to_png(&path) {
+    if let Err(err) = texture.save_to_png(path) {
         eprintln!("could not save {}: {err}", path.display());
     }
 }

@@ -111,6 +111,18 @@
       <caption>Run a job on any branch</caption>
       <image type="source" width="2000" height="1400">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-4.png</image>
     </screenshot>
+    <screenshot type="detail">
+      <caption>Browse repositories on your phone</caption>
+      <image type="source" width="796" height="1516">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-mobile-1.png</image>
+    </screenshot>
+    <screenshot type="detail">
+      <caption>Follow runs and their jobs on a phone</caption>
+      <image type="source" width="796" height="1516">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-mobile-2.png</image>
+    </screenshot>
+    <screenshot type="detail">
+      <caption>Read job logs on the go</caption>
+      <image type="source" width="796" height="1516">https://raw.githubusercontent.com/makoni/actioneer-gtk/develop/data/screenshots/en-mobile-3.png</image>
+    </screenshot>
   </screenshots>
 
   <releases>

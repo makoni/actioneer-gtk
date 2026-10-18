@@ -722,6 +722,15 @@ msgstr "অ্যাপ না ছেড়ে ইনলাইনেই জব �
 msgid "Run a job on any branch"
 msgstr "যেকোনো ব্রাঞ্চে একটি জব চালান"
 
+msgid "Browse repositories on your phone"
+msgstr "আপনার ফোনে রিপোজিটরিগুলো ব্রাউজ করুন"
+
+msgid "Follow runs and their jobs on a phone"
+msgstr "ফোনে রান ও সেগুলোর জব অনুসরণ করুন"
+
+msgid "Read job logs on the go"
+msgstr "যেকোনো জায়গা থেকে জব লগ পড়ুন"
+
 msgid "This release includes an important security update to help keep Actioneer safer to use."
 msgstr "এই রিলিজে একটি গুরুত্বপূর্ণ নিরাপত্তা আপডেট রয়েছে, যা Actioneer-কে আরও নিরাপদভাবে ব্যবহার করতে সাহায্য করে।"
 

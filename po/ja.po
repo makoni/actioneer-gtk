@@ -1141,6 +1141,15 @@ msgstr "アプリを離れずにジョブログをインラインで確認しま
 msgid "Run a job on any branch"
 msgstr "任意のブランチでジョブを実行します"
 
+msgid "Browse repositories on your phone"
+msgstr "スマートフォンでリポジトリを閲覧"
+
+msgid "Follow runs and their jobs on a phone"
+msgstr "スマートフォンで実行とそのジョブを追跡"
+
+msgid "Read job logs on the go"
+msgstr "外出先でジョブログを確認"
+
 #: data/metainfo.xml.in:90
 msgid ""
 "Sign-in works more reliably on newer Linux systems thanks to improved secure "

@@ -231,7 +231,12 @@ env -u WAYLAND_DISPLAY GDK_BACKEND=x11 GSK_RENDERER=cairo ACTIONEER_UI_SHOTS=/tm
   xvfb-run -a dbus-run-session -- bash -lc "cargo test --lib phone_layout -- --ignored --test-threads=1"
 ```
 
-saves `<language>-<screen>.png` for each. Interactively:
+saves `<language>-<screen>.png` for each. The phone screenshots in
+`data/screenshots/en-mobile-*.png` (listed in the AppStream data and the
+README) come from the same machinery: regenerate them with
+`scripts/render-mobile-screenshots.sh` after a visible UI change.
+
+Interactively:
 
 - `ADW_DEBUG_ADAPTIVE_PREVIEW=1 cargo run -- --demo` (or `Ctrl+Shift+M` in a
   running window) opens libadwaita's adaptive preview: the window rendered

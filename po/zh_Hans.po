@@ -717,6 +717,15 @@ msgstr "在应用内直接查看作业日志，无需离开应用"
 msgid "Run a job on any branch"
 msgstr "在任意分支上运行作业"
 
+msgid "Browse repositories on your phone"
+msgstr "在手机上浏览仓库"
+
+msgid "Follow runs and their jobs on a phone"
+msgstr "在手机上跟踪运行及其作业"
+
+msgid "Read job logs on the go"
+msgstr "随时随地查看作业日志"
+
 msgid "This release includes an important security update to help keep Actioneer safer to use."
 msgstr "此版本包含一项重要的安全更新，帮助让 Actioneer 使用起来更安全。"
 

@@ -1113,6 +1113,18 @@ msgstr ""
 msgid "Run a job on any branch"
 msgstr ""
 
+#: data/metainfo.xml.in
+msgid "Browse repositories on your phone"
+msgstr ""
+
+#: data/metainfo.xml.in
+msgid "Follow runs and their jobs on a phone"
+msgstr ""
+
+#: data/metainfo.xml.in
+msgid "Read job logs on the go"
+msgstr ""
+
 #: data/metainfo.xml.in:109
 msgid ""
 "Signing out now always returns to the welcome screen right away, including "

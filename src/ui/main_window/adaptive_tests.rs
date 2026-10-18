@@ -266,3 +266,154 @@ phone_layout_tests! {
     phone_layout_it => It, "it";
     phone_layout_ja => Ja, "ja";
 }
+
+/// Renders the phone screenshots the AppStream data ships
+/// (`data/screenshots/en-mobile-*.png`), when `ACTIONEER_STORE_SHOTS=<dir>` is
+/// set; otherwise does nothing, so it is harmless in the `--ignored` run.
+///
+/// Light style, English, Ubuntu Sans and the Yaru icons, like the desktop
+/// screenshots; no window buttons, as on a phone's shell; drawn at twice the
+/// size. The frame (rounded corners, shadow) is added afterwards, see
+/// `data/screenshots/README.md`.
+#[test]
+#[ignore = "requires GTK display"]
+fn store_screenshots() {
+    let Some(dir) = std::env::var_os("ACTIONEER_STORE_SHOTS") else {
+        return;
+    };
+    let dir = std::path::PathBuf::from(dir);
+    std::fs::create_dir_all(&dir).expect("screenshot directory");
+    run_gtk_test("store_screenshots", move || {
+        let _language = LanguageScope::enter(LanguagePreference::En);
+        crate::runtime::init_test_runtime();
+        crate::ui::style::install_app_css();
+        if let Some(settings) = gtk::Settings::default() {
+            settings.set_gtk_font_name(Some(WIDE_FONT));
+            settings.set_gtk_icon_theme_name(Some("Yaru"));
+            settings.set_gtk_decoration_layout(Some(":"));
+        }
+
+        let temp = tempfile::tempdir().expect("temp dir");
+        let services = AppServices::test_fakes(temp.path());
+        // One favourite, so the list shows both states of the heart.
+        let main_repo_id = crate::demo::DemoBackend::new()
+            .seed()
+            .0
+            .into_iter()
+            .find(|repo| repo.full_name == MAIN_REPO)
+            .expect("the main demo repository")
+            .id;
+        if let Some(favorites) = services.favorites.clone() {
+            crate::runtime::handle()
+                .block_on(favorites.add_favorite(main_repo_id))
+                .expect("favourite saved");
+        }
+
+        let app = adw::Application::builder()
+            .application_id("me.spaceinbox.actioneer.StoreScreenshots")
+            .build();
+        let window = MainWindow::new(&app, services, true);
+        settle_for_a_while();
+        // After the window has applied the stored theme, which would win.
+        adw::StyleManager::default().set_color_scheme(adw::ColorScheme::ForceLight);
+        window.window.set_default_size(PHONE_WIDTH, PHONE_HEIGHT);
+        window.window.present();
+        for _ in 0..4 {
+            settle_for_a_while();
+        }
+        // No caret blinking in the search field.
+        gtk::prelude::GtkWindowExt::set_focus(&window.window, None::<&gtk::Widget>);
+        settle_for_a_while();
+        let save = |widget: &gtk::Widget, name: &str| {
+            crate::ui::test_helpers::save_screenshot_to(widget, &dir.join(name), 2.0);
+        };
+        save(window.window.upcast_ref(), "en-mobile-1.png");
+
+        let position = (0..window.repo_filter_model.n_items())
+            .find(|&index| {
+                window
+                    .repo_filter_model
+                    .item(index)
+                    .and_then(|item| repo_from_object(&item))
+                    .is_some_and(|repo| repo.full_name == MAIN_REPO)
+            })
+            .expect("the main demo repository is listed");
+        window
+            .sidebar_panel
+            .repo_list()
+            .emit_by_name::<()>("activate", &[&position]);
+        for _ in 0..4 {
+            settle_for_a_while();
+        }
+        // Open the newest run, so its jobs and steps show.
+        if let Some(run) = first_widget_with_class(window.window.upcast_ref(), "run-item")
+            && let Some(expander) = first_expander(&run)
+        {
+            expander.set_expanded(true);
+        }
+        for _ in 0..6 {
+            settle_for_a_while();
+        }
+        save(window.window.upcast_ref(), "en-mobile-2.png");
+
+        let before: Vec<gtk::Window> = gtk::Window::list_toplevels()
+            .into_iter()
+            .filter_map(|w| w.downcast::<gtk::Window>().ok())
+            .collect();
+        click_control(&window, &tr("View logs"));
+        let mut logs = None;
+        for _ in 0..20 {
+            settle_for_a_while();
+            logs = gtk::Window::list_toplevels()
+                .into_iter()
+                .filter_map(|w| w.downcast::<gtk::Window>().ok())
+                .find(|w| w.is_visible() && !before.contains(w));
+            if logs.is_some() {
+                break;
+            }
+        }
+        let logs = logs.expect("the logs window opened");
+        logs.set_default_size(PHONE_WIDTH, PHONE_HEIGHT);
+        for _ in 0..6 {
+            settle_for_a_while();
+        }
+        save(logs.upcast_ref(), "en-mobile-3.png");
+
+        logs.destroy();
+        window.window.destroy();
+        adw::StyleManager::default().set_color_scheme(adw::ColorScheme::Default);
+        if let Some(settings) = gtk::Settings::default() {
+            settings.reset_property("gtk-icon-theme-name");
+            settings.reset_property("gtk-decoration-layout");
+        }
+        settle_for_a_while();
+    });
+}
+
+fn first_widget_with_class(widget: &gtk::Widget, class: &str) -> Option<gtk::Widget> {
+    if widget.is_mapped() && widget.has_css_class(class) {
+        return Some(widget.clone());
+    }
+    let mut child = widget.first_child();
+    while let Some(current) = child {
+        if let Some(found) = first_widget_with_class(&current, class) {
+            return Some(found);
+        }
+        child = current.next_sibling();
+    }
+    None
+}
+
+fn first_expander(widget: &gtk::Widget) -> Option<gtk::Expander> {
+    if let Some(expander) = widget.downcast_ref::<gtk::Expander>() {
+        return Some(expander.clone());
+    }
+    let mut child = widget.first_child();
+    while let Some(current) = child {
+        if let Some(found) = first_expander(&current) {
+            return Some(found);
+        }
+        child = current.next_sibling();
+    }
+    None
+}

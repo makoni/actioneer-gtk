@@ -768,6 +768,15 @@ msgstr "Job-Protokolle direkt in der App prüfen"
 msgid "Run a job on any branch"
 msgstr "Einen Job auf jedem Branch ausführen"
 
+msgid "Browse repositories on your phone"
+msgstr "Repositories auf dem Smartphone durchsuchen"
+
+msgid "Follow runs and their jobs on a phone"
+msgstr "Ausführungen und ihre Aufgaben auf dem Smartphone verfolgen"
+
+msgid "Read job logs on the go"
+msgstr "Job-Protokolle unterwegs lesen"
+
 msgid "This release includes an important security update to help keep Actioneer safer to use."
 msgstr "Dieses Release enthält ein wichtiges Sicherheitsupdate, damit Actioneer sicherer nutzbar bleibt."
 
