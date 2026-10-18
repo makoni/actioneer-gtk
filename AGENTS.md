@@ -197,11 +197,16 @@ The whole app supports phones: every window and dialog lays out down to
   A window breakpoint (`COLLAPSE_CONDITION` in `main_window.rs`) collapses it
   into two pages below 720 sp; the rate limit then moves from the content
   header to the bottom of the list.
-- Collapsed, only a **tap** on a repository row opens its page
-  (`connect_repo_tap`), plus `activate` (Enter, double click). Selection must
-  not navigate: it also changes when the app restores the last repository or
-  rebuilds the list. `single-click-activate` is not the answer either — it
-  selects rows on hover, which opens repositories as the pointer passes.
+- Collapsed, only a **tap** on a repository row opens its page, plus
+  `activate` (Enter, double click). Selection must not navigate: it also
+  changes when the app restores the last repository or rebuilds the list.
+  `single-click-activate` is not the answer either — it selects rows on hover,
+  which opens repositories as the pointer passes. Nor is a gesture on each row:
+  the list item wrapping a row takes the press first. So `connect_repo_tap`
+  puts a capture-phase gesture on the list, finds the row under the press by
+  the rows' own bounds (`sidebar::repo_at_point`, star excluded), and fires
+  `win.open-repository`, which navigates once the list has selected that
+  repository.
 - The detail pane adapts to its *own* width through an `adw::BreakpointBin`
   (`NARROW_PANE_CONDITION`), since the content half of a mid-sized window is as
   narrow as a phone. Widgets that exist when the pane is built get breakpoint

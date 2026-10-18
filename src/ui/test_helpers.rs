@@ -483,3 +483,18 @@ pub fn present_window_at(window: &impl IsA<gtk::Window>, width: i32, height: i32
          where no window manager resizes them"
     );
 }
+
+/// Installs the app's stylesheet once per test process. Every GTK test shares
+/// one display, and `style::install_app_css` adds a new provider on each call,
+/// so calling it per test would stack identical copies of every rule.
+#[cfg(test)]
+pub fn ensure_app_css() {
+    thread_local! {
+        static INSTALLED: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+    }
+    INSTALLED.with(|installed| {
+        if !installed.replace(true) {
+            crate::ui::style::install_app_css();
+        }
+    });
+}

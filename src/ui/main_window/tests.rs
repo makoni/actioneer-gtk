@@ -87,38 +87,17 @@ fn the_gateway_slot_follows_the_session_transitions() {
     });
 }
 
-/// Runs the main loop for a while: the demo data and the stored preferences
-/// arrive from the Tokio side, and the breakpoint needs a layout pass.
-fn settle_for_a_while() {
-    crate::ui::test_helpers::settle_main_loop(100);
-}
-
-/// The text of every label on screen.
-fn visible_labels(widget: &gtk::Widget) -> Vec<String> {
-    let mut texts = Vec::new();
-    if let Some(label) = widget.downcast_ref::<gtk::Label>()
-        && label.is_mapped()
-    {
-        texts.push(label.label().to_string());
-    }
-    let mut child = widget.first_child();
-    while let Some(current) = child {
-        texts.extend(visible_labels(&current));
-        child = current.next_sibling();
-    }
-    texts
-}
-
-/// A demo-mode window presented at the given size, with its repositories
-/// loaded.
-fn demo_window_at(dir: &std::path::Path, width: i32, height: i32) -> MainWindow {
+/// A demo-mode window on `services`, presented at the given size with its
+/// repositories loaded. Shared with `adaptive_tests`.
+pub(super) fn demo_window(services: AppServices, width: i32, height: i32) -> MainWindow {
     crate::runtime::init_test_runtime();
-    let window = MainWindow::new(&app(), AppServices::test_fakes(dir), true);
-    // The stored window size is restored asynchronously; let it land before
-    // overriding it, or it overrides the size under test.
-    settle_for_a_while();
+    let window = MainWindow::new(&app(), services, true);
+    // The demo data and the stored window size arrive asynchronously; let
+    // them land before overriding the size, or it overrides the size under
+    // test.
+    crate::ui::test_helpers::settle_main_loop(100);
     crate::ui::test_helpers::present_window_at(&window.window, width, height);
-    settle_for_a_while();
+    crate::ui::test_helpers::settle_main_loop(100);
     assert!(
         crate::ui::sidebar::find_first_repo_index(&window.repo_filter_model).is_some(),
         "the demo repositories loaded"
@@ -131,7 +110,7 @@ fn demo_window_at(dir: &std::path::Path, width: i32, height: i32) -> MainWindow 
 fn a_phone_sized_window_shows_one_page_at_a_time() {
     run_gtk_test("main_window_phone_sized", || {
         let dir = tempfile::tempdir().expect("temp dir");
-        let window = demo_window_at(dir.path(), 360, 720);
+        let window = demo_window(AppServices::test_fakes(dir.path()), 360, 720);
 
         assert_eq!(
             window.window.size_request(),
@@ -147,9 +126,10 @@ fn a_phone_sized_window_shows_one_page_at_a_time() {
         );
         let header_text = window.rate_limit_label.label();
         assert!(
-            visible_labels(window.window.upcast_ref())
-                .iter()
-                .any(|text| *text == header_text),
+            crate::ui::test_helpers::find_widget::<gtk::Label>(&window.window, |label| {
+                label.label() == header_text
+            })
+            .is_some(),
             "the rate limit is still shown somewhere: {header_text:?}"
         );
         // Demo mode opens a repository by itself. That is a restore, not a
@@ -182,7 +162,7 @@ fn a_phone_sized_window_shows_one_page_at_a_time() {
 fn a_desktop_window_keeps_list_and_detail_side_by_side() {
     run_gtk_test("main_window_desktop_sized", || {
         let dir = tempfile::tempdir().expect("temp dir");
-        let window = demo_window_at(dir.path(), 1000, 700);
+        let window = demo_window(AppServices::test_fakes(dir.path()), 1000, 700);
 
         assert!(!window.split_view.is_collapsed());
         assert!(window.rate_limit_box.is_visible());

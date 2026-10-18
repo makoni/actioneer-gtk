@@ -605,7 +605,7 @@ mod tests {
     /// its workflows loaded and the first one expanded — the widest state.
     fn demo_pane_at(width: i32) -> (RepoDetailPane, gtk::Window) {
         crate::runtime::init_test_runtime();
-        crate::ui::style::install_app_css();
+        crate::ui::test_helpers::ensure_app_css();
         let repo = crate::demo::DemoBackend::new()
             .seed()
             .0

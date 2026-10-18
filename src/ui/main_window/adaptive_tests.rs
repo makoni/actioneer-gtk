@@ -11,8 +11,11 @@
 //! `ACTIONEER_UI_SHOTS=<dir>` saves a PNG of every screen checked, named
 //! `<language>-<screen>.png`.
 
+use super::tests::demo_window;
 use super::*;
-use crate::kernel::i18n::{apply_language_preference, i18n_test_guard, tr};
+use crate::kernel::i18n::{
+    apply_language_preference, current_effective_language, i18n_test_guard, language_code, tr,
+};
 use crate::services::preferences::LanguagePreference;
 use crate::ui::sidebar::repo_from_object;
 use crate::ui::test_helpers::{
@@ -25,6 +28,9 @@ const PHONE_HEIGHT: i32 = 720;
 /// A phone on its side: wide enough to collapse nothing more, and as low as
 /// GNOME asks adaptive apps to go.
 const LANDSCAPE_WIDTH: i32 = 720;
+/// Just past the collapse width: list and detail side by side, with the
+/// least room either will ever get.
+const NARROWEST_EXPANDED_WIDTH: i32 = 740;
 const LANDSCAPE_HEIGHT: i32 = 294;
 const WIDE_FONT: &str = "Ubuntu Sans 11";
 const MAIN_REPO: &str = "demo-org/actioneer-demo-app";
@@ -32,10 +38,6 @@ const MAIN_REPO: &str = "demo-org/actioneer-demo-app";
 /// A crash report line long enough to need wrapping, and with no spaces in
 /// the path, so it has to break inside words.
 const LONG_REPORT: &str = "thread 'main' panicked at /home/user/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/some-crate-1.2.3/src/lib.rs:42:13\n";
-
-fn settle_for_a_while() {
-    settle_main_loop(50);
-}
 
 /// The look a test lays the app out in: its language, the wide font, and for
 /// store screenshots the light style, Yaru icons and no window buttons.
@@ -45,19 +47,47 @@ fn settle_for_a_while() {
 /// out in its font or language, and pass or fail by the order they ran in.
 struct LookScope {
     _guard: std::sync::MutexGuard<'static, ()>,
+    /// What to put back: the language the run had before this test.
+    previous_language: LanguagePreference,
 }
+
+/// Every language the app ships, `System` aside.
+const LANGUAGES: [LanguagePreference; 14] = [
+    LanguagePreference::En,
+    LanguagePreference::De,
+    LanguagePreference::Nl,
+    LanguagePreference::ZhHans,
+    LanguagePreference::Hi,
+    LanguagePreference::Es,
+    LanguagePreference::Fr,
+    LanguagePreference::Ar,
+    LanguagePreference::Bn,
+    LanguagePreference::PtBr,
+    LanguagePreference::Ru,
+    LanguagePreference::Ur,
+    LanguagePreference::It,
+    LanguagePreference::Ja,
+];
 
 impl LookScope {
     fn enter(language: LanguagePreference) -> Self {
         let guard = i18n_test_guard();
+        let current = current_effective_language();
+        let previous_language = LANGUAGES
+            .into_iter()
+            .find(|candidate| language_code(*candidate) == current)
+            .unwrap_or(LanguagePreference::En);
         apply_language_preference(language);
         crate::ui::style::apply_text_direction_for_language();
         crate::runtime::init_test_runtime();
-        crate::ui::style::install_app_css();
+        crate::ui::test_helpers::ensure_app_css();
         if let Some(settings) = gtk::Settings::default() {
             settings.set_gtk_font_name(Some(WIDE_FONT));
         }
-        Self { _guard: guard }
+        Self {
+            _guard: guard,
+            previous_language,
+        }
     }
 
     /// The desktop store screenshots' look. Call once the window exists: it
@@ -73,7 +103,7 @@ impl LookScope {
 
 impl Drop for LookScope {
     fn drop(&mut self) {
-        apply_language_preference(LanguagePreference::En);
+        apply_language_preference(self.previous_language);
         crate::ui::style::apply_text_direction_for_language();
         if let Some(settings) = gtk::Settings::default() {
             for property in [
@@ -86,19 +116,6 @@ impl Drop for LookScope {
         }
         adw::StyleManager::default().set_color_scheme(adw::ColorScheme::Default);
     }
-}
-
-/// A demo-mode main window, presented at the given size with its
-/// repositories loaded.
-fn demo_window(services: AppServices, width: i32, height: i32) -> MainWindow {
-    let app = adw::Application::builder()
-        .application_id("me.spaceinbox.actioneer.PhoneLayoutTest")
-        .build();
-    let window = MainWindow::new(&app, services, true);
-    // The stored window size arrives asynchronously; let it land first.
-    settle_for_a_while();
-    present_window_at(&window.window, width, height);
-    window
 }
 
 /// Opens `MAIN_REPO` as a tap or Enter would.
@@ -138,7 +155,7 @@ fn open_job_logs(window: &MainWindow) -> Option<gtk::Window> {
 
 /// Lays the window out, saves a screenshot and records what overflows.
 fn inspect(window: &MainWindow, code: &str, screen: &str, problems: &mut Vec<String>) {
-    settle_for_a_while();
+    settle_main_loop(50);
     save_screenshot(&window.window, &format!("{code}-{screen}"));
     for overflow in horizontal_overflow(&window.window) {
         problems.push(format!("{screen}: {overflow}"));
@@ -151,7 +168,7 @@ fn inspect(window: &MainWindow, code: &str, screen: &str, problems: &mut Vec<Str
 /// dialog is a bottom sheet a few pixels wider than the window it covers — its
 /// rounded corners and shadow — which is libadwaita's frame, not overflow.
 fn inspect_dialog(window: &MainWindow, code: &str, screen: &str, problems: &mut Vec<String>) {
-    settle_for_a_while();
+    settle_main_loop(50);
     let Some(dialog) = window.window.visible_dialog() else {
         problems.push(format!("{screen}: no dialog opened"));
         return;
@@ -171,7 +188,7 @@ fn inspect_dialog(window: &MainWindow, code: &str, screen: &str, problems: &mut 
         ));
     }
     dialog.force_close();
-    settle_for_a_while();
+    settle_main_loop(50);
 }
 
 type OpenDialog = dyn Fn(&MainWindow);
@@ -249,11 +266,27 @@ fn check_phone_layout(language: LanguagePreference, code: &str) {
     }
 
     window.window.destroy();
-    settle_for_a_while();
+    settle_main_loop(50);
+
+    // List and detail side by side, as narrow as that layout gets.
+    let dir = tempfile::tempdir().expect("temp dir");
+    let window = demo_window(
+        AppServices::test_fakes(dir.path()),
+        NARROWEST_EXPANDED_WIDTH,
+        PHONE_HEIGHT,
+    );
+    assert!(
+        !window.split_view.is_collapsed(),
+        "{code}: {NARROWEST_EXPANDED_WIDTH} px keeps list and detail side by side"
+    );
+    open_main_repo(&window);
+    inspect(&window, code, "narrowest-expanded", &mut problems);
+    window.window.destroy();
+    settle_main_loop(50);
 
     assert!(
         problems.is_empty(),
-        "{code}: content is cut off at {PHONE_WIDTH} px:\n{}",
+        "{code}: content is cut off on a narrow window:\n{}",
         problems.join("\n")
     );
 }
@@ -272,7 +305,7 @@ fn check_landscape_dialogs(language: LanguagePreference, code: &str) {
     inspect_window_dialogs(&window, &format!("{code}-landscape"), &mut problems);
 
     window.window.destroy();
-    settle_for_a_while();
+    settle_main_loop(50);
 
     assert!(
         problems.is_empty(),
@@ -376,7 +409,7 @@ fn store_screenshots() {
         settle_main_loop(200);
         // No caret blinking in the search field.
         gtk::prelude::GtkWindowExt::set_focus(&window.window, None::<&gtk::Widget>);
-        settle_for_a_while();
+        settle_main_loop(50);
         let save = |widget: &gtk::Widget, name: &str| {
             save_screenshot_to(widget, &dir.join(name), 2.0);
         };
@@ -401,6 +434,6 @@ fn store_screenshots() {
 
         logs.destroy();
         window.window.destroy();
-        settle_for_a_while();
+        settle_main_loop(50);
     });
 }

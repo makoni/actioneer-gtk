@@ -18,6 +18,7 @@ changes when the app restores the last repository, and that must not leave
 the list.
 """
 import os
+import time
 
 import fixtures
 from lib import (
@@ -72,6 +73,14 @@ def main():
         f"the back button did not return to the list. Visible: {visible_names(frame)}",
     )
     print("Back returned to the list.", flush=True)
+
+    # The star toggles the favourite and leaves the list where it is: its
+    # button takes the press, so the row never sees a tap.
+    tap(require_named(frame, fixtures.CONTROL_TOGGLE_FAVORITE))
+    time.sleep(1.5)
+    if find_named(frame, fixtures.BACK_BUTTON) is not None:
+        raise SystemExit("tapping a repository's star opened the repository")
+    print("The star did not navigate.", flush=True)
 
     # The repository that is already open: selection does not change, the
     # tap alone has to bring its page back.
