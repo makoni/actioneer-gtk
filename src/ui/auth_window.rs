@@ -111,11 +111,20 @@ impl AuthWindow {
             cancel_button,
         ) = Self::build_ui_content();
 
-        dialog.set_child(Some(&content_box));
+        // Scrolls rather than overflows when the window is short — a phone on
+        // its side leaves less height than the code and its buttons need.
+        let scroller = gtk::ScrolledWindow::builder()
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .propagate_natural_height(true)
+            .propagate_natural_width(true)
+            .child(&content_box)
+            .build();
+        dialog.set_child(Some(&scroller));
 
         // A dialog with breakpoints has to state the smallest size it lays
-        // out for; this is a phone's, less the bottom sheet's frame.
-        dialog.set_size_request(300, 294);
+        // out for: narrower than a phone in portrait, lower than one on its
+        // side, once the bottom sheet's frame is taken off both.
+        dialog.set_size_request(300, 200);
         // A phone's bottom sheet cannot spare the desktop's 48 px either side.
         let narrow = adw::Breakpoint::new(
             adw::BreakpointCondition::parse("max-width: 450sp")

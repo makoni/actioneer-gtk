@@ -410,7 +410,7 @@ impl RepoDetailPane {
             adw::BreakpointCondition::parse(NARROW_PANE_CONDITION)
                 .expect("the narrow-pane condition is a valid breakpoint condition"),
         );
-        let setters: [(&gtk::Widget, &str, glib::Value); 7] = [
+        let setters: [(&gtk::Widget, &str, glib::Value); 6] = [
             (
                 header_box.upcast_ref(),
                 "orientation",
@@ -425,11 +425,25 @@ impl RepoDetailPane {
             ),
             (runs_clamp.upcast_ref(), "margin-start", 12.to_value()),
             (runs_clamp.upcast_ref(), "margin-end", 12.to_value()),
-            (self.root.upcast_ref(), "css-classes", ["narrow"].to_value()),
         ];
         for (object, property, value) in &setters {
             narrow.add_setter(*object, property, Some(value));
         }
+        // One class added and removed, rather than a setter on `css-classes`,
+        // which would replace whatever other classes the root has. Weak: the
+        // breakpoint belongs to the bin the root sits in.
+        let root = self.root.downgrade();
+        narrow.connect_apply(move |_| {
+            if let Some(root) = root.upgrade() {
+                root.add_css_class("narrow");
+            }
+        });
+        let root = self.root.downgrade();
+        narrow.connect_unapply(move |_| {
+            if let Some(root) = root.upgrade() {
+                root.remove_css_class("narrow");
+            }
+        });
         self.breakpoint_bin.add_breakpoint(narrow);
     }
 

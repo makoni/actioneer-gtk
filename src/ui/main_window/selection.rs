@@ -126,8 +126,13 @@ impl MainWindow {
         let stack = self.detail_stack.clone();
         let active_detail = self.active_detail.clone();
         let status_page = self.detail_status_page.clone();
+        let split_view = self.split_view.clone();
+        let title = repo.full_name.clone();
 
         glib::idle_add_local_once(move || {
+            if let Some(page) = split_view.content() {
+                page.set_title(&title);
+            }
             if let Some(detail_child) = stack.child_by_name("detail") {
                 stack.remove(&detail_child);
             }

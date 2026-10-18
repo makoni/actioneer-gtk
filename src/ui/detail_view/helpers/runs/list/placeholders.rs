@@ -97,6 +97,9 @@ pub(super) fn build_error_placeholder() -> (gtk::Widget, gtk::Label, RetryHandle
     detail_label.set_halign(gtk::Align::Start);
     detail_label.set_xalign(0.0);
     allow_wrap(&detail_label);
+    // Error text carries URLs and paths with no spaces to break at; between
+    // words only, one of them would set the pane's width on a phone.
+    detail_label.set_wrap_mode(gtk::pango::WrapMode::WordChar);
     container.append(&detail_label);
 
     let retry_button = gtk::Button::with_label(tr("Retry").as_str());

@@ -219,14 +219,18 @@ impl Ctx {
         job_list.connect_row_selected(move |_, row| {
             if let Some(row) = row {
                 this.show_job(row.index().max(0) as usize);
-                // Collapsed, the list covers the log; a reader who picked a job
-                // wants to read it.
-                if !this.rebuilding.get()
-                    && let Some(split) = this.split_view.upgrade()
-                    && split.is_collapsed()
-                {
-                    split.set_show_sidebar(false);
-                }
+            }
+        });
+        // Collapsed, the list covers the log, and a reader who picked a job
+        // wants to read it. On activation rather than selection: arrowing
+        // through the list also selects, and would close it after one step,
+        // while tapping the job already selected selects nothing new.
+        let split_view = self.split_view.clone();
+        job_list.connect_row_activated(move |_, _| {
+            if let Some(split) = split_view.upgrade()
+                && split.is_collapsed()
+            {
+                split.set_show_sidebar(false);
             }
         });
     }

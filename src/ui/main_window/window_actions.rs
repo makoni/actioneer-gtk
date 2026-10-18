@@ -149,6 +149,12 @@ Troubleshooting\n\
     }
 
     pub(super) fn open_report_issue(&self) {
+        Self::report_issue(&self.window);
+    }
+
+    /// Opens the issue tracker, prefilled from a pending crash report if there
+    /// is one; `window` parents the error alert if the browser cannot open.
+    fn report_issue(window: &adw::ApplicationWindow) {
         let issue_url = crash_report::build_issue_url_for_pending_report()
             .map(|url| url.unwrap_or_else(|| ISSUE_URL.to_string()))
             .unwrap_or_else(|err| {
@@ -159,7 +165,7 @@ Troubleshooting\n\
             error!("Failed to open issue tracker URL: {}", err);
             let open_issue_error = tr("Failed to open issue tracker in the browser.");
             let dialog = Self::info_alert(open_issue_error.as_str());
-            dialog.present(Some(&self.window));
+            dialog.present(Some(window));
         }
     }
 
@@ -215,7 +221,7 @@ Troubleshooting\n\
         let scrolled = gtk::ScrolledWindow::builder()
             .hscrollbar_policy(gtk::PolicyType::Never)
             .vexpand(true)
-            .min_content_height(160)
+            .min_content_height(80)
             .child(&text_view)
             .build();
         scrolled.add_css_class("card");
@@ -235,9 +241,12 @@ Troubleshooting\n\
                 display.clipboard().set_text(report_text.as_str());
             }
         });
-        let this = self.clone();
+        // Weak: the dialog is hosted inside this window.
+        let window = self.window.downgrade();
         issue_button.connect_clicked(move |_| {
-            this.open_report_issue();
+            if let Some(window) = window.upgrade() {
+                Self::report_issue(&window);
+            }
         });
 
         let toolbar = adw::ToolbarView::new();
@@ -251,8 +260,9 @@ Troubleshooting\n\
             .child(&toolbar)
             .build();
         // A dialog with breakpoints has to state the smallest size it lays
-        // out for; this is a phone's, less the bottom sheet's frame.
-        dialog.set_size_request(300, 294);
+        // out for: narrower than a phone in portrait, lower than one on its
+        // side, once the bottom sheet's frame is taken off both.
+        dialog.set_size_request(300, 200);
         // Two buttons side by side outgrow a phone in the longer languages.
         let narrow = adw::Breakpoint::new(
             adw::BreakpointCondition::parse("max-width: 480sp")
