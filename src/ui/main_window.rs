@@ -146,6 +146,9 @@ impl MainWindow {
             .build();
         root_stack.set_hexpand(true);
         root_stack.set_vexpand(true);
+        // Only the visible page decides how narrow the window may get: the
+        // welcome screen must not hold the signed-in app wider, or the reverse.
+        root_stack.set_hhomogeneous(false);
         let active_detail: Rc<RefCell<Option<RepoDetailPane>>> = Rc::new(RefCell::new(None));
         let favorites_manager = services.favorites.clone();
         let preferences_manager = services.preferences.clone();
@@ -611,5 +614,7 @@ mod app_actions;
 mod layout;
 mod rate_limit;
 
+#[cfg(test)]
+mod adaptive_tests;
 #[cfg(test)]
 mod tests;

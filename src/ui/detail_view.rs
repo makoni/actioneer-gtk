@@ -244,6 +244,8 @@ impl RepoDetailPane {
         footer_label.add_css_class("dim-label");
         footer_label.add_css_class("caption");
         footer_label.set_halign(gtk::Align::Start);
+        footer_label.set_xalign(0.0);
+        crate::ui::utils::allow_wrap(&footer_label);
 
         let header = DetailHeaderState::new(
             subtitle_label.clone(),

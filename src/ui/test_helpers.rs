@@ -248,3 +248,141 @@ pub fn collect_widget_weaks(
         child = current.next_sibling();
     }
 }
+
+/// Widgets that stick out past the left or right edge of `root`, which is what
+/// a phone-sized window shows as content cut off at the side.
+///
+/// Only the outermost offender of each overflowing subtree is listed, with the
+/// chain below it that demands the width: at every step the child with the
+/// largest minimum width, down to the widget that sets it — usually a label or
+/// a row of buttons that cannot shrink.
+///
+/// Content that scrolls horizontally on purpose (a `ScrolledWindow` whose
+/// horizontal policy is not `Never`) and unmapped widgets (pages that are not
+/// on screen) are skipped.
+#[cfg(test)]
+pub fn horizontal_overflow(root: &impl IsA<gtk::Widget>) -> Vec<String> {
+    let root = root.as_ref();
+    let limit = root.width() as f32;
+    let mut found = Vec::new();
+    collect_overflow(root, root, limit, &mut found);
+    found
+}
+
+#[cfg(test)]
+fn collect_overflow(root: &gtk::Widget, widget: &gtk::Widget, limit: f32, found: &mut Vec<String>) {
+    let mut child = widget.first_child();
+    while let Some(current) = child {
+        child = current.next_sibling();
+        // Overlay scrollbars are drawn over the edge by design.
+        if !current.is_mapped() || current.is::<gtk::Popover>() || current.is::<gtk::Scrollbar>() {
+            continue;
+        }
+        let Some(bounds) = current.compute_bounds(root) else {
+            continue;
+        };
+        // A pixel of slack: header bars reach a pixel past the window's edge
+        // into the decoration's border.
+        if bounds.x() < -1.5 || bounds.x() + bounds.width() > limit + 1.5 {
+            found.push(format!(
+                "{} spans {:.0}..{:.0} of {limit:.0}: {}",
+                describe_widget(&current),
+                bounds.x(),
+                bounds.x() + bounds.width(),
+                widest_chain(&current)
+            ));
+            continue;
+        }
+        let scrolls_sideways = current
+            .downcast_ref::<gtk::ScrolledWindow>()
+            .is_some_and(|scroller| scroller.hscrollbar_policy() != gtk::PolicyType::Never);
+        if !scrolls_sideways {
+            collect_overflow(root, &current, limit, found);
+        }
+    }
+}
+
+#[cfg(test)]
+fn widest_chain(widget: &gtk::Widget) -> String {
+    let mut steps = Vec::new();
+    let mut node = Some(widget.clone());
+    while let Some(current) = node {
+        let (min, _, _, _) = current.measure(gtk::Orientation::Horizontal, -1);
+        steps.push(format!("{} {min}", describe_widget(&current)));
+        let mut widest: Option<(i32, gtk::Widget)> = None;
+        let mut child = current.first_child();
+        while let Some(candidate) = child {
+            child = candidate.next_sibling();
+            if !candidate.is_visible() {
+                continue;
+            }
+            let (candidate_min, _, _, _) = candidate.measure(gtk::Orientation::Horizontal, -1);
+            if widest
+                .as_ref()
+                .is_none_or(|(best, _)| candidate_min > *best)
+            {
+                widest = Some((candidate_min, candidate));
+            }
+        }
+        node = widest.map(|(_, child)| child);
+    }
+    steps.join(" > ")
+}
+
+#[cfg(test)]
+fn describe_widget(widget: &gtk::Widget) -> String {
+    let classes: Vec<String> = widget.css_classes().iter().map(|c| c.to_string()).collect();
+    let text = widget
+        .downcast_ref::<gtk::Label>()
+        .map(|label| format!(" {:?}", label.text()))
+        .or_else(|| {
+            widget
+                .downcast_ref::<gtk::Button>()
+                .and_then(|button| button.label())
+                .map(|label| format!(" {label:?}"))
+        })
+        .unwrap_or_default();
+    if classes.is_empty() {
+        format!("{}{text}", widget.type_().name())
+    } else {
+        format!("{}.{}{text}", widget.type_().name(), classes.join("."))
+    }
+}
+
+/// Renders `widget` to `<dir>/<name>.png` when `ACTIONEER_UI_SHOTS=<dir>` is
+/// set, so a layout can be looked at rather than only asserted on. Does
+/// nothing otherwise.
+#[cfg(test)]
+pub fn save_screenshot(widget: &impl IsA<gtk::Widget>, name: &str) {
+    let Some(dir) = std::env::var_os("ACTIONEER_UI_SHOTS") else {
+        return;
+    };
+    let widget = widget.as_ref();
+    let (width, height) = (widget.width(), widget.height());
+    if width <= 0 || height <= 0 {
+        return;
+    }
+    let paintable = gtk::WidgetPaintable::new(Some(widget));
+    let snapshot = gtk::Snapshot::new();
+    paintable.snapshot(&snapshot, width as f64, height as f64);
+    let Some(node) = snapshot.to_node() else {
+        return;
+    };
+    let Some(renderer) = widget.native().and_then(|native| native.renderer()) else {
+        return;
+    };
+    let texture = renderer.render_texture(
+        node,
+        Some(&gtk::graphene::Rect::new(
+            0.0,
+            0.0,
+            width as f32,
+            height as f32,
+        )),
+    );
+    let path = std::path::Path::new(&dir).join(format!("{name}.png"));
+    let _ = std::fs::create_dir_all(&dir);
+    if let Err(err) = texture.save_to_png(&path) {
+        eprintln!("could not save {}: {err}", path.display());
+    }
+}

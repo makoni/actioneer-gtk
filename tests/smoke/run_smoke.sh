@@ -46,6 +46,15 @@ mkdir -p "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CONFIG_HOME" \
   "$XDG_CACHE_HOME" "$XDG_RUNTIME_DIR"
 chmod 700 "$XDG_RUNTIME_DIR"
 
+# The private config home above also hides the developer's font settings, so
+# GTK falls back to its default font. Widths depend on the font — a layout that
+# fits in the default one can overflow in a wider one such as Ubuntu Sans —
+# so SMOKE_FONT can pick one, e.g. SMOKE_FONT="Ubuntu Sans 11".
+if [[ -n "${SMOKE_FONT:-}" ]]; then
+  mkdir -p "$XDG_CONFIG_HOME/gtk-4.0"
+  printf '[Settings]\ngtk-font-name=%s\n' "$SMOKE_FONT" >"$XDG_CONFIG_HOME/gtk-4.0/settings.ini"
+fi
+
 # Enable AT-SPI accessibility bridge so pyatspi can inspect GTK widgets.
 export NO_AT_BRIDGE=0
 export GTK_A11Y=atspi
@@ -58,6 +67,8 @@ export GDK_BACKEND=x11
 unset WAYLAND_DISPLAY
 
 app_log="$workdir/app.log"
+# Journeys may read the app's output, e.g. to fail on layout warnings.
+export SMOKE_APP_LOG="$app_log"
 
 xvfb_display=":${XVFB_DISPLAY_NUM:-98}"
 # SMOKE_SCREEN picks the screen size; a narrow one exercises the phone layout.

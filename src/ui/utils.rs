@@ -12,7 +12,7 @@ mod a11y;
 pub use a11y::describe_control;
 
 mod typography;
-pub use typography::section_heading;
+pub use typography::{allow_wrap, section_heading};
 
 mod favorites;
 pub use favorites::apply_favorite_result;

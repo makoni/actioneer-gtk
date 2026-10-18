@@ -37,6 +37,8 @@ impl WelcomeScreen {
         // Welcome title
         let title = gtk::Label::new(Some(tr("Welcome to Actioneer").as_str()));
         title.add_css_class("title-1");
+        title.set_justify(gtk::Justification::Center);
+        crate::ui::utils::allow_wrap(&title);
         title.set_margin_bottom(12);
         widget.append(&title);
 
@@ -45,6 +47,8 @@ impl WelcomeScreen {
             tr("Manage your GitHub Actions workflows with ease").as_str(),
         ));
         subtitle.add_css_class("dim-label");
+        subtitle.set_justify(gtk::Justification::Center);
+        crate::ui::utils::allow_wrap(&subtitle);
         subtitle.set_margin_bottom(36);
         widget.append(&subtitle);
 
@@ -150,6 +154,8 @@ impl WelcomeScreen {
 
         let label = gtk::Label::new(Some(text));
         label.set_halign(gtk::Align::Start);
+        label.set_xalign(0.0);
+        crate::ui::utils::allow_wrap(&label);
         feature_box.append(&label);
 
         container.append(&feature_box);
