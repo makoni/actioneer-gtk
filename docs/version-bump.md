@@ -1,5 +1,18 @@
 # Version bump checklist
 
+Releases are prepared directly on `develop`, with no release branch, in two
+commits: `i18n(release): add X.Y.Z changelog entry with translations` (steps 3–4)
+and `chore(release): bump version to X.Y.Z and sync packaging` (steps 1–2 and
+`RELEASE.md`). Run the checks in step 5 and `ci.yml` before publishing.
+
+There are two sets of release notes:
+
+- **For users, in the repository**: the AppStream `<release>` entry (translated,
+  shown by software centers) and `RELEASE.md`. Plain language, no crate names
+  or commit lists.
+- **Technical, on GitHub**: written into the draft release that
+  `publish.yml` creates (step 6), not committed.
+
 ## 1) Update versions
 - `Cargo.toml` — `[package].version`.
 - `Cargo.lock` — update only the crate's own entry with `cargo update -w`. Do not use `cargo generate-lockfile`: it re-resolves every dependency to its newest compatible version, which slips an unreviewed dependency refresh into the release commit.
@@ -21,6 +34,7 @@ scripts/check-flatpak-lock-sync.sh
   git log --oneline <last-tag>..HEAD
   ```
 - Keep older entries intact.
+- Do not put an em dash (—) in a bullet: `scripts/extract-translations.sh` drops it from the msgid, so no catalog entry matches the extracted string. Use commas or a colon.
 - Check whether the CI runners changed since the last tag:
   ```bash
   git diff <last-tag>..HEAD -- .github/workflows | grep -E '^[-+].*(runs-on|runner):'
@@ -30,8 +44,8 @@ scripts/check-flatpak-lock-sync.sh
   to a newer Ubuntu, the release notes (`metainfo.xml.in`, `RELEASE.md`, the
   GitHub release) must say which glibc is now required and which distributions
   lose the AppImage, pointing them to the Flatpak or the Snap; update the
-  AppImage section of `README.md` to match. The first release after 1.1.2 is
-  such a release: 24.04 → 26.04, glibc 2.39 → 2.43.
+  AppImage section of `README.md` to match. 1.2.0 was such a release:
+  24.04 → 26.04, glibc 2.39 → 2.43.
 
 ## 4) Translate the new changelog bullets
 - Run `scripts/extract-translations.sh` to refresh `po/actioneer.pot` with the new msgids (needs `xtr`: `cargo install xtr`). Check that the msgid set grew by exactly the new bullets; the rest of the diff is `#:` line references shifting.
@@ -45,3 +59,16 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo test
 scripts/check-flatpak-lock-sync.sh
 ```
+
+## 6) Publish
+```bash
+git push origin develop
+gh workflow run ci.yml --ref develop          # must be green
+gh workflow run publish.yml --ref develop -f tag=X.Y.Z
+```
+`publish.yml` builds the Flatpak, Snap and AppImage bundles and creates a
+**draft** GitHub release with them. Its body is a placeholder: replace it with
+the technical notes (what changed and why, dependency and packaging changes,
+anything a packager or contributor needs, and the compare link
+`https://github.com/makoni/actioneer-gtk/compare/<last-tag>...X.Y.Z`), then
+publish the draft, which creates the tag on `develop`.
