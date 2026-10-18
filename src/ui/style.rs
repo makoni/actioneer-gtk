@@ -145,6 +145,21 @@ const APP_CSS: &str = r#"
     margin-left: 6px;
 }
 
+/* The job cards of an expanded run sit under the run title, past its
+   disclosure arrow and status dot (the title moved 6px in with the header's
+   disclosure gap, the jobs with it). The trailing inset matches the leading
+   one: different insets read as the block having slipped sideways. Narrow,
+   every pixel goes to the job and step names instead. */
+.run-jobs {
+    margin-left: 42px;
+    margin-right: 42px;
+}
+
+.narrow .run-jobs {
+    margin-left: 6px;
+    margin-right: 6px;
+}
+
 .workflow-title {
     font-weight: 700;
 }
