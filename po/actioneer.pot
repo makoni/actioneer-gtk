@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-18 12:15+0000\n"
+"POT-Creation-Date: 2026-10-18 12:36+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -838,7 +838,7 @@ msgstr ""
 msgid "Failed to open donation page in the browser."
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:341 src/ui/main_window.rs:563
+#: src/ui/main_window/window_actions.rs:341 src/ui/main_window.rs:552
 msgid "Actioneer notification test"
 msgstr ""
 
@@ -854,7 +854,7 @@ msgstr ""
 msgid "Application menu"
 msgstr ""
 
-#: src/ui/main_window/app_actions.rs:20 src/ui/preferences_window.rs:29
+#: src/ui/main_window/app_actions.rs:20 src/ui/preferences_window.rs:31
 msgid "Preferences"
 msgstr ""
 
@@ -902,87 +902,95 @@ msgstr ""
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr ""
 
-#: src/ui/main_window.rs:564
+#: src/ui/main_window.rs:553
 msgid "If you see this, notifications are working."
 msgstr ""
 
-#: src/ui/preferences_window.rs:37
+#: src/ui/preferences_window.rs:39
 msgid "Refresh"
 msgstr ""
 
-#: src/ui/preferences_window.rs:40
+#: src/ui/preferences_window.rs:42
 msgid "2 seconds"
 msgstr ""
 
-#: src/ui/preferences_window.rs:41
+#: src/ui/preferences_window.rs:43
 msgid "5 seconds"
 msgstr ""
 
-#: src/ui/preferences_window.rs:42
+#: src/ui/preferences_window.rs:44
 msgid "10 seconds"
 msgstr ""
 
-#: src/ui/preferences_window.rs:43
+#: src/ui/preferences_window.rs:45
 msgid "30 seconds"
 msgstr ""
 
-#: src/ui/preferences_window.rs:52
+#: src/ui/preferences_window.rs:54
 msgid "Auto-refresh interval"
 msgstr ""
 
-#: src/ui/preferences_window.rs:53
+#: src/ui/preferences_window.rs:55
 msgid "How often to check for workflow run updates"
 msgstr ""
 
-#: src/ui/preferences_window.rs:59
+#: src/ui/preferences_window.rs:61
 msgid "Notifications"
 msgstr ""
 
-#: src/ui/preferences_window.rs:63
+#: src/ui/preferences_window.rs:65
 msgid "Desktop Notifications"
 msgstr ""
 
-#: src/ui/preferences_window.rs:64
+#: src/ui/preferences_window.rs:66
 msgid "Show a notification when a workflow run finishes"
 msgstr ""
 
-#: src/ui/preferences_window.rs:76
+#: src/ui/preferences_window.rs:78
 msgid "Appearance"
 msgstr ""
 
-#: src/ui/preferences_window.rs:78
+#: src/ui/preferences_window.rs:85
+msgid "Follow Omarchy theme"
+msgstr ""
+
+#: src/ui/preferences_window.rs:86
+msgid "Use the colors and shapes of the active Omarchy theme"
+msgstr ""
+
+#: src/ui/preferences_window.rs:98
 msgid "System"
 msgstr ""
 
-#: src/ui/preferences_window.rs:79
+#: src/ui/preferences_window.rs:99
 msgid "Light"
 msgstr ""
 
-#: src/ui/preferences_window.rs:80
+#: src/ui/preferences_window.rs:100
 msgid "Dark"
 msgstr ""
 
-#: src/ui/preferences_window.rs:87
+#: src/ui/preferences_window.rs:107
 msgid "Theme"
 msgstr ""
 
-#: src/ui/preferences_window.rs:88
+#: src/ui/preferences_window.rs:108
 msgid "Select application theme"
 msgstr ""
 
-#: src/ui/preferences_window.rs:94
+#: src/ui/preferences_window.rs:114
 msgid "Language"
 msgstr ""
 
-#: src/ui/preferences_window.rs:96
+#: src/ui/preferences_window.rs:116
 msgid "System language (fallback: English)"
 msgstr ""
 
-#: src/ui/preferences_window.rs:115
+#: src/ui/preferences_window.rs:135
 msgid "Application language"
 msgstr ""
 
-#: src/ui/preferences_window.rs:116
+#: src/ui/preferences_window.rs:136
 msgid "Switch language instantly"
 msgstr ""
 
@@ -990,19 +998,19 @@ msgstr ""
 msgid "Error: {message}"
 msgstr ""
 
-#: src/main.rs:173
+#: src/main.rs:172
 msgid "Send a test notification when the app starts"
 msgstr ""
 
-#: src/main.rs:174
+#: src/main.rs:173
 msgid "Set the application language (e.g., ru, en, zh_Hans)"
 msgstr ""
 
-#: src/main.rs:175
+#: src/main.rs:174
 msgid "Start the app with sample demo data"
 msgstr ""
 
-#: src/main.rs:176
+#: src/main.rs:175
 msgid "Print the version of Actioneer and the GTK stack it runs on"
 msgstr ""
 
