@@ -18,66 +18,29 @@ jobs:
   package:
     name: Package AppImage (${{ matrix.arch }})
     runs-on: ${{ matrix.runner }}
-    needs: build-release
     strategy:
       fail-fast: false
-      # The host's glibc is the floor for every user: the binary links
-      # against it, and an AppImage bundles GTK but not glibc. Ubuntu 26.04
-      # ships glibc 2.43, so these builds need 2.43+ to run (not Ubuntu
-      # 24.04, Debian 13, Fedora 42 or RHEL 10). Moving to a newer runner
-      # raises that floor again.
+      # The AppImage bundles glibc and the dynamic loader along with GTK (see
+      # packaging/anylinux-appimage.sh), so the build host's glibc no longer
+      # sets a floor for users; verify-portability runs it on Ubuntu 22.04.
       matrix:
         include:
           - arch: x86_64
             runner: ubuntu-26.04
-            linuxdeploy_suffix: x86_64
-            linuxdeploy_sha256: c20cd71e3a4e3b80c3483cef793cda3f4e990aca14014d23c544ca3ce1270b4d
           - arch: aarch64
             runner: ubuntu-26.04-arm
-            linuxdeploy_suffix: aarch64
-            linuxdeploy_sha256: 620095110d693282b8ebeb244a95b5e911cf8f65f76c88b4b47d16ae6346fcff
+    # Rolling, like the packages pacman installs into it; the tools the script
+    # downloads are pinned by commit and checksum.
+    container: ghcr.io/pkgforge-dev/archlinux:latest
     outputs:
       run-id: ${{ steps.expose-run-id.outputs.run_id }}
     env:
-      APPDIR: build/AppDir
-      LINUXDEPLOY_PLUGIN_GTK: ${{ github.workspace }}/linuxdeploy-plugin-gtk.sh
-      # Pinned, with checksums: a release artifact must not depend on whatever
-      # sat on someone else's branch the day it was built. linuxdeploy has no
-      # stable channel, so this is its newest non-prerelease tag; the GTK plugin
-      # publishes no releases at all, so it is pinned by commit.
-      LINUXDEPLOY_VERSION: 1-alpha-20251107-1
-      LINUXDEPLOY_PLUGIN_GTK_COMMIT: 7a3fbc31a9e5075073ff8790f26effbac5f84453
-      LINUXDEPLOY_PLUGIN_GTK_SHA256: b0f4cbc684a0103a9651f0955b635eaea0096b3a66c0f5a2c2aa337960375171
+      APPDIR: AppDir
       # The GTK the AppImage must ship: the floor the crate compiles against
       # (`gtk4` feature `v4_14`). Anything older would load but lack symbols.
       MIN_BUNDLED_GTK: "4.14"
     steps:
       - uses: actions/checkout@v7.0.1
-
-      - name: Install system packages
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pkg-config libglib2.0-dev libgtk-4-dev libadwaita-1-dev desktop-file-utils gettext zsync
-
-      - name: Download prebuilt release binary
-        uses: actions/download-artifact@v8
-        with:
-          name: actioneer-release-bin-${{ matrix.arch }}
-          path: dist/release-payload
-
-      - name: Restore release layout
-        run: |
-          set -euo pipefail
-          mkdir -p target/release po
-          install -Dm755 dist/release-payload/bin/actioneer target/release/actioneer
-          if [ -d dist/release-payload/locale ]; then
-            rm -rf po/locale
-            mkdir -p po/locale
-            cp -r dist/release-payload/locale/. po/locale/
-          fi
-
-      - name: Render AppStream metainfo
-        run: msgfmt --xml -L MetaInfo --template=data/metainfo.xml.in -d po -o data/metainfo.xml
 
       - name: Get app version
         id: get_version
@@ -91,77 +54,37 @@ jobs:
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
-      - name: Download linuxdeploy and GTK plugin
-        run: |
-          set -euo pipefail
-          curl -fL "https://github.com/linuxdeploy/linuxdeploy/releases/download/${LINUXDEPLOY_VERSION}/linuxdeploy-${{ matrix.linuxdeploy_suffix }}.AppImage" -o linuxdeploy.AppImage
-          curl -fL "https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/${LINUXDEPLOY_PLUGIN_GTK_COMMIT}/linuxdeploy-plugin-gtk.sh" -o "$LINUXDEPLOY_PLUGIN_GTK"
-          echo "${{ matrix.linuxdeploy_sha256 }}  linuxdeploy.AppImage" | sha256sum --check --strict
-          echo "${LINUXDEPLOY_PLUGIN_GTK_SHA256}  ${LINUXDEPLOY_PLUGIN_GTK}" | sha256sum --check --strict
-          chmod +x linuxdeploy.AppImage "$LINUXDEPLOY_PLUGIN_GTK"
-
-      - name: Build AppImage with linuxdeploy
-        env:
-          ARCH: ${{ matrix.arch }}
-          # Bare filename, no directory: appimagetool takes this as its
-          # destination and hands the same basename to zsyncmake, which writes
-          # the .zsync next to it in the working directory.
-          LDAI_OUTPUT: actioneer-${{ steps.get_version.outputs.version }}-${{ matrix.arch }}.AppImage
-          LDAI_UPDATE_INFORMATION: "gh-releases-zsync|makoni|actioneer-gtk|latest|actioneer-*${{ matrix.arch }}.AppImage.zsync"
-        run: |
-          set -euo pipefail
-          rm -rf "$APPDIR"
-          mkdir -p dist "$APPDIR/usr/share/metainfo" "$APPDIR/usr/share/licenses/actioneer"
-          install -Dm644 data/metainfo.xml "$APPDIR/usr/share/metainfo/me.spaceinbox.actioneer.metainfo.xml"
-          install -Dm644 LICENSE "$APPDIR/usr/share/licenses/actioneer/LICENSE"
-          chmod +x packaging/AppRun.sh
-          export APPIMAGE_EXTRACT_AND_RUN=1
-          ./linuxdeploy.AppImage \
-            --appdir "$APPDIR" \
-            --executable target/release/actioneer \
-            --desktop-file data/me.spaceinbox.actioneer.desktop \
-            --icon-file icons/icons/hicolor/scalable/apps/me.spaceinbox.actioneer.svg \
-            --custom-apprun packaging/AppRun.sh \
-            --plugin gtk \
-            --output appimage
-          # linuxdeploy already produced the final name via $LDAI_OUTPUT. Do not
-          # rename it: the .zsync carries this exact basename in its URL header,
-          # and a renamed AppImage would leave that header pointing at nothing.
-          if [ ! -f "$LDAI_OUTPUT" ]; then
-            echo "linuxdeploy did not produce $LDAI_OUTPUT" >&2
-            ls -1 *.AppImage 2>/dev/null >&2 || true
-            exit 1
-          fi
-          if [ ! -f "$LDAI_OUTPUT.zsync" ]; then
-            echo "No $LDAI_OUTPUT.zsync: zsyncmake did not run" >&2
-            ls -1 *.zsync 2>/dev/null >&2 || true
-            exit 1
-          fi
-          mv "$LDAI_OUTPUT" "$LDAI_OUTPUT.zsync" dist/
+      - name: Build the AppImage
+        shell: bash
+        run: bash packaging/anylinux-appimage.sh
 
       - name: Verify the AppImage runs and carries its own GTK
+        shell: bash
         env:
           ARCH: ${{ matrix.arch }}
         run: |
           set -euo pipefail
           APPIMAGE="dist/actioneer-${{ steps.get_version.outputs.version }}-${{ matrix.arch }}.AppImage"
 
-          # 1. The bundle must actually contain GTK. If the plugin silently
-          #    stops copying it, the AppImage would fall back to the host's GTK
-          #    on machines that have one and fail outright on machines that do
-          #    not — both of which look fine on this runner.
-          bundled=$(find "$APPDIR" -name 'libgtk-4.so*' -printf '%f\n' | head -n 1)
-          if [ -z "$bundled" ]; then
-            echo "No libgtk-4 in the AppDir: the GTK plugin did not run" >&2
-            find "$APPDIR/usr/lib" -maxdepth 1 -name 'lib*' -printf '  %f\n' | head -n 20 >&2
-            exit 1
-          fi
-          echo "Bundled GTK library: $bundled"
+          # 1. The bundle must actually contain GTK and the C library. If
+          #    quick-sharun silently stops deploying either, the AppImage
+          #    would fall back to the host's copy on machines that have one
+          #    and fail outright on machines that do not — both of which look
+          #    fine on this runner.
+          for lib in 'libgtk-4.so*' 'libc.so.6' 'ld-linux-*.so*'; do
+            bundled=$(find "$APPDIR/lib" -name "$lib" -printf '%f\n' | head -n 1)
+            if [ -z "$bundled" ]; then
+              echo "No $lib in the AppDir: quick-sharun did not deploy it" >&2
+              find "$APPDIR/lib" -maxdepth 1 -name 'lib*' -printf '  %f\n' | head -n 20 >&2
+              exit 1
+            fi
+            echo "Bundled: $bundled"
+          done
 
           # 2. It must start, and report the GTK it loaded. `--version` prints
           #    the runtime's numbers, so this checks the library that answers at
           #    run time rather than the file that happens to sit in the AppDir.
-          reported=$(APPIMAGE_EXTRACT_AND_RUN=1 "./$APPIMAGE" --version)
+          reported=$("./$APPIMAGE" --appimage-extract-and-run --version | tail -n 1)
           echo "AppImage reports: $reported"
 
           gtk_version=$(printf '%s' "$reported" | sed -n 's/.*gtk \([0-9][0-9.]*\).*/\1/p')
@@ -215,3 +138,49 @@ jobs:
       - name: Expose workflow run id
         id: expose-run-id
         run: echo "run_id=$GITHUB_RUN_ID" >> "$GITHUB_OUTPUT"
+
+  # The point of bundling glibc: the AppImage must start on a system whose C
+  # library is older than the build container's. Ubuntu 22.04 (glibc 2.35) is
+  # the oldest supported LTS and what the AppImage catalog tests on.
+  verify-portability:
+    name: Run AppImage on Ubuntu 22.04 (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    needs: package
+    container: ubuntu:22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-26.04
+          - arch: aarch64
+            runner: ubuntu-26.04-arm
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Get app version
+        id: get_version
+        shell: bash
+        run: |
+          version=$(awk -F '"' '/^\[package\]/{p=1} p && /^version/ {print $2; exit}' Cargo.toml)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Download the AppImage
+        uses: actions/download-artifact@v8
+        with:
+          name: actioneer-${{ steps.get_version.outputs.version }}-${{ matrix.arch }}.AppImage
+          path: dist
+
+      - name: Start it
+        shell: bash
+        run: |
+          set -euo pipefail
+          ldd --version | head -n 1
+          APPIMAGE="dist/actioneer-${{ steps.get_version.outputs.version }}-${{ matrix.arch }}.AppImage"
+          chmod +x "$APPIMAGE"
+          reported=$("./$APPIMAGE" --appimage-extract-and-run --version | tail -n 1)
+          echo "AppImage reports: $reported"
+          case "$reported" in
+            "actioneer ${{ steps.get_version.outputs.version }} (gtk "*) ;;
+            *) echo "Unexpected --version output: $reported" >&2; exit 1 ;;
+          esac

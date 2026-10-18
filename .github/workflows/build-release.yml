@@ -23,11 +23,11 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
-      # The host's glibc is the floor for every user: the binary links
-      # against it, and an AppImage bundles GTK but not glibc. Ubuntu 26.04
-      # ships glibc 2.43, so these builds need 2.43+ to run (not Ubuntu
-      # 24.04, Debian 13, Fedora 42 or RHEL 10). Moving to a newer runner
-      # raises that floor again.
+      # The host's glibc is the floor for everyone running this standalone
+      # binary: it links against it. Ubuntu 26.04 ships glibc 2.43, so it
+      # needs 2.43+ (not Ubuntu 24.04, Debian 13, Fedora 42 or RHEL 10), and
+      # moving to a newer runner raises that floor again. The AppImage is not
+      # built from it and bundles its own glibc.
       matrix:
         include:
           - arch: x86_64
