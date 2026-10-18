@@ -985,3 +985,15 @@ msgstr "Пакеты AppImage теперь содержат информацию
 
 msgid "Signing out now always returns to the welcome screen right away, including in demo mode and when the system keyring is unavailable."
 msgstr "При выходе из аккаунта приложение теперь всегда сразу возвращается на экран приветствия — в том числе в демо-режиме и когда системная связка ключей недоступна."
+
+msgid "Actioneer now fits phones and narrow windows: every window and dialog adapts down to 360 pixels wide, and on a phone the repository list and a repository's workflows open as separate pages."
+msgstr "Actioneer теперь подходит для телефонов и узких окон: все окна и диалоги подстраиваются под ширину вплоть до 360 пикселей, а на телефоне список репозиториев и рабочие процессы репозитория открываются отдельными страницами."
+
+msgid "On Omarchy, Actioneer follows the desktop theme, including its colors, light or dark style and square corners, and updates when the theme changes. A switch in Preferences turns this off."
+msgstr "В Omarchy Actioneer следует теме рабочего стола — её цветам, светлому или тёмному стилю и прямым углам — и обновляется при смене темы. Это отключается переключателем в настройках."
+
+msgid "If there is no secure storage for your sign-in token, Actioneer now says so plainly instead of reporting a broken keyring."
+msgstr "Если для токена входа нет защищённого хранилища, Actioneer теперь прямо говорит об этом, а не сообщает о неисправной связке ключей."
+
+msgid "The AppImage now requires glibc 2.43 or newer, as found in Ubuntu 26.04. On older systems, use the Flatpak or the Snap."
+msgstr "Для AppImage теперь нужна glibc 2.43 или новее, как в Ubuntu 26.04. В более старых системах используйте Flatpak или Snap."

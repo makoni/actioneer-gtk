@@ -983,3 +983,15 @@ msgstr "Les paquets AppImage incluent désormais des informations de mise à jou
 
 msgid "Signing out now always returns to the welcome screen right away, including in demo mode and when the system keyring is unavailable."
 msgstr "La déconnexion ramène désormais toujours immédiatement à l’écran d’accueil, y compris en mode démo et lorsque le trousseau du système n’est pas disponible."
+
+msgid "Actioneer now fits phones and narrow windows: every window and dialog adapts down to 360 pixels wide, and on a phone the repository list and a repository's workflows open as separate pages."
+msgstr "Actioneer s’adapte désormais aux téléphones et aux fenêtres étroites : chaque fenêtre et chaque boîte de dialogue s’ajuste jusqu’à 360 pixels de large, et sur un téléphone la liste des dépôts et les workflows d’un dépôt s’ouvrent sur des pages distinctes."
+
+msgid "On Omarchy, Actioneer follows the desktop theme, including its colors, light or dark style and square corners, and updates when the theme changes. A switch in Preferences turns this off."
+msgstr "Sous Omarchy, Actioneer suit le thème du bureau — ses couleurs, son style clair ou sombre et ses angles droits — et se met à jour quand le thème change. Un interrupteur dans les Préférences permet de le désactiver."
+
+msgid "If there is no secure storage for your sign-in token, Actioneer now says so plainly instead of reporting a broken keyring."
+msgstr "S’il n’existe aucun stockage sécurisé pour votre jeton de connexion, Actioneer le dit désormais clairement au lieu de signaler un trousseau défectueux."
+
+msgid "The AppImage now requires glibc 2.43 or newer, as found in Ubuntu 26.04. On older systems, use the Flatpak or the Snap."
+msgstr "L’AppImage nécessite désormais glibc 2.43 ou plus récent, comme dans Ubuntu 26.04. Sur les systèmes plus anciens, utilisez le Flatpak ou le Snap."

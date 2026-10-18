@@ -981,3 +981,15 @@ msgstr "AppImage पैकेज अब zsync अपडेट जानकार
 
 msgid "Signing out now always returns to the welcome screen right away, including in demo mode and when the system keyring is unavailable."
 msgstr "साइन आउट करने पर अब ऐप हमेशा तुरंत स्वागत स्क्रीन पर लौट आता है, डेमो मोड में भी और तब भी जब सिस्टम कीरिंग उपलब्ध न हो।"
+
+msgid "Actioneer now fits phones and narrow windows: every window and dialog adapts down to 360 pixels wide, and on a phone the repository list and a repository's workflows open as separate pages."
+msgstr "Actioneer अब फ़ोन और संकरी विंडो में फ़िट होता है: हर विंडो और डायलॉग 360 पिक्सेल चौड़ाई तक ढल जाता है, और फ़ोन पर रिपॉज़िटरी सूची और किसी रिपॉज़िटरी के वर्कफ़्लो अलग-अलग पेजों में खुलते हैं।"
+
+msgid "On Omarchy, Actioneer follows the desktop theme, including its colors, light or dark style and square corners, and updates when the theme changes. A switch in Preferences turns this off."
+msgstr "Omarchy पर Actioneer डेस्कटॉप थीम का अनुसरण करता है — उसके रंग, हल्की या गहरी शैली और चौकोर कोने — और थीम बदलने पर अपडेट हो जाता है। प्राथमिकताएँ में एक स्विच से इसे बंद किया जा सकता है।"
+
+msgid "If there is no secure storage for your sign-in token, Actioneer now says so plainly instead of reporting a broken keyring."
+msgstr "अगर आपके साइन-इन टोकन के लिए कोई सुरक्षित भंडारण नहीं है, तो Actioneer अब टूटी हुई कीरिंग बताने के बजाय साफ़-साफ़ यही बताता है।"
+
+msgid "The AppImage now requires glibc 2.43 or newer, as found in Ubuntu 26.04. On older systems, use the Flatpak or the Snap."
+msgstr "AppImage को अब glibc 2.43 या नया संस्करण चाहिए, जैसा Ubuntu 26.04 में है। पुराने सिस्टम पर Flatpak या Snap का उपयोग करें।"
