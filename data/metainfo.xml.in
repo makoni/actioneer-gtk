@@ -126,6 +126,15 @@
   </screenshots>
 
   <releases>
+    <release version="1.2.1" date="2026-10-19">
+      <description>
+        <ul>
+          <li>The sign-in dialog shows the code and both of its buttons in full again, without scrolling.</li>
+          <li>The AppImage runs on older distributions again, including Ubuntu 22.04 and 24.04, and now appears in your language.</li>
+          <li>Notifications from the AppImage now appear, and once the AppImage is integrated, docks show Actioneer's name and icon.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.0" date="2026-10-18">
       <description>
         <ul>

@@ -994,3 +994,12 @@ msgstr "اگر آپ کے سائن اِن ٹوکن کے لیے کوئی محفو�
 
 msgid "The AppImage now requires glibc 2.43 or newer, as found in Ubuntu 26.04. On older systems, use the Flatpak or the Snap."
 msgstr "AppImage کو اب glibc 2.43 یا نیا ورژن درکار ہے، جیسا کہ Ubuntu 26.04 میں ہے۔ پرانے سسٹمز پر Flatpak یا Snap استعمال کریں۔"
+
+msgid "The sign-in dialog shows the code and both of its buttons in full again, without scrolling."
+msgstr "سائن اِن ڈائیلاگ اب پھر سے کوڈ اور اس کے دونوں بٹن پورے دکھاتا ہے، اسکرول کیے بغیر۔"
+
+msgid "The AppImage runs on older distributions again, including Ubuntu 22.04 and 24.04, and now appears in your language."
+msgstr "AppImage اب پھر سے پرانی ڈسٹری بیوشنز پر چلتا ہے، جن میں Ubuntu 22.04 اور 24.04 شامل ہیں، اور اب آپ کی زبان میں نظر آتا ہے۔"
+
+msgid "Notifications from the AppImage now appear, and once the AppImage is integrated, docks show Actioneer's name and icon."
+msgstr "AppImage سے اطلاعات اب ظاہر ہوتی ہیں، اور AppImage کو مربوط کرنے کے بعد ڈاک Actioneer کا نام اور آئیکن دکھاتا ہے۔"

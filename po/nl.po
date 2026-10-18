@@ -1039,3 +1039,12 @@ msgstr "Als er geen veilige opslag is voor je aanmeldtoken, zegt Actioneer dat n
 
 msgid "The AppImage now requires glibc 2.43 or newer, as found in Ubuntu 26.04. On older systems, use the Flatpak or the Snap."
 msgstr "De AppImage vereist nu glibc 2.43 of nieuwer, zoals in Ubuntu 26.04. Gebruik op oudere systemen de Flatpak of de Snap."
+
+msgid "The sign-in dialog shows the code and both of its buttons in full again, without scrolling."
+msgstr "Het aanmeldvenster toont de code en beide knoppen weer volledig, zonder scrollen."
+
+msgid "The AppImage runs on older distributions again, including Ubuntu 22.04 and 24.04, and now appears in your language."
+msgstr "De AppImage werkt weer op oudere distributies, waaronder Ubuntu 22.04 en 24.04, en is nu in je eigen taal."
+
+msgid "Notifications from the AppImage now appear, and once the AppImage is integrated, docks show Actioneer's name and icon."
+msgstr "Meldingen uit de AppImage verschijnen nu, en zodra de AppImage is geïntegreerd, tonen docks de naam en het pictogram van Actioneer."

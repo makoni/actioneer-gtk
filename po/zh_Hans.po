@@ -986,3 +986,12 @@ msgstr "如果没有可用于保存登录令牌的安全存储，Actioneer 现�
 
 msgid "The AppImage now requires glibc 2.43 or newer, as found in Ubuntu 26.04. On older systems, use the Flatpak or the Snap."
 msgstr "AppImage 现在需要 glibc 2.43 或更高版本（如 Ubuntu 26.04）。在较旧的系统上，请使用 Flatpak 或 Snap。"
+
+msgid "The sign-in dialog shows the code and both of its buttons in full again, without scrolling."
+msgstr "登录对话框再次完整显示验证码及两个按钮，无需滚动。"
+
+msgid "The AppImage runs on older distributions again, including Ubuntu 22.04 and 24.04, and now appears in your language."
+msgstr "AppImage 再次可在较旧的发行版上运行，包括 Ubuntu 22.04 和 24.04，并且现在会以你的语言显示。"
+
+msgid "Notifications from the AppImage now appear, and once the AppImage is integrated, docks show Actioneer's name and icon."
+msgstr "AppImage 的通知现在可以正常显示；集成 AppImage 后，程序坞会显示 Actioneer 的名称和图标。"

@@ -997,3 +997,12 @@ msgstr "Если для токена входа нет защищённого х
 
 msgid "The AppImage now requires glibc 2.43 or newer, as found in Ubuntu 26.04. On older systems, use the Flatpak or the Snap."
 msgstr "Для AppImage теперь нужна glibc 2.43 или новее, как в Ubuntu 26.04. В более старых системах используйте Flatpak или Snap."
+
+msgid "The sign-in dialog shows the code and both of its buttons in full again, without scrolling."
+msgstr "Диалог входа снова показывает код и обе кнопки целиком, без прокрутки."
+
+msgid "The AppImage runs on older distributions again, including Ubuntu 22.04 and 24.04, and now appears in your language."
+msgstr "AppImage снова запускается на более старых дистрибутивах, включая Ubuntu 22.04 и 24.04, и теперь работает на вашем языке."
+
+msgid "Notifications from the AppImage now appear, and once the AppImage is integrated, docks show Actioneer's name and icon."
+msgstr "Уведомления из AppImage теперь появляются, а после интеграции AppImage док показывает имя и значок Actioneer."

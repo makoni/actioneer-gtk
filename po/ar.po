@@ -989,3 +989,12 @@ msgstr "إذا لم يتوفر تخزين آمن لرمز تسجيل الدخو�
 
 msgid "The AppImage now requires glibc 2.43 or newer, as found in Ubuntu 26.04. On older systems, use the Flatpak or the Snap."
 msgstr "تتطلب حزمة AppImage الآن الإصدار 2.43 من glibc أو أحدث، كما في Ubuntu 26.04. على الأنظمة الأقدم، استخدم Flatpak أو Snap."
+
+msgid "The sign-in dialog shows the code and both of its buttons in full again, without scrolling."
+msgstr "يعرض مربع حوار تسجيل الدخول الرمز وزرّيه كاملين مرة أخرى، دون تمرير."
+
+msgid "The AppImage runs on older distributions again, including Ubuntu 22.04 and 24.04, and now appears in your language."
+msgstr "تعمل حزمة AppImage مجددًا على التوزيعات الأقدم، ومنها Ubuntu 22.04 و24.04، وأصبحت تظهر الآن بلغتك."
+
+msgid "Notifications from the AppImage now appear, and once the AppImage is integrated, docks show Actioneer's name and icon."
+msgstr "تظهر الآن الإشعارات من حزمة AppImage، وبعد دمج AppImage تعرض أشرطة التطبيقات اسم Actioneer وأيقونته."

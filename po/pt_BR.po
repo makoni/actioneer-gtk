@@ -996,3 +996,12 @@ msgstr "Se não houver armazenamento seguro para o seu token de login, o Actione
 
 msgid "The AppImage now requires glibc 2.43 or newer, as found in Ubuntu 26.04. On older systems, use the Flatpak or the Snap."
 msgstr "O AppImage agora requer glibc 2.43 ou mais recente, como no Ubuntu 26.04. Em sistemas mais antigos, use o Flatpak ou o Snap."
+
+msgid "The sign-in dialog shows the code and both of its buttons in full again, without scrolling."
+msgstr "A caixa de diálogo de login volta a mostrar o código e seus dois botões por inteiro, sem rolagem."
+
+msgid "The AppImage runs on older distributions again, including Ubuntu 22.04 and 24.04, and now appears in your language."
+msgstr "O AppImage volta a funcionar em distribuições mais antigas, incluindo Ubuntu 22.04 e 24.04, e agora aparece no seu idioma."
+
+msgid "Notifications from the AppImage now appear, and once the AppImage is integrated, docks show Actioneer's name and icon."
+msgstr "As notificações do AppImage agora aparecem e, depois que o AppImage é integrado, as docks mostram o nome e o ícone do Actioneer."

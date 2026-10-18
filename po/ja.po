@@ -1448,3 +1448,12 @@ msgstr "サインイントークンを保存できる安全なストレージが
 
 msgid "The AppImage now requires glibc 2.43 or newer, as found in Ubuntu 26.04. On older systems, use the Flatpak or the Snap."
 msgstr "AppImageにはglibc 2.43以降（Ubuntu 26.04など）が必要になりました。古いシステムではFlatpakまたはSnapをご利用ください。"
+
+msgid "The sign-in dialog shows the code and both of its buttons in full again, without scrolling."
+msgstr "サインインダイアログで、コードと2つのボタンが再びスクロールなしですべて表示されるようになりました。"
+
+msgid "The AppImage runs on older distributions again, including Ubuntu 22.04 and 24.04, and now appears in your language."
+msgstr "AppImageがUbuntu 22.04や24.04などの古いディストリビューションで再び動作し、お使いの言語で表示されるようになりました。"
+
+msgid "Notifications from the AppImage now appear, and once the AppImage is integrated, docks show Actioneer's name and icon."
+msgstr "AppImageからの通知が表示されるようになり、AppImageを統合するとドックにActioneerの名前とアイコンが表示されます。"

@@ -1042,3 +1042,12 @@ msgstr "Wenn es keinen sicheren Speicher für Ihr Anmelde-Token gibt, sagt Actio
 
 msgid "The AppImage now requires glibc 2.43 or newer, as found in Ubuntu 26.04. On older systems, use the Flatpak or the Snap."
 msgstr "Das AppImage benötigt jetzt glibc 2.43 oder neuer, wie in Ubuntu 26.04. Verwenden Sie auf älteren Systemen das Flatpak oder das Snap."
+
+msgid "The sign-in dialog shows the code and both of its buttons in full again, without scrolling."
+msgstr "Der Anmeldedialog zeigt den Code und beide Schaltflächen wieder vollständig an, ohne Scrollen."
+
+msgid "The AppImage runs on older distributions again, including Ubuntu 22.04 and 24.04, and now appears in your language."
+msgstr "Das AppImage läuft wieder auf älteren Distributionen, darunter Ubuntu 22.04 und 24.04, und erscheint jetzt in Ihrer Sprache."
+
+msgid "Notifications from the AppImage now appear, and once the AppImage is integrated, docks show Actioneer's name and icon."
+msgstr "Benachrichtigungen aus dem AppImage werden jetzt angezeigt, und sobald das AppImage integriert ist, zeigen Docks den Namen und das Symbol von Actioneer."
