@@ -32,6 +32,9 @@ jobs:
     # Rolling, like the packages pacman installs into it; the tools the script
     # downloads are pinned by commit and checksum.
     container: ghcr.io/pkgforge-dev/archlinux:latest
+    # The token below only downloads release assets; keep it read-only.
+    permissions:
+      contents: read
     outputs:
       run-id: ${{ steps.expose-run-id.outputs.run_id }}
     env:
@@ -56,6 +59,10 @@ jobs:
 
       - name: Build the AppImage
         shell: bash
+        env:
+          # get-debloated-pkgs asks api.github.com for its package list;
+          # unauthenticated, a shared runner IP hits the 60-an-hour limit.
+          GITHUB_TOKEN: ${{ github.token }}
         run: bash packaging/anylinux-appimage.sh
 
       - name: Verify the AppImage runs and carries its own GTK
