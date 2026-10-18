@@ -123,7 +123,7 @@ Actioneer picks a token backend automatically:
 
 Packaging/review checklist:
 
-1. Launch the sandboxed build with logging enabled (`ACTIONEER_LOG=info snap run actioneer` or `flatpak run me.spaceinbox.actioneer`). The log must contain `Using secret portal storage` before you start the OAuth device flow.
+1. Launch the sandboxed build with logging enabled (`RUST_LOG=info snap run actioneer` or `RUST_LOG=info flatpak run me.spaceinbox.actioneer`). The log must contain `Using secret portal storage` before you start the OAuth device flow.
 2. Complete sign-in once, restart the app, and confirm the encrypted file mentioned above exists and the session stays authenticated. If the log falls back to `system keyring storage`, the host portal stack is missing or disabled—fix that before submitting to the Snap Store or Flathub.
 
 Set `ACTIONEER_ENABLE_SECRET_PORTAL=1` to force the portal on desktop builds for testing, or `ACTIONEER_DISABLE_SECRET_PORTAL=1` to compare behavior without the portal.

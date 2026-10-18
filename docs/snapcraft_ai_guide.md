@@ -36,7 +36,7 @@ This note distills the Snapcraft documentation fetched during the investigation 
 - After `pack`, call `snapcraft upload` (alias `snapcraft push`) with `--release edge` as currently configured.
 
 ## Secret portal verification
-- Launch the snap (`snap run actioneer`) on a confined session (core24 GNOME image). `ACTIONEER_LOG=info` will show whether the portal backend is selected (`Using secret portal storage...`).
+- Launch the snap (`snap run actioneer`) on a confined session (core24 GNOME image). `RUST_LOG=info` will show whether the portal backend is selected (`Using secret portal storage...`).
 - If the log falls back to "system keyring storage", inspect the host (`busctl --user list | grep portal`, `gdbus introspect --session --dest org.freedesktop.portal.Desktop ...`) and ensure `xdg-desktop-portal` plus the GNOME backend are present.
 - The snap no longer declares `password-manager-service`, so portal failures will break token storage — run this check before requesting store review.
 
