@@ -298,8 +298,8 @@ impl MainWindow {
 
         root_stack.add_named(&split_view, Some("app"));
 
-        // Collapsed, the split view shows one page at a time; `connect_repo_tap`
-        // opens the detail page when a repository is tapped. The rate limit
+        // Collapsed, the split view shows one page at a time; a tap on a
+        // repository opens its page through the `open-repository` action. The rate limit
         // gives way to the back button.
         let collapse = adw::Breakpoint::new(
             adw::BreakpointCondition::parse(COLLAPSE_CONDITION)

@@ -26,6 +26,9 @@ impl HeaderControls {
         rate_limit_label.add_css_class("dim-label");
         rate_limit_label.add_css_class("caption");
         rate_limit_label.set_halign(gtk::Align::End);
+        // Just past the collapse width the content header has ~420 px, and in
+        // the longer languages the low-budget text alone is nearly that.
+        rate_limit_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
 
         let rate_limit_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
         rate_limit_box.add_css_class("linked");

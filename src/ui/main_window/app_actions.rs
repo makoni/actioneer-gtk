@@ -65,6 +65,36 @@ impl MainWindow {
             window.add_action(&action);
         }
 
+        if window.lookup_action("open-repository").is_none() {
+            // A tap on a repository row (`sidebar::OPEN_REPOSITORY_ACTION`).
+            // Collapsed, it opens the repository's page — once the list has
+            // made it the selected one, so a tap whose selection did not take
+            // (a row being rebuilt, a selection already in progress) stays on
+            // the list rather than landing on another repository. Expanded,
+            // the page is on screen already and `show-content` stays as it
+            // is. Weak and `Arc`: the window owns this action.
+            let split_view = self.split_view.downgrade();
+            let selected_repo_id = self.selected_repo_id.clone();
+            let action = gio::SimpleAction::new("open-repository", Some(glib::VariantTy::INT64));
+            action.connect_activate(move |_, parameter| {
+                let Some(repo_id) = parameter.and_then(|p| p.get::<i64>()) else {
+                    return;
+                };
+                let split_view = split_view.clone();
+                let selected_repo_id = selected_repo_id.clone();
+                // After the list has handled the same press.
+                glib::idle_add_local_once(move || {
+                    if let Some(split) = split_view.upgrade()
+                        && split.is_collapsed()
+                        && *selected_repo_id.lock() == Some(repo_id)
+                    {
+                        split.set_show_content(true);
+                    }
+                });
+            });
+            window.add_action(&action);
+        }
+
         if window.lookup_action("sign_out").is_none() {
             let this = self.clone();
             let action = gio::SimpleAction::new("sign_out", None);
