@@ -263,6 +263,20 @@ impl MainWindow {
         let sidebar_toolbar = adw::ToolbarView::new();
         sidebar_toolbar.add_top_bar(&header);
         sidebar_toolbar.set_content(Some(&sidebar_clamp));
+        // Collapsed, the content header has no room for the rate limit; it
+        // moves under the repository list instead, mirroring the header's.
+        let narrow_rate_limit = gtk::Label::new(None);
+        narrow_rate_limit.add_css_class("dim-label");
+        narrow_rate_limit.add_css_class("caption");
+        crate::ui::utils::allow_wrap(&narrow_rate_limit);
+        narrow_rate_limit.set_justify(gtk::Justification::Center);
+        narrow_rate_limit.set_margin_bottom(8);
+        narrow_rate_limit.set_visible(false);
+        self.rate_limit_label
+            .bind_property("label", &narrow_rate_limit, "label")
+            .sync_create()
+            .build();
+        sidebar_toolbar.add_bottom_bar(&narrow_rate_limit);
         let sidebar_page = adw::NavigationPage::builder()
             .title("Actioneer")
             .tag("sidebar")
@@ -293,6 +307,7 @@ impl MainWindow {
         );
         collapse.add_setter(&split_view, "collapsed", Some(&true.to_value()));
         collapse.add_setter(&self.rate_limit_box, "visible", Some(&false.to_value()));
+        collapse.add_setter(&narrow_rate_limit, "visible", Some(&true.to_value()));
         self.window.add_breakpoint(collapse);
 
         let welcome_screen = WelcomeScreen::new();

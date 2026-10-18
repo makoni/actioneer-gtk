@@ -97,6 +97,22 @@ fn settle_for_a_while() {
     settle();
 }
 
+/// The text of every label on screen.
+fn visible_labels(widget: &gtk::Widget) -> Vec<String> {
+    let mut texts = Vec::new();
+    if let Some(label) = widget.downcast_ref::<gtk::Label>()
+        && label.is_mapped()
+    {
+        texts.push(label.label().to_string());
+    }
+    let mut child = widget.first_child();
+    while let Some(current) = child {
+        texts.extend(visible_labels(&current));
+        child = current.next_sibling();
+    }
+    texts
+}
+
 /// A demo-mode window presented at the given size, with its repositories
 /// loaded.
 fn demo_window_at(dir: &std::path::Path, width: i32, height: i32) -> MainWindow {
@@ -133,6 +149,13 @@ fn a_phone_sized_window_shows_one_page_at_a_time() {
         assert!(
             !window.rate_limit_box.is_visible(),
             "the rate limit gave way to the back button"
+        );
+        let header_text = window.rate_limit_label.label();
+        assert!(
+            visible_labels(window.window.upcast_ref())
+                .iter()
+                .any(|text| *text == header_text),
+            "the rate limit is still shown somewhere: {header_text:?}"
         );
         // Demo mode opens a repository by itself. That is a restore, not a
         // request from the user, so it must leave the list on screen.
