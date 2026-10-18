@@ -4,8 +4,7 @@
 
 use actioneer::kernel::i18n::tr;
 use actioneer::services::app_services::AppServices;
-use actioneer::services::preferences::ThemePreference;
-use actioneer::ui::{MainWindow, style};
+use actioneer::ui::{MainWindow, style, theme_sync};
 use gio::ApplicationFlags;
 use gtk4::prelude::*;
 use gtk4::{IconTheme, gdk, glib};
@@ -246,19 +245,14 @@ fn main() -> anyhow::Result<()> {
         gtk4::Window::set_default_icon_name(actioneer::APP_ICON_NAME);
         style::install_app_css();
     });
-    let startup_theme_preference = startup_preferences.theme_preference;
+    // The first appearance pass runs before any window exists; the window
+    // re-applies it from its restored preferences. Watching the Omarchy state
+    // starts here too, so a desktop theme switch reaches the app live.
+    let preferences_for_theme = services.preferences.clone();
     app.connect_startup(move |_| {
-        let style_manager = adw::StyleManager::default();
-        match startup_theme_preference {
-            ThemePreference::System => {
-                style_manager.set_color_scheme(adw::ColorScheme::Default);
-            }
-            ThemePreference::Light => {
-                style_manager.set_color_scheme(adw::ColorScheme::ForceLight);
-            }
-            ThemePreference::Dark => {
-                style_manager.set_color_scheme(adw::ColorScheme::ForceDark);
-            }
+        theme_sync::apply_preferences(&startup_preferences);
+        if let Some(manager) = preferences_for_theme.clone() {
+            theme_sync::start_watching(manager);
         }
     });
 

@@ -29,6 +29,10 @@ pub struct Preferences {
     #[serde(default)]
     pub theme_preference: ThemePreference,
 
+    /// Follow the active Omarchy theme's colors when running on Omarchy
+    #[serde(default = "default_follow_omarchy")]
+    pub follow_omarchy: bool,
+
     /// App language preference
     #[serde(default)]
     pub language_preference: LanguagePreference,
@@ -36,6 +40,12 @@ pub struct Preferences {
     /// Saved run filter preferences for workflow panes
     #[serde(default)]
     pub run_filters: RunFilterPreferences,
+}
+
+/// Existing config files predate the flag; they should follow Omarchy by
+/// default, exactly as a fresh install does.
+fn default_follow_omarchy() -> bool {
+    true
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -66,6 +76,7 @@ impl Default for Preferences {
             window_height: 700,
             enable_notifications: true,
             theme_preference: ThemePreference::System,
+            follow_omarchy: true,
             language_preference: LanguagePreference::System,
             run_filters: RunFilterPreferences::default(),
         }
@@ -119,6 +130,16 @@ impl PreferencesManager {
         self.prefs.blocking_read().clone()
     }
 
+    /// The latest preferences without blocking — safe on the GTK main
+    /// thread, where [`Self::get_blocking`] could stall behind a writer.
+    /// Falls back to the watch channel when a writer holds the lock.
+    pub fn current(&self) -> Preferences {
+        self.prefs
+            .try_read()
+            .map(|prefs| prefs.clone())
+            .unwrap_or_else(|_| self.updates.borrow().clone())
+    }
+
     pub async fn update<F>(&self, f: F) -> anyhow::Result<()>
     where
         F: FnOnce(&mut Preferences),
@@ -129,7 +150,10 @@ impl PreferencesManager {
             prefs.clone()
         };
         self.save(&current).await?;
-        let _ = self.updates.send(current);
+        // `send_replace` stores the value even before anything subscribed;
+        // `send` drops it when there are no receivers, which would leave the
+        // watch-based fallback in `current()` stale.
+        self.updates.send_replace(current);
         Ok(())
     }
 
@@ -155,6 +179,10 @@ impl PreferencesManager {
 
     pub async fn set_theme_preference(&self, preference: ThemePreference) -> anyhow::Result<()> {
         self.update(|p| p.theme_preference = preference).await
+    }
+
+    pub async fn set_follow_omarchy(&self, enabled: bool) -> anyhow::Result<()> {
+        self.update(|p| p.follow_omarchy = enabled).await
     }
 
     pub async fn set_language_preference(
@@ -196,11 +224,41 @@ mod tests {
         assert_eq!(prefs.window_width, 1000);
         assert!(prefs.enable_notifications);
         assert_eq!(prefs.theme_preference, ThemePreference::System);
+        assert!(prefs.follow_omarchy);
         assert_eq!(prefs.language_preference, LanguagePreference::System);
         assert!(prefs.run_filters.show_success);
         assert!(prefs.run_filters.show_failed);
         assert!(prefs.run_filters.show_running);
         assert!(!prefs.run_filters.default_branch_only);
+    }
+
+    #[test]
+    fn follow_omarchy_defaults_to_true_when_the_field_is_missing() {
+        let mut value = serde_json::to_value(Preferences::default()).expect("serialize");
+        value
+            .as_object_mut()
+            .expect("object")
+            .remove("follow_omarchy");
+        let prefs: Preferences = serde_json::from_value(value).expect("deserialize");
+        assert!(prefs.follow_omarchy, "old configs must follow Omarchy");
+
+        let off = Preferences {
+            follow_omarchy: false,
+            ..Preferences::default()
+        };
+        assert_eq!(
+            serde_json::to_value(off).expect("serialize")["follow_omarchy"],
+            serde_json::json!(false)
+        );
+    }
+
+    #[tokio::test]
+    async fn current_reads_the_latest_preferences() {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let manager = PreferencesManager::with_dir(dir.path()).expect("manager");
+        assert!(manager.current().follow_omarchy);
+        manager.set_follow_omarchy(false).await.expect("set");
+        assert!(!manager.current().follow_omarchy);
     }
 
     #[tokio::test]

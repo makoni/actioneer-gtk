@@ -7,7 +7,7 @@ use crate::services::cache::DataCache;
 use crate::services::favorites::FavoritesManager;
 use crate::services::gateway::GitHubGateway;
 use crate::services::notifications::NotificationManager;
-use crate::services::preferences::{Preferences, PreferencesManager, ThemePreference};
+use crate::services::preferences::{Preferences, PreferencesManager};
 use crate::ui::detail_view::RepoDetailPane;
 use crate::ui::main_window::layout::create_detail_clamp;
 use gio::Menu;
@@ -379,18 +379,7 @@ impl MainWindow {
 
             receiver.attach(None, move |prefs| {
                 window.set_default_size(prefs.window_width, prefs.window_height);
-                let style_manager = adw::StyleManager::default();
-                match prefs.theme_preference {
-                    ThemePreference::System => {
-                        style_manager.set_color_scheme(adw::ColorScheme::Default);
-                    }
-                    ThemePreference::Light => {
-                        style_manager.set_color_scheme(adw::ColorScheme::ForceLight);
-                    }
-                    ThemePreference::Dark => {
-                        style_manager.set_color_scheme(adw::ColorScheme::ForceDark);
-                    }
-                }
+                crate::ui::theme_sync::apply_preferences(&prefs);
                 {
                     let mut selected = selected_repo_id.lock();
                     *selected = prefs.last_selected_repo_id;

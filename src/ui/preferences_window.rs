@@ -1,9 +1,11 @@
 use crate::kernel::i18n::{apply_language_preference, tr};
 use crate::runtime::channel::MainContextChannelExt;
 use crate::runtime::handle;
+use crate::services::omarchy_theme;
 use crate::services::preferences::{
     LanguagePreference, Preferences, PreferencesManager, ThemePreference,
 };
+use crate::ui::theme_sync;
 use gtk4::glib::Propagation;
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
@@ -75,6 +77,24 @@ impl PreferencesWindow {
         let appearance_group = adw::PreferencesGroup::builder()
             .title(tr("Appearance"))
             .build();
+
+        // The follow switch only makes sense where Omarchy state is readable;
+        // elsewhere the app keeps its own theme choice.
+        let omarchy_available = omarchy_theme::load().is_some();
+        let follow_row = adw::ActionRow::builder()
+            .title(tr("Follow Omarchy theme"))
+            .subtitle(tr("Use the colors and shapes of the active Omarchy theme"))
+            .build();
+        let follow_switch = gtk::Switch::new();
+        follow_switch.set_hexpand(false);
+        follow_switch.set_vexpand(false);
+        follow_switch.set_halign(gtk::Align::End);
+        follow_switch.set_valign(gtk::Align::Center);
+        follow_row.add_suffix(&follow_switch);
+        follow_row.set_activatable_widget(Some(&follow_switch));
+        follow_row.set_visible(omarchy_available);
+        appearance_group.add(&follow_row);
+
         let system_theme = tr("System");
         let light_theme = tr("Light");
         let dark_theme = tr("Dark");
@@ -129,6 +149,7 @@ impl PreferencesWindow {
         // detach once the dialog is gone.
         let refresh_row_weak = refresh_row.downgrade();
         let notify_weak = notify_switch.downgrade();
+        let follow_switch_weak = follow_switch.downgrade();
         let theme_row_weak = theme_row.downgrade();
         let language_row_weak = language_row.downgrade();
         let (sender, receiver) =
@@ -151,12 +172,20 @@ impl PreferencesWindow {
         });
 
         receiver.attach(None, move |prefs| {
-            let (Some(refresh_row), Some(notify_switch), Some(theme_row), Some(language_row)) = (
+            let (
+                Some(refresh_row),
+                Some(notify_switch),
+                Some(follow_switch),
+                Some(theme_row),
+                Some(language_row),
+            ) = (
                 refresh_row_weak.upgrade(),
                 notify_weak.upgrade(),
+                follow_switch_weak.upgrade(),
                 theme_row_weak.upgrade(),
                 language_row_weak.upgrade(),
-            ) else {
+            )
+            else {
                 return glib::ControlFlow::Break;
             };
             let refresh_index = match prefs.refresh_interval {
@@ -168,6 +197,10 @@ impl PreferencesWindow {
             };
             refresh_row.set_selected(refresh_index);
             notify_switch.set_active(prefs.enable_notifications);
+            follow_switch.set_active(prefs.follow_omarchy);
+            // While the palette follows Omarchy the manual choice has no
+            // effect; it stays disabled but remembers its value.
+            theme_row.set_sensitive(!(prefs.follow_omarchy && omarchy_available));
             theme_row.set_selected(theme_to_index(prefs.theme_preference));
             language_row.set_selected(language_to_index(prefs.language_preference));
             glib::ControlFlow::Continue
@@ -202,9 +235,18 @@ impl PreferencesWindow {
         });
 
         let manager_for_theme = manager.clone();
+        // The other half of the appearance comes from the switch, not from
+        // `manager.current()`: the last toggle may still be on its way to the
+        // store, and the stale value would undo it.
+        let follow_switch_for_theme = follow_switch.downgrade();
         theme_row.connect_selected_notify(move |combo| {
             let theme_preference = index_to_theme(combo.selected());
-            apply_theme(theme_preference);
+            let mut prefs = manager_for_theme.current();
+            prefs.theme_preference = theme_preference;
+            if let Some(follow_switch) = follow_switch_for_theme.upgrade() {
+                prefs.follow_omarchy = follow_switch.is_active();
+            }
+            theme_sync::apply_preferences(&prefs);
 
             let manager = manager_for_theme.clone();
             handle().spawn(async move {
@@ -212,6 +254,27 @@ impl PreferencesWindow {
                     warn!("Failed to update theme preference: {}", err);
                 }
             });
+        });
+
+        let theme_row_for_follow = theme_row.downgrade();
+        let manager_for_follow = manager.clone();
+        follow_switch.connect_state_set(move |_, state| {
+            let mut prefs = manager_for_follow.current();
+            prefs.follow_omarchy = state;
+            // Likewise the theme choice comes from its row.
+            if let Some(theme_row) = theme_row_for_follow.upgrade() {
+                prefs.theme_preference = index_to_theme(theme_row.selected());
+                theme_row.set_sensitive(!(state && omarchy_available));
+            }
+            theme_sync::apply_preferences(&prefs);
+
+            let manager = manager_for_follow.clone();
+            handle().spawn(async move {
+                if let Err(err) = manager.set_follow_omarchy(state).await {
+                    warn!("Failed to update Omarchy theme preference: {}", err);
+                }
+            });
+            Propagation::Proceed
         });
 
         let manager_for_language = manager.clone();
@@ -251,15 +314,6 @@ impl PreferencesWindow {
     pub fn present(&self) {
         let _ = &self.manager;
         self.dialog.present(Some(&self.parent));
-    }
-}
-
-fn apply_theme(theme: ThemePreference) {
-    let style_manager = adw::StyleManager::default();
-    match theme {
-        ThemePreference::System => style_manager.set_color_scheme(adw::ColorScheme::Default),
-        ThemePreference::Light => style_manager.set_color_scheme(adw::ColorScheme::ForceLight),
-        ThemePreference::Dark => style_manager.set_color_scheme(adw::ColorScheme::ForceDark),
     }
 }
 

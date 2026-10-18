@@ -203,6 +203,12 @@ msgstr "Тема"
 msgid "Select application theme"
 msgstr "Выберите тему приложения"
 
+msgid "Follow Omarchy theme"
+msgstr "Следовать теме Omarchy"
+
+msgid "Use the colors and shapes of the active Omarchy theme"
+msgstr "Использовать цвета и формы активной темы Omarchy"
+
 msgid "Language"
 msgstr "Язык"
 
