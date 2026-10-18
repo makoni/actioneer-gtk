@@ -922,6 +922,9 @@ msgstr "确定"
 msgid "Saving token..."
 msgstr "正在保存令牌…"
 
+msgid "No secure storage is available for the GitHub token. Your desktop needs a Secret portal backend, such as GNOME Keyring or KWallet."
+msgstr "没有可用于 GitHub 令牌的安全存储。你的桌面需要一个 Secret 门户后端，例如 GNOME Keyring 或 KWallet。"
+
 msgid "Set the application language (e.g., ru, en, zh_Hans)"
 msgstr "设置应用语言（例如 ru、en、zh_Hans）"
 

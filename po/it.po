@@ -615,6 +615,9 @@ msgstr "In attesa dell'autorizzazione..."
 msgid "Saving token..."
 msgstr "Salvataggio del token..."
 
+msgid "No secure storage is available for the GitHub token. Your desktop needs a Secret portal backend, such as GNOME Keyring or KWallet."
+msgstr "Nessuno spazio di archiviazione sicuro è disponibile per il token di GitHub. Il tuo desktop ha bisogno di un backend del portale Secret, come GNOME Keyring o KWallet."
+
 #: src/ui/auth_window.rs:448
 msgid "Signed in successfully"
 msgstr "Accesso effettuato con successo"

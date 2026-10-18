@@ -9,4 +9,9 @@ drifts.
 
 ## Open items (optional / low priority)
 
-Nothing open right now.
+- Sandbox detection is written three times and has drifted:
+  `services/tokens/secret_portal.rs` knows the `/.flatpak-info` marker file
+  (the environment can be stripped, the file cannot), while
+  `services/notifications/env_config.rs::is_sandboxed` and `kernel/i18n.rs`
+  check environment variables only. One probe in `kernel/` should serve all
+  three.

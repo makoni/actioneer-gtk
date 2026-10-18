@@ -923,6 +923,9 @@ msgstr "OK"
 msgid "Saving token..."
 msgstr "Token opslaan..."
 
+msgid "No secure storage is available for the GitHub token. Your desktop needs a Secret portal backend, such as GNOME Keyring or KWallet."
+msgstr "Er is geen beveiligde opslag beschikbaar voor het GitHub-token. Je bureaubladomgeving heeft een Secret-portalbackend nodig, zoals GNOME Keyring of KWallet."
+
 msgid "Set the application language (e.g., ru, en, zh_Hans)"
 msgstr "Taal van de toepassing instellen (bijv. ru, en, zh_Hans)"
 

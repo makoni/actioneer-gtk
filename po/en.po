@@ -673,3 +673,5 @@ msgstr "Copy diagnostics"
 #~ msgid "Dismiss"
 #~ msgstr "Dismiss"
 
+msgid "No secure storage is available for the GitHub token. Your desktop needs a Secret portal backend, such as GNOME Keyring or KWallet."
+msgstr "No secure storage is available for the GitHub token. Your desktop needs a Secret portal backend, such as GNOME Keyring or KWallet."

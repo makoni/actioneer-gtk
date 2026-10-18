@@ -1,4 +1,7 @@
-use std::{env, future::Future, io::Read, os::unix::net::UnixStream, time::Duration};
+use std::{
+    env, ffi::OsString, future::Future, io::Read, os::unix::net::UnixStream, path::Path,
+    time::Duration,
+};
 
 use ashpd::desktop::secret::Secret as PortalClient;
 use gio::glib::{self, VariantTy};
@@ -17,6 +20,9 @@ const INTROSPECT_TIMEOUT_MS: i32 = 5_000;
 const SECRET_REQUEST_TIMEOUT: Duration = Duration::from_secs(10);
 const ENABLE_ENV: &str = "ACTIONEER_ENABLE_SECRET_PORTAL";
 const DISABLE_ENV: &str = "ACTIONEER_DISABLE_SECRET_PORTAL";
+/// Present in every Flatpak sandbox; the environment may be stripped, the file
+/// cannot. libsecret checks the same path.
+const FLATPAK_MARKER_FILE: &str = "/.flatpak-info";
 
 #[derive(Debug, Error)]
 pub enum PortalDetectionError {
@@ -161,7 +167,18 @@ pub fn retrieve_secret(_previous_token: Option<&str>) -> Result<PortalSecret, Po
     })
 }
 
+/// Returns the environment or filesystem marker that marks a confined runtime.
 fn sandbox_reason() -> Option<&'static str> {
+    sandbox_reason_impl(|name| env::var_os(name), Path::new(FLATPAK_MARKER_FILE))
+}
+
+/// Testable core of [`sandbox_reason`]: `lookup` resolves environment variables
+/// and `flatpak_marker` stands in for the runtime's marker file, checked last
+/// so environment markers keep their precedence.
+fn sandbox_reason_impl(
+    lookup: impl Fn(&str) -> Option<OsString>,
+    flatpak_marker: &Path,
+) -> Option<&'static str> {
     const CANDIDATES: [(&str, &str); 4] = [
         ("SNAP", "SNAP"),
         ("SNAP_INSTANCE_NAME", "SNAP_INSTANCE_NAME"),
@@ -170,15 +187,23 @@ fn sandbox_reason() -> Option<&'static str> {
     ];
 
     for (var, label) in CANDIDATES {
-        if env::var_os(var).is_some() {
+        if lookup(var).is_some() {
             return Some(label);
         }
     }
 
-    if let Ok(value) = env::var("CONTAINER")
-        && (value.eq_ignore_ascii_case("flatpak") || value.eq_ignore_ascii_case("snap"))
-    {
-        return Some("CONTAINER");
+    // Conventionally lowercase (systemd's `container`); the uppercase form is
+    // kept as it was checked before.
+    for var in ["container", "CONTAINER"] {
+        if let Some(value) = lookup(var).and_then(|value| value.into_string().ok())
+            && (value.eq_ignore_ascii_case("flatpak") || value.eq_ignore_ascii_case("snap"))
+        {
+            return Some("CONTAINER");
+        }
+    }
+
+    if flatpak_marker.exists() {
+        return Some(FLATPAK_MARKER_FILE);
     }
 
     None
@@ -259,5 +284,64 @@ mod tests {
         run_portal_request_with_timeout(|| async { Ok(()) }, Duration::from_secs(1))
             .await
             .expect("request should succeed");
+    }
+
+    #[test]
+    fn sandbox_reason_reports_environment_markers() {
+        let env = |name: &str| (name == "SNAP_NAME").then(|| OsString::from("actioneer"));
+        assert_eq!(
+            sandbox_reason_impl(env, Path::new("/nonexistent")),
+            Some("SNAP_NAME")
+        );
+    }
+
+    #[test]
+    fn sandbox_reason_reports_container_values() {
+        for name in ["container", "CONTAINER"] {
+            let env = |var: &str| (var == name).then(|| OsString::from("FlatPak"));
+            assert_eq!(
+                sandbox_reason_impl(env, Path::new("/nonexistent")),
+                Some("CONTAINER"),
+                "{name}"
+            );
+        }
+    }
+
+    #[test]
+    fn sandbox_reason_reports_the_flatpak_marker_file() {
+        let dir = tempfile::tempdir().expect("create temp dir");
+        let marker = dir.path().join("flatpak-info");
+        std::fs::write(&marker, b"").expect("write marker file");
+
+        assert_eq!(
+            sandbox_reason_impl(|_| None, &marker),
+            Some(FLATPAK_MARKER_FILE)
+        );
+    }
+
+    #[test]
+    fn sandbox_reason_prefers_environment_markers_over_the_marker_file() {
+        let dir = tempfile::tempdir().expect("create temp dir");
+        let marker = dir.path().join("flatpak-info");
+        std::fs::write(&marker, b"").expect("write marker file");
+
+        let lookup = |name: &str| (name == "FLATPAK_ID").then(|| OsString::from("1"));
+        assert_eq!(sandbox_reason_impl(lookup, &marker), Some("FLATPAK_ID"));
+    }
+
+    #[test]
+    fn sandbox_reason_ignores_non_unicode_container_values() {
+        use std::os::unix::ffi::OsStringExt;
+
+        let lookup = |name: &str| (name == "CONTAINER").then(|| OsString::from_vec(vec![0xff]));
+        assert_eq!(sandbox_reason_impl(lookup, Path::new("/nonexistent")), None);
+    }
+
+    #[test]
+    fn sandbox_reason_is_none_without_markers() {
+        assert_eq!(
+            sandbox_reason_impl(|_| None, Path::new("/nonexistent")),
+            None
+        );
     }
 }
