@@ -130,9 +130,7 @@ impl MainWindow {
         let title = repo.full_name.clone();
 
         glib::idle_add_local_once(move || {
-            if let Some(page) = split_view.content() {
-                page.set_title(&title);
-            }
+            set_detail_page_title(&split_view, &title);
             if let Some(detail_child) = stack.child_by_name("detail") {
                 stack.remove(&detail_child);
             }
@@ -205,11 +203,7 @@ impl MainWindow {
                     }
 
                     let widget = pane.widget();
-                    if let Some(page) = split_view.content() {
-                        // The page's accessible name: what a screen reader
-                        // announces when the detail page opens.
-                        page.set_title(&pane.repo().full_name);
-                    }
+                    set_detail_page_title(&split_view, &pane.repo().full_name);
                     stack.add_named(&widget, Some("detail"));
                     stack.set_visible_child_name("detail");
                 });
@@ -228,9 +222,7 @@ impl MainWindow {
         let split_view = self.split_view.clone();
 
         glib::idle_add_local_once(move || {
-            if let Some(page) = split_view.content() {
-                page.set_title(&tr("Select a repository"));
-            }
+            set_detail_page_title(&split_view, &tr("Select a repository"));
             if let Some(detail_child) = stack.child_by_name("detail") {
                 stack.remove(&detail_child);
             }
@@ -280,6 +272,15 @@ impl MainWindow {
                 refresh_button.set_visible(true);
             }
         });
+    }
+}
+
+/// Names the detail page after what it shows. The page's title is its
+/// accessible name — what a screen reader announces when the page opens — so
+/// every path that changes the detail stack sets it.
+fn set_detail_page_title(split_view: &libadwaita::NavigationSplitView, title: &str) {
+    if let Some(page) = split_view.content() {
+        page.set_title(title);
     }
 }
 

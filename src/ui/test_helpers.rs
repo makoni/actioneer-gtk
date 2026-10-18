@@ -498,3 +498,41 @@ pub fn ensure_app_css() {
         }
     });
 }
+
+/// Opens the dialog `build` makes over `parent`, closes it, and asserts that
+/// the dialog and every widget under it were released — the release test
+/// AGENTS.md asks of every new widget tree. A handler holding the dialog, or
+/// the window it is hosted in, strongly would keep some of them alive.
+#[cfg(test)]
+pub fn assert_dialog_released(
+    parent: &adw::ApplicationWindow,
+    build: impl FnOnce() -> adw::Dialog,
+    what: &str,
+) {
+    use libadwaita::prelude::AdwDialogExt;
+    let mut weaks: Vec<(String, gtk::glib::WeakRef<gtk::Widget>)> = Vec::new();
+    let dialog_weak = {
+        let dialog = build();
+        dialog.present(Some(parent));
+        settle_main_loop(20);
+        collect_widget_weaks(dialog.upcast_ref(), &mut weaks);
+        dialog.force_close();
+        dialog.downgrade()
+    };
+    for _ in 0..40 {
+        settle_main_loop(5);
+        if dialog_weak.upgrade().is_none() && weaks.iter().all(|(_, w)| w.upgrade().is_none()) {
+            break;
+        }
+    }
+    let survivors: Vec<&str> = weaks
+        .iter()
+        .filter(|(_, weak)| weak.upgrade().is_some())
+        .map(|(name, _)| name.as_str())
+        .collect();
+    assert!(
+        dialog_weak.upgrade().is_none() && survivors.is_empty(),
+        "the {what} outlived its closing — a handler holds it in a reference cycle. \
+         Survivors: {survivors:?}"
+    );
+}

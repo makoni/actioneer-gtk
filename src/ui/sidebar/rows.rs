@@ -42,9 +42,12 @@ pub(crate) const OPEN_REPOSITORY_ACTION: &str = "win.open-repository";
 /// The repository whose row is at `(x, y)` in `view`'s coordinates, unless the
 /// point is on the row's star or on a header.
 ///
-/// Found by the rows' own bounds rather than `view.pick()`: a list item
-/// widget takes the press before its row sees it, and what `pick` answers
-/// there depends on how GTK nests its list items, which is not API.
+/// Found by geometry rather than `view.pick()`: a list item takes the press
+/// before its row sees it, and what `pick` answers there depends on how GTK
+/// nests list items, which is not API. The area is the row's parent — the
+/// list item `ListItem::set_child` put it in — so the row's margins, the list
+/// item's padding and right-to-left all come with it: the list selects a row
+/// when any of that is pressed, and a finger lands there as often as on text.
 pub(crate) fn repo_at_point(
     view: &impl IsA<gtk::Widget>,
     rows: &impl IsA<gio::ListModel>,
@@ -57,28 +60,14 @@ pub(crate) fn repo_at_point(
         let Some(row) = rows.item(index).and_downcast::<gtk::Widget>() else {
             continue;
         };
-        // With its margins: the list selects a row when its margin is pressed
-        // too, and a finger lands there as often as on the text.
         if !row.is_mapped() {
             continue;
         }
-        let Some(bounds) = row.compute_bounds(view) else {
-            continue;
-        };
-        // Start and end are logical: in a right-to-left language the start
-        // margin is the one on the right.
-        let (left, right) = if row.direction() == gtk::TextDirection::Rtl {
-            (row.margin_end(), row.margin_start())
-        } else {
-            (row.margin_start(), row.margin_end())
-        };
-        let area = gtk::graphene::Rect::new(
-            bounds.x() - left as f32,
-            bounds.y() - row.margin_top() as f32,
-            bounds.width() + (left + right) as f32,
-            bounds.height() + (row.margin_top() + row.margin_bottom()) as f32,
-        );
-        if !area.contains_point(&point) {
+        let item = row.parent().unwrap_or_else(|| row.clone());
+        if !item
+            .compute_bounds(view)
+            .is_some_and(|bounds| bounds.contains_point(&point))
+        {
             continue;
         }
         let on_star = get_data_clone::<gtk::ToggleButton, _>(&row, REPO_FAV_BUTTON_KEY)

@@ -93,7 +93,7 @@ impl MainWindow {
         let selection = self.repo_selection.clone();
         let repo_view = self.sidebar_panel.repo_list();
 
-        repo_view.connect_activate(move |_, position| {
+        repo_view.connect_activate(move |view, position| {
             let Some(obj) = window.repo_filter_model.item(position) else {
                 return;
             };
@@ -101,6 +101,7 @@ impl MainWindow {
                 return;
             };
 
+            let repo_id = repo.id;
             let active_detail_repo_id = window
                 .active_detail
                 .borrow()
@@ -128,12 +129,10 @@ impl MainWindow {
             // Only an activation (Enter, a double click) or a tap moves to the
             // detail page: selection changes also come from restoring the last
             // repo and from list rebuilds, and those must not navigate away
-            // from the list when collapsed. Expanded, the page is on screen
-            // already; setting the property there would only decide which page
-            // a later collapse shows, by how the repo happened to be chosen.
-            if window.split_view.is_collapsed() {
-                window.split_view.set_show_content(true);
-            }
+            // from the list when collapsed. The same action as a tap, so the
+            // same rules: collapsed only, and only once this repository is the
+            // selected one.
+            let _ = view.activate_action(OPEN_REPOSITORY_ACTION, Some(&repo_id.to_variant()));
         });
     }
 
@@ -209,6 +208,14 @@ impl MainWindow {
             restore_sidebar_selection(&self.repo_selection, &self.repo_filter_model, target);
         *self.selected_repo_id.lock() = restored_repo_id;
         *self.handling_selection.lock() = false;
+
+        // The open repository is gone (deleted, transferred, access revoked)
+        // and the list fell back to another. Side by side that is visible;
+        // collapsed, the detail page would switch to a repository the reader
+        // never chose, under the same back button. Back to the list instead.
+        if target.is_some() && restored_repo_id != target && self.split_view.is_collapsed() {
+            self.split_view.set_show_content(false);
+        }
 
         self.ensure_detail_matches_selection();
     }

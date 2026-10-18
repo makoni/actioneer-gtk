@@ -1,13 +1,18 @@
 use super::{DONATION_URL, HOMEPAGE_URL, ISSUE_URL, MainWindow};
 use crate::kernel::i18n::tr;
 use crate::services::crash_report;
-use crate::ui::preferences_window::PreferencesWindow;
+use crate::ui::preferences_window::{PREFERENCES_DIALOG_NAME, PreferencesWindow};
 use gtk4::prelude::*;
 use gtk4::{self as gtk};
 use libadwaita as adw;
 use libadwaita::prelude::*;
 use std::fs;
 use tracing::{error, info, warn};
+
+/// Widget names of the menu's dialogs; see `dialog_is_on_top`.
+const ABOUT_DIALOG_NAME: &str = "about-dialog";
+const SHORTCUTS_DIALOG_NAME: &str = "shortcuts-dialog";
+const HELP_DIALOG_NAME: &str = "help-dialog";
 
 impl MainWindow {
     /// Builds a simple informational alert with a single dismiss button.
@@ -18,16 +23,20 @@ impl MainWindow {
         dialog
     }
 
-    /// Whether a dialog is already open in the window. The menu's dialogs
-    /// are hosted inside the window, so its accelerators (Ctrl+,, Ctrl+?, F1)
-    /// still reach it while one is open — unlike the separate modal windows
-    /// these used to be — and pressing one again would stack a second copy.
-    fn dialog_is_open(&self) -> bool {
-        self.window.visible_dialog().is_some()
+    /// Whether the dialog named `name` is the one on top in the window.
+    ///
+    /// The menu's dialogs are hosted inside the window, so their accelerators
+    /// (Ctrl+,, Ctrl+?, F1) still reach it while one is open, and pressing the
+    /// same one again would stack a second copy. Only that is refused: another
+    /// dialog may still open over, say, the crash report shown at startup.
+    fn dialog_is_on_top(&self, name: &str) -> bool {
+        self.window
+            .visible_dialog()
+            .is_some_and(|dialog| dialog.widget_name() == name)
     }
 
     pub(super) fn open_preferences_window(&self) {
-        if self.dialog_is_open() {
+        if self.dialog_is_on_top(PREFERENCES_DIALOG_NAME) {
             return;
         }
         if let Some(manager) = &self.preferences_manager {
@@ -43,10 +52,11 @@ impl MainWindow {
     }
 
     pub(super) fn open_about_window(&self) {
-        if self.dialog_is_open() {
+        if self.dialog_is_on_top(ABOUT_DIALOG_NAME) {
             return;
         }
         let about = adw::AboutDialog::builder()
+            .name(ABOUT_DIALOG_NAME)
             .application_name("Actioneer")
             .application_icon(crate::kernel::app::APP_ICON_NAME)
             .developer_name("Sergey Armodin")
@@ -59,7 +69,7 @@ impl MainWindow {
     }
 
     pub(super) fn open_shortcuts_window(&self) {
-        if self.dialog_is_open() {
+        if self.dialog_is_on_top(SHORTCUTS_DIALOG_NAME) {
             return;
         }
         Self::build_shortcuts_dialog().present(Some(&self.window));
@@ -88,6 +98,7 @@ impl MainWindow {
         toolbar.set_content(Some(&page));
 
         adw::Dialog::builder()
+            .name(SHORTCUTS_DIALOG_NAME)
             .title(tr("Keyboard Shortcuts"))
             .content_width(420)
             .child(&toolbar)
@@ -105,7 +116,7 @@ impl MainWindow {
     }
 
     pub(super) fn open_help_window(&self) {
-        if self.dialog_is_open() {
+        if self.dialog_is_on_top(HELP_DIALOG_NAME) {
             return;
         }
         Self::build_help_dialog().present(Some(&self.window));
@@ -133,9 +144,8 @@ Troubleshooting\n\
 - For expired logs, retry from the latest run or trigger a new run.\n\
 - Use Report Issue from the menu to send diagnostics and steps.");
         let label = gtk::Label::new(Some(help_text.as_str()));
-        label.set_wrap(true);
         label.set_selectable(false);
-        label.set_xalign(0.0);
+        crate::ui::utils::leading_wrapping(&label);
         content.append(&label);
 
         let issue_hint_text = format!(
@@ -144,8 +154,9 @@ Troubleshooting\n\
             ISSUE_URL
         );
         let issue_hint = gtk::Label::new(Some(issue_hint_text.as_str()));
-        issue_hint.set_wrap(true);
-        issue_hint.set_xalign(0.0);
+        crate::ui::utils::leading_wrapping(&issue_hint);
+        // The issue tracker's URL has no spaces to break at.
+        issue_hint.set_wrap_mode(gtk::pango::WrapMode::WordChar);
         issue_hint.add_css_class("dim-label");
         content.append(&issue_hint);
 
@@ -161,6 +172,7 @@ Troubleshooting\n\
         toolbar.set_content(Some(&scrolled));
 
         adw::Dialog::builder()
+            .name(HELP_DIALOG_NAME)
             .title(tr("Actioneer Help"))
             .content_width(560)
             .content_height(560)
@@ -379,6 +391,28 @@ mod tests {
             }
 
             assert!(parent.visible_dialog().is_none());
+        });
+    }
+
+    #[test]
+    #[ignore = "requires GTK display"]
+    fn shortcuts_and_help_dialogs_are_released_once_closed() {
+        run_gtk_test("shortcuts_and_help_released", || {
+            let app = adw::Application::builder()
+                .application_id("me.spaceinbox.actioneer.tests.dialogs")
+                .build();
+            let parent = adw::ApplicationWindow::new(&app);
+            crate::ui::test_helpers::assert_dialog_released(
+                &parent,
+                MainWindow::build_shortcuts_dialog,
+                "shortcuts dialog",
+            );
+            crate::ui::test_helpers::assert_dialog_released(
+                &parent,
+                MainWindow::build_help_dialog,
+                "help dialog",
+            );
+            parent.destroy();
         });
     }
 

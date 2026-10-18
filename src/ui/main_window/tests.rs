@@ -204,17 +204,49 @@ fn a_menu_dialog_is_not_stacked_on_another() {
         let first = window.window.visible_dialog().expect("shortcuts opened");
         // The accelerators still reach the window behind an open dialog.
         window.open_shortcuts_window();
-        window.open_help_window();
         settle();
         assert_eq!(window.window.visible_dialog().as_ref(), Some(&first));
-
         first.force_close();
         crate::ui::test_helpers::settle_main_loop(50);
         assert!(
             window.window.visible_dialog().is_none(),
-            "another dialog was stacked under the first"
+            "a second copy was stacked under the first"
         );
 
+        // A different dialog may still open over another one — the menu must
+        // not go dead behind, say, the crash report shown at startup.
+        window
+            .build_crash_report_dialog("report".into())
+            .present(Some(&window.window));
+        settle();
+        window.open_help_window();
+        settle();
+        assert_eq!(
+            window
+                .window
+                .visible_dialog()
+                .map(|dialog| dialog.widget_name().to_string())
+                .as_deref(),
+            Some("help-dialog"),
+            "help opens over the crash report"
+        );
+
+        window.window.destroy();
+        settle();
+    });
+}
+
+#[test]
+#[ignore = "requires GTK display"]
+fn the_crash_report_dialog_is_released_once_closed() {
+    run_gtk_test("crash_report_dialog_released", || {
+        let dir = tempfile::tempdir().expect("temp dir");
+        let window = demo_window(AppServices::test_fakes(dir.path()), 1000, 700);
+        crate::ui::test_helpers::assert_dialog_released(
+            &window.window,
+            || window.build_crash_report_dialog("report".into()),
+            "crash report dialog",
+        );
         window.window.destroy();
         settle();
     });
