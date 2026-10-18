@@ -128,6 +128,9 @@ msgstr "Ayuda de Actioneer\n\nPrimeros pasos\n1. Inicia sesión con tu cuenta de
 msgid "Need more help? Use “Report Issue” in the app menu or visit:"
 msgstr "¿Necesitas más ayuda? Usa «Reportar problema» en el menú de la aplicación o visita:"
 
+msgid "Close"
+msgstr "Cerrar"
+
 msgid "Failed to open issue tracker in the browser."
 msgstr "No se pudo abrir el gestor de incidencias en el navegador."
 

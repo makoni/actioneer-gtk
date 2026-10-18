@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-18 08:43+0000\n"
+"POT-Creation-Date: 2026-10-05 14:05+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -73,12 +73,11 @@ msgstr ""
 msgid "Workflows and runs will load in the detail pane."
 msgstr ""
 
-#: src/ui/detail_placeholder.rs:25 src/ui/main_window/selection.rs:232
-#: src/ui/main_window.rs:132 src/ui/main_window.rs:290
+#: src/ui/detail_placeholder.rs:25 src/ui/main_window.rs:117
 msgid "Select a repository"
 msgstr ""
 
-#: src/ui/detail_placeholder.rs:27 src/ui/main_window.rs:134
+#: src/ui/detail_placeholder.rs:27 src/ui/main_window.rs:119
 msgid ""
 "Choose a repository from the sidebar to browse its workflows and runs here."
 msgstr ""
@@ -89,11 +88,11 @@ msgid ""
 "workflows and runs."
 msgstr ""
 
-#: src/ui/detail_view/content.rs:18
+#: src/ui/detail_view/content.rs:16
 msgid "Workflows"
 msgstr ""
 
-#: src/ui/detail_view/favorite_controls.rs:19 src/ui/detail_view.rs:176
+#: src/ui/detail_view/favorite_controls.rs:19 src/ui/detail_view.rs:165
 #: src/ui/sidebar/rows.rs:69
 msgid "Toggle favorite"
 msgstr ""
@@ -258,7 +257,6 @@ msgstr ""
 #: src/ui/detail_view/helpers/jobs.rs:113
 #: src/ui/detail_view/helpers/runs/actions.rs:75
 #: src/ui/detail_view/helpers/workflows/row_widgets.rs:88
-#: src/ui/main_window/adaptive_tests.rs:135
 msgid "View logs"
 msgstr ""
 
@@ -275,7 +273,7 @@ msgid "Unable to load jobs"
 msgstr ""
 
 #: src/ui/detail_view/helpers/jobs.rs:478
-#: src/ui/detail_view/helpers/runs/list/placeholders.rs:105
+#: src/ui/detail_view/helpers/runs/list/placeholders.rs:87
 msgid "Retry"
 msgstr ""
 
@@ -355,27 +353,27 @@ msgstr ""
 msgid "✗ Failed to cancel run"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/list/placeholders.rs:27
+#: src/ui/detail_view/helpers/runs/list/placeholders.rs:26
 msgid "Click to load runs..."
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/list/placeholders.rs:41
+#: src/ui/detail_view/helpers/runs/list/placeholders.rs:38
 msgid "No recent runs"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/list/placeholders.rs:49
+#: src/ui/detail_view/helpers/runs/list/placeholders.rs:44
 msgid "Triggered runs may take 10-30 seconds to appear"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/list/placeholders.rs:64
+#: src/ui/detail_view/helpers/runs/list/placeholders.rs:57
 msgid "No runs match the current filters"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/list/placeholders.rs:72
+#: src/ui/detail_view/helpers/runs/list/placeholders.rs:63
 msgid "Adjust the status chips above to see more runs."
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/list/placeholders.rs:87
+#: src/ui/detail_view/helpers/runs/list/placeholders.rs:76
 msgid "Unable to load workflow runs"
 msgstr ""
 
@@ -390,7 +388,7 @@ msgstr ""
 msgid "Showing {visible} of {filtered} matching filters"
 msgstr ""
 
-#: src/ui/detail_view/helpers/runs/row.rs:273
+#: src/ui/detail_view/helpers/runs/row.rs:281
 msgid "Click to load jobs..."
 msgstr ""
 
@@ -406,11 +404,11 @@ msgstr ""
 msgid "Trigger workflow"
 msgstr ""
 
-#: src/ui/detail_view/helpers/workflows/row_widgets.rs:153
+#: src/ui/detail_view/helpers/workflows/row_widgets.rs:152
 msgid "Recent runs"
 msgstr ""
 
-#: src/ui/detail_view/helpers/workflows/row_widgets.rs:188
+#: src/ui/detail_view/helpers/workflows/row_widgets.rs:181
 msgid "All on GitHub"
 msgstr ""
 
@@ -476,7 +474,7 @@ msgstr ""
 msgid "✗ Failed to trigger workflow: {error}"
 msgstr ""
 
-#: src/ui/detail_view/helpers/workflows.rs:63 src/ui/auth_window.rs:280
+#: src/ui/detail_view/helpers/workflows.rs:63 src/ui/auth_window.rs:232
 msgid "Cancel"
 msgstr ""
 
@@ -505,16 +503,16 @@ msgstr ""
 msgid "Loading workflows..."
 msgstr ""
 
-#: src/ui/detail_view.rs:179
+#: src/ui/detail_view.rs:168
 msgid "Refresh workflows"
 msgstr ""
 
-#: src/ui/detail_view.rs:476 src/ui/sidebar/rows.rs:145
+#: src/ui/detail_view.rs:409 src/ui/sidebar/rows.rs:145
 #: src/ui/sidebar/rows.rs:198
 msgid "Private"
 msgstr ""
 
-#: src/ui/detail_view.rs:478 src/ui/sidebar/rows.rs:147
+#: src/ui/detail_view.rs:411 src/ui/sidebar/rows.rs:147
 #: src/ui/sidebar/rows.rs:200
 msgid "Public"
 msgstr ""
@@ -535,87 +533,87 @@ msgstr ""
 msgid "Failures: {count}"
 msgstr ""
 
-#: src/ui/welcome_screen.rs:47
+#: src/ui/welcome_screen.rs:45
 msgid "Manage your GitHub Actions workflows with ease"
 msgstr ""
 
-#: src/ui/welcome_screen.rs:63
+#: src/ui/welcome_screen.rs:59
 msgid "Trigger workflows instantly"
 msgstr ""
 
-#: src/ui/welcome_screen.rs:69
+#: src/ui/welcome_screen.rs:65
 msgid "Monitor runs in real-time"
 msgstr ""
 
-#: src/ui/welcome_screen.rs:75
+#: src/ui/welcome_screen.rs:71
 msgid "View detailed logs"
 msgstr ""
 
-#: src/ui/welcome_screen.rs:99
+#: src/ui/welcome_screen.rs:95
 msgid "Sign in with GitHub"
 msgstr ""
 
-#: src/ui/welcome_screen.rs:107
+#: src/ui/welcome_screen.rs:103
 msgid "Try Demo Mode"
 msgstr ""
 
-#: src/ui/welcome_screen.rs:110
+#: src/ui/welcome_screen.rs:106
 msgid "Explore Actioneer with sample data"
 msgstr ""
 
-#: src/ui/welcome_screen.rs:129 src/ui/main_window/app_actions.rs:28
+#: src/ui/welcome_screen.rs:125 src/ui/main_window/app_actions.rs:28
 msgid "Quit"
 msgstr ""
 
-#: src/ui/auth_window.rs:89 src/ui/auth_window.rs:368
-msgid "Open GitHub in your browser and enter the code."
-msgstr ""
-
-#: src/ui/auth_window.rs:95 src/ui/auth_window.rs:203
+#: src/ui/auth_window.rs:82 src/ui/auth_window.rs:163
 msgid "Sign in to GitHub"
 msgstr ""
 
-#: src/ui/auth_window.rs:213 src/ui/auth_window.rs:309
+#: src/ui/auth_window.rs:171 src/ui/auth_window.rs:261
 msgid "Initializing authentication..."
 msgstr ""
 
-#: src/ui/auth_window.rs:227
+#: src/ui/auth_window.rs:185
 msgid "Enter this code on GitHub:"
 msgstr ""
 
-#: src/ui/auth_window.rs:242
+#: src/ui/auth_window.rs:198
 msgid "Copy code to clipboard"
 msgstr ""
 
-#: src/ui/auth_window.rs:270
+#: src/ui/auth_window.rs:226
 msgid "Open GitHub in Browser"
 msgstr ""
 
-#: src/ui/auth_window.rs:383 src/ui/auth_window.rs:415
+#: src/ui/auth_window.rs:320
+msgid "Open GitHub in your browser and enter the code."
+msgstr ""
+
+#: src/ui/auth_window.rs:335 src/ui/auth_window.rs:367
 msgid "Authentication timeout"
 msgstr ""
 
-#: src/ui/auth_window.rs:422
+#: src/ui/auth_window.rs:374
 msgid "Access denied"
 msgstr ""
 
-#: src/ui/auth_window.rs:443
+#: src/ui/auth_window.rs:395
 msgid "Waiting for authorization..."
 msgstr ""
 
-#: src/ui/auth_window.rs:457
+#: src/ui/auth_window.rs:409
 msgid "Saving token..."
 msgstr ""
 
-#: src/ui/auth_window.rs:494
+#: src/ui/auth_window.rs:446
 msgid "Signed in successfully"
 msgstr ""
 
-#: src/ui/auth_window.rs:501
+#: src/ui/auth_window.rs:453
 msgid "Error saving token: {message}"
 msgstr ""
 
-#: src/ui/job_logs_window/ctx.rs:46 src/ui/job_logs_window.rs:171
+#: src/ui/job_logs_window/ctx.rs:46 src/ui/job_logs_window.rs:161
 msgid "Fetching logs..."
 msgstr ""
 
@@ -636,63 +634,63 @@ msgid ""
 "Details: {error}"
 msgstr ""
 
-#: src/ui/job_logs_window/ctx.rs:252
+#: src/ui/job_logs_window/ctx.rs:240
 msgid "Logs are empty; nothing to copy"
 msgstr ""
 
-#: src/ui/job_logs_window/ctx.rs:259
+#: src/ui/job_logs_window/ctx.rs:247
 msgid "Logs copied to clipboard"
 msgstr ""
 
-#: src/ui/job_logs_window/ctx.rs:263
+#: src/ui/job_logs_window/ctx.rs:251
 msgid "Unable to access the clipboard"
 msgstr ""
 
-#: src/ui/job_logs_window/ctx.rs:290
+#: src/ui/job_logs_window/ctx.rs:278
 msgid "Logs are empty; nothing saved"
 msgstr ""
 
-#: src/ui/job_logs_window/ctx.rs:297
+#: src/ui/job_logs_window/ctx.rs:285
 msgid "Unable to determine save location"
 msgstr ""
 
-#: src/ui/job_logs_window/ctx.rs:309
+#: src/ui/job_logs_window/ctx.rs:297
 msgid "Logs saved"
 msgstr ""
 
-#: src/ui/job_logs_window/ctx.rs:312
+#: src/ui/job_logs_window/ctx.rs:300
 msgid "Failed to save logs: {error}"
 msgstr ""
 
-#: src/ui/job_logs_window/tests.rs:562 src/ui/job_logs_window.rs:337
+#: src/ui/job_logs_window/tests.rs:562 src/ui/job_logs_window.rs:303
 msgid "Save Logs"
 msgstr ""
 
-#: src/ui/job_logs_window/tests.rs:563 src/ui/job_logs_window.rs:338
+#: src/ui/job_logs_window/tests.rs:563 src/ui/job_logs_window.rs:304
 msgid "Save"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:150
+#: src/ui/job_logs_window.rs:142
 msgid "{title} - Logs"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:229
+#: src/ui/job_logs_window.rs:214
 msgid "Refresh logs"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:233
-msgid "Copy logs to clipboard"
-msgstr ""
-
-#: src/ui/job_logs_window.rs:237
-msgid "Save logs to file"
-msgstr ""
-
-#: src/ui/job_logs_window.rs:292
+#: src/ui/job_logs_window.rs
 msgid "Show jobs"
 msgstr ""
 
-#: src/ui/job_logs_window.rs:377
+#: src/ui/job_logs_window.rs:218
+msgid "Copy logs to clipboard"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:222
+msgid "Save logs to file"
+msgstr ""
+
+#: src/ui/job_logs_window.rs:343
 msgid "Job"
 msgstr ""
 
@@ -703,18 +701,18 @@ msgid ""
 "You will need to sign in again to continue."
 msgstr ""
 
-#: src/ui/main_window/header_controls.rs:22
-#: src/ui/main_window/header_controls.rs:83
-#: src/ui/main_window/window_actions.rs:58
+#: src/ui/main_window/header_controls.rs:18
+#: src/ui/main_window/header_controls.rs:61
+#: src/ui/main_window/window_actions.rs:69
 msgid "Refresh repositories"
 msgstr ""
 
-#: src/ui/main_window/header_controls.rs:25
-#: src/ui/main_window/header_controls.rs:92 src/ui/main_window/rate_limit.rs:40
+#: src/ui/main_window/header_controls.rs:21
+#: src/ui/main_window/header_controls.rs:70 src/ui/main_window/rate_limit.rs:40
 msgid "Rate limit: –"
 msgstr ""
 
-#: src/ui/main_window/selection.rs:263
+#: src/ui/main_window/selection.rs:246
 msgid "Loading repositories..."
 msgstr ""
 
@@ -750,27 +748,37 @@ msgstr ""
 msgid "Preferences are currently unavailable."
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:59
-msgid "Open preferences"
-msgstr ""
-
-#: src/ui/main_window/window_actions.rs:60
-msgid "Show keyboard shortcuts"
-msgstr ""
-
-#: src/ui/main_window/window_actions.rs:61
-msgid "Open help"
-msgstr ""
-
-#: src/ui/main_window/window_actions.rs:62
-msgid "Quit application"
-msgstr ""
-
-#: src/ui/main_window/window_actions.rs:74 src/ui/main_window/app_actions.rs:21
+#: src/ui/main_window/window_actions.rs:55 src/ui/main_window/app_actions.rs:21
 msgid "Keyboard Shortcuts"
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:101
+#: src/ui/main_window/window_actions.rs:73
+msgid "Open preferences"
+msgstr ""
+
+#: src/ui/main_window/window_actions.rs:77
+msgid "Show keyboard shortcuts"
+msgstr ""
+
+#: src/ui/main_window/window_actions.rs:80
+msgid "Open help"
+msgstr ""
+
+#: src/ui/main_window/window_actions.rs:82
+msgid "Quit application"
+msgstr ""
+
+#: src/ui/main_window/window_actions.rs:95
+#: src/ui/main_window/window_actions.rs:192
+#: src/ui/main_window/window_actions.rs:280
+msgid "Close"
+msgstr ""
+
+#: src/ui/main_window/window_actions.rs:126
+msgid "Actioneer Help"
+msgstr ""
+
+#: src/ui/main_window/window_actions.rs:144
 msgid ""
 "Actioneer Help\n"
 "\n"
@@ -791,50 +799,46 @@ msgid ""
 "- Use Report Issue from the menu to send diagnostics and steps."
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:123
+#: src/ui/main_window/window_actions.rs:166
 msgid "Need more help? Use “Report Issue” in the app menu or visit:"
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:144
-msgid "Actioneer Help"
-msgstr ""
-
-#: src/ui/main_window/window_actions.rs:166
+#: src/ui/main_window/window_actions.rs:214
 msgid "Failed to open issue tracker in the browser."
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:188
+#: src/ui/main_window/window_actions.rs:236
 msgid "Crash report file:"
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:208
+#: src/ui/main_window/window_actions.rs:256
 msgid ""
 "Actioneer detected a crash report from the previous run. You can report it "
 "on GitHub and attach the crash file."
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:230
+#: src/ui/main_window/window_actions.rs:278
 msgid "Copy diagnostics"
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:231
+#: src/ui/main_window/window_actions.rs:279
 #: src/ui/main_window/app_actions.rs:24
 msgid "Report Issue"
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:289
+#: src/ui/main_window/window_actions.rs:318
 msgid "Failed to open donation page in the browser."
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:302 src/ui/main_window.rs:563
+#: src/ui/main_window/window_actions.rs:331 src/ui/main_window.rs:510
 msgid "Actioneer notification test"
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:303
+#: src/ui/main_window/window_actions.rs:332
 msgid "If you can read this, GNOME notifications are working."
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:314
+#: src/ui/main_window/window_actions.rs:343
 msgid "Notifications are currently unavailable."
 msgstr ""
 
@@ -842,7 +846,7 @@ msgstr ""
 msgid "Application menu"
 msgstr ""
 
-#: src/ui/main_window/app_actions.rs:20 src/ui/preferences_window.rs:24
+#: src/ui/main_window/app_actions.rs:20 src/ui/preferences_window.rs:23
 msgid "Preferences"
 msgstr ""
 
@@ -890,87 +894,87 @@ msgstr ""
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr ""
 
-#: src/ui/main_window.rs:564
+#: src/ui/main_window.rs:511
 msgid "If you see this, notifications are working."
 msgstr ""
 
-#: src/ui/preferences_window.rs:32
+#: src/ui/preferences_window.rs:33
 msgid "Refresh"
 msgstr ""
 
-#: src/ui/preferences_window.rs:35
+#: src/ui/preferences_window.rs:36
 msgid "2 seconds"
 msgstr ""
 
-#: src/ui/preferences_window.rs:36
+#: src/ui/preferences_window.rs:37
 msgid "5 seconds"
 msgstr ""
 
-#: src/ui/preferences_window.rs:37
+#: src/ui/preferences_window.rs:38
 msgid "10 seconds"
 msgstr ""
 
-#: src/ui/preferences_window.rs:38
+#: src/ui/preferences_window.rs:39
 msgid "30 seconds"
 msgstr ""
 
-#: src/ui/preferences_window.rs:47
+#: src/ui/preferences_window.rs:48
 msgid "Auto-refresh interval"
 msgstr ""
 
-#: src/ui/preferences_window.rs:48
+#: src/ui/preferences_window.rs:49
 msgid "How often to check for workflow run updates"
 msgstr ""
 
-#: src/ui/preferences_window.rs:54
+#: src/ui/preferences_window.rs:55
 msgid "Notifications"
 msgstr ""
 
-#: src/ui/preferences_window.rs:58
+#: src/ui/preferences_window.rs:59
 msgid "Desktop Notifications"
 msgstr ""
 
-#: src/ui/preferences_window.rs:59
+#: src/ui/preferences_window.rs:60
 msgid "Show a notification when a workflow run finishes"
 msgstr ""
 
-#: src/ui/preferences_window.rs:71
+#: src/ui/preferences_window.rs:72
 msgid "Appearance"
 msgstr ""
 
-#: src/ui/preferences_window.rs:73
+#: src/ui/preferences_window.rs:74
 msgid "System"
 msgstr ""
 
-#: src/ui/preferences_window.rs:74
+#: src/ui/preferences_window.rs:75
 msgid "Light"
 msgstr ""
 
-#: src/ui/preferences_window.rs:75
+#: src/ui/preferences_window.rs:76
 msgid "Dark"
 msgstr ""
 
-#: src/ui/preferences_window.rs:82
+#: src/ui/preferences_window.rs:83
 msgid "Theme"
 msgstr ""
 
-#: src/ui/preferences_window.rs:83
+#: src/ui/preferences_window.rs:84
 msgid "Select application theme"
 msgstr ""
 
-#: src/ui/preferences_window.rs:89
+#: src/ui/preferences_window.rs:90
 msgid "Language"
 msgstr ""
 
-#: src/ui/preferences_window.rs:91
+#: src/ui/preferences_window.rs:92
 msgid "System language (fallback: English)"
 msgstr ""
 
-#: src/ui/preferences_window.rs:110
+#: src/ui/preferences_window.rs:111
 msgid "Application language"
 msgstr ""
 
-#: src/ui/preferences_window.rs:111
+#: src/ui/preferences_window.rs:112
 msgid "Switch language instantly"
 msgstr ""
 
@@ -1093,296 +1097,296 @@ msgstr ""
 msgid "DevOps"
 msgstr ""
 
-#: data/metainfo.xml.in:99
+#: data/metainfo.xml.in:88
 msgid "Browse Actions workflows"
 msgstr ""
 
-#: data/metainfo.xml.in:103
+#: data/metainfo.xml.in:92
 msgid "Inspect workflow runs and drill into job details quickly"
 msgstr ""
 
-#: data/metainfo.xml.in:107
+#: data/metainfo.xml.in:96
 msgid "Review job logs inline without leaving the app"
 msgstr ""
 
-#: data/metainfo.xml.in:111
+#: data/metainfo.xml.in:100
 msgid "Run a job on any branch"
 msgstr ""
 
-#: data/metainfo.xml.in:115
+#: data/metainfo.xml.in
 msgid "Browse repositories on your phone"
 msgstr ""
 
-#: data/metainfo.xml.in:119
+#: data/metainfo.xml.in
 msgid "Follow runs and their jobs on a phone"
 msgstr ""
 
-#: data/metainfo.xml.in:123
+#: data/metainfo.xml.in
 msgid "Read job logs on the go"
 msgstr ""
 
-#: data/metainfo.xml.in:132
+#: data/metainfo.xml.in:109
 msgid ""
 "Signing out now always returns to the welcome screen right away, including "
 "in demo mode and when the system keyring is unavailable."
 msgstr ""
 
-#: data/metainfo.xml.in:133 data/metainfo.xml.in:140 data/metainfo.xml.in:152
+#: data/metainfo.xml.in:110 data/metainfo.xml.in:117 data/metainfo.xml.in:129
 msgid "Updated bundled components help keep Actioneer reliable and up to date."
 msgstr ""
 
-#: data/metainfo.xml.in:141
+#: data/metainfo.xml.in:118
 msgid ""
 "AppImage packages now include zsync update information, so package managers "
 "can update the app incrementally."
 msgstr ""
 
-#: data/metainfo.xml.in:148
+#: data/metainfo.xml.in:125
 msgid ""
 "The workflow detail pane was redesigned: workflows, runs, jobs, and steps "
 "now expand inline in one place, without opening extra windows."
 msgstr ""
 
-#: data/metainfo.xml.in:149
+#: data/metainfo.xml.in:126
 msgid "Running jobs and steps now show live durations."
 msgstr ""
 
-#: data/metainfo.xml.in:150
+#: data/metainfo.xml.in:127
 msgid ""
 "Italian and Japanese translations added; Actioneer is now available in 14 "
 "languages."
 msgstr ""
 
-#: data/metainfo.xml.in:151
+#: data/metainfo.xml.in:128
 msgid ""
 "Reviewed and completed the existing translations: every remaining "
 "untranslated string is now translated in all languages, with diacritics and "
 "wording corrected."
 msgstr ""
 
-#: data/metainfo.xml.in:159
+#: data/metainfo.xml.in:136
 msgid ""
 "Sign-in works more reliably on newer Linux systems thanks to improved secure "
 "token storage compatibility."
 msgstr ""
 
-#: data/metainfo.xml.in:160
+#: data/metainfo.xml.in:137
 msgid ""
 "Updated bundled components help keep Actioneer stable, reliable, and up to "
 "date."
 msgstr ""
 
-#: data/metainfo.xml.in:167
+#: data/metainfo.xml.in:144
 msgid ""
 "Closing and reopening Actioneer is more reliable, so you are less likely to "
 "see an unexpected crash report after a normal shutdown."
 msgstr ""
 
-#: data/metainfo.xml.in:168
+#: data/metainfo.xml.in:145
 msgid ""
 "Sign-in checks and secure storage now recover more gracefully when desktop "
 "services are slow to respond."
 msgstr ""
 
-#: data/metainfo.xml.in:169
+#: data/metainfo.xml.in:146
 msgid "Updated bundled components help keep the app reliable and up to date."
 msgstr ""
 
-#: data/metainfo.xml.in:176
+#: data/metainfo.xml.in:153
 msgid ""
 "Older workflow runs now show dates in your selected app language, making run "
 "history easier to scan."
 msgstr ""
 
-#: data/metainfo.xml.in:177
+#: data/metainfo.xml.in:154
 msgid ""
 "Updated components and build improvements help keep Linux releases more "
 "reliable."
 msgstr ""
 
-#: data/metainfo.xml.in:184
+#: data/metainfo.xml.in:161
 msgid ""
 "Refreshed the GNOME desktop libraries and HTTP stack for a more reliable, up-"
 "to-date experience."
 msgstr ""
 
-#: data/metainfo.xml.in:191
+#: data/metainfo.xml.in:168
 msgid ""
 "Refreshed bundled components for a more reliable and up-to-date experience."
 msgstr ""
 
-#: data/metainfo.xml.in:198
+#: data/metainfo.xml.in:175
 msgid ""
 "This release includes an important security update to help keep Actioneer "
 "safer to use."
 msgstr ""
 
-#: data/metainfo.xml.in:199
+#: data/metainfo.xml.in:176
 msgid ""
 "Bundled components have been refreshed for a more reliable and up-to-date "
 "experience."
 msgstr ""
 
-#: data/metainfo.xml.in:206
+#: data/metainfo.xml.in:183
 msgid ""
 "Workflow runs and expanded details are now more stable during background "
 "refreshes, with badges and job summaries preserved while results update."
 msgstr ""
 
-#: data/metainfo.xml.in:207
+#: data/metainfo.xml.in:184
 msgid ""
 "Completed runs now stay collapsed when you close them, and run detail "
 "actions recover more reliably after temporary loading hiccups."
 msgstr ""
 
-#: data/metainfo.xml.in:208
+#: data/metainfo.xml.in:185
 msgid ""
 "GitHub connectivity is more resilient to API and permission-related "
 "responses, helping keep repository and workflow data visible instead of "
 "unexpectedly signing you out."
 msgstr ""
 
-#: data/metainfo.xml.in:215
+#: data/metainfo.xml.in:192
 msgid ""
 "In-progress workflow runs now stay up to date, so jobs and steps refresh "
 "while a run is still active."
 msgstr ""
 
-#: data/metainfo.xml.in:216
+#: data/metainfo.xml.in:193
 msgid ""
 "Expanded run details are more stable and easier to follow, with clearer job "
 "badges and step numbering."
 msgstr ""
 
-#: data/metainfo.xml.in:217
+#: data/metainfo.xml.in:194
 msgid ""
 "Workflow status badges are now translated more consistently across the app."
 msgstr ""
 
-#: data/metainfo.xml.in:218
+#: data/metainfo.xml.in:195
 msgid ""
 "Background refresh is lighter on the GitHub API, which helps preserve your "
 "rate limit."
 msgstr ""
 
-#: data/metainfo.xml.in:225
+#: data/metainfo.xml.in:202
 msgid ""
 "The app now feels faster and smoother during sign-in, refreshes, and "
 "everyday navigation."
 msgstr ""
 
-#: data/metainfo.xml.in:226
+#: data/metainfo.xml.in:203
 msgid ""
 "Notifications and background updates are more reliable, so important run "
 "results are less likely to be missed."
 msgstr ""
 
-#: data/metainfo.xml.in:227
+#: data/metainfo.xml.in:204
 msgid ""
 "German and Dutch translations are now available across the app and listing "
 "metadata."
 msgstr ""
 
-#: data/metainfo.xml.in:234
+#: data/metainfo.xml.in:211
 msgid ""
 "Actioneer is now localized in English, German, Dutch, Simplified Chinese, "
 "Hindi, Spanish, French, Arabic, Bengali, Brazilian Portuguese, Russian, and "
 "Urdu."
 msgstr ""
 
-#: data/metainfo.xml.in:235
+#: data/metainfo.xml.in:212
 msgid ""
 "Added Help and Shortcuts to make in-app guidance and keyboard workflows "
 "easier."
 msgstr ""
 
-#: data/metainfo.xml.in:236
+#: data/metainfo.xml.in:213
 msgid "Improved GitHub request stability with client-side timeouts."
 msgstr ""
 
-#: data/metainfo.xml.in:243
+#: data/metainfo.xml.in:220
 msgid ""
 "Manual workflow triggers now support workflow_dispatch inputs with dynamic "
 "parameter fields."
 msgstr ""
 
-#: data/metainfo.xml.in:244
+#: data/metainfo.xml.in:221
 msgid "Dependency updates for ryu, unicode-ident, and zmij."
 msgstr ""
 
-#: data/metainfo.xml.in:251
+#: data/metainfo.xml.in:228
 msgid ""
 "Handle expired job logs (HTTP 410) with clearer messaging instead of a "
 "broken view."
 msgstr ""
 
-#: data/metainfo.xml.in:252
+#: data/metainfo.xml.in:229
 msgid ""
 "Strip BOM markers in job logs so first-line timestamps render correctly."
 msgstr ""
 
-#: data/metainfo.xml.in:259
+#: data/metainfo.xml.in:236
 msgid ""
 "Job logs now render ANSI colors, grouped workflow sections, and clearer "
 "command/output formatting."
 msgstr ""
 
-#: data/metainfo.xml.in:260
+#: data/metainfo.xml.in:237
 msgid ""
 "Aligned timestamps and command prefixes improve scanability, with stronger "
 "error highlighting."
 msgstr ""
 
-#: data/metainfo.xml.in:261
+#: data/metainfo.xml.in:238
 msgid ""
 "Packaging CI refreshed with multi-arch updates for AppImage/Snap/Flatpak "
 "builds."
 msgstr ""
 
-#: data/metainfo.xml.in:262
+#: data/metainfo.xml.in:239
 msgid "Dependency updates and demo log refreshes for improved accuracy."
 msgstr ""
 
-#: data/metainfo.xml.in:269 data/metainfo.xml.in:283
+#: data/metainfo.xml.in:246 data/metainfo.xml.in:260
 msgid ""
 "Faster and smoother UI with refreshed repo/workflow lists and improved "
 "scrolling behavior."
 msgstr ""
 
-#: data/metainfo.xml.in:270 data/metainfo.xml.in:284
+#: data/metainfo.xml.in:247 data/metainfo.xml.in:261
 msgid ""
 "New run filtering controls with better caching, so switching filters is "
 "instant and doesn't reload data."
 msgstr ""
 
-#: data/metainfo.xml.in:271 data/metainfo.xml.in:285
+#: data/metainfo.xml.in:248 data/metainfo.xml.in:262
 msgid ""
 "Better workflow auto-refresh and run status updates, including fewer "
 "duplicate fetches."
 msgstr ""
 
-#: data/metainfo.xml.in:272 data/metainfo.xml.in:286
+#: data/metainfo.xml.in:249 data/metainfo.xml.in:263
 msgid ""
 "Notifications are more reliable across Snap/Flatpak, with improved icon "
 "handling and fallbacks."
 msgstr ""
 
-#: data/metainfo.xml.in:273 data/metainfo.xml.in:287
+#: data/metainfo.xml.in:250 data/metainfo.xml.in:264
 msgid ""
 "Improved sandboxed credential storage using the secret portal for Snap/"
 "Flatpak."
 msgstr ""
 
-#: data/metainfo.xml.in:274 data/metainfo.xml.in:288
+#: data/metainfo.xml.in:251 data/metainfo.xml.in:265
 msgid "Offline-friendly cache persistence for workflows, runs, and jobs."
 msgstr ""
 
-#: data/metainfo.xml.in:275 data/metainfo.xml.in:289
+#: data/metainfo.xml.in:252 data/metainfo.xml.in:266
 msgid ""
 "Packaging and CI updates across Snap, Flatpak, and AppImage for better "
 "compatibility."
 msgstr ""
 
-#: data/metainfo.xml.in:276 data/metainfo.xml.in:290
+#: data/metainfo.xml.in:253 data/metainfo.xml.in:267
 msgid "Dependency updates and stability fixes."
 msgstr ""

@@ -152,6 +152,9 @@ msgstr ""
 "Benötigen Sie weitere Hilfe? Verwenden Sie „Problem melden“ im "
 "Anwendungsmenü oder besuchen Sie:"
 
+msgid "Close"
+msgstr "Schließen"
+
 msgid "Failed to open issue tracker in the browser."
 msgstr "Der Issue-Tracker konnte nicht im Browser geöffnet werden."
 

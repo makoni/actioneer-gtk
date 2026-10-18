@@ -128,6 +128,9 @@ msgstr "Aide Actioneer\n\nPremiers pas\n1. Connectez-vous avec votre compte GitH
 msgid "Need more help? Use “Report Issue” in the app menu or visit:"
 msgstr "Besoin d’aide supplémentaire ? Utilisez « Signaler un problème » dans le menu de l’application ou visitez :"
 
+msgid "Close"
+msgstr "Fermer"
+
 msgid "Failed to open issue tracker in the browser."
 msgstr "Impossible d’ouvrir le suivi des problèmes dans le navigateur."
 

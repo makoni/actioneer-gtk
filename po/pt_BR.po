@@ -128,6 +128,9 @@ msgstr "Ajuda do Actioneer\n\nPrimeiros passos\n1. Entre com sua conta do GitHub
 msgid "Need more help? Use “Report Issue” in the app menu or visit:"
 msgstr "Precisa de mais ajuda? Use “Reportar problema” no menu do aplicativo ou visite:"
 
+msgid "Close"
+msgstr "Fechar"
+
 msgid "Failed to open issue tracker in the browser."
 msgstr "Falha ao abrir o rastreador de problemas no navegador."
 

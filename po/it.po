@@ -780,6 +780,12 @@ msgstr "Apri aiuto"
 msgid "Quit application"
 msgstr "Esci dall'applicazione"
 
+#: src/ui/main_window/window_actions.rs:95
+#: src/ui/main_window/window_actions.rs:192
+#: src/ui/main_window/window_actions.rs:279
+msgid "Close"
+msgstr "Chiudi"
+
 #: src/ui/main_window/window_actions.rs:126
 msgid "Actioneer Help"
 msgstr "Aiuto di Actioneer"

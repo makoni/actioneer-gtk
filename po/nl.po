@@ -149,6 +149,9 @@ msgstr ""
 msgid "Need more help? Use “Report Issue” in the app menu or visit:"
 msgstr "Meer hulp nodig? Gebruik “Probleem melden” in het appmenu of ga naar:"
 
+msgid "Close"
+msgstr "Sluiten"
+
 msgid "Failed to open issue tracker in the browser."
 msgstr "Kon issue-tracker niet in de browser openen."
 

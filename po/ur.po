@@ -128,6 +128,9 @@ msgstr "Actioneer مدد\n\nشروع کریں\n1. خوش آمدید اسکرین
 msgid "Need more help? Use “Report Issue” in the app menu or visit:"
 msgstr "مزید مدد چاہیے؟ ایپ مینو میں “مسئلہ رپورٹ کریں” استعمال کریں یا وزٹ کریں:"
 
+msgid "Close"
+msgstr "بند کریں"
+
 msgid "Failed to open issue tracker in the browser."
 msgstr "براؤزر میں ایشو ٹریکر کھولنے میں ناکام۔"
 
