@@ -4,10 +4,10 @@ pub fn initialize_portal_env(resolved_app_id: &str) {
     apply_portal_env_overrides(resolved_app_id);
 }
 
+/// An AppImage is not a sandbox: the portal cannot tell which app a host
+/// process is, so a portal notification from one is accepted and then dropped.
 pub(super) fn is_sandboxed() -> bool {
-    env::var_os("FLATPAK_ID").is_some()
-        || env::var_os("SNAP").is_some()
-        || env::var_os("APPIMAGE").is_some()
+    env::var_os("FLATPAK_ID").is_some() || env::var_os("SNAP").is_some()
 }
 
 pub(super) fn resolve_portal_app_id(default_app_id: &str) -> String {

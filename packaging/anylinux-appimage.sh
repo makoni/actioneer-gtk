@@ -76,9 +76,13 @@ done
 install -Dm644 data/metainfo.xml "$APPDIR/share/metainfo/me.spaceinbox.actioneer.metainfo.xml"
 install -Dm644 LICENSE "$APPDIR/share/licenses/actioneer/LICENSE"
 cp -a icons/icons/hicolor "$APPDIR/share/icons/"
+# GLib would send notifications through org.gtk.Notifications, which GNOME
+# Shell rejects for an app ID with no installed desktop file - and an
+# AppImage installs none. The freedesktop protocol needs no desktop file.
 cat >> "$APPDIR/.env" <<'EOF'
 ACTIONEER_PO_DIR=${SHARUN_DIR}/share/actioneer/po
 ACTIONEER_LOCALE_DIR=${SHARUN_DIR}/share/locale
+GNOTIFICATION_BACKEND=freedesktop
 EOF
 
 echo "Making the AppImage..."
