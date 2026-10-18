@@ -57,7 +57,7 @@ impl MainWindow {
         }
         let about = adw::AboutDialog::builder()
             .name(ABOUT_DIALOG_NAME)
-            .application_name("Actioneer")
+            .application_name(crate::kernel::app::APP_NAME)
             .application_icon(crate::kernel::app::APP_ICON_NAME)
             .developer_name("Sergey Armodin")
             .version(env!("CARGO_PKG_VERSION"))
@@ -291,7 +291,7 @@ Troubleshooting\n\
         toolbar.set_content(Some(&content));
 
         let dialog = adw::Dialog::builder()
-            .title("Actioneer")
+            .title(crate::kernel::app::APP_NAME)
             .content_width(640)
             .content_height(480)
             .child(&toolbar)

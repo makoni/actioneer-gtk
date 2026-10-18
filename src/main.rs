@@ -150,6 +150,7 @@ fn main() -> anyhow::Result<()> {
     install_panic_hook();
 
     info!("Starting Actioneer for Linux");
+    glib::set_application_name(actioneer::kernel::app::APP_NAME);
     let runtime_app_id = actioneer::resolved_app_id();
     actioneer::services::notifications::initialize_portal_env(runtime_app_id.as_ref());
     actioneer::runtime::install_runtime(actioneer::runtime::tokio_worker_threads());

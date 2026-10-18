@@ -4,6 +4,10 @@ use std::borrow::Cow;
 
 pub const APP_ID: &str = "me.spaceinbox.actioneer";
 pub const APP_ICON_NAME: &str = APP_ID;
+/// The name people see. Without it GLib falls back to the program name, which
+/// GApplication sets to the app ID, and notification servers that print the
+/// sender's name show "me.spaceinbox.actioneer".
+pub const APP_NAME: &str = "Actioneer";
 
 /// One line naming this build and the GTK actually loaded at runtime.
 ///
