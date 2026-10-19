@@ -1005,3 +1005,9 @@ msgstr "O AppImage volta a funcionar em distribuições mais antigas, incluindo 
 
 msgid "Notifications from the AppImage now appear, and once the AppImage is integrated, docks show Actioneer's name and icon."
 msgstr "As notificações do AppImage agora aparecem e, depois que o AppImage é integrado, as docks mostram o nome e o ícone do Actioneer."
+
+msgid "The AppImage uses the standard SquashFS format again, so tools such as AppImageLauncher can integrate it."
+msgstr "O AppImage volta a usar o formato padrão SquashFS, então ferramentas como o AppImageLauncher podem integrá-lo."
+
+msgid "The AppImage shows all of its icons even where no Adwaita icon theme is installed."
+msgstr "O AppImage mostra todos os seus ícones mesmo onde o tema de ícones Adwaita não está instalado."

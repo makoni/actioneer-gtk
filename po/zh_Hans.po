@@ -995,3 +995,9 @@ msgstr "AppImage 再次可在较旧的发行版上运行，包括 Ubuntu 22.04 �
 
 msgid "Notifications from the AppImage now appear, and once the AppImage is integrated, docks show Actioneer's name and icon."
 msgstr "AppImage 的通知现在可以正常显示；集成 AppImage 后，程序坞会显示 Actioneer 的名称和图标。"
+
+msgid "The AppImage uses the standard SquashFS format again, so tools such as AppImageLauncher can integrate it."
+msgstr "AppImage 重新采用标准的 SquashFS 格式，因此 AppImageLauncher 等工具可以集成它。"
+
+msgid "The AppImage shows all of its icons even where no Adwaita icon theme is installed."
+msgstr "即使未安装 Adwaita 图标主题，AppImage 也能显示其全部图标。"

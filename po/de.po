@@ -1051,3 +1051,9 @@ msgstr "Das AppImage läuft wieder auf älteren Distributionen, darunter Ubuntu 
 
 msgid "Notifications from the AppImage now appear, and once the AppImage is integrated, docks show Actioneer's name and icon."
 msgstr "Benachrichtigungen aus dem AppImage werden jetzt angezeigt, und sobald das AppImage integriert ist, zeigen Docks den Namen und das Symbol von Actioneer."
+
+msgid "The AppImage uses the standard SquashFS format again, so tools such as AppImageLauncher can integrate it."
+msgstr "Das AppImage verwendet wieder das Standardformat SquashFS, sodass Werkzeuge wie AppImageLauncher es integrieren können."
+
+msgid "The AppImage shows all of its icons even where no Adwaita icon theme is installed."
+msgstr "Das AppImage zeigt alle seine Symbole an, auch wenn kein Adwaita-Symbolthema installiert ist."

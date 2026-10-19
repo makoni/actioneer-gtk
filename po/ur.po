@@ -1003,3 +1003,9 @@ msgstr "AppImage اب پھر سے پرانی ڈسٹری بیوشنز پر چلت
 
 msgid "Notifications from the AppImage now appear, and once the AppImage is integrated, docks show Actioneer's name and icon."
 msgstr "AppImage سے اطلاعات اب ظاہر ہوتی ہیں، اور AppImage کو مربوط کرنے کے بعد ڈاک Actioneer کا نام اور آئیکن دکھاتا ہے۔"
+
+msgid "The AppImage uses the standard SquashFS format again, so tools such as AppImageLauncher can integrate it."
+msgstr "AppImage اب پھر سے معیاری SquashFS فارمیٹ استعمال کرتا ہے، اس لیے AppImageLauncher جیسے ٹولز اسے مربوط کر سکتے ہیں۔"
+
+msgid "The AppImage shows all of its icons even where no Adwaita icon theme is installed."
+msgstr "جہاں Adwaita آئیکن تھیم انسٹال نہ ہو، وہاں بھی AppImage اپنے تمام آئیکن دکھاتا ہے۔"

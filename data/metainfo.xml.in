@@ -126,6 +126,14 @@
   </screenshots>
 
   <releases>
+    <release version="1.2.2" date="2026-10-19">
+      <description>
+        <ul>
+          <li>The AppImage uses the standard SquashFS format again, so tools such as AppImageLauncher can integrate it.</li>
+          <li>The AppImage shows all of its icons even where no Adwaita icon theme is installed.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.1" date="2026-10-19">
       <description>
         <ul>
