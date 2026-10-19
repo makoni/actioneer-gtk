@@ -88,7 +88,17 @@ jobs:
             echo "Bundled: $bundled"
           done
 
-          # 2. It must start, and report the GTK it loaded. `--version` prints
+          # 2. The image must be SquashFS: the AppImage catalog cannot mount
+          #    anything else, and AppImageLauncher cannot integrate it.
+          offset=$("./$APPIMAGE" --appimage-offset)
+          magic=$(od -An -c -j "$offset" -N 4 "$APPIMAGE" | tr -d ' ')
+          if [ "$magic" != "hsqs" ]; then
+            echo "The image at offset $offset is not SquashFS (magic '$magic')" >&2
+            exit 1
+          fi
+          echo "SquashFS image at offset $offset"
+
+          # 3. It must start, and report the GTK it loaded. `--version` prints
           #    the runtime's numbers, so this checks the library that answers at
           #    run time rather than the file that happens to sit in the AppDir.
           reported=$("./$APPIMAGE" --appimage-extract-and-run --version | tail -n 1)
@@ -100,7 +110,7 @@ jobs:
             exit 1
           fi
 
-          # 3. And it must not be older than what the crate compiles against.
+          # 4. And it must not be older than what the crate compiles against.
           lowest=$(printf '%s\n%s\n' "$MIN_BUNDLED_GTK" "$gtk_version" | sort -V | head -n 1)
           if [ "$lowest" != "$MIN_BUNDLED_GTK" ]; then
             echo "Bundled GTK $gtk_version is older than the $MIN_BUNDLED_GTK the build needs" >&2
@@ -108,7 +118,7 @@ jobs:
           fi
           echo "GTK $gtk_version satisfies the $MIN_BUNDLED_GTK floor"
 
-          # 4. The update information must be embedded, and the .zsync must point
+          # 5. The update information must be embedded, and the .zsync must point
           #    back at this exact filename — the two halves that let a package
           #    manager find and fetch the next release.
           upd_info=$("./$APPIMAGE" --appimage-updateinformation)
