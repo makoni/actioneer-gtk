@@ -67,7 +67,8 @@ echo "Installing build dependencies..."
 pacman-key --init
 pacman -Syy --noconfirm archlinux-keyring
 pacman -Syu --needed --noconfirm \
-    appstream base-devel curl gettext git gtk4 libadwaita patchelf pkgconf rust strace wget \
+    adwaita-icon-theme appstream base-devel curl gettext git gtk4 libadwaita patchelf pkgconf rust \
+    strace wget \
     xorg-server-xvfb zsync
 
 # Must run after every `pacman -S`, or pacman puts the full packages back.
@@ -104,6 +105,14 @@ done
 install -Dm644 data/metainfo.xml "$APPDIR/share/metainfo/me.spaceinbox.actioneer.metainfo.xml"
 install -Dm644 LICENSE "$APPDIR/share/licenses/actioneer/LICENSE"
 cp -a icons/icons/hicolor "$APPDIR/share/icons/"
+# The symbolic icons a libadwaita app asks for come from the Adwaita theme.
+# Desktops have it, or a theme that covers the same names, and theirs still
+# comes first; a bare system (a minimal window manager, the AppImage
+# catalog's test runner) has neither and shows missing-icon placeholders.
+# Cursors stay out: they are the bulk of the theme and the host's own.
+install -d "$APPDIR/share/icons/Adwaita"
+cp -r /usr/share/icons/Adwaita/{index.theme,16x16,scalable,symbolic} "$APPDIR/share/icons/Adwaita/"
+gtk-update-icon-cache -f -t "$APPDIR/share/icons/Adwaita"
 # GLib would send notifications through org.gtk.Notifications, which GNOME
 # Shell rejects for an app ID with no installed desktop file - and an
 # AppImage installs none. The freedesktop protocol needs no desktop file.
