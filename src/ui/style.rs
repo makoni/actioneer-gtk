@@ -110,10 +110,9 @@ const APP_CSS: &str = r#"
 
 /* The expanded row is tinted with currentColor, not a black alpha: GTK's
    `prefers-color-scheme` query does not follow AdwStyleManager for app-level
-   providers (so a @media block would apply in the wrong scheme, and is
-   unsupported on the GTK 4.14 snap runtime), while a fixed black wash strong
-   enough to read in dark stacks with the runs card nested inside it and pushes
-   light-mode meta text below AA. currentColor lightens in dark and darkens in
+   providers (so a @media block would apply in the wrong scheme), while a fixed
+   black wash strong enough to read in dark stacks with the runs card nested
+   inside it and pushes light-mode meta text below AA. currentColor lightens in dark and darkens in
    light, and is kept clearly stronger than the hover cue. */
 .workflow-item.expanded {
     background-color: alpha(currentColor, 0.09);
