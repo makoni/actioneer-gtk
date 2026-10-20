@@ -8,6 +8,7 @@ use crate::kernel::i18n::tr;
 use crate::ui::utils::leading_wrapping;
 use gtk4::prelude::*;
 use gtk4::{self as gtk};
+use libadwaita as adw;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -15,8 +16,7 @@ pub(super) fn build_spinner() -> gtk::Widget {
     let container = gtk::Box::new(gtk::Orientation::Horizontal, 0);
     container.set_halign(gtk::Align::Center);
     container.set_valign(gtk::Align::Center);
-    let spinner = gtk::Spinner::new();
-    spinner.start();
+    let spinner = adw::Spinner::new();
     spinner.set_margin_top(8);
     spinner.set_margin_bottom(8);
     container.append(&spinner);

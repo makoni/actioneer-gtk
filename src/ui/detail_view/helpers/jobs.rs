@@ -14,6 +14,7 @@ use crate::ui::utils::duration::{job_duration_label, start_live_duration, step_d
 use crate::ui::utils::widget_data::{get_data_clone, get_data_copy, set_data};
 use gtk4::prelude::*;
 use gtk4::{self as gtk, glib};
+use libadwaita as adw;
 use parking_lot::Mutex;
 use std::collections::HashSet;
 use std::sync::Arc;
@@ -354,8 +355,7 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
             jobs_box.remove(&child);
         }
 
-        let spinner = gtk::Spinner::new();
-        spinner.start();
+        let spinner = adw::Spinner::new();
         jobs_box.append(&spinner);
     }
 

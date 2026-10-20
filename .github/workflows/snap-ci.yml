@@ -8,6 +8,12 @@ name: Snap CI
         description: Snapcraft channel to build with (e.g. latest/edge to try unreleased fixes)
         required: false
         default: latest/stable
+      snapcraft-verbosity:
+        description: Snapcraft log level (debug shows every command run inside the build instance, with timings)
+        required: false
+        type: choice
+        options: [brief, verbose, debug, trace]
+        default: brief
   workflow_call:
     outputs:
       run-id:
@@ -39,7 +45,7 @@ jobs:
         uses: snapcore/action-build@v1
         id: build
         with:
-          snapcraft-args: --build-for=${{ matrix.platform }}
+          snapcraft-args: --build-for=${{ matrix.platform }} --verbosity=${{ inputs.snapcraft-verbosity || 'brief' }}
           snapcraft-channel: ${{ inputs.snapcraft-channel || 'latest/stable' }}
 
       - name: Upload snap artifact

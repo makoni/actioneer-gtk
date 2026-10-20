@@ -429,8 +429,7 @@ impl RepoDetailPane {
                     child = next;
                 }
 
-                let spinner = gtk::Spinner::new();
-                spinner.start();
+                let spinner = adw::Spinner::new();
                 spinner.set_tooltip_text(Some(tr("Loading workflows...").as_str()));
                 spinner.set_widget_name("detail-spinner");
                 spinner.set_size_request(24, 24);

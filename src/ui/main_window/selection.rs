@@ -3,8 +3,9 @@ use crate::kernel::i18n::tr;
 use crate::services::api::models::Repo;
 use crate::ui::detail_placeholder::{schedule_actions_disabled_page, schedule_status_page_update};
 use crate::ui::detail_view::{RepoDetailDeps, RepoDetailPane};
+use gtk4::glib;
 use gtk4::prelude::WidgetExt;
-use gtk4::{self as gtk, glib};
+use libadwaita as adw;
 use libadwaita::prelude::NavigationPageExt;
 use parking_lot::Mutex;
 use std::sync::Arc;
@@ -249,8 +250,7 @@ impl MainWindow {
                     header.remove(&old_spinner);
                 }
 
-                let spinner = gtk::Spinner::new();
-                spinner.start();
+                let spinner = adw::Spinner::new();
                 spinner.set_size_request(24, 24);
                 spinner.set_tooltip_text(Some(tr("Loading repositories...").as_str()));
                 header.pack_start(&spinner);
