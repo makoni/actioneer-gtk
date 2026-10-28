@@ -57,7 +57,7 @@ thiserror = "2.0"
 dirs = "7.0"
 dotenvy = "0.15"
 chrono = { version = "0.4", features = ["clock"] }
-parking_lot = "0.12"
+parking_lot = "0.13"
 
 [dev-dependencies]
 # Testing HTTP mocks
