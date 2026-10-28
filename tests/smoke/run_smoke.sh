@@ -114,15 +114,18 @@ start_atspi_registry() {
 }
 
 cleanup() {
-  kill "${registry_pid:-0}" 2>/dev/null || true
-  kill "${app_pid:-0}" 2>/dev/null || true
+  # An empty default, not 0: `kill 0` signals the whole process group, which
+  # takes down run_all.sh with it whenever start_atspi_registry skipped the
+  # spawn because a registry was already running.
+  kill "${registry_pid:-}" 2>/dev/null || true
+  kill "${app_pid:-}" 2>/dev/null || true
   kill "$xvfb_pid" 2>/dev/null || true
   sleep 0.5
-  kill -9 "${registry_pid:-0}" 2>/dev/null || true
-  kill -9 "${app_pid:-0}" 2>/dev/null || true
+  kill -9 "${registry_pid:-}" 2>/dev/null || true
+  kill -9 "${app_pid:-}" 2>/dev/null || true
   kill -9 "$xvfb_pid" 2>/dev/null || true
-  wait "${registry_pid:-0}" 2>/dev/null || true
-  wait "${app_pid:-0}" 2>/dev/null || true
+  wait "${registry_pid:-}" 2>/dev/null || true
+  wait "${app_pid:-}" 2>/dev/null || true
   wait "$xvfb_pid" 2>/dev/null || true
 }
 trap 'cleanup; rm -rf "$workdir"' EXIT
