@@ -1,24 +1,20 @@
-# Actioneer 1.2.2
+# Actioneer 1.3.0
 
-A small AppImage-only release. The Flatpak and the Snap are unchanged apart
-from the version number.
+A packaging release: the minimum desktop versions rise to GNOME 48, and the
+Snap now brings its own runtime. There are no functional changes to the app.
 
-## What's fixed
+## What's changed
 
-- **AppImage format.** The 1.2.1 AppImage was packaged in a newer image format
-  (DwarFS) that some AppImage tools cannot open: AppImageLauncher could not
-  integrate it, and the AppImage catalog could not list it. The AppImage is
-  back in the standard SquashFS format and still brings its own C library, so
-  it keeps running on older distributions such as Ubuntu 22.04.
-- **Icons in the AppImage.** On systems without the Adwaita icon theme, some
-  buttons showed placeholder images instead of their icons. The AppImage now
-  includes the icons it needs. Your desktop's own icon theme still takes
-  precedence where it has them.
+- **Minimum versions.** Actioneer now needs at least GTK 4.18 and libadwaita
+  1.7, which is GNOME 48. Debian 13 and Fedora 42 already ship exactly this,
+  so building from source there is unaffected.
+- **The Snap's runtime.** The Snap is built on a newer base, so GTK 4.24 and
+  libadwaita 1.10 reach users even on Ubuntu 24.04. The runtime base belongs
+  to the Snap rather than the host, so the host does not have to be updated.
+
+The Flatpak and the AppImage are unchanged apart from the version number.
 
 ## Before you update
 
-If you update the AppImage with a tool such as Gear Lever or AppImageUpdate,
-this update downloads nearly the whole file once more, because the format
-changed back. Later updates download only what changed.
-
-Your settings, favorites and sign-in carry over.
+Your settings, favorites and sign-in carry over. On a Flatpak or AppImage
+install, nothing looks different: only the Snap moves to a newer runtime.
