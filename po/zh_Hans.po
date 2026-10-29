@@ -1001,3 +1001,9 @@ msgstr "AppImage 重新采用标准的 SquashFS 格式，因此 AppImageLauncher
 
 msgid "The AppImage shows all of its icons even where no Adwaita icon theme is installed."
 msgstr "即使未安装 Adwaita 图标主题，AppImage 也能显示其全部图标。"
+
+msgid "The Snap now ships its own runtime, so GTK 4.24 and libadwaita 1.10 arrive even on older Ubuntu releases."
+msgstr "Snap 现在自带运行环境，因此即使在较旧的 Ubuntu 版本上也能用上 GTK 4.24 和 libadwaita 1.10。"
+
+msgid "The minimum desktop version is now GNOME 48 (GTK 4.18 and libadwaita 1.7)."
+msgstr "桌面最低版本现为 GNOME 48（GTK 4.18 和 libadwaita 1.7）。"

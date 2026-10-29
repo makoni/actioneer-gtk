@@ -126,6 +126,14 @@
   </screenshots>
 
   <releases>
+    <release version="1.3.0" date="2026-10-29">
+      <description>
+        <ul>
+          <li>The Snap now ships its own runtime, so GTK 4.24 and libadwaita 1.10 arrive even on older Ubuntu releases.</li>
+          <li>The minimum desktop version is now GNOME 48 (GTK 4.18 and libadwaita 1.7).</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2.2" date="2026-10-19">
       <description>
         <ul>

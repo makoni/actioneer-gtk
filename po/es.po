@@ -1011,3 +1011,9 @@ msgstr "La AppImage vuelve a usar el formato estándar SquashFS, así que herram
 
 msgid "The AppImage shows all of its icons even where no Adwaita icon theme is installed."
 msgstr "La AppImage muestra todos sus iconos incluso donde no está instalado el tema de iconos Adwaita."
+
+msgid "The Snap now ships its own runtime, so GTK 4.24 and libadwaita 1.10 arrive even on older Ubuntu releases."
+msgstr "El Snap ahora incluye su propio runtime, por lo que GTK 4.24 y libadwaita 1.10 llegan incluso a versiones antiguas de Ubuntu."
+
+msgid "The minimum desktop version is now GNOME 48 (GTK 4.18 and libadwaita 1.7)."
+msgstr "La versión mínima del escritorio ahora es GNOME 48 (GTK 4.18 y libadwaita 1.7)."
