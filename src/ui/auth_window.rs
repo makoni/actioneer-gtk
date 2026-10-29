@@ -69,7 +69,7 @@ pub struct AuthWindow {
     user_code: gtk::Label,
     open_button: gtk::Button,
     copy_button: gtk::Button,
-    spinner: gtk::Spinner,
+    spinner: adw::Spinner,
     attempt_tracker: Arc<AuthAttemptTracker>,
     poll_task: Arc<Mutex<Option<tokio::task::JoinHandle<()>>>>,
 }
@@ -207,7 +207,7 @@ impl AuthWindow {
         gtk::Label,
         gtk::Button,
         gtk::Button,
-        gtk::Spinner,
+        adw::Spinner,
         gtk::Button,
     ) {
         let content_box = gtk::Box::new(gtk::Orientation::Vertical, 24);
@@ -232,7 +232,7 @@ impl AuthWindow {
         status_label.set_justify(gtk::Justification::Center);
         status_box.append(&status_label);
 
-        let spinner = gtk::Spinner::new();
+        let spinner = adw::Spinner::new();
         spinner.set_visible(false);
         status_box.append(&spinner);
 
@@ -328,7 +328,6 @@ impl AuthWindow {
         self.user_code.set_text("");
         self.open_button.set_visible(false);
         self.copy_button.set_visible(false);
-        self.spinner.stop();
         self.spinner.set_visible(false);
     }
 
@@ -380,7 +379,6 @@ impl AuthWindow {
                     open_button_clone.set_visible(true);
                     copy_button_clone.set_visible(true);
                     spinner_clone.set_visible(true);
-                    spinner_clone.start();
                     status_clone
                         .set_text(tr("Open GitHub in your browser and enter the code.").as_str());
 
@@ -466,14 +464,12 @@ impl AuthWindow {
                     if let Some(existing) = poll_task.lock().take() {
                         existing.abort();
                     }
-                    spinner_clone.stop();
                     spinner_clone.set_visible(false);
                     ControlFlow::Break
                 }
                 AuthMessage::PollSuccess(_, token) => {
                     status_clone.set_text(tr("Saving token...").as_str());
                     spinner_clone.set_visible(true);
-                    spinner_clone.start();
                     poll_task.lock().take();
 
                     let save_sender = poll_sender.clone();
@@ -498,13 +494,11 @@ impl AuthWindow {
                     if let Some(existing) = poll_task.lock().take() {
                         existing.abort();
                     }
-                    spinner_clone.stop();
                     spinner_clone.set_visible(false);
                     status_clone.set_text(crate::ui::error_text::user_message_from(&err).as_str());
                     ControlFlow::Break
                 }
                 AuthMessage::SaveCompleted(_, save_result) => {
-                    spinner_clone.stop();
                     spinner_clone.set_visible(false);
                     match save_result {
                         Ok(()) => {

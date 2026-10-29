@@ -187,9 +187,9 @@ This guide provides a comprehensive set of best practices for an AI agent to dev
 - **Add necessary dependencies to `Cargo.toml` (match this repo's versions when editing Actioneer):**
   ```toml
   [dependencies]
-  gtk4 = { version = "0.10", package = "gtk4" }
-  libadwaita = { version = "0.8", package = "libadwaita", features = ["v1_5"] }
-  gio = "0.21"
+  gtk4 = { version = "0.11", package = "gtk4", features = ["v4_18"] }
+  libadwaita = { version = "0.9", package = "libadwaita", features = ["v1_7"] }
+  gio = "0.22"
 
   [build-dependencies]
   glib-build-utils = "0.18.0"
