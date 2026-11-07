@@ -1014,6 +1014,9 @@ msgstr "Limite di richieste (basso)"
 msgid "Rate limit"
 msgstr "Limite di richieste"
 
+msgid "Offline"
+msgstr "Offline"
+
 #: src/ui/utils/rate_limit.rs:32
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr "{prefix}: {remaining}/{limit} (si resetta tra {time})"

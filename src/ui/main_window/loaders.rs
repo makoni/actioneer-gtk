@@ -1,12 +1,16 @@
 use super::MainWindow;
-use crate::domain::counts::{determine_actions_state, selected_repo_for_status_refresh};
+use crate::domain::counts::{
+    RepoActionsState, determine_actions_state, selected_repo_for_status_refresh,
+};
 use crate::runtime::channel::MainContextChannelExt;
 use crate::services::api::GitHubError;
 use crate::services::api::models::{RateLimitInfo, Repo};
-use crate::ui::main_window::rate_limit::update_rate_limit_label;
+use crate::ui::main_window::offline::render_rate_limit;
 use crate::ui::sidebar::{RepoListRenderContext, rebuild_repo_list};
 use crate::ui::tasks::repo_status;
 use gtk4::glib;
+use std::collections::HashMap;
+use std::sync::atomic::Ordering;
 use std::time::Instant;
 use tracing::{error, info};
 
@@ -18,7 +22,15 @@ impl MainWindow {
         };
 
         if let Some(client) = client_opt {
+            // Connectivity flapping (VPN, docker, Wi-Fi roaming) can ask for a
+            // reload many times in a row; one request at a time is enough.
+            if self.offline.repos_loading.swap(true, Ordering::AcqRel) {
+                info!("Repository list already loading; reloading once it returns");
+                self.offline.reload_pending.store(true, Ordering::Release);
+                return;
+            }
             info!("Starting to load repositories...");
+            let session = self.offline.current_session();
 
             self.show_header_loading(true);
 
@@ -30,7 +42,22 @@ impl MainWindow {
             let this = self.clone();
 
             receiver.attach(None, move |(repos_result, rate_info)| {
+                // A sign-out or another sign-in since: the answer belongs to a
+                // session that is over, and the flag was reset with it.
+                if this.offline.current_session() != session {
+                    return glib::ControlFlow::Break;
+                }
+                this.offline.repos_loading.store(false, Ordering::Release);
                 this.show_header_loading(false);
+                if this.offline.reload_pending.swap(false, Ordering::AcqRel) {
+                    // A reload was asked for meanwhile. A successful answer is
+                    // still shown; either way the reload runs after it.
+                    if let Ok(repos) = repos_result {
+                        this.refresh_repository_view(repos, rate_info);
+                    }
+                    this.load_repositories();
+                    return glib::ControlFlow::Break;
+                }
 
                 match repos_result {
                     Ok(repos) => {
@@ -67,19 +94,17 @@ impl MainWindow {
         repos: Vec<Repo>,
         rate_info: Option<RateLimitInfo>,
     ) {
+        self.offline.note_live_repos();
         {
             let mut repos_guard = self.repos.lock();
             *repos_guard = repos.clone();
         }
 
-        {
-            let mut actions = self.actions_states.lock();
-            actions.retain(|repo_id, _| repos.iter().any(|repo| repo.id == *repo_id));
-            for repo in &repos {
-                let state = determine_actions_state(repo.permissions.as_ref());
-                actions.entry(repo.id).or_insert(state);
-            }
-        }
+        apply_live_actions_states(
+            &mut self.actions_states.lock(),
+            &self.actions_checked_at.lock(),
+            &repos,
+        );
 
         {
             let mut checked = self.actions_checked_at.lock();
@@ -161,7 +186,10 @@ impl MainWindow {
 
     pub(super) fn update_rate_limit_display(&self, info: Option<RateLimitInfo>) {
         let label = self.rate_limit_label.clone();
-        glib::idle_add_local_once(move || update_rate_limit_label(&label, info.clone()));
+        let client = self.client.clone();
+        // Connectivity is read when the idle runs, not now: a display queued
+        // before GitHub went unreachable must not paint over "Offline".
+        glib::idle_add_local_once(move || render_rate_limit(&label, &client, info.clone()));
     }
 
     pub(super) fn schedule_repo_list_refresh(&self) {
@@ -188,6 +216,25 @@ impl MainWindow {
     }
 }
 
+/// Live permissions replace whatever was derived before — possibly from the
+/// cache — unless the actions-permissions endpoint has already given a firmer
+/// answer for that repository. Repositories no longer listed are dropped.
+fn apply_live_actions_states(
+    actions: &mut HashMap<i64, RepoActionsState>,
+    checked: &HashMap<i64, Instant>,
+    repos: &[Repo],
+) {
+    actions.retain(|repo_id, _| repos.iter().any(|repo| repo.id == *repo_id));
+    for repo in repos {
+        let state = determine_actions_state(repo.permissions.as_ref());
+        if checked.contains_key(&repo.id) {
+            actions.entry(repo.id).or_insert(state);
+        } else {
+            actions.insert(repo.id, state);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -205,6 +252,38 @@ mod tests {
             permissions: None,
             default_branch: Some("main".into()),
         }
+    }
+
+    #[test]
+    fn live_permissions_replace_unconfirmed_states_only() {
+        use crate::services::api::models::RepoPermissions;
+        let mut with_push = repo(1, "one");
+        with_push.permissions = Some(RepoPermissions {
+            admin: false,
+            push: true,
+            pull: true,
+        });
+        let mut confirmed = repo(2, "two");
+        confirmed.permissions = with_push.permissions.clone();
+
+        // Both were painted from the cache as Unknown; 2 has since been checked
+        // against the actions-permissions endpoint and found disabled. 3 is gone.
+        let mut actions = HashMap::from([
+            (1, RepoActionsState::Unknown),
+            (2, RepoActionsState::Disabled),
+            (3, RepoActionsState::Enabled),
+        ]);
+        let checked = HashMap::from([(2, Instant::now())]);
+
+        apply_live_actions_states(&mut actions, &checked, &[with_push, confirmed]);
+
+        assert_eq!(actions.get(&1), Some(&RepoActionsState::Enabled));
+        assert_eq!(
+            actions.get(&2),
+            Some(&RepoActionsState::Disabled),
+            "a checked answer is firmer than the listed permissions"
+        );
+        assert!(!actions.contains_key(&3));
     }
 
     #[test]

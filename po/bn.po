@@ -443,6 +443,9 @@ msgstr "রেট সীমা (কম)"
 msgid "Rate limit"
 msgstr "রেট সীমা"
 
+msgid "Offline"
+msgstr "অফলাইন"
+
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr "{prefix}: {remaining}/{limit} ({time} পরে রিসেট হবে)"
 

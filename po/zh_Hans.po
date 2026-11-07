@@ -439,6 +439,9 @@ msgstr "速率限制（低）"
 msgid "Rate limit"
 msgstr "速率限制"
 
+msgid "Offline"
+msgstr "离线"
+
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr "{prefix}：{remaining}/{limit}（{time} 后重置）"
 

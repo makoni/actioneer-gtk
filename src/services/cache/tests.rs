@@ -123,7 +123,7 @@ fn a_new_repo_list_prunes_repos_that_are_gone() {
 }
 
 #[test]
-fn only_the_latest_run_of_each_workflow_is_kept() {
+fn only_the_latest_completed_run_of_each_workflow_is_kept() {
     let cache = memory_cache();
     let owner = cache.bind_owner("token-a");
     cache.store_repos(&owner, &[repo(1, "octo/one")]);
@@ -139,8 +139,9 @@ fn only_the_latest_run_of_each_workflow_is_kept() {
         ],
     );
 
-    let latest = cache.latest_runs(&owner, 1).expect("latest runs");
-    assert_eq!(ids(&latest, |r| r.id), vec![103, 102]);
+    let latest = cache.latest_completed_runs(&owner, 1).expect("latest runs");
+    // 103 is still running: workflow 10 is represented by its last finished run.
+    assert_eq!(ids(&latest, |r| r.id), vec![102, 101]);
 }
 
 #[test]

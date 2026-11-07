@@ -7,7 +7,7 @@ use gtk4::{self as gtk, glib};
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::time::Instant;
+use std::time::SystemTime;
 
 /// Shared state backing the repository pane header: the "N workflows · updated
 /// …" subline, the per-status counters in the segmented filter, the auto-refresh
@@ -20,7 +20,13 @@ pub(crate) struct DetailHeaderState {
     filter_chips: FilterChips,
     latest_runs: Rc<RefCell<HashMap<i64, WorkflowRun>>>,
     workflow_count: Rc<Cell<usize>>,
-    last_refresh: Rc<RefCell<Option<Instant>>>,
+    /// Wall-clock time, not `Instant`: the data may come from the cache, fetched
+    /// before the app started, and a monotonic clock also stops while the
+    /// machine sleeps.
+    last_refresh: Rc<RefCell<Option<SystemTime>>>,
+    /// GitHub could not be reached on the last attempt; the subline says so,
+    /// since the age alone does not tell cached data from live.
+    offline: Rc<Cell<bool>>,
 }
 
 impl DetailHeaderState {
@@ -36,6 +42,7 @@ impl DetailHeaderState {
             latest_runs: Rc::new(RefCell::new(HashMap::new())),
             workflow_count: Rc::new(Cell::new(0)),
             last_refresh: Rc::new(RefCell::new(None)),
+            offline: Rc::new(Cell::new(false)),
         };
         state.render_subtitle();
         state
@@ -48,7 +55,21 @@ impl DetailHeaderState {
 
     /// Marks the workflow list as freshly loaded and re-renders the subline.
     pub(crate) fn note_refreshed(&self) {
-        *self.last_refresh.borrow_mut() = Some(Instant::now());
+        self.offline.set(false);
+        self.note_fetched_at(SystemTime::now());
+    }
+
+    /// Marks the shown data as unrefreshable for now, or clears that.
+    pub(crate) fn set_offline(&self, offline: bool) {
+        if self.offline.replace(offline) != offline {
+            self.render_subtitle();
+        }
+    }
+
+    /// Marks the shown data as fetched at `fetched_at` — in the past, for a
+    /// paint from the cache — and re-renders the subline.
+    pub(crate) fn note_fetched_at(&self, fetched_at: SystemTime) {
+        *self.last_refresh.borrow_mut() = Some(fetched_at);
         self.render_subtitle();
     }
 
@@ -119,6 +140,8 @@ impl DetailHeaderState {
         self.subtitle_label.set_text(&subtitle_text(
             self.workflow_count.get(),
             *self.last_refresh.borrow(),
+            self.offline.get(),
+            SystemTime::now(),
         ));
     }
 
@@ -129,6 +152,7 @@ impl DetailHeaderState {
             subtitle_label: self.subtitle_label.downgrade(),
             workflow_count: self.workflow_count.clone(),
             last_refresh: self.last_refresh.clone(),
+            offline: self.offline.clone(),
         }
     }
 }
@@ -137,7 +161,8 @@ impl DetailHeaderState {
 pub(crate) struct SubtitleTicker {
     subtitle_label: glib::WeakRef<gtk::Label>,
     workflow_count: Rc<Cell<usize>>,
-    last_refresh: Rc<RefCell<Option<Instant>>>,
+    last_refresh: Rc<RefCell<Option<SystemTime>>>,
+    offline: Rc<Cell<bool>>,
 }
 
 impl SubtitleTicker {
@@ -150,12 +175,19 @@ impl SubtitleTicker {
         label.set_text(&subtitle_text(
             self.workflow_count.get(),
             *self.last_refresh.borrow(),
+            self.offline.get(),
+            SystemTime::now(),
         ));
         true
     }
 }
 
-fn subtitle_text(count: usize, last_refresh: Option<Instant>) -> String {
+fn subtitle_text(
+    count: usize,
+    last_refresh: Option<SystemTime>,
+    offline: bool,
+    now: SystemTime,
+) -> String {
     let count_text = if count == 1 {
         tr("1 workflow")
     } else {
@@ -163,21 +195,32 @@ fn subtitle_text(count: usize, last_refresh: Option<Instant>) -> String {
     };
 
     let updated_text = match last_refresh {
-        Some(instant) => {
-            let elapsed = instant.elapsed().as_secs();
+        Some(fetched_at) => {
+            // A clock set back makes the stamp look like the future; call it
+            // fresh rather than fail.
+            let elapsed = now
+                .duration_since(fetched_at)
+                .map(|elapsed| elapsed.as_secs())
+                .unwrap_or(0);
             let when = if elapsed < 60 {
                 tr("Just now")
             } else if elapsed < 3600 {
                 tr("{count}m ago").replace("{count}", (elapsed / 60).to_string().as_str())
-            } else {
+            } else if elapsed < 86_400 {
                 tr("{count}h ago").replace("{count}", (elapsed / 3600).to_string().as_str())
+            } else {
+                tr("{count}d ago").replace("{count}", (elapsed / 86_400).to_string().as_str())
             };
             tr("Updated {when}").replace("{when}", when.as_str())
         }
         None => tr("Not updated yet"),
     };
 
-    format!("{count_text} · {updated_text}")
+    if offline {
+        format!("{count_text} · {} · {updated_text}", tr("Offline"))
+    } else {
+        format!("{count_text} · {updated_text}")
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -205,6 +248,7 @@ pub(crate) fn classify_run(run: &WorkflowRun) -> StatusGroup {
 mod tests {
     use super::*;
     use crate::kernel::i18n::{i18n_test_guard, init};
+    use std::time::Duration;
 
     fn run_stub(status: Option<&str>, conclusion: Option<&str>) -> WorkflowRun {
         WorkflowRun {
@@ -273,9 +317,45 @@ mod tests {
         let _guard = i18n_test_guard();
         init(None);
 
-        assert!(subtitle_text(1, None).starts_with(&tr("1 workflow")));
+        assert!(subtitle_text(1, None, false, SystemTime::now()).starts_with(&tr("1 workflow")));
         assert!(
-            subtitle_text(2, None).starts_with(&tr("{count} workflows").replace("{count}", "2"))
+            subtitle_text(2, None, false, SystemTime::now())
+                .starts_with(&tr("{count} workflows").replace("{count}", "2"))
         );
+    }
+
+    #[test]
+    fn subtitle_ages_cover_minutes_hours_and_days() {
+        let _guard = i18n_test_guard();
+        init(None);
+        let now = SystemTime::now();
+        let ago = |secs: u64| subtitle_text(3, Some(now - Duration::from_secs(secs)), false, now);
+        let updated = |when: String| tr("Updated {when}").replace("{when}", &when);
+
+        assert!(ago(10).ends_with(&updated(tr("Just now"))));
+        assert!(ago(5 * 60).ends_with(&updated(tr("{count}m ago").replace("{count}", "5"))));
+        assert!(ago(3 * 3600).ends_with(&updated(tr("{count}h ago").replace("{count}", "3"))));
+        // Cached data can be days old; it must not read "72h ago".
+        assert!(ago(3 * 86_400).ends_with(&updated(tr("{count}d ago").replace("{count}", "3"))));
+    }
+
+    #[test]
+    fn the_subline_says_offline_when_github_cannot_be_reached() {
+        let _guard = i18n_test_guard();
+        init(None);
+        let now = SystemTime::now();
+        let text = subtitle_text(2, Some(now - Duration::from_secs(7200)), true, now);
+        assert!(text.contains(&tr("Offline")), "{text:?}");
+        assert!(text.contains(&tr("{count}h ago").replace("{count}", "2")));
+        assert!(!subtitle_text(2, Some(now), false, now).contains(&tr("Offline")));
+    }
+
+    #[test]
+    fn a_stamp_in_the_future_reads_as_just_now() {
+        let _guard = i18n_test_guard();
+        init(None);
+        let now = SystemTime::now();
+        let text = subtitle_text(1, Some(now + Duration::from_secs(600)), false, now);
+        assert!(text.ends_with(&tr("Updated {when}").replace("{when}", &tr("Just now"))));
     }
 }

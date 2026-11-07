@@ -442,6 +442,9 @@ msgstr "रेट सीमा (कम)"
 msgid "Rate limit"
 msgstr "रेट सीमा"
 
+msgid "Offline"
+msgstr "ऑफ़लाइन"
+
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr "{prefix}: {remaining}/{limit} ({time} में रीसेट)"
 

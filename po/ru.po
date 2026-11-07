@@ -445,6 +445,9 @@ msgstr "Лимит запросов (низкий)"
 msgid "Rate limit"
 msgstr "Лимит запросов"
 
+msgid "Offline"
+msgstr "Не в сети"
+
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr "{prefix}: {remaining}/{limit} (сброс через {time})"
 

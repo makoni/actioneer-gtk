@@ -440,6 +440,9 @@ msgstr "حد المعدل (منخفض)"
 msgid "Rate limit"
 msgstr "حد المعدل"
 
+msgid "Offline"
+msgstr "غير متصل"
+
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr "{prefix}: {remaining}/{limit} (إعادة الضبط خلال {time})"
 

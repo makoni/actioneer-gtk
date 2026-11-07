@@ -56,7 +56,29 @@ fn expand_first_expander(widget: &gtk::Widget) -> bool {
     false
 }
 
+/// Where a workflow list being rendered came from.
+pub(super) enum ListSource {
+    /// Just fetched: the rows count as refreshed, and the latest runs are
+    /// fetched next.
+    Live,
+    /// From the cache, fetched at `fetched_at`, painted before the network
+    /// answers. Nothing here may have side effects: no "refreshed" stamp, no
+    /// run fetches, no expansion, no activity flags.
+    Cached {
+        fetched_at: std::time::SystemTime,
+        latest_completed_runs: Option<std::sync::Arc<Vec<WorkflowRun>>>,
+    },
+}
+
 pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[Workflow]) {
+    render_workflows(context, workflows, &ListSource::Live);
+}
+
+pub(super) fn render_workflows(
+    context: &WorkflowListContext,
+    workflows: &[Workflow],
+    source: &ListSource,
+) {
     let store = context.store.clone();
     let render_start = Instant::now();
 
@@ -103,7 +125,7 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
 
         store.append(&placeholder_box);
         context.header.set_workflow_count(0);
-        context.header.note_refreshed();
+        note_source(context, source);
         context.header.retain_workflows(&visible_workflows);
         return;
     }
@@ -147,8 +169,18 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
     }
 
     context.header.set_workflow_count(workflows.len());
-    context.header.note_refreshed();
+    note_source(context, source);
     context.header.retain_workflows(&visible_workflows);
+    if let ListSource::Cached {
+        latest_completed_runs,
+        ..
+    } = source
+    {
+        if let Some(runs) = latest_completed_runs {
+            apply_cached_run_summary(context, runs);
+        }
+        return;
+    }
     fetch_latest_runs_summary(context);
 
     if context.expand_first_workflow.get() {
@@ -170,6 +202,48 @@ pub(super) fn update_workflows_list(context: &WorkflowListContext, workflows: &[
             duration_ms = elapsed.as_millis(),
             "Rebuilt workflow detail list"
         );
+    }
+}
+
+fn note_source(context: &WorkflowListContext, source: &ListSource) {
+    match source {
+        ListSource::Live => context.header.note_refreshed(),
+        ListSource::Cached { fetched_at, .. } => context.header.note_fetched_at(*fetched_at),
+    }
+}
+
+/// Shows each workflow's last completed run from the cache on its collapsed
+/// row and in the header counters. Unlike the live summary it never marks an
+/// expander active: nothing cached may start polling.
+fn apply_cached_run_summary(context: &WorkflowListContext, runs: &[WorkflowRun]) {
+    let rows = collect_workflow_rows(&context.store);
+    let mut known_workflows = HashSet::new();
+    for row in &rows {
+        super::workflow_refresh::visit_workflow_expanders(row, &mut |_, workflow_id, _| {
+            known_workflows.insert(workflow_id);
+        });
+    }
+
+    for run in runs.iter().filter(|run| !run.is_active()) {
+        if let Some(workflow_id) = run.workflow_id
+            && known_workflows.contains(&workflow_id)
+        {
+            context.header.record_latest_run(workflow_id, Some(run));
+        }
+    }
+
+    for row in &rows {
+        super::workflow_refresh::visit_workflow_expanders(row, &mut |expander, workflow_id, _| {
+            let Some(run_list) = super::workflow_refresh::run_list_for_expander(expander) else {
+                return;
+            };
+            let Some(latest) = context.header.latest_run(workflow_id) else {
+                return;
+            };
+            if let Some(row_header) = run_list.row_header() {
+                update_workflow_row_header(&row_header, Some(&latest), None);
+            }
+        });
     }
 }
 

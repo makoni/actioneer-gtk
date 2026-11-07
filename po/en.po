@@ -444,6 +444,9 @@ msgstr "Rate limit (low)"
 msgid "Rate limit"
 msgstr "Rate limit"
 
+msgid "Offline"
+msgstr "Offline"
+
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr "{prefix}: {remaining}/{limit} (resets in {time})"
 

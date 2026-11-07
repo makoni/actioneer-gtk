@@ -443,6 +443,9 @@ msgstr "ریٹ حد (کم)"
 msgid "Rate limit"
 msgstr "ریٹ حد"
 
+msgid "Offline"
+msgstr "آف لائن"
+
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr "{prefix}: {remaining}/{limit} ({time} میں ری سیٹ)"
 

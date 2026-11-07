@@ -1016,6 +1016,9 @@ msgstr "レート制限（低）"
 msgid "Rate limit"
 msgstr "レート制限"
 
+msgid "Offline"
+msgstr "オフライン"
+
 #: src/ui/utils/rate_limit.rs:32
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr "{prefix}: {remaining}/{limit} ({time} でリセット)"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-29 08:41+0000\n"
+"POT-Creation-Date: 2026-11-07 18:22+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -80,11 +80,11 @@ msgid "Workflows and runs will load in the detail pane."
 msgstr ""
 
 #: src/ui/detail_placeholder.rs:25 src/ui/main_window/selection.rs:226
-#: src/ui/main_window.rs:132 src/ui/main_window.rs:290
+#: src/ui/main_window.rs:134 src/ui/main_window.rs:293
 msgid "Select a repository"
 msgstr ""
 
-#: src/ui/detail_placeholder.rs:27 src/ui/main_window.rs:134
+#: src/ui/detail_placeholder.rs:27 src/ui/main_window.rs:136
 msgid ""
 "Choose a repository from the sidebar to browse its workflows and runs here."
 msgstr ""
@@ -127,44 +127,57 @@ msgstr ""
 msgid "{count} workflows in this state"
 msgstr ""
 
-#: src/ui/detail_view/header_state.rs:88
+#: src/ui/detail_view/header_state.rs:97
 msgid "Auto-refresh is disabled."
 msgstr ""
 
-#: src/ui/detail_view/header_state.rs:91
+#: src/ui/detail_view/header_state.rs:100
 msgid "Data refreshes automatically every {seconds} seconds."
 msgstr ""
 
-#: src/ui/detail_view/header_state.rs:160
-#: src/ui/detail_view/header_state.rs:276
+#: src/ui/detail_view/header_state.rs:171
+#: src/ui/detail_view/header_state.rs:295
 msgid "1 workflow"
 msgstr ""
 
-#: src/ui/detail_view/header_state.rs:162
-#: src/ui/detail_view/header_state.rs:278
+#: src/ui/detail_view/header_state.rs:173
+#: src/ui/detail_view/header_state.rs:298
 msgid "{count} workflows"
 msgstr ""
 
-#: src/ui/detail_view/header_state.rs:169
+#: src/ui/detail_view/header_state.rs:185
+#: src/ui/detail_view/header_state.rs:310
+#: src/ui/detail_view/header_state.rs:323
 #: src/ui/detail_view/helpers/formatting.rs:340
 msgid "Just now"
 msgstr ""
 
-#: src/ui/detail_view/header_state.rs:171
+#: src/ui/detail_view/header_state.rs:187
+#: src/ui/detail_view/header_state.rs:311
 #: src/ui/detail_view/helpers/formatting.rs:343
 msgid "{count}m ago"
 msgstr ""
 
-#: src/ui/detail_view/header_state.rs:173
+#: src/ui/detail_view/header_state.rs:189
+#: src/ui/detail_view/header_state.rs:312
 #: src/ui/detail_view/helpers/formatting.rs:346
+#: src/ui/detail_view/offline_tests.rs:115
 msgid "{count}h ago"
 msgstr ""
 
-#: src/ui/detail_view/header_state.rs:175
+#: src/ui/detail_view/header_state.rs:191
+#: src/ui/detail_view/header_state.rs:314
+#: src/ui/detail_view/helpers/formatting.rs:352
+msgid "{count}d ago"
+msgstr ""
+
+#: src/ui/detail_view/header_state.rs:193
+#: src/ui/detail_view/header_state.rs:308
+#: src/ui/detail_view/header_state.rs:323
 msgid "Updated {when}"
 msgstr ""
 
-#: src/ui/detail_view/header_state.rs:177
+#: src/ui/detail_view/header_state.rs:195
 msgid "Not updated yet"
 msgstr ""
 
@@ -251,10 +264,6 @@ msgstr ""
 
 #: src/ui/detail_view/helpers/formatting.rs:350
 msgid "Yesterday"
-msgstr ""
-
-#: src/ui/detail_view/helpers/formatting.rs:352
-msgid "{count}d ago"
 msgstr ""
 
 #: src/ui/detail_view/helpers/jobs.rs:83
@@ -498,15 +507,15 @@ msgstr ""
 msgid "Required"
 msgstr ""
 
-#: src/ui/detail_view/workflow_list.rs:92
+#: src/ui/detail_view/workflow_list.rs:114
 msgid "No workflows found."
 msgstr ""
 
-#: src/ui/detail_view/workflow_refresh/pane.rs:93
+#: src/ui/detail_view/workflow_refresh/pane.rs:104
 msgid "Failed to load workflows: {error}"
 msgstr ""
 
-#: src/ui/detail_view/workflow_refresh/pane.rs:433
+#: src/ui/detail_view/workflow_refresh/pane.rs:466
 #: src/ui/detail_view/workflow_refresh.rs:487
 msgid "Loading workflows..."
 msgstr ""
@@ -515,12 +524,12 @@ msgstr ""
 msgid "Refresh workflows"
 msgstr ""
 
-#: src/ui/detail_view.rs:474 src/ui/sidebar/rows.rs:193
+#: src/ui/detail_view.rs:479 src/ui/sidebar/rows.rs:193
 #: src/ui/sidebar/rows.rs:246
 msgid "Private"
 msgstr ""
 
-#: src/ui/detail_view.rs:476 src/ui/sidebar/rows.rs:195
+#: src/ui/detail_view.rs:481 src/ui/sidebar/rows.rs:195
 #: src/ui/sidebar/rows.rs:248
 msgid "Public"
 msgstr ""
@@ -721,6 +730,11 @@ msgstr ""
 msgid "Rate limit: –"
 msgstr ""
 
+#: src/ui/main_window/offline.rs:81 src/ui/main_window/offline_tests.rs:144
+#: src/ui/main_window/offline_tests.rs:149
+msgid "Offline"
+msgstr ""
+
 #: src/ui/main_window/selection.rs:255
 msgid "Loading repositories..."
 msgstr ""
@@ -838,7 +852,7 @@ msgstr ""
 msgid "Failed to open donation page in the browser."
 msgstr ""
 
-#: src/ui/main_window/window_actions.rs:341 src/ui/main_window.rs:552
+#: src/ui/main_window/window_actions.rs:341 src/ui/main_window.rs:571
 msgid "Actioneer notification test"
 msgstr ""
 
@@ -902,7 +916,7 @@ msgstr ""
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr ""
 
-#: src/ui/main_window.rs:553
+#: src/ui/main_window.rs:572
 msgid "If you see this, notifications are working."
 msgstr ""
 
