@@ -64,6 +64,7 @@ impl MainWindow {
                 // token to delete, yet its sign-out still hung on the keyring.
                 info!("Signing out");
                 this.enter_signed_out_state();
+                this.forget_cached_data();
 
                 // The deletion still runs, in the background, because a demo
                 // session started while a token is stored must not leave that
@@ -129,6 +130,7 @@ impl MainWindow {
         info!("Authentication failed; clearing token and returning to welcome");
 
         self.enter_signed_out_state();
+        self.forget_cached_data();
 
         crate::runtime::handle().spawn(async move {
             let result = tokio::task::spawn_blocking(delete_token_blocking)

@@ -16,7 +16,7 @@ Important local docs
   - `src/api/` — GitHub client, endpoints and models. See `src/api/client.rs` and `src/api/models.rs` for API surface.
   - `src/auth/` — OAuth Device Flow implementation (`device` module). Changes to auth must ensure TokenStorage interaction remains compatible.
   - `src/storage/token_storage.rs` — secure token handling via system keyring. This file contains a live test of the keyring; edits can affect developer machines.
-  - `src/cache.rs`, `src/preferences.rs`, `src/favorites.rs` — app-level caching and persistence helpers used throughout the UI.
+  - `src/services/cache.rs`, `src/services/preferences.rs`, `src/services/favorites.rs` — the data cache the live gateway writes through to, and the persisted preferences and favorites.
 
 - Concurrency & integration patterns (important)
   - Background HTTP and long-running work: run on Tokio via `crate::runtime_handle().spawn(async move { ... })` (see `load_repositories`, `spawn_repo_status_tasks`).

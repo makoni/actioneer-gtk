@@ -97,3 +97,288 @@ async fn two_demo_gateways_do_not_share_fixtures() {
 
     assert_eq!(before, after);
 }
+
+// ---- the data cache --------------------------------------------------------
+//
+// A live gateway built with a cache writes what it fetches through to it; the
+// demo gateway has no cache to write to or read from.
+
+fn repo_page() -> serde_json::Value {
+    serde_json::json!([{
+        "id": 7,
+        "name": "hello",
+        "full_name": "octo/hello",
+        "owner": { "login": "octo" },
+        "private": true,
+        "permissions": { "admin": true, "push": true, "pull": true },
+        "default_branch": "main"
+    }])
+}
+
+fn run_json(id: i64, workflow_id: i64, status: &str, updated_at: &str) -> serde_json::Value {
+    serde_json::json!({
+        "id": id,
+        "run_number": id,
+        "workflow_id": workflow_id,
+        "name": "CI",
+        "display_title": "CI",
+        "head_branch": "main",
+        "head_commit": null,
+        "status": status,
+        "conclusion": if status == "completed" { serde_json::json!("success") } else { serde_json::Value::Null },
+        "run_started_at": null,
+        "event": "push",
+        "created_at": null,
+        "updated_at": updated_at,
+        "html_url": null
+    })
+}
+
+fn jobs_json(run_id: i64, status: &str) -> serde_json::Value {
+    serde_json::json!({
+        "total_count": 1,
+        "jobs": [{
+            "id": run_id * 10,
+            "run_id": run_id,
+            "status": status,
+            "conclusion": null,
+            "started_at": null,
+            "completed_at": null,
+            "name": "build",
+            "steps": [],
+            "html_url": null
+        }]
+    })
+}
+
+fn cached_gateway_at(
+    base_url: &str,
+    cache: &std::sync::Arc<actioneer::services::cache::DataCache>,
+) -> actioneer::services::gateway::GitHubGateway {
+    actioneer::services::gateway::GitHubGateway::live_cached_with_base_url(
+        base_url,
+        "test-token".into(),
+        cache,
+    )
+    .expect("a cached live gateway builds")
+}
+
+#[tokio::test]
+async fn a_cached_gateway_writes_what_it_fetches_through() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/user/repos"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(repo_page()))
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/repos/octo/hello/actions/workflows"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "total_count": 1,
+            "workflows": [{ "id": 70, "name": "CI", "path": ".github/workflows/ci.yml" }]
+        })))
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/repos/octo/hello/actions/runs"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "workflow_runs": [
+                run_json(2, 70, "in_progress", "2026-11-01T10:00:00Z"),
+                run_json(1, 70, "completed", "2026-11-01T09:00:00Z")
+            ]
+        })))
+        .mount(&server)
+        .await;
+
+    let cache = std::sync::Arc::new(actioneer::services::cache::DataCache::new());
+    let gateway = cached_gateway_at(&server.uri(), &cache);
+    assert!(gateway.cached_repos().is_none(), "nothing fetched yet");
+
+    gateway.list_repos().await.expect("repos");
+    gateway
+        .list_workflows("octo", "hello")
+        .await
+        .expect("workflows");
+    gateway
+        .list_repository_runs("octo", "hello")
+        .await
+        .expect("runs");
+
+    let repos = gateway.cached_repos().expect("cached repos");
+    assert_eq!(repos.value[0].full_name, "octo/hello");
+    assert_eq!(
+        gateway.cached_workflows(7).expect("workflows").value[0].id,
+        70
+    );
+    let latest = gateway.cached_latest_runs(7).expect("latest runs");
+    assert_eq!(
+        latest.value.iter().map(|run| run.id).collect::<Vec<_>>(),
+        vec![2],
+        "one run per workflow, the newest"
+    );
+}
+
+#[tokio::test]
+async fn a_failed_request_stores_nothing() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/user/repos"))
+        .respond_with(ResponseTemplate::new(500))
+        .mount(&server)
+        .await;
+
+    let cache = std::sync::Arc::new(actioneer::services::cache::DataCache::new());
+    let gateway = cached_gateway_at(&server.uri(), &cache);
+    assert!(gateway.list_repos().await.is_err());
+    assert!(gateway.cached_repos().is_none());
+}
+
+#[tokio::test]
+async fn the_demo_gateway_has_no_cache() {
+    let gateway = demo_gateway();
+    gateway.list_repos().await.expect("demo repositories");
+    assert!(gateway.cached_repos().is_none());
+}
+
+#[tokio::test]
+async fn jobs_of_a_settled_run_are_fetched_once() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/repos/octo/hello/actions/workflows/70/runs"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "workflow_runs": [run_json(5, 70, "completed", "2026-11-01T09:00:00Z")]
+        })))
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/repos/octo/hello/actions/runs/5/jobs"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(jobs_json(5, "completed")))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let cache = std::sync::Arc::new(actioneer::services::cache::DataCache::new());
+    let gateway = cached_gateway_at(&server.uri(), &cache);
+    gateway.list_runs("octo", "hello", 70).await.expect("runs");
+
+    for _ in 0..3 {
+        let jobs = gateway
+            .list_jobs_for_run("octo", "hello", 5)
+            .await
+            .expect("jobs");
+        assert_eq!(jobs.len(), 1);
+    }
+    // `expect(1)` is verified when the server drops.
+}
+
+#[tokio::test]
+async fn jobs_are_refetched_once_the_run_is_rerun() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/repos/octo/hello/actions/runs/5/jobs"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(jobs_json(5, "completed")))
+        .expect(2)
+        .mount(&server)
+        .await;
+
+    let first_list = Mock::given(method("GET"))
+        .and(path("/repos/octo/hello/actions/workflows/70/runs"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "workflow_runs": [run_json(5, 70, "completed", "2026-11-01T09:00:00Z")]
+        })))
+        .mount_as_scoped(&server)
+        .await;
+
+    let cache = std::sync::Arc::new(actioneer::services::cache::DataCache::new());
+    let gateway = cached_gateway_at(&server.uri(), &cache);
+    gateway.list_runs("octo", "hello", 70).await.expect("runs");
+    gateway
+        .list_jobs_for_run("octo", "hello", 5)
+        .await
+        .expect("jobs");
+    drop(first_list);
+
+    // Re-run and finished again: same id, new `updated_at`.
+    Mock::given(method("GET"))
+        .and(path("/repos/octo/hello/actions/workflows/70/runs"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "workflow_runs": [run_json(5, 70, "completed", "2026-11-01T11:00:00Z")]
+        })))
+        .mount(&server)
+        .await;
+    gateway.list_runs("octo", "hello", 70).await.expect("runs");
+    gateway
+        .list_jobs_for_run("octo", "hello", 5)
+        .await
+        .expect("jobs");
+}
+
+#[tokio::test]
+async fn plain_list_jobs_always_goes_to_the_network() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/repos/octo/hello/actions/workflows/70/runs"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "workflow_runs": [run_json(5, 70, "completed", "2026-11-01T09:00:00Z")]
+        })))
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/repos/octo/hello/actions/runs/5/jobs"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(jobs_json(5, "completed")))
+        .expect(3)
+        .mount(&server)
+        .await;
+
+    let cache = std::sync::Arc::new(actioneer::services::cache::DataCache::new());
+    let gateway = cached_gateway_at(&server.uri(), &cache);
+    gateway.list_runs("octo", "hello", 70).await.expect("runs");
+    gateway
+        .list_jobs_for_run("octo", "hello", 5)
+        .await
+        .expect("jobs");
+    // The log window follows a run live; it must never be answered from cache.
+    gateway.list_jobs("octo", "hello", 5).await.expect("jobs");
+    gateway.list_jobs("octo", "hello", 5).await.expect("jobs");
+}
+
+#[tokio::test]
+async fn a_rerun_through_the_gateway_drops_the_cached_jobs_at_once() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/repos/octo/hello/actions/workflows/70/runs"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "workflow_runs": [run_json(5, 70, "completed", "2026-11-01T09:00:00Z")]
+        })))
+        .mount(&server)
+        .await;
+    Mock::given(method("POST"))
+        .and(path("/repos/octo/hello/actions/runs/5/rerun"))
+        .respond_with(ResponseTemplate::new(201))
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/repos/octo/hello/actions/runs/5/jobs"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(jobs_json(5, "completed")))
+        .expect(2)
+        .mount(&server)
+        .await;
+
+    let cache = std::sync::Arc::new(actioneer::services::cache::DataCache::new());
+    let gateway = cached_gateway_at(&server.uri(), &cache);
+    gateway.list_runs("octo", "hello", 70).await.expect("runs");
+    gateway
+        .list_jobs_for_run("octo", "hello", 5)
+        .await
+        .expect("jobs");
+
+    // No run list has shown the re-run yet; the jobs must still be refetched.
+    gateway
+        .rerun_workflow("octo", "hello", 5)
+        .await
+        .expect("rerun");
+    gateway
+        .list_jobs_for_run("octo", "hello", 5)
+        .await
+        .expect("jobs");
+}

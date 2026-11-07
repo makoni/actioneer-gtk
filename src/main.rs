@@ -235,6 +235,12 @@ fn main() -> anyhow::Result<()> {
     // here, before the startup preferences are read, so nothing else has to
     // construct a `PreferencesManager` of its own.
     let services = AppServices::build(&app);
+    // Pending cache writes are debounced on the Tokio runtime, which does not
+    // outlive `app.run()`; write them out while the process is still here.
+    // This blocks the main thread on purpose: the window is already gone, and
+    // the snapshot is a few hundred kilobytes at most.
+    let cache_for_shutdown = services.cache.clone();
+    app.connect_shutdown(move |_| cache_for_shutdown.flush_blocking());
     let startup_preferences = services
         .preferences
         .as_ref()
