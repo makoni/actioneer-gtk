@@ -88,6 +88,8 @@ pub struct RepoDetailPane {
     favorites_observer: Rc<RefCell<Option<tokio::task::JoinHandle<()>>>>,
     refresh_active: Arc<AtomicBool>,
     expand_first_workflow_on_load: Rc<Cell<bool>>,
+    /// See `reload`.
+    reload_pending: Rc<Cell<bool>>,
     header: DetailHeaderState,
 }
 
@@ -238,7 +240,10 @@ impl RepoDetailPane {
         subtitle_label.add_css_class("dim-label");
         subtitle_label.add_css_class("caption");
         subtitle_label.set_halign(gtk::Align::Start);
-        subtitle_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
+        // Wraps rather than ellipsizes: offline, "Offline" sits before the age,
+        // and on a phone an ellipsis would cut the age off — the part that
+        // says how old the data is.
+        crate::ui::utils::leading_wrapping(&subtitle_label);
 
         let footer_label = gtk::Label::new(None);
         footer_label.add_css_class("dim-label");
@@ -311,6 +316,7 @@ impl RepoDetailPane {
             favorites_observer: Rc::new(RefCell::new(None)),
             refresh_active: Arc::new(AtomicBool::new(true)),
             expand_first_workflow_on_load: Rc::new(Cell::new(expand_first_workflow_on_load)),
+            reload_pending: Rc::new(Cell::new(false)),
             header,
         };
 
@@ -339,6 +345,21 @@ impl RepoDetailPane {
 
     pub fn repo(&self) -> &Repo {
         &self.repo
+    }
+
+    /// Loads the workflows again, as after the network came back. If a load
+    /// is already out, this one runs once it returns.
+    pub(crate) fn reload(&self) {
+        if *self.loading.lock() {
+            self.reload_pending.set(true);
+            return;
+        }
+        self.load_workflows();
+    }
+
+    /// Marks the shown data as not refreshable while GitHub is unreachable.
+    pub(crate) fn mark_offline(&self) {
+        self.header.set_offline(true);
     }
 
     pub(crate) fn same_instance(&self, other: &Self) -> bool {
@@ -521,6 +542,9 @@ impl RepoDetailPane {
         // The row activation will be handled by the expander widget
     }
 }
+
+#[cfg(test)]
+mod offline_tests;
 
 #[cfg(test)]
 mod tests {

@@ -15,6 +15,8 @@ impl MainWindow {
 
         info!("Entering demo mode with mock data");
         self.stop_background_refresh();
+        self.offline.begin_session();
+        self.offline.stop_watching();
 
         // The slot transition belongs to the services; everything below it in
         // this function is the UI reacting, which is why it stays here.

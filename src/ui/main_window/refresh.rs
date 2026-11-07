@@ -1,7 +1,7 @@
 use super::MainWindow;
 use crate::runtime::channel::MainContextChannelExt;
 use crate::services::api::models::Repo;
-use crate::ui::main_window::rate_limit::update_rate_limit_label;
+use crate::ui::main_window::offline::render_rate_limit;
 use gtk4::glib;
 use tokio::time::{Duration, sleep};
 
@@ -22,8 +22,9 @@ impl MainWindow {
         let (rate_sender, rate_receiver) =
             glib::MainContext::default().channel(glib::Priority::default());
 
+        let client_for_label = self.client.clone();
         rate_receiver.attach(None, move |info| {
-            update_rate_limit_label(&rate_limit_label, info);
+            render_rate_limit(&rate_limit_label, &client_for_label, info);
             glib::ControlFlow::Continue
         });
 

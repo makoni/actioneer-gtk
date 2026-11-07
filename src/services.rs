@@ -9,6 +9,7 @@ pub mod app_services;
 pub mod auth;
 pub mod cache;
 pub mod config;
+pub mod connectivity;
 pub mod crash_report;
 pub mod favorites;
 pub mod gateway;

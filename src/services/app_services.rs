@@ -16,6 +16,7 @@
 
 use crate::domain::models::{RateLimitInfo, Repo};
 use crate::services::cache::{CachePersistenceConfig, DataCache};
+use crate::services::connectivity::Connectivity;
 use crate::services::favorites::FavoritesManager;
 use crate::services::gateway::GitHubGateway;
 use crate::services::notifications::NotificationManager;
@@ -33,6 +34,9 @@ pub struct AppServices {
     pub favorites: Option<Arc<FavoritesManager>>,
     pub preferences: Option<Arc<PreferencesManager>>,
     pub cache: Arc<DataCache>,
+    /// Whether GitHub can be reached; shared by every live gateway, so it
+    /// survives a gateway being replaced.
+    pub connectivity: Arc<Connectivity>,
     pub notifications: Option<NotificationManager>,
 }
 
@@ -76,6 +80,7 @@ impl AppServices {
             favorites,
             preferences,
             cache,
+            connectivity: Connectivity::new(),
             notifications: Some(NotificationManager::for_application(app)),
         }
     }
@@ -97,6 +102,7 @@ impl AppServices {
                 .map(Arc::new),
             preferences: PreferencesManager::with_dir(dir).ok().map(Arc::new),
             cache: Arc::new(DataCache::new()),
+            connectivity: Connectivity::new(),
             // `for_application` would need a running GApplication and a main
             // context; `new` falls back to a no-op dispatcher, which is what a
             // test wants.
@@ -114,6 +120,7 @@ impl AppServices {
     pub fn enter_demo(&self) -> (Vec<Repo>, Option<RateLimitInfo>) {
         let gateway = GitHubGateway::demo();
         let seed = gateway.demo_seed().expect("a demo gateway always seeds");
+        self.connectivity.reset();
         *self.gateway.lock() = Some(gateway);
         seed
     }
@@ -122,7 +129,7 @@ impl AppServices {
     /// under that account. Returns false if it could not be built, leaving the
     /// slot untouched.
     pub fn authenticate(&self, token: String) -> bool {
-        match GitHubGateway::live_cached(token, &self.cache) {
+        match GitHubGateway::live_cached(token, &self.cache, &self.connectivity) {
             Ok(gateway) => {
                 *self.gateway.lock() = Some(gateway);
                 true
@@ -137,5 +144,6 @@ impl AppServices {
     /// Empties the slot.
     pub fn sign_out(&self) {
         *self.gateway.lock() = None;
+        self.connectivity.reset();
     }
 }

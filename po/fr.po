@@ -443,6 +443,9 @@ msgstr "Limite de débit (faible)"
 msgid "Rate limit"
 msgstr "Limite de débit"
 
+msgid "Offline"
+msgstr "Hors ligne"
+
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr "{prefix}: {remaining}/{limit} (réinitialisation dans {time})"
 

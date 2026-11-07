@@ -30,12 +30,15 @@ use crate::services::api::models::{
 };
 use crate::services::api::{GitHubClient, GitHubError};
 use crate::services::cache::{CacheOwner, Cached, DataCache};
+use crate::services::connectivity::{Connectivity, RequestEpoch};
 use anyhow::Result;
 use std::sync::Arc;
+use std::time::Duration;
+use tokio::sync::watch;
 
 #[derive(Clone)]
 enum Inner {
-    Live(GitHubClient, Option<CacheBinding>),
+    Live(GitHubClient, Option<CacheBinding>, Arc<Connectivity>),
     Demo(DemoBackend),
 }
 
@@ -63,18 +66,26 @@ impl GitHubGateway {
     /// The real GitHub REST API.
     pub fn live(token: Option<String>) -> Result<Self> {
         Ok(Self {
-            inner: Inner::Live(GitHubClient::new(token)?, None),
+            inner: Inner::Live(GitHubClient::new(token)?, None, Connectivity::new()),
         })
     }
 
     /// The real GitHub REST API, writing what it fetches through to `cache`
     /// under the account behind `token`.
-    pub fn live_cached(token: String, cache: &Arc<DataCache>) -> Result<Self> {
+    pub fn live_cached(
+        token: String,
+        cache: &Arc<DataCache>,
+        connectivity: &Arc<Connectivity>,
+    ) -> Result<Self> {
         // The client first: binding retires the previous owner, which must not
         // happen for a gateway that is never installed.
         let client = GitHubClient::new(Some(token.clone()))?;
         Ok(Self {
-            inner: Inner::Live(client, Some(CacheBinding::new(cache, &token))),
+            inner: Inner::Live(
+                client,
+                Some(CacheBinding::new(cache, &token)),
+                connectivity.clone(),
+            ),
         })
     }
 
@@ -86,7 +97,11 @@ impl GitHubGateway {
     #[doc(hidden)]
     pub fn live_with_base_url(base: &str, token: Option<String>) -> Result<Self> {
         Ok(Self {
-            inner: Inner::Live(GitHubClient::with_base_url(base, token)?, None),
+            inner: Inner::Live(
+                GitHubClient::with_base_url(base, token)?,
+                None,
+                Connectivity::new(),
+            ),
         })
     }
 
@@ -100,13 +115,65 @@ impl GitHubGateway {
     ) -> Result<Self> {
         let client = GitHubClient::with_base_url(base, Some(token.clone()))?;
         Ok(Self {
-            inner: Inner::Live(client, Some(CacheBinding::new(cache, &token))),
+            inner: Inner::Live(
+                client,
+                Some(CacheBinding::new(cache, &token)),
+                Connectivity::new(),
+            ),
         })
+    }
+
+    fn begin_request(&self) -> Option<RequestEpoch> {
+        match &self.inner {
+            Inner::Live(_, _, connectivity) => Some(connectivity.begin_request()),
+            Inner::Demo(_) => None,
+        }
+    }
+
+    fn observe<T>(&self, result: &Result<T, GitHubError>, started: Option<RequestEpoch>) {
+        if let (Inner::Live(client, _, connectivity), Some(started)) = (&self.inner, started) {
+            connectivity.observe(result, started, client);
+        }
+    }
+
+    /// True while GitHub cannot be reached. Never true for demo mode.
+    pub fn is_offline(&self) -> bool {
+        match &self.inner {
+            Inner::Live(_, _, connectivity) => connectivity.is_offline(),
+            Inner::Demo(_) => false,
+        }
+    }
+
+    /// Follows [`is_offline`](Self::is_offline) as it changes. `None` for
+    /// demo mode, which is never offline.
+    pub fn connectivity(&self) -> Option<watch::Receiver<bool>> {
+        match &self.inner {
+            Inner::Live(_, _, connectivity) => Some(connectivity.subscribe()),
+            Inner::Demo(_) => None,
+        }
+    }
+
+    /// Marks the gateway offline and starts the probe, with `first_retry` as
+    /// its first pause — for tests of the recovery path, which cannot make a
+    /// live server unreachable on demand.
+    #[doc(hidden)]
+    pub fn simulate_offline_for_test(&self, first_retry: Duration) {
+        if let Inner::Live(client, _, connectivity) = &self.inner {
+            connectivity.simulate_offline(client, first_retry);
+        }
+    }
+
+    /// Resolves once the cache has finished loading from disk; at once for
+    /// demo mode or an uncached gateway.
+    pub async fn cache_ready(&self) {
+        if let Some(binding) = self.cache() {
+            binding.cache.ready().await;
+        }
     }
 
     fn cache(&self) -> Option<&CacheBinding> {
         match &self.inner {
-            Inner::Live(_, binding) => binding.as_ref(),
+            Inner::Live(_, binding, _) => binding.as_ref(),
             Inner::Demo(_) => None,
         }
     }
@@ -124,11 +191,11 @@ impl GitHubGateway {
         binding.cache.workflows(&binding.owner, repo_id)
     }
 
-    /// The most recent run of each of a repository's workflows, as last
-    /// fetched. A hint only: a run shown here as in progress may long be done.
-    pub fn cached_latest_runs(&self, repo_id: i64) -> Option<Cached<Vec<WorkflowRun>>> {
+    /// The most recent completed run of each of a repository's workflows, as
+    /// last fetched.
+    pub fn cached_latest_completed_runs(&self, repo_id: i64) -> Option<Cached<Vec<WorkflowRun>>> {
         let binding = self.cache()?;
-        binding.cache.latest_runs(&binding.owner, repo_id)
+        binding.cache.latest_completed_runs(&binding.owner, repo_id)
     }
 
     /// The demo fixtures. Infallible — there is nothing to configure.
@@ -156,36 +223,43 @@ impl GitHubGateway {
 
     pub fn rate_limit_info(&self) -> Option<RateLimitInfo> {
         match &self.inner {
-            Inner::Live(client, _) => client.rate_limit_info(),
+            Inner::Live(client, _, _) => client.rate_limit_info(),
             Inner::Demo(backend) => backend.rate_limit_info(),
         }
     }
 
     pub async fn list_repos(&self) -> Result<Vec<Repo>, GitHubError> {
-        match &self.inner {
-            Inner::Live(client, binding) => {
-                let repos = client.list_repos().await?;
+        let started = self.begin_request();
+        let result = match &self.inner {
+            Inner::Live(client, binding, _) => client.list_repos().await.inspect(|repos| {
                 if let Some(binding) = binding {
-                    binding.cache.store_repos(&binding.owner, &repos);
+                    binding.cache.store_repos(&binding.owner, repos);
                 }
-                Ok(repos)
-            }
+            }),
             Inner::Demo(backend) => backend.list_repos().await,
-        }
+        };
+        self.observe(&result, started);
+        result
     }
 
     pub async fn is_actions_enabled(&self, owner: &str, repo: &str) -> Result<bool, GitHubError> {
-        match &self.inner {
-            Inner::Live(client, _) => client.is_actions_enabled(owner, repo).await,
+        let started = self.begin_request();
+        let result = match &self.inner {
+            Inner::Live(client, _, _) => client.is_actions_enabled(owner, repo).await,
             Inner::Demo(backend) => backend.is_actions_enabled(owner, repo).await,
-        }
+        };
+        self.observe(&result, started);
+        result
     }
 
     pub async fn list_branches(&self, owner: &str, repo: &str) -> Result<Vec<Branch>, GitHubError> {
-        match &self.inner {
-            Inner::Live(client, _) => client.list_branches(owner, repo).await,
+        let started = self.begin_request();
+        let result = match &self.inner {
+            Inner::Live(client, _, _) => client.list_branches(owner, repo).await,
             Inner::Demo(backend) => backend.list_branches(owner, repo).await,
-        }
+        };
+        self.observe(&result, started);
+        result
     }
 
     pub async fn list_workflows(
@@ -193,18 +267,23 @@ impl GitHubGateway {
         owner: &str,
         repo: &str,
     ) -> Result<Vec<Workflow>, GitHubError> {
-        match &self.inner {
-            Inner::Live(client, binding) => {
-                let workflows = client.list_workflows(owner, repo).await?;
-                if let Some(binding) = binding {
-                    binding
-                        .cache
-                        .store_workflows(&binding.owner, owner, repo, &workflows);
-                }
-                Ok(workflows)
-            }
-            Inner::Demo(backend) => backend.list_workflows(owner, repo).await,
-        }
+        let started = self.begin_request();
+        let result =
+            match &self.inner {
+                Inner::Live(client, binding, _) => client
+                    .list_workflows(owner, repo)
+                    .await
+                    .inspect(|workflows| {
+                        if let Some(binding) = binding {
+                            binding
+                                .cache
+                                .store_workflows(&binding.owner, owner, repo, workflows);
+                        }
+                    }),
+                Inner::Demo(backend) => backend.list_workflows(owner, repo).await,
+            };
+        self.observe(&result, started);
+        result
     }
 
     pub async fn dispatch_workflow(
@@ -215,8 +294,9 @@ impl GitHubGateway {
         ref_name: &str,
         inputs: Option<serde_json::Value>,
     ) -> Result<Option<WorkflowRun>, GitHubError> {
-        match &self.inner {
-            Inner::Live(client, _) => {
+        let started = self.begin_request();
+        let result = match &self.inner {
+            Inner::Live(client, _, _) => {
                 client
                     .dispatch_workflow(owner, repo, workflow_id, ref_name, inputs)
                     .await
@@ -226,7 +306,9 @@ impl GitHubGateway {
                     .dispatch_workflow(owner, repo, workflow_id, ref_name, inputs)
                     .await
             }
-        }
+        };
+        self.observe(&result, started);
+        result
     }
 
     pub async fn get_workflow_dispatch_inputs(
@@ -236,8 +318,9 @@ impl GitHubGateway {
         workflow_path: &str,
         reference: Option<&str>,
     ) -> Result<Vec<WorkflowDispatchInput>, GitHubError> {
-        match &self.inner {
-            Inner::Live(client, _) => {
+        let started = self.begin_request();
+        let result = match &self.inner {
+            Inner::Live(client, _, _) => {
                 client
                     .get_workflow_dispatch_inputs(owner, repo, workflow_path, reference)
                     .await
@@ -247,7 +330,9 @@ impl GitHubGateway {
                     .get_workflow_dispatch_inputs(owner, repo, workflow_path, reference)
                     .await
             }
-        }
+        };
+        self.observe(&result, started);
+        result
     }
 
     pub async fn list_runs(
@@ -256,16 +341,20 @@ impl GitHubGateway {
         repo: &str,
         workflow_id: i64,
     ) -> Result<Vec<WorkflowRun>, GitHubError> {
-        match &self.inner {
-            Inner::Live(client, binding) => {
-                let runs = client.list_runs(owner, repo, workflow_id).await?;
-                if let Some(binding) = binding {
-                    binding.cache.note_runs(&binding.owner, &runs);
-                }
-                Ok(runs)
-            }
+        let started = self.begin_request();
+        let result = match &self.inner {
+            Inner::Live(client, binding, _) => client
+                .list_runs(owner, repo, workflow_id)
+                .await
+                .inspect(|runs| {
+                    if let Some(binding) = binding {
+                        binding.cache.note_runs(&binding.owner, runs);
+                    }
+                }),
             Inner::Demo(backend) => backend.list_runs(owner, repo, workflow_id).await,
-        }
+        };
+        self.observe(&result, started);
+        result
     }
 
     pub async fn list_repository_runs(
@@ -273,18 +362,22 @@ impl GitHubGateway {
         owner: &str,
         repo: &str,
     ) -> Result<Vec<WorkflowRun>, GitHubError> {
-        match &self.inner {
-            Inner::Live(client, binding) => {
-                let runs = client.list_repository_runs(owner, repo).await?;
-                if let Some(binding) = binding {
-                    binding
-                        .cache
-                        .store_repository_runs(&binding.owner, owner, repo, &runs);
-                }
-                Ok(runs)
-            }
+        let started = self.begin_request();
+        let result = match &self.inner {
+            Inner::Live(client, binding, _) => client
+                .list_repository_runs(owner, repo)
+                .await
+                .inspect(|runs| {
+                    if let Some(binding) = binding {
+                        binding
+                            .cache
+                            .store_repository_runs(&binding.owner, owner, repo, runs);
+                    }
+                }),
             Inner::Demo(backend) => backend.list_repository_runs(owner, repo).await,
-        }
+        };
+        self.observe(&result, started);
+        result
     }
 
     pub async fn rerun_workflow(
@@ -293,8 +386,9 @@ impl GitHubGateway {
         repo: &str,
         run_id: i64,
     ) -> Result<(), GitHubError> {
-        match &self.inner {
-            Inner::Live(client, binding) => {
+        let started = self.begin_request();
+        let result = match &self.inner {
+            Inner::Live(client, binding, _) => {
                 let result = client.rerun_workflow(owner, repo, run_id).await;
                 // Forgotten even when the call fails: a timeout can hide a
                 // re-run that went through, and the cost is only a refetch.
@@ -304,7 +398,9 @@ impl GitHubGateway {
                 result
             }
             Inner::Demo(backend) => backend.rerun_workflow(owner, repo, run_id).await,
-        }
+        };
+        self.observe(&result, started);
+        result
     }
 
     pub async fn rerun_failed_jobs(
@@ -313,8 +409,9 @@ impl GitHubGateway {
         repo: &str,
         run_id: i64,
     ) -> Result<(), GitHubError> {
-        match &self.inner {
-            Inner::Live(client, binding) => {
+        let started = self.begin_request();
+        let result = match &self.inner {
+            Inner::Live(client, binding, _) => {
                 let result = client.rerun_failed_jobs(owner, repo, run_id).await;
                 if let Some(binding) = binding {
                     binding.cache.forget_run(&binding.owner, run_id);
@@ -322,7 +419,9 @@ impl GitHubGateway {
                 result
             }
             Inner::Demo(backend) => backend.rerun_failed_jobs(owner, repo, run_id).await,
-        }
+        };
+        self.observe(&result, started);
+        result
     }
 
     pub async fn cancel_run(
@@ -331,8 +430,9 @@ impl GitHubGateway {
         repo: &str,
         run_id: i64,
     ) -> Result<(), GitHubError> {
-        match &self.inner {
-            Inner::Live(client, binding) => {
+        let started = self.begin_request();
+        let result = match &self.inner {
+            Inner::Live(client, binding, _) => {
                 let result = client.cancel_run(owner, repo, run_id).await;
                 if let Some(binding) = binding {
                     binding.cache.forget_run(&binding.owner, run_id);
@@ -340,7 +440,9 @@ impl GitHubGateway {
                 result
             }
             Inner::Demo(backend) => backend.cancel_run(owner, repo, run_id).await,
-        }
+        };
+        self.observe(&result, started);
+        result
     }
 
     pub async fn list_jobs(
@@ -349,10 +451,13 @@ impl GitHubGateway {
         repo: &str,
         run_id: i64,
     ) -> Result<Vec<Job>, GitHubError> {
-        match &self.inner {
-            Inner::Live(client, _) => client.list_jobs(owner, repo, run_id).await,
+        let started = self.begin_request();
+        let result = match &self.inner {
+            Inner::Live(client, _, _) => client.list_jobs(owner, repo, run_id).await,
             Inner::Demo(backend) => backend.list_jobs(owner, repo, run_id).await,
-        }
+        };
+        self.observe(&result, started);
+        result
     }
 
     /// [`list_jobs`](Self::list_jobs) for a run row in the detail pane, which
@@ -369,18 +474,22 @@ impl GitHubGateway {
         repo: &str,
         run_id: i64,
     ) -> Result<Vec<Job>, GitHubError> {
-        match &self.inner {
-            Inner::Live(client, Some(binding)) => {
+        let started = self.begin_request();
+        let result = match &self.inner {
+            Inner::Live(client, Some(binding), _) => {
                 if let Some(jobs) = binding.cache.completed_jobs(&binding.owner, run_id) {
                     return Ok(jobs.as_ref().clone());
                 }
                 let fetch = binding.cache.begin_jobs_fetch(&binding.owner, run_id);
-                let jobs = client.list_jobs(owner, repo, run_id).await?;
-                binding.cache.store_jobs(&binding.owner, fetch, &jobs);
-                Ok(jobs)
+                client
+                    .list_jobs(owner, repo, run_id)
+                    .await
+                    .inspect(|jobs| binding.cache.store_jobs(&binding.owner, fetch, jobs))
             }
             _ => self.list_jobs(owner, repo, run_id).await,
-        }
+        };
+        self.observe(&result, started);
+        result
     }
 
     pub async fn get_job_logs(
@@ -389,9 +498,12 @@ impl GitHubGateway {
         repo: &str,
         job_id: i64,
     ) -> Result<String, GitHubError> {
-        match &self.inner {
-            Inner::Live(client, _) => client.get_job_logs(owner, repo, job_id).await,
+        let started = self.begin_request();
+        let result = match &self.inner {
+            Inner::Live(client, _, _) => client.get_job_logs(owner, repo, job_id).await,
             Inner::Demo(backend) => backend.get_job_logs(owner, repo, job_id).await,
-        }
+        };
+        self.observe(&result, started);
+        result
     }
 }

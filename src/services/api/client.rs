@@ -277,6 +277,18 @@ impl GitHubClient {
         )
         .await
     }
+
+    /// Asks GitHub for the rate limit, only to learn whether it can be reached:
+    /// any HTTP answer counts, whatever its status. `/rate_limit` does not
+    /// count against the rate limit itself.
+    pub async fn probe(&self) -> Result<(), GitHubError> {
+        let request = self.client.get(format!("{}/rate_limit", self.base_url));
+        let response = super::http::add_auth_header(request, &self.token)
+            .send()
+            .await?;
+        self.response_handler.update_rate_limit(response.headers());
+        Ok(())
+    }
 }
 
 fn github_api_version_from_env() -> String {

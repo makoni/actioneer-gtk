@@ -28,6 +28,7 @@ mod auth;
 mod demo_mode;
 mod header_controls;
 mod loaders;
+mod offline;
 mod refresh;
 mod repo_list;
 mod selection;
@@ -85,6 +86,7 @@ pub struct MainWindow {
     handling_selection: Arc<Mutex<bool>>,
     notification_manager: Option<NotificationManager>,
     demo_mode: Arc<Mutex<bool>>,
+    offline: offline::OfflineState,
     /// Kept so the window can rebuild itself on a language change without
     /// constructing a second set of real services.
     services: AppServices,
@@ -198,6 +200,7 @@ impl MainWindow {
             handling_selection: handling_selection.clone(),
             notification_manager: notification_manager.clone(),
             demo_mode: demo_mode.clone(),
+            offline: offline::OfflineState::default(),
             services: services.clone(),
         };
 
@@ -410,9 +413,12 @@ impl MainWindow {
                 *info_guard = None;
             }
 
+            self.offline.begin_session();
+            self.watch_connectivity();
             self.update_rate_limit_display(None);
             self.show_authenticated_ui();
             self.load_repositories();
+            self.paint_cached_repositories();
             true
         } else {
             false
@@ -442,6 +448,8 @@ impl MainWindow {
     fn enter_signed_out_state(&self) {
         info!("Switching to signed-out state");
         self.stop_background_refresh();
+        self.offline.begin_session();
+        self.offline.stop_watching();
 
         if self.is_demo_mode() {
             // Leaving demo mode is just dropping the demo gateway; the slot is
@@ -596,6 +604,7 @@ impl MainWindow {
         let was_demo_mode = self.is_demo_mode();
 
         self.stop_background_refresh();
+        self.offline.stop_watching();
 
         let replacement = MainWindow::new(&app, self.services.clone(), was_demo_mode);
         {
@@ -631,5 +640,7 @@ mod rate_limit;
 
 #[cfg(test)]
 mod adaptive_tests;
+#[cfg(test)]
+mod offline_tests;
 #[cfg(test)]
 mod tests;

@@ -48,7 +48,7 @@ const CACHE_FILE_NAME: &str = "data-cache.json";
 
 /// Bumped whenever the on-disk layout changes; a file with another version is
 /// ignored rather than migrated — it is only a cache.
-const SNAPSHOT_VERSION: u32 = 1;
+const SNAPSHOT_VERSION: u32 = 2;
 
 /// How long an entry stays usable for an offline paint. Long enough to cover a
 /// weekend away from the network; the age is always shown next to the data.
@@ -144,8 +144,10 @@ impl<T: Serialize> Stamped<T> {
 struct RepoEntry {
     #[serde(default)]
     workflows: Option<Stamped<Vec<Workflow>>>,
-    /// The most recent run of each workflow, taken from the repository-wide
-    /// run list.
+    /// The most recent *completed* run of each workflow, taken from the
+    /// repository-wide run list. Completed only: a cached run shown as in
+    /// progress would look live — elapsed time ticking, a Cancel button —
+    /// long after it finished.
     #[serde(default)]
     latest_runs: Option<Stamped<Vec<WorkflowRun>>>,
     /// Unix seconds of the last store, for eviction.
@@ -456,6 +458,25 @@ impl DataCache {
         self
     }
 
+    /// Moves every stored fetch time `secs` into the past, so a test can tell
+    /// a cached paint ("3h ago") from a live one ("Just now").
+    #[cfg(test)]
+    pub(crate) fn backdate_for_test(&self, secs: u64) {
+        let mut state = self.state.lock();
+        let data = &mut state.data;
+        if let Some(repos) = data.repos.as_mut() {
+            repos.fetched_at = repos.fetched_at.saturating_sub(secs);
+        }
+        for entry in data.by_repo.values_mut() {
+            if let Some(workflows) = entry.workflows.as_mut() {
+                workflows.fetched_at = workflows.fetched_at.saturating_sub(secs);
+            }
+            if let Some(runs) = entry.latest_runs.as_mut() {
+                runs.fetched_at = runs.fetched_at.saturating_sub(secs);
+            }
+        }
+    }
+
     pub fn has_persistence(&self) -> bool {
         self.persistence.is_some()
     }
@@ -608,8 +629,8 @@ impl DataCache {
         self.note_change(&mut state, changed);
     }
 
-    /// Stores the latest run of each workflow from a repository-wide run list,
-    /// and records every run's live version.
+    /// Stores the latest completed run of each workflow from a
+    /// repository-wide run list, and records every run's live version.
     pub fn store_repository_runs(
         self: &Arc<Self>,
         owner: &CacheOwner,
@@ -629,7 +650,11 @@ impl DataCache {
         let now = unix_now();
         let entry = state.data.by_repo.entry(repo_id).or_default();
         entry.touched_at = now;
-        let changed = replace_stamped(&mut entry.latest_runs, latest_run_per_workflow(runs), now);
+        let changed = replace_stamped(
+            &mut entry.latest_runs,
+            latest_completed_run_per_workflow(runs),
+            now,
+        );
         state.data.evict_beyond(MAX_DETAILED_REPOS);
         self.note_change(&mut state, changed);
     }
@@ -727,7 +752,7 @@ impl DataCache {
             .map(Stamped::to_cached)
     }
 
-    pub fn latest_runs(
+    pub fn latest_completed_runs(
         &self,
         owner: &CacheOwner,
         repo_id: i64,
@@ -874,10 +899,12 @@ fn replace_stamped<T: Serialize>(slot: &mut Option<Stamped<T>>, value: T, now: u
     changed
 }
 
-/// The first run seen for each workflow. GitHub lists runs newest first.
-fn latest_run_per_workflow(runs: &[WorkflowRun]) -> Vec<WorkflowRun> {
+/// The first completed run seen for each workflow. GitHub lists runs newest
+/// first.
+fn latest_completed_run_per_workflow(runs: &[WorkflowRun]) -> Vec<WorkflowRun> {
     let mut seen = std::collections::HashSet::new();
     runs.iter()
+        .filter(|run| RunVersion::of(run).completed)
         .filter(|run| run.workflow_id.is_some_and(|id| seen.insert(id)))
         .cloned()
         .collect()

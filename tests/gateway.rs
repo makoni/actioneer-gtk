@@ -210,11 +210,13 @@ async fn a_cached_gateway_writes_what_it_fetches_through() {
         gateway.cached_workflows(7).expect("workflows").value[0].id,
         70
     );
-    let latest = gateway.cached_latest_runs(7).expect("latest runs");
+    let latest = gateway
+        .cached_latest_completed_runs(7)
+        .expect("latest runs");
     assert_eq!(
         latest.value.iter().map(|run| run.id).collect::<Vec<_>>(),
-        vec![2],
-        "one run per workflow, the newest"
+        vec![1],
+        "one run per workflow, the newest completed one"
     );
 }
 
@@ -381,4 +383,114 @@ async fn a_rerun_through_the_gateway_drops_the_cached_jobs_at_once() {
         .list_jobs_for_run("octo", "hello", 5)
         .await
         .expect("jobs");
+}
+
+// ---- connectivity ----------------------------------------------------------
+
+/// A port nothing listens on: connecting fails at once, which is what an
+/// unreachable GitHub looks like to the client.
+const UNREACHABLE: &str = "http://127.0.0.1:1";
+
+#[tokio::test]
+async fn a_transport_failure_marks_the_gateway_offline() {
+    let gateway = live_gateway_at(UNREACHABLE);
+    let mut connectivity = gateway.connectivity().expect("a live gateway reports");
+    assert!(!gateway.is_offline());
+
+    let error = gateway.list_repos().await.expect_err("nothing listens");
+    assert!(
+        error.is_offline(),
+        "a refused connection is offline: {error}"
+    );
+    assert!(gateway.is_offline());
+    assert!(
+        connectivity.has_changed().expect("sender alive"),
+        "subscribers are told"
+    );
+    assert!(*connectivity.borrow_and_update());
+}
+
+#[tokio::test]
+async fn an_http_error_is_not_offline() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/user/repos"))
+        .respond_with(ResponseTemplate::new(500))
+        .mount(&server)
+        .await;
+
+    let gateway = live_gateway_at(&server.uri());
+    // A long first pause, so it is the request below that clears the state.
+    gateway.simulate_offline_for_test(std::time::Duration::from_secs(3600));
+    let error = gateway.list_repos().await.expect_err("server error");
+    assert!(!error.is_offline());
+    assert!(!gateway.is_offline(), "GitHub answered, so it is reachable");
+}
+
+#[tokio::test]
+async fn the_probe_notices_github_coming_back() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/rate_limit"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({})))
+        .mount(&server)
+        .await;
+
+    let gateway = live_gateway_at(&server.uri());
+    let mut connectivity = gateway.connectivity().expect("a live gateway reports");
+    gateway.simulate_offline_for_test(std::time::Duration::from_millis(20));
+    assert!(gateway.is_offline());
+
+    tokio::time::timeout(
+        std::time::Duration::from_secs(5),
+        connectivity.wait_for(|offline| !*offline),
+    )
+    .await
+    .expect("the probe reaches the server")
+    .expect("sender alive");
+    assert!(!gateway.is_offline());
+}
+
+#[tokio::test]
+async fn any_successful_request_clears_offline() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/user/repos"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([])))
+        .mount(&server)
+        .await;
+
+    let gateway = live_gateway_at(&server.uri());
+    // A long first pause, so it is the request below that clears the state.
+    gateway.simulate_offline_for_test(std::time::Duration::from_secs(3600));
+    gateway.list_repos().await.expect("repos");
+    assert!(!gateway.is_offline());
+}
+
+#[tokio::test]
+async fn the_demo_gateway_is_never_offline() {
+    let gateway = demo_gateway();
+    assert!(!gateway.is_offline());
+    assert!(gateway.connectivity().is_none());
+}
+
+#[tokio::test]
+async fn a_connection_dropped_before_the_answer_is_offline() {
+    // Accepts and hangs up at once: what a pooled connection does when the
+    // network goes away under it. Not a connect error, and no I/O error in the
+    // chain either — hyper reports the closed connection itself.
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+        .await
+        .expect("bind");
+    let address = listener.local_addr().expect("address");
+    tokio::spawn(async move {
+        while let Ok((socket, _)) = listener.accept().await {
+            drop(socket);
+        }
+    });
+
+    let gateway = live_gateway_at(&format!("http://{address}"));
+    let error = gateway.list_repos().await.expect_err("the server hangs up");
+    assert!(error.is_offline(), "{error}");
+    assert!(gateway.is_offline());
 }

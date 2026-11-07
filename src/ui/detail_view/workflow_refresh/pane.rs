@@ -5,6 +5,7 @@
 //! skip, when to reconfigure the timer — which is pure and separately tested.
 
 use super::*;
+use crate::ui::detail_view::workflow_list::{ListSource, render_workflows};
 
 impl RepoDetailPane {
     pub(in crate::ui::detail_view) fn load_workflows(&self) {
@@ -16,6 +17,8 @@ impl RepoDetailPane {
             }
             *loading_guard = true;
         }
+        // Whatever reload was waiting, this load is it.
+        self.reload_pending.set(false);
 
         let context = self.workflow_list_context();
         let run_filters = context.run_filters.clone();
@@ -36,6 +39,17 @@ impl RepoDetailPane {
         let preferences_manager = context.preferences_manager.clone();
         let repo_model = context.repo_model.clone();
 
+        // The pane's first load paints from the cache, if it has anything, so
+        // the repository shows its last known state at once — and stays
+        // readable if the network never answers.
+        let reload_pending = self.reload_pending.clone();
+        // Released with this load's reply, so it does not outlive it.
+        let pane_for_pending = std::cell::RefCell::new(Some(self.clone()));
+        let had_rows = !workflows.lock().is_empty();
+        let painted_from_cache = !had_rows && self.paint_cached_workflows();
+        let rows_on_screen = had_rows || painted_from_cache;
+        let header_for_ui = self.header.clone();
+
         self.show_loading(true);
         let callback_refs = self.clone_for_callbacks();
 
@@ -51,6 +65,17 @@ impl RepoDetailPane {
         receiver.attach(None, move |message| {
             callback_refs.show_loading(false);
             *loading_guard.lock() = false;
+            if reload_pending.replace(false)
+                && let Some(pane) = pane_for_pending.take()
+                && pane
+                    .refresh_active
+                    .load(std::sync::atomic::Ordering::Relaxed)
+            {
+                // A reload asked for while this load was out — GitHub came
+                // back meanwhile; that one's answer is the one to show.
+                pane.load_workflows();
+                return glib::ControlFlow::Break;
+            }
 
             let result = workflow_load_result(message, "Workflow load");
 
@@ -87,6 +112,14 @@ impl RepoDetailPane {
                         &ui_context,
                         wf_list.as_ref(),
                     );
+                }
+                Err(e) if !should_toast_load_failure(&e, rows_on_screen) => {
+                    // The rows already on screen stay, marked offline; a toast
+                    // per opened repository, or per network flap, adds nothing.
+                    warn!("Failed to load workflows, keeping the list shown: {}", e);
+                    // The shared state, not this error: a load that started
+                    // before GitHub came back may only now time out.
+                    header_for_ui.set_offline(client.lock().is_offline());
                 }
                 Err(e) => {
                     error!("Failed to load workflows: {}", e);
@@ -405,6 +438,29 @@ impl RepoDetailPane {
         *workflows_with_active.lock() = observed_active;
     }
 
+    /// Renders the cached workflow list, if there is one. Returns whether it
+    /// did.
+    fn paint_cached_workflows(&self) -> bool {
+        let gateway = self.client.lock().clone();
+        let Some(cached) = gateway.cached_workflows(self.repo.id) else {
+            return false;
+        };
+        let latest_completed_runs = gateway
+            .cached_latest_completed_runs(self.repo.id)
+            .map(|runs| runs.value);
+        *self.workflows.lock() = cached.value.clone();
+        render_workflows(
+            &self.workflow_list_context(),
+            cached.value.as_ref(),
+            &ListSource::Cached {
+                fetched_at: cached.fetched_at,
+                latest_completed_runs,
+            },
+        );
+        self.header.set_offline(gateway.is_offline());
+        true
+    }
+
     pub(super) fn clone_for_callbacks(&self) -> CallbackRefs {
         CallbackRefs {
             refresh_button: self.refresh_button.clone(),
@@ -449,4 +505,13 @@ impl RepoDetailPane {
             }
         });
     }
+}
+
+/// Whether a failed workflow load deserves a toast. Not when GitHub is simply
+/// unreachable and a list — cached or from before — is already on screen.
+pub(in crate::ui::detail_view) fn should_toast_load_failure(
+    error: &GitHubError,
+    rows_on_screen: bool,
+) -> bool {
+    !(rows_on_screen && error.is_offline())
 }

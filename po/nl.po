@@ -477,6 +477,9 @@ msgstr "Rate-limiet (laag)"
 msgid "Rate limit"
 msgstr "Rate-limiet"
 
+msgid "Offline"
+msgstr "Offline"
+
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr "{prefix}: {remaining}/{limit} (herstelt over {time})"
 

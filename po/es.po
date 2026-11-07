@@ -443,6 +443,9 @@ msgstr "Límite de tasa (bajo)"
 msgid "Rate limit"
 msgstr "Límite de tasa"
 
+msgid "Offline"
+msgstr "Sin conexión"
+
 msgid "{prefix}: {remaining}/{limit} (resets in {time})"
 msgstr "{prefix}: {remaining}/{limit} (se restablece en {time})"
 

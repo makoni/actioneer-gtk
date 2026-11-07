@@ -355,6 +355,11 @@ fn refresh_workflows_silent_with_state(
                 }
             }
             Err(e) => {
+                // The shared state, not this error, which may be from before
+                // GitHub came back.
+                context
+                    .header
+                    .set_offline(context.client.lock().is_offline());
                 if !matches!(e, GitHubError::ApiError(ref msg) if msg.contains("Not modified")) {
                     warn!("Silent workflow refresh failed: {}", e);
                 }
@@ -374,6 +379,8 @@ fn refresh_workflows_silent_with_state(
     });
 }
 mod pane;
+#[cfg(test)]
+pub(in crate::ui::detail_view) use pane::should_toast_load_failure;
 
 #[cfg(test)]
 mod tests {

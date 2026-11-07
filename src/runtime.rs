@@ -23,6 +23,14 @@ pub fn handle() -> &'static Handle {
     RUNTIME_HANDLE.get().expect("Runtime not initialized")
 }
 
+/// The handle to spawn on from anywhere: the current runtime's, else the
+/// global one, else none (a unit test that installed neither).
+pub fn try_handle() -> Option<Handle> {
+    Handle::try_current()
+        .ok()
+        .or_else(|| RUNTIME_HANDLE.get().cloned())
+}
+
 pub fn available_parallelism_count() -> usize {
     std::thread::available_parallelism()
         .map(usize::from)
