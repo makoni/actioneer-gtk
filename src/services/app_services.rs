@@ -118,10 +118,11 @@ impl AppServices {
         seed
     }
 
-    /// Installs a live gateway for `token`. Returns false if it could not be
-    /// built, leaving the slot untouched.
+    /// Installs a live gateway for `token`, writing through to the data cache
+    /// under that account. Returns false if it could not be built, leaving the
+    /// slot untouched.
     pub fn authenticate(&self, token: String) -> bool {
-        match GitHubGateway::live(Some(token)) {
+        match GitHubGateway::live_cached(token, &self.cache) {
             Ok(gateway) => {
                 *self.gateway.lock() = Some(gateway);
                 true

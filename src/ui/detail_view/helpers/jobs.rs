@@ -544,7 +544,7 @@ pub(super) fn load_run_jobs(params: LoadJobsParams) {
     crate::runtime::handle().spawn(async move {
         let client_guard = client_for_api.lock().clone();
         let result = client_guard
-            .list_jobs(&owner_for_api, &repo_for_api, run_id)
+            .list_jobs_for_run(&owner_for_api, &repo_for_api, run_id)
             .await
             .map(Arc::new);
         let _ = sender.send(result);

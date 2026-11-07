@@ -326,6 +326,14 @@ when adding endpoints, and keep rate-limit updates intact. For large async fan-
 out, use `for_each_concurrent` with a concurrency cap (see
 `spawn_repo_status_tasks`) rather than spawning per item.
 
+`DataCache` (`src/services/cache.rs`) is written through by the live gateway,
+bound to the signed-in token. It never stands in for a network call for data
+that can change — repositories, workflows and runs are kept only to paint
+before the network answers. The one exception is `list_jobs_for_run`: the jobs
+of a run that a live run list shows completed, unchanged since they were
+fetched. An earlier cache that served runs by TTL showed long-stale statuses;
+do not reintroduce that.
+
 ## Contact
 
 If something here is unclear or wrong, open an issue or ping the repo owner.

@@ -426,6 +426,19 @@ impl MainWindow {
         });
     }
 
+    /// Deletes the data cache file, for an explicit sign-out or a token GitHub
+    /// rejected. Not part of `enter_signed_out_state`: that also runs when the
+    /// keyring merely failed to answer, and the next start may still be
+    /// offline.
+    fn forget_cached_data(&self) {
+        let cache = self.cache.clone();
+        crate::runtime::handle().spawn(async move {
+            if let Err(err) = tokio::task::spawn_blocking(move || cache.remove_persisted()).await {
+                warn!("Failed to join the cache removal task: {}", err);
+            }
+        });
+    }
+
     fn enter_signed_out_state(&self) {
         info!("Switching to signed-out state");
         self.stop_background_refresh();
@@ -448,12 +461,10 @@ impl MainWindow {
 
         self.services.sign_out();
 
-        {
-            let cache = self.cache.clone();
-            crate::runtime::handle().spawn(async move {
-                cache.clear_all().await;
-            });
-        }
+        // Memory only: this also runs when the keyring merely failed to
+        // answer, and the file is what a later offline start paints from. An
+        // explicit sign-out removes it as well (`forget_cached_data`).
+        self.cache.clear_all();
 
         {
             let mut repos_guard = self.repos.lock();
