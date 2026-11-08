@@ -1472,3 +1472,12 @@ msgstr "Snap は独自のランタイムを同梱するようになったため�
 
 msgid "The minimum desktop version is now GNOME 48 (GTK 4.18 and libadwaita 1.7)."
 msgstr "デスクトップの最低バージョンは GNOME 48（GTK 4.18 と libadwaita 1.7）になりました。"
+
+msgid "Repositories and their workflows appear at once on startup, from the last data Actioneer saw, and stay readable when GitHub cannot be reached."
+msgstr "起動するとすぐに、Actioneer が最後に取得したデータからリポジトリとワークフローが表示され、GitHub に接続できないときも閲覧できます。"
+
+msgid "When GitHub cannot be reached, Actioneer says it is offline, shows how old the data on screen is, and reloads by itself once the connection is back."
+msgstr "GitHub に接続できないときは、オフラインであることと画面上のデータがどれだけ古いかを表示し、接続が戻ると自動的に再読み込みします。"
+
+msgid "Expanding a finished run again shows its jobs without asking GitHub, which saves requests from your rate limit."
+msgstr "完了した実行をもう一度展開すると、GitHub に問い合わせずにジョブが表示されるため、レート制限のリクエストを節約できます。"

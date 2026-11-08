@@ -1010,3 +1010,12 @@ msgstr "Snap 现在自带运行环境，因此即使在较旧的 Ubuntu 版本�
 
 msgid "The minimum desktop version is now GNOME 48 (GTK 4.18 and libadwaita 1.7)."
 msgstr "桌面最低版本现为 GNOME 48（GTK 4.18 和 libadwaita 1.7）。"
+
+msgid "Repositories and their workflows appear at once on startup, from the last data Actioneer saw, and stay readable when GitHub cannot be reached."
+msgstr "启动时，仓库及其工作流会立即根据 Actioneer 上次获取的数据显示，即使无法连接 GitHub 也能继续查看。"
+
+msgid "When GitHub cannot be reached, Actioneer says it is offline, shows how old the data on screen is, and reloads by itself once the connection is back."
+msgstr "无法连接 GitHub 时，Actioneer 会提示处于离线状态，显示屏幕上数据的时效，并在连接恢复后自动重新加载。"
+
+msgid "Expanding a finished run again shows its jobs without asking GitHub, which saves requests from your rate limit."
+msgstr "再次展开已完成的运行时，无需请求 GitHub 即可显示其作业，从而节省速率限制中的请求次数。"

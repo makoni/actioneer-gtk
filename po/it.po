@@ -1474,3 +1474,12 @@ msgstr "Lo Snap ora include il proprio runtime, quindi GTK 4.24 e libadwaita 1.1
 
 msgid "The minimum desktop version is now GNOME 48 (GTK 4.18 and libadwaita 1.7)."
 msgstr "La versione minima del desktop ora è GNOME 48 (GTK 4.18 e libadwaita 1.7)."
+
+msgid "Repositories and their workflows appear at once on startup, from the last data Actioneer saw, and stay readable when GitHub cannot be reached."
+msgstr "I repository e i loro flussi di lavoro compaiono subito all'avvio, dagli ultimi dati visti da Actioneer, e restano leggibili quando GitHub non è raggiungibile."
+
+msgid "When GitHub cannot be reached, Actioneer says it is offline, shows how old the data on screen is, and reloads by itself once the connection is back."
+msgstr "Quando GitHub non è raggiungibile, Actioneer indica di essere offline, mostra quanto sono vecchi i dati sullo schermo e ricarica da solo non appena la connessione torna."
+
+msgid "Expanding a finished run again shows its jobs without asking GitHub, which saves requests from your rate limit."
+msgstr "Se espandi di nuovo un'esecuzione terminata, i suoi job compaiono senza interrogare GitHub, risparmiando richieste dal tuo limite di richieste."

@@ -1018,3 +1018,12 @@ msgstr "Snap اب اپنا رن ٹائم لاتا ہے، اس لیے GTK 4.24 ا
 
 msgid "The minimum desktop version is now GNOME 48 (GTK 4.18 and libadwaita 1.7)."
 msgstr "ڈیسک ٹاپ کا کم از کم ورژن اب GNOME 48 (GTK 4.18 اور libadwaita 1.7) ہے۔"
+
+msgid "Repositories and their workflows appear at once on startup, from the last data Actioneer saw, and stay readable when GitHub cannot be reached."
+msgstr "اسٹارٹ اپ پر ریپوزیٹریز اور ان کے ورک فلو Actioneer کے آخری دیکھے گئے ڈیٹا سے فوراً نظر آتے ہیں، اور GitHub تک رسائی نہ ہونے پر بھی پڑھے جا سکتے ہیں۔"
+
+msgid "When GitHub cannot be reached, Actioneer says it is offline, shows how old the data on screen is, and reloads by itself once the connection is back."
+msgstr "جب GitHub تک رسائی نہ ہو تو Actioneer بتاتا ہے کہ وہ آف لائن ہے، اسکرین پر موجود ڈیٹا کتنا پرانا ہے، اور کنکشن بحال ہوتے ہی خود دوبارہ لوڈ کرتا ہے۔"
+
+msgid "Expanding a finished run again shows its jobs without asking GitHub, which saves requests from your rate limit."
+msgstr "کسی مکمل شدہ رن کو دوبارہ کھولنے پر اس کے جابز GitHub سے پوچھے بغیر دکھائی دیتے ہیں، جس سے آپ کی ریٹ حد کی درخواستیں بچتی ہیں۔"

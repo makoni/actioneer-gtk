@@ -126,6 +126,15 @@
   </screenshots>
 
   <releases>
+    <release version="1.4.0" date="2026-11-08">
+      <description>
+        <ul>
+          <li>Repositories and their workflows appear at once on startup, from the last data Actioneer saw, and stay readable when GitHub cannot be reached.</li>
+          <li>When GitHub cannot be reached, Actioneer says it is offline, shows how old the data on screen is, and reloads by itself once the connection is back.</li>
+          <li>Expanding a finished run again shows its jobs without asking GitHub, which saves requests from your rate limit.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.3.0" date="2026-10-29">
       <description>
         <ul>

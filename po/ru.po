@@ -1021,3 +1021,12 @@ msgstr "Snap теперь привозит свою собственную ср�
 
 msgid "The minimum desktop version is now GNOME 48 (GTK 4.18 and libadwaita 1.7)."
 msgstr "Минимальная версия рабочего стола теперь GNOME 48 (GTK 4.18 и libadwaita 1.7)."
+
+msgid "Repositories and their workflows appear at once on startup, from the last data Actioneer saw, and stay readable when GitHub cannot be reached."
+msgstr "Репозитории и их воркфлоу появляются сразу при запуске, по последним данным, которые видел Actioneer, и остаются доступными для чтения, когда GitHub недоступен."
+
+msgid "When GitHub cannot be reached, Actioneer says it is offline, shows how old the data on screen is, and reloads by itself once the connection is back."
+msgstr "Когда GitHub недоступен, Actioneer сообщает, что он не в сети, показывает, насколько устарели данные на экране, и сам обновляет их, как только соединение восстановится."
+
+msgid "Expanding a finished run again shows its jobs without asking GitHub, which saves requests from your rate limit."
+msgstr "При повторном раскрытии завершённого запуска его задачи показываются без запроса к GitHub, что экономит запросы из вашего лимита."
