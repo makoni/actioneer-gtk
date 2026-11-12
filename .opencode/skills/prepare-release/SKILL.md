@@ -70,7 +70,10 @@ This is commit `i18n(release): add X.Y.Z changelog entry with translations`.
 
 This is commit `chore(release): bump version to X.Y.Z and sync packaging` - the i18n
 commit comes first. Run the step-5 checks (`cargo fmt`, clippy `-D warnings`,
-`cargo test`, `check-flatpak-lock-sync.sh`) before committing.
+`cargo test`, `check-flatpak-lock-sync.sh`) before committing, plus the `--ignored`
+GTK batch with the scale dropped - an inherited `GDK_SCALE` from a HiDPI session
+sizes the test windows to the monitor's logical size and the geometry tests fail as
+false positives (see `AGENTS.md`).
 
 ## 4. Publish the draft
 

@@ -94,7 +94,7 @@ nothing validates a PR unless you do it locally. Run all of these:
 cargo fmt --all
 cargo clippy --workspace --all-targets --all-features -- -D warnings
 cargo test --workspace
-env -u WAYLAND_DISPLAY GDK_BACKEND=x11 xvfb-run -a dbus-run-session -- bash -lc "RUST_TEST_THREADS=1 cargo test --workspace -- --ignored --test-threads=1 --skip test_token_storage_lifecycle"
+env -u WAYLAND_DISPLAY -u GDK_SCALE -u GDK_FRACTIONAL_SCALE GDK_BACKEND=x11 xvfb-run -a dbus-run-session -- bash -lc "RUST_TEST_THREADS=1 cargo test --workspace -- --ignored --test-threads=1 --skip test_token_storage_lifecycle"
 cargo build --release && dbus-run-session -- bash tests/smoke/run_all.sh
 ```
 
@@ -134,6 +134,13 @@ command above. A test that depends on geometry must not trust
 `set_default_size` either way: present the widget with
 `test_helpers::present_at_size`, which pins its allocation under any window
 manager.
+
+A HiDPI session also leaks its scale into the run. At `GDK_SCALE=2` GTK4 maps a
+new window at the monitor's *logical* size, so a test that asks for 1200×800 gets
+960×540 and every `present_window_at` assertion fails on a machine that is
+otherwise fine. Drop the inherited scale too (`-u GDK_SCALE
+-u GDK_FRACTIONAL_SCALE` in the command above): CI runs without a scale, so a
+local run that inherits one is not the run CI does.
 
 ### Smoke tests
 
